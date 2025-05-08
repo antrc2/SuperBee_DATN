@@ -140,3 +140,5 @@ Là người quản lý toàn bộ hệ thống, có quyền thêm/sửa/xóa t�
 #### ✅ Xử lý yêu cầu hỗ trợ
 - Nhận và phản hồi các yêu cầu từ người dùng, công tác viên, đại lý.
 - Giải quyết tranh chấp, hỗ trợ kỹ thuật,...
+
+# Website Document được tạo bởi Qwen3

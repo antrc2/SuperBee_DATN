@@ -1,5 +1,7 @@
-# Tất cả các API đều được bảo vệ bằng token xác thực. Token này cần được gửi trong header của mỗi yêu cầu.
-# Method GetAll thì có thể có field, offset, limit
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+
 openapi: 3.0.0
 info:
   title: SuperBee

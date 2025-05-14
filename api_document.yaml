@@ -22,6 +22,24 @@ paths:
           schema:
             type: string
             example: Bearer <Token>
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Các trường dữ liệu muốn trả về
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Số lượng bản ghi muốn bỏ qua
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Giới hạn tối đa muốn trả về
       responses:
         '200':
           description: Danh sách vai trò
@@ -995,6 +1013,9 @@ paths:
                         phone: 
                           type: string
                           example: 0987654321
+                        role_id:
+                          type: integer
+                          example: 1
                         role:
                           type: string
                           example: admin
@@ -1077,9 +1098,9 @@ paths:
                 fullname:
                   type: string
                   example: Nguyễn Văn C
-                role:
-                  type: string
-                  example: user
+                affiliated_by:
+                  type: integer
+                  example: 2
       responses:
         '201':
           description: Tạo tài khoản thành công

@@ -4,12 +4,20 @@ import datetime
 import time
 import requests
 import json
+from dotenv import load_dotenv
+import os
 
+# Load biến môi trường từ file .env
+load_dotenv()
+
+# Truy cập biến môi trường
+accountNo = os.getenv("ACCOUNT_NO")
+password = os.getenv("PASSWORD")
 headers = {
     "Authorization": "Bearer Sqrtfl0@t01bfkskvqfayl0AnChimTo18cm",
     "Content-Type": "application/json"
 }
-url = "http://localhost:8000/api/"
+
 def readFile():
     with open("data.txt","r") as f:
         text = f.read().split("\n")

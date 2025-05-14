@@ -9,7 +9,7 @@ from io import BytesIO
 from PIL import Image
 
 # Load mô hình
-model = load_model("nsfw_detect.h5")
+model = load_model("nsfw.h5")
 
 # Cấu hình FastAPI
 app = FastAPI()
@@ -38,8 +38,6 @@ def predict_image_array(img_array: np.ndarray) -> bool:
     img_array = tf.expand_dims(img_array, axis=0)
     prediction = model.predict(img_array)[0][0]
     return prediction < 0.5  # True nếu là NSFW
-
-# API chính nhận mảng link ảnh
 @app.post("/nsfw_detect")
 async def predict_from_multiple_urls(request: Request):
     data = await request.json()
@@ -76,11 +74,11 @@ async def predict_from_multiple_urls(request: Request):
 
     # Ghép kết quả với danh sách URL tương ứng
     for url, pred in zip(valid_urls, predictions):
-        is_nsfw = pred[0] < 0.5
+        is_nsfw = bool(pred[0] < 0.5)  # Convert to Python boolean
         results.append({
             "url": url,
             "nsfw": is_nsfw,
-            "score": float(pred[0])
+            "score": float(pred[0])  # Already converting to float
         })
 
     return {"results": results}

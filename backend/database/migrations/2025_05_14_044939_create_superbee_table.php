@@ -23,11 +23,11 @@ return new class extends Migration
             $table->text('email')->nullable();
             $table->text('phone')->nullable();
             $table->text('avatar_url');
-            $table->integer('balance');
-            $table->unsignedBigInteger('role_id')->nullable();
-            $table->unsignedBigInteger('web_id')->nullable();
+            $table->integer('balance')->default(0);
+            $table->unsignedBigInteger('role_id')->nullable()->default(1);
+            $table->unsignedBigInteger('web_id')->nullable()->default(1);
             $table->unsignedBigInteger('affiliated_by')->nullable();
-            $table->integer('status')->nullable();
+            $table->integer('status')->nullable()->default(1);
             $table->timestamps();
         });
 
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->text('subdomain')->nullable();
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->integer('status')->nullable();
+            $table->integer('status')->nullable()->default(1);
             $table->text('api_key')->nullable();
             $table->timestamps();
         });
@@ -88,7 +88,7 @@ return new class extends Migration
             $table->bigIncrements('id');
             $table->text('name')->nullable();
             $table->text('image_url');
-            $table->integer('status')->nullable();
+            $table->integer('status')->nullable()->default(1);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamps();
@@ -116,13 +116,13 @@ return new class extends Migration
         Schema::create('discount_codes', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->text('code')->nullable();
-            $table->integer('usage_limit')->nullable();
+            $table->integer('usage_limit')->nullable()->default(-1);
             $table->integer('used_count')->nullable();
             $table->timestamp('end_date')->nullable();
             $table->integer('discount_amount')->nullable();
             $table->integer('min_discount_amount')->nullable();
             $table->integer('max_discount_amount')->nullable();
-            $table->unsignedBigInteger('user_id')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable()->default(0);
             $table->unsignedBigInteger('web_id')->nullable();
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
@@ -158,7 +158,7 @@ return new class extends Migration
             $table->text('slug');
             $table->text('description');
             $table->text('content');
-            $table->integer('status');
+            $table->integer('status')->default(1);
             $table->unsignedBigInteger('created_by');
             $table->unsignedBigInteger('updated_by');
             $table->timestamps();
@@ -200,7 +200,7 @@ return new class extends Migration
             $table->unsignedBigInteger('category_id')->nullable();
             $table->text('username')->nullable();
             $table->text('password')->nullable();
-            $table->integer('status')->nullable();
+            $table->integer('status')->nullable()->default(1);
             $table->unsignedBigInteger('created_by')->nullable();
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->unsignedBigInteger('web_id')->nullable();
@@ -249,7 +249,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('web_id');
             $table->text('title');
-            $table->integer('status');
+            $table->integer('status')->default(1);
             $table->timestamps();
         });
 

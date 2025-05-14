@@ -265,6 +265,12 @@ paths:
           schema:
             type: string
             example: Bearer <Token>
+        - name: Role ID
+          in: header
+          required: true
+          schema:
+            type: string
+            example: 1
       requestBody:
         required: true
         content:
@@ -362,6 +368,12 @@ paths:
           schema:
             type: string
             example: Bearer <Token>
+        - name: Role ID
+          in: header
+          required: true
+          schema:
+            type: string
+            example: 1
       responses:
         '200':
           description: Xóa vai trò thành công

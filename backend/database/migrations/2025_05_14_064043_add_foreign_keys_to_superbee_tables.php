@@ -16,9 +16,9 @@ return new class extends Migration
         });
 
         // webs
-        Schema::table('webs', function (Blueprint $table) {
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
-        });
+        // Schema::table('webs', function (Blueprint $table) {
+        //     $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
+        // });
 
         // bank_histories
         Schema::table('bank_histories', function (Blueprint $table) {

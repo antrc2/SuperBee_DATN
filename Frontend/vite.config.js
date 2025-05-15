@@ -12,6 +12,8 @@ export default defineConfig({
       // eslint-disable-next-line no-undef
       "@contexts": resolve(__dirname, "src/contexts"),
       // eslint-disable-next-line no-undef
+      "@layouts": resolve(__dirname, "src/layouts"),
+      // eslint-disable-next-line no-undef
       "@assets": resolve(__dirname, "src/assets"),
       // eslint-disable-next-line no-undef
       "@pages": resolve(__dirname, "src/pages"),
@@ -19,6 +21,19 @@ export default defineConfig({
       "@routers": resolve(__dirname, "src/routers"),
       // eslint-disable-next-line no-undef
       "@utils": resolve(__dirname, "src/utils")
+    }
+  },
+  theme: {
+    extend: {
+      keyframes: {
+        fadeIn: {
+          "0%": { opacity: 0, transform: "translateY(-10px)" },
+          "100%": { opacity: 1, transform: "translateY(0)" }
+        }
+      },
+      animation: {
+        fadeIn: "fadeIn 0.3s ease-out"
+      }
     }
   }
 });

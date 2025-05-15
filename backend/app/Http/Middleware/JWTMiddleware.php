@@ -29,7 +29,7 @@ class JWTMiddleware
             if (!isset($decoded->api_key)) {
                 return response()->json(['error' => 'API key not found in token'], 401);
             }
-
+            
             $apiKey = $decoded->api_key;
 
             $webRecord = Web::where('api_key', $apiKey)->first();

@@ -28,9 +28,11 @@ class AuthenticateMiddleware
 
         // Lấy web_id từ bản ghi
         $webId = $apiKeyRecord->web_id;
+        $userId = $apiKeyRecord->user_id;
 
         // Thêm web_id vào request
         $request->attributes->add(['web_id' => $webId]);
+        $request->attributes->add(['user_id'=>$userId]);
 
         return $next($request);
     }

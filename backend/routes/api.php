@@ -4,13 +4,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['authenticate'])->group(function(){
-    // Route::post("/accounts/login");
-    // Route::post("/accounts/register");
     
     Route::prefix("/accounts")->group(function(){
         Route::post("/login");
         Route::post("/register");
-
     });
 
     Route::prefix('/categories')->group(function(){
@@ -99,7 +96,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::delete("/{id}");
     });
     Route::prefix("/notifications")->group(function(){
-                Route::get("/");
+        Route::get("/");
         Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");

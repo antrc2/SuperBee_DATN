@@ -1,6 +1,6 @@
-import Docs from "@pages/Doc";
+import Home from "@pages/Clients/Home/Home";
 
 function App() {
-  return <Docs />;
+  return <Home />;
 }
 export default App;

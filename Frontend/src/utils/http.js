@@ -2,7 +2,7 @@ import axios from "axios";
 import { refreshToken } from "./refreshToken.js";
 
 const defaultConfig = {
-  baseURL: import.meta.env.VITE_API_BACKEND,
+  baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
   timeout: 10_000

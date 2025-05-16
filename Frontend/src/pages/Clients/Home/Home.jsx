@@ -1,15 +1,15 @@
-import { showNotification } from "@utils/notification.js";
-import { useEffect } from "react";
-import { showConfirm } from "../../../utils/notification";
+import { useFetch } from "@utils/hook";
 
 export default function Home() {
-  useEffect(() => {
-    showNotification("warning", "Đây là thông báo thông tin!", 4000);
-    showConfirm("bạn chắc chứ", "Đăng Xuất");
-  }, []);
+  const { data, loading, error } = useFetch("/domain", "get");
+
+  if (loading) return <p>Đang gửi yêu cầu...</p>;
+  if (error) return <p>Lỗi: {error.message}</p>;
+  console.log(data.message);
   return (
     <div>
-      <div className="space-x-2">hello</div>
+      <h2>Kết quả:</h2>
+      <pre>{JSON.stringify(data, null, 2)}</pre>
     </div>
   );
 }

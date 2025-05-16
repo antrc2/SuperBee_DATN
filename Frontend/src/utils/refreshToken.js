@@ -18,4 +18,4 @@ const refreshToken = async () => {
   }
 };
 
-export default refreshToken;
+export { refreshToken };

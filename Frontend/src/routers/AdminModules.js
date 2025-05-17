@@ -8,6 +8,11 @@ import CreateDiscountCodePage from "@pages/Admin/DiscountCode/CreateDiscountCode
 import EditDiscountCodePage from "@pages/Admin/DiscountCode/EditDiscountCodePage";
 
 
+import DonatePromotionPage from "@pages/Admin/DonatePromotion/DonatePromotionPage";
+import CreateDonatePromotionPage from "@pages/Admin/DonatePromotion/CreateDonatePromotionPage";
+import EditDonatePromotionPage from "@pages/Admin/DonatePromotion/EditDonatePromotionPage";
+
+
 export const adminModules = [
   {
     name: "categories",
@@ -21,6 +26,14 @@ export const adminModules = [
     list: DiscountCodePage,
     create: CreateDiscountCodePage,
     edit: EditDiscountCodePage,
+  },
+
+
+    {
+    name: "donate-promotions",
+    list: DonatePromotionPage,
+    create: CreateDonatePromotionPage,
+    edit: EditDonatePromotionPage,
   },
 
 ];

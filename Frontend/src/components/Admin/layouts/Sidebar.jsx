@@ -11,7 +11,8 @@ const Sidebar = () => {
     { path: "/admin/products", label: "Quản lý sản phẩm" },
     { path: "/admin/discount-codes", label: "Quản lý mã giảm giá" },
     { path: "/admin/donate-promotions", label: "Quản lý khuyến mãi nạp thẻ" },
-    // thêm route nếu cần
+    { path: "/admin/categories", label: "Quản lý danh mục" },
+    { path: "/admin/products", label: "Quản lý sản phẩm" },
   ];
 
   return (
@@ -36,4 +37,5 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+
 

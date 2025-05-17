@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
 Route::middleware(['authenticate'])->group(function(){
     
     Route::prefix("/accounts")->group(function(){
@@ -10,7 +11,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::post("/register");
     });
 
-    Route::prefix('/categories')->group(function(){
+    Route::prefix('/categories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -19,7 +20,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::delete("/{id}");
     });
 
-    Route::prefix('/products')->group(function(){
+    Route::prefix('/products')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -27,7 +28,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix('/news')->group(function(){
+    Route::prefix('/news')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -35,7 +36,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix('/reviews')->group(function(){
+    Route::prefix('/reviews')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -43,7 +44,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix('/bank_histories')->group(function(){
+    Route::prefix('/bank_histories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -51,7 +52,7 @@ Route::middleware(['authenticate'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix('/card_histories')->group(function(){
+    Route::prefix('/card_histories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -59,11 +60,10 @@ Route::middleware(['authenticate'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-
 });
 
-Route::middleware(['jwt'])->group(function(){
-    Route::prefix("/webs")->group(function(){
+Route::middleware(['jwt'])->group(function () {
+    Route::prefix("/webs")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -71,7 +71,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/accounts")->group(function(){
+    Route::prefix("/accounts")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -79,7 +79,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/cart")->group(function(){
+    Route::prefix("/cart")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -87,7 +87,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/order")->group(function(){
+    Route::prefix("/order")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -95,7 +95,9 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+
     Route::prefix("/notifications")->group(function(){
+
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -103,7 +105,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/chats")->group(function(){
+    Route::prefix("/chats")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -111,7 +113,7 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/tickets")->group(function(){
+    Route::prefix("/tickets")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");
@@ -119,7 +121,11 @@ Route::middleware(['jwt'])->group(function(){
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    
 });
 
+Route::prefix("/domain")->group(function () {
+    Route::get("/", function () {
+        return response()->json(['message' => "lay thanh cong", 'status' => true, 'data' => []]);
+    });
+});
 // Anh An đẹp trai :)))

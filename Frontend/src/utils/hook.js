@@ -65,7 +65,7 @@ function useDebounce(value, delay) {
 // . useLocalStorage - Lưu trữ dữ liệu trong localStorage
 // Công dụng: Đồng bộ hóa dữ liệu với localStorage để duy trì trạng thái giữa các phiên làm việc.
 // const [name, setName] = useLocalStorage("name", "Người dùng");
-function useLocalStorage(key, initialValue) {
+function useLocalStorage(key, initialValue = null) {
   const [storedValue, setStoredValue] = useState(() => {
     try {
       const item = window.localStorage.getItem(key);
@@ -122,12 +122,31 @@ function useScrollPosition() {
 
   return scrollPosition;
 }
+function writeToLocalStorage(key, value) {
+  try {
+    const valueToStore = typeof value === "function" ? value() : value;
+    window.localStorage.setItem(key, JSON.stringify(valueToStore));
+  } catch (error) {
+    console.error("Lỗi khi ghi vào localStorage:", error);
+  }
+}
+let apiKey = null;
 
+function setApiKeyHook(key) {
+  apiKey = key;
+}
+
+function getApiKey() {
+  return apiKey;
+}
 export {
   useClickOutside,
   useDebounce,
   useFetch,
   useLocalStorage,
   useScrollPosition,
-  useToggle
+  useToggle,
+  writeToLocalStorage,
+  getApiKey,
+  setApiKeyHook
 };

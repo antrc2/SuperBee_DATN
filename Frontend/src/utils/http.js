@@ -1,5 +1,7 @@
 import axios from "axios";
 import { refreshToken } from "./refreshToken.js";
+import { getApiKey } from "./hook.js";
+import { showError } from "./notification.js";
 
 const defaultConfig = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
@@ -8,7 +10,7 @@ const defaultConfig = {
   timeout: 10_000
 };
 
-const authFreePaths = ["auth/login", "auth/register", "auth/refresh"];
+const authFreePaths = ["auth/login", "auth/register", "auth/refresh", "domain"];
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {
@@ -19,8 +21,18 @@ api.interceptors.request.use((config) => {
       // Ném lỗi sẽ được catch ở tầng gọi API
       throw new axios.Cancel("NO_ACCESS_TOKEN");
     }
+
     config.headers.Authorization = `Bearer ${token}`;
   }
+  const apiKey = getApiKey();
+
+  if (!apiKey) {
+    // Ném lỗi sẽ được catch ở tầng gọi API
+    showError("Server đang lỗi vui lòng thử lại sau 100d");
+
+    throw new axios.Cancel("NO_API_KEY");
+  }
+  config.headers.ShopKey = `KEY ${apiKey}`;
   return config;
 });
 

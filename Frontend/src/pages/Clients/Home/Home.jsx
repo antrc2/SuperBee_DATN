@@ -5,7 +5,7 @@ export default function Home() {
 
   if (loading) return <p>Đang gửi yêu cầu...</p>;
   if (error) return <p>Lỗi: {error.message}</p>;
-  console.log(data.message);
+  // console.log(data.message);
   return (
     <div>
       <h2>Kết quả:</h2>

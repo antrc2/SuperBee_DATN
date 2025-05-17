@@ -13,6 +13,7 @@ load_dotenv()
 # Truy cập biến môi trường
 accountNo = os.getenv("ACCOUNT_NO")
 password = os.getenv("PASSWORD")
+url = os.getenv("CALLBACK_URL")
 headers = {
     "Authorization": "Bearer Sqrtfl0@t01bfkskvqfayl0AnChimTo18cm",
     "Content-Type": "application/json"

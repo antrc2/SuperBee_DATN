@@ -3,6 +3,7 @@
 import { Navigate, Outlet } from "react-router-dom";
 import AdminLayout from "@layouts/Admin/AdminLayout";
 import { adminModules } from "@routers/adminModules";
+import AccountListPage from "../pages/Admin/Account/AccountPage";
 
 const adminRoutes = [
   {
@@ -22,7 +23,8 @@ const adminRoutes = [
           { path: "*",          element: <Navigate to={`/admin/${name}`} replace /> },
         ],
       })),
-
+      
+      { path: "account", element: <AccountListPage /> },
       // catch-all /admin/*
       { path: "*", element: <Navigate to="/admin" replace /> },
     ],

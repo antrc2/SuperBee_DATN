@@ -5,11 +5,7 @@ use Illuminate\Http\Request;
 
 abstract class Controller
 {
-    abstract public function index();
-    abstract public function show(Request $request);
-    abstract public function store(string $id);
-    abstract public function update(Request $request, string $id);
-    abstract public function destroy(string $id);
+
 }
 
 // namespace App\Http\Controllers\Api;

@@ -1,12 +1,16 @@
 <?php
 
+use App\Http\Controllers\Client\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['authenticate'])->group(function () {
     // Route::post("/accounts/login");
     // Route::post("/accounts/register");
-
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [HomeController::class, "index"]);
+        Route::post("/register", [HomeController::class, "index"]);
+    });
     Route::prefix("/accounts")->group(function () {
         Route::post("/login");
         Route::post("/register");
@@ -122,9 +126,5 @@ Route::middleware(['jwt'])->group(function () {
     });
 });
 
-Route::prefix("/domain")->group(function () {
-    Route::get("/", function () {
-        return response()->json(['message' => "lay thanh cong", 'status' => true, 'data' => []]);
-    });
-});
+
 // Anh An đẹp trai :)))

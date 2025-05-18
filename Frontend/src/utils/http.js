@@ -10,7 +10,13 @@ const defaultConfig = {
   timeout: 10_000
 };
 
-const authFreePaths = ["auth/login", "auth/register", "auth/refresh", "domain"];
+const authFreePaths = [
+  "auth/login",
+  "auth/register",
+  "auth/refresh",
+  "domain",
+  "domain/register"
+];
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {

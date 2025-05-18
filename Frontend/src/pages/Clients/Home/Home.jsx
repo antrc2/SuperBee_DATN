@@ -1,15 +1,5 @@
-import { useFetch } from "@utils/hook";
+import RegisterDomain from "../ActiveDomain/RegisterDomain";
 
 export default function Home() {
-  const { data, loading, error } = useFetch("/domain", "get");
-
-  if (loading) return <p>Đang gửi yêu cầu...</p>;
-  if (error) return <p>Lỗi: {error.message}</p>;
-  // console.log(data.message);
-  return (
-    <div>
-      <h2>Kết quả:</h2>
-      <pre>{JSON.stringify(data, null, 2)}</pre>
-    </div>
-  );
+  return <div>Hello bạn</div>;
 }

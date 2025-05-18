@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Api\CategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -11,10 +11,10 @@ Route::middleware(['authenticate', 'api'])->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register");
     });
-
+    // Categories
     Route::prefix('/categories')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
+        Route::get("/", [CategoryController::class, 'index']);
+        Route::get("/{id}", [CategoryController::class, 'show']);
     });
 
     Route::prefix('/products')->group(function () {
@@ -59,11 +59,12 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+    // Categories
     Route::prefix('/categories')->group(function () {
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::post("/", [CategoryController::class, 'store']);
+        Route::put("/{id}", [CategoryController::class, 'update']);
+        // Route::patch("/{id}", [CategoryController::class, 'partialUpdate']);
+        Route::delete("/{id}", [CategoryController::class, 'destroy']);
     });
     Route::prefix('/news')->group(function () {
         Route::post("/");

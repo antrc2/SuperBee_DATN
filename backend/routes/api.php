@@ -1,11 +1,17 @@
 <?php
 
+
+use App\Http\Controllers\Api\DiscountCodeController;
+
 use App\Http\Controllers\Api\CategoryController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
+
 Route::middleware(['authenticate', 'api'])->group(function () {
+
 
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
@@ -136,14 +142,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
+
 });
 
 Route::prefix("/domain")->group(function () {

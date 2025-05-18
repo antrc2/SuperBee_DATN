@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RefreshToken extends Model
 {
+    public $timestamps = false;
     protected $fillable = ['user_id', 'refresh_token', 'revoked', 'expires_at', 'user_agent'];
 
     protected $casts = [

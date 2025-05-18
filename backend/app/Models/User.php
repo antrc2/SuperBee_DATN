@@ -7,8 +7,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use HasFactory, Notifiable;
 
@@ -54,6 +55,21 @@ class User extends Authenticatable
         ];
     }
 
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [
+
+            'api_key' => $this->apikey,      // nếu có
+            'web_id' => $this->id,       // nếu có
+            // thêm gì tùy bạn
+
+        ];
+    }
     /**
      * Get the role that the user belongs to.
      */

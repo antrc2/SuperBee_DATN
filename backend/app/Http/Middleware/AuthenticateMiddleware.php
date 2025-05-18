@@ -9,11 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AuthenticateMiddleware
 {
-     public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
-        $authHeader = $request->header('Authorization');
+        $authHeader = $request->header('shopkey');
 
-        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+        if (!$authHeader || !preg_match('/KEY\s(\S+)/', $authHeader, $matches)) {
             return response()->json(['error' => 'API Key not provided'], 401);
         }
 
@@ -27,12 +27,11 @@ class AuthenticateMiddleware
         }
 
         // Lấy web_id từ bản ghi
-        $webId = $apiKeyRecord->web_id;
-        $userId = $apiKeyRecord->user_id;
+        $webId = $apiKeyRecord->id;
+        // $userId = $apiKeyRecord->user_id;
 
         // Thêm web_id vào request
-        $request->attributes->add(['web_id' => $webId]);
-        $request->attributes->add(['user_id'=>$userId]);
+        $request->merge(['web_id' => $webId, 'shopkey' => $authHeader]);
 
         return $next($request);
     }

@@ -1,13 +1,14 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
-Route::middleware(['authenticate'])->group(function () {
+Route::middleware(['authenticate', 'api'])->group(function () {
 
     Route::prefix("/accounts")->group(function () {
-        Route::post("/login");
+        Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register");
     });
 
@@ -39,6 +40,7 @@ Route::middleware(['authenticate'])->group(function () {
 });
 
 Route::middleware(['jwt'])->group(function () {
+    Route::get('/me', [AuthController::class, 'me']);
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -133,7 +135,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-        Route::prefix("/discount_codes")->group(function () {
+    Route::prefix("/discount_codes")->group(function () {
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");

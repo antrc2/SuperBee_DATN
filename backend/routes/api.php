@@ -1,7 +1,19 @@
 <?php
 
+use App\Http\Controllers\Api\DiscountCodeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+
+
+Route::prefix("/discount_codes")->group(function () {
+    Route::get("/", [DiscountCodeController::class, 'getAll']);
+    Route::get("/{id}", [DiscountCodeController::class, 'getOne']);
+    Route::post("/", [DiscountCodeController::class, 'post']);
+    Route::put("/{id}", [DiscountCodeController::class, 'put']);
+    Route::patch("/{id}", [DiscountCodeController::class, 'patch']);
+    Route::delete("/{id}", [DiscountCodeController::class, 'delete']);
+});
 
 
 Route::middleware(['authenticate'])->group(function () {
@@ -133,14 +145,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-        Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
+
 });
 
 Route::prefix("/domain")->group(function () {

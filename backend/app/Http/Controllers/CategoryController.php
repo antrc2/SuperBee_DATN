@@ -15,31 +15,19 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = $request->input('query', '');
-            $offset = (int) $request->input('offset', 0);
-            $limit = (int) $request->input('limit', 10);
+            // $query = $request->input('query', '');
+            // $perPage = $request->input('per_page', 10);
 
-            $categories = Category::when($query, function ($q) use ($query) {
-                return $q->where('name', 'like', "%{$query}%");
-            })
-                ->with(['createdBy', 'updatedBy'])
-                ->skip($offset)
-                ->take($limit)
-                ->get();
-
-            $total = Category::when($query, function ($q) use ($query) {
-                return $q->where('name', 'like', "%{$query}%");
-            })->count();
+            $categories = Category::all();
 
             return response()->json([
+                "status" => true,
                 'message' => 'Lấy danh sách danh mục thành công',
-                'data' => $categories,
-                'total' => $total,
-                'offset' => $offset,
-                'limit' => $limit
+                'data' => $categories
             ]);
         } catch (Exception $e) {
             return response()->json([
+
                 'message' => 'Có lỗi xảy ra khi lấy danh sách danh mục',
                 'error' => $e->getMessage()
             ], 500);
@@ -52,18 +40,25 @@ class CategoryController extends Controller
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
                 'image_url' => 'nullable|string|max:255',
-
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
+            // Kiểm tra tên danh mục đã tồn tại chưa
+            $existingCategory = Category::where('name', $request->name)->first();
+            if ($existingCategory) {
+                return response()->json([
+                    'message' => 'Tên danh mục đã tồn tại'
+                ], 422);
+            }
+
             $category = Category::create([
                 'name' => $request->name,
                 'image_url' => $request->image_url,
-                'created_by' => Auth::id(),
-                'updated_by' => Auth::id()
+                'status' => 1,
+                'created_by' => $request->user_id,
             ]);
 
             return response()->json([
@@ -81,7 +76,7 @@ class CategoryController extends Controller
     public function show($id)
     {
         try {
-            $category = Category::with(['createdBy', 'updatedBy'])->findOrFail($id);
+            $category = Category::findOrFail($id);
             return response()->json([
                 'message' => 'Lấy thông tin danh mục thành công',
                 'data' => $category
@@ -106,18 +101,38 @@ class CategoryController extends Controller
 
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'image_url' => 'required|string|max:255',
+                'image_url' => 'nullable|string|max:255', // Cho phép nullable
             ]);
 
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
             }
 
-            $category->update([
+            if ($request->name !== $category->name) {
+                $existingCategory = Category::where('name', $request->name)
+                    ->where('id', '!=', $category->id)
+                    ->first();
+
+                if ($existingCategory) {
+                    return response()->json([
+                        'message' => 'Tên danh mục đã tồn tại'
+                    ], 422);
+                }
+            }
+            // Chỉ cập nhật image_url nếu có truyền lên
+            $updateData = [
                 'name' => $request->name,
-                'image_url' => $request->image_url,
-                'updated_by' => Auth::id()
-            ]);
+                'updated_by' => $request->user_id,
+
+            ];
+            if ($request->has('image_url') && $request->image_url !== null && $request->image_url !== '') {
+                $updateData['image_url'] = $request->image_url;
+            }
+            if ($request->filled('status')) {
+            $updateData['status'] = $request->status;
+        }
+
+            $category->update($updateData);
 
             return response()->json([
                 'message' => 'Cập nhật danh mục thành công',
@@ -135,46 +150,40 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $category = Category::findOrFail($id);
 
-    // public function partialUpdate(Request $request, $id)
-    // {
-    //     try {
-    //         $category = Category::findOrFail($id);
+            // Kiểm tra xem danh mục có sản phẩm không
+            if ($category->products()->exists()) {
+                // Nếu có sản phẩm thì xóa mềm (cập nhật status = 0)
+                $category->update([
+                    'status' => 0,
+                    'updated_by' => $request->user_id
+                ]);
 
-    //         $validator = Validator::make($request->all(), [
-    //             'name' => 'sometimes|required|string|max:255',
-    //             'image_url' => 'sometimes|nullable|string|max:255',
-    //             'status' => 'sometimes|required|integer|in:0,1'
-    //         ]);
+                return response()->json([
+                    'message' => 'Đã xóa mềm danh mục thành công'
+                ]);
+            } else {
+                // Nếu không có sản phẩm thì xóa cứng
+                $category->delete();
 
-    //         if ($validator->fails()) {
-    //             return response()->json(['errors' => $validator->errors()], 422);
-    //         }
-
-    //         $category->update(array_merge(
-    //             $request->all(),
-    //             ['updated_by' => Auth::id()]
-    //         ));
-
-    //         return response()->json([
-    //             'message' => 'Cập nhật danh mục thành công',
-    //             'data' => $category
-    //         ]);
-    //     } catch (ModelNotFoundException $e) {
-    //         return response()->json([
-    //             'status' => False,
-    //             'message' => 'Không tìm thấy danh mục',
-    //             'error' => $e->getMessage()
-    //         ], 404);
-    //     } catch (Exception $e) {
-    //         return response()->json([
-    //             'message' => 'Có lỗi xảy ra khi cập nhật danh mục',
-    //             'error' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    public function destroy($id) {
-        
+                return response()->json([
+                    'message' => 'Đã xóa cứng danh mục thành công'
+                ]);
+            }
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'message' => 'Không tìm thấy danh mục',
+                'error' => $e->getMessage()
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Có lỗi xảy ra khi xóa danh mục',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 }

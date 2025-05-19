@@ -55,6 +55,7 @@ class AuthController extends Controller
         $web = Web::where('api_key', $request->api_key)->first();
         $credentials = $request->only('username', 'password');
 
+
         // Tìm user theo username
         $user = \App\Models\User::where('username', $credentials['username'])->first();
 
@@ -69,6 +70,7 @@ class AuthController extends Controller
             return response()->json(['error' => 'Invalid password'], 401);
         }
 
+
         // ✅ Build payload + tạo access token
         $claims = $this->buildJwtClaims($user, $request);
         $accessToken = auth()->claims($claims)->login($user);
@@ -76,13 +78,17 @@ class AuthController extends Controller
         // Tạo refresh token
         $refreshToken = $this->generateRefreshToken($user, $request);
 
+
+
         return response()->json([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
             'token_type' => 'bearer',
             'expires_in' => auth()->factory()->getTTL() * 60
+
         ]);
     }
+
 
 
     public function refreshToken(Request $request)

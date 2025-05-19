@@ -45,10 +45,11 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
-    
 });
 
 Route::middleware(['jwt'])->group(function () {
+    Route::get("/domain", [AuthController::class, 'logout']);
+
     Route::get('/me', [AuthController::class, 'me']);
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
@@ -162,11 +163,10 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-
 });
 
-Route::prefix("/domain")->group(function () {
-    Route::get("/", function () {
-        return response()->json(['message' => "lay thanh cong", 'status' => true, 'data' => []]);
-    });
-});
+// Route::prefix("/domain")->group(function () {
+//     Route::get("/", function () {
+//         return response()->json(['message' => "lay thanh cong", 'status' => true, 'data' => []]);
+//     });
+// });

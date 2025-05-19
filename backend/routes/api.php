@@ -1,9 +1,20 @@
 <?php
 
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\DiscountCodeController;
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+Route::prefix("/discount_codes")->group(function () {
+    Route::get("/", [DiscountCodeController::class, 'index']);
+    Route::get("/{id}", [DiscountCodeController::class, 'show']);
+    Route::post("/", [DiscountCodeController::class, 'store']);
+    Route::put("/{id}", [DiscountCodeController::class, 'update']);
+    Route::patch("/{id}", [DiscountCodeController::class, 'update']);
+    Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
+});
 
 Route::middleware(['authenticate', 'api'])->group(function () {
 
@@ -136,14 +147,14 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
+    // Route::prefix("/discount_codes")->group(function () {
+    //     Route::get("/");
+    //     Route::get("/{id}");
+    //     Route::post("/");
+    //     Route::put("/{id}");
+    //     Route::patch("/{id}");
+    //     Route::delete("/{id}");
+    // });
 });
 
 Route::prefix("/domain")->group(function () {

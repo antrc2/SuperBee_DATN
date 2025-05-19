@@ -18,7 +18,7 @@ Route::middleware(['authenticate'])->group(function () {
 
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
-        Route::post("/register");
+        Route::post("/register", [AuthController::class, 'register']);
     });
     // Categories
     Route::prefix('/categories')->group(function () {
@@ -46,13 +46,11 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
-    Route::prefix("/domain")->group(function () {
-        Route::get("/", [HomeController::class, "domain"]);
-    });
 });
 
 Route::middleware(['jwt'])->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
+
+    Route::post('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");

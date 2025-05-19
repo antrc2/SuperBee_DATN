@@ -55,14 +55,21 @@ class AuthController extends Controller
         $web = Web::where('api_key', $request->api_key)->first();
         $credentials = $request->only('username', 'password');
 
-        // Thay đổi tên field mặc định thành username
-        config(['auth.providers.users.field' => 'username']);
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // Tìm user theo username
+        $user = \App\Models\User::where('username', $credentials['username'])->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 401);
         }
 
-        $user = Auth::user();
+        // So sánh password sử dụng SHA-512
+        $hashedInputPassword = hash('sha512', $credentials['password']);
+
+        if ($hashedInputPassword !== $user->password) {
+            return response()->json(['error' => 'Invalid password'], 401);
+        }
+
 
         // ✅ Build payload + tạo access token
         $claims = $this->buildJwtClaims($user, $request);
@@ -70,7 +77,9 @@ class AuthController extends Controller
 
         // Tạo refresh token
         $refreshToken = $this->generateRefreshToken($user, $request);
-        // dd($claims);
+
+
+
         return response()->json([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
@@ -79,6 +88,8 @@ class AuthController extends Controller
 
         ]);
     }
+
+
 
     public function refreshToken(Request $request)
     {

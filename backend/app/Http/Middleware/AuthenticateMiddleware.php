@@ -13,7 +13,9 @@ class AuthenticateMiddleware
     {
         $authHeader = $request->header('authorization');
 
+
         if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+
             return response()->json(['error' => 'API Key not provided'], 401);
         }
         // dd($authHeader);

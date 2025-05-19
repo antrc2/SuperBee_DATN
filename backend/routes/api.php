@@ -2,9 +2,9 @@
 
 
 
-use App\Http\Controllers\Api\DiscountCodeController;
+use App\Http\Controllers\DiscountCodeController;
 
-use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\CategoryController;
 
 use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-Route::middleware(['authenticate', 'api'])->group(function () {
+Route::middleware(['authenticate'])->group(function () {
 
 
     Route::prefix("/accounts")->group(function () {

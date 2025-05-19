@@ -24,7 +24,7 @@ class AuthenticateMiddleware
 
 
         if (!$apiKeyRecord) {
-            return response()->json(['error' => 'Invalid API Key'], 401);
+            return response()->json(['error' => 'Invalid API Key', 'code' => 'NO_API_KEY'], 401);
         }
         if ($apiKeyRecord->status == 0) {
             return response()->json(["error" => "WEB_NOT_ACTIVE", "code" => "NO_ACTIVE"], 404);
@@ -35,7 +35,7 @@ class AuthenticateMiddleware
         // $userId = $apiKeyRecord->user_id;
 
         // Thêm web_id vào request
-        $request->merge(['web_id' => $webId, 'shopkey' => $apiKey]);
+        $request->merge(['web_id' => $webId]);
 
         return $next($request);
     }

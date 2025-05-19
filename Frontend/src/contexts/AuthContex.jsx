@@ -1,11 +1,11 @@
 import { createContext, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useApiKey } from "../utils/getApiKey";
+import { useApiKey } from "@utils/getApiKey";
 import {
   setApiKeyHook,
   useLocalStorage,
   writeToLocalStorage
-} from "../utils/hook";
+} from "@utils/hook";
 
 const AuthContext = createContext({});
 

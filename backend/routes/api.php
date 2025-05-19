@@ -46,7 +46,6 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
-    Route::get("/domain", [AuthController::class, 'test']);
 });
 
 Route::middleware(['jwt'])->group(function () {

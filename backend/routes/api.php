@@ -15,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['authenticate'])->group(function () {
 
-
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
@@ -47,8 +46,9 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/{id}");
     });
 });
-
+Route::get('/demo', [HomeController::class, 'domain']);
 Route::middleware(['jwt'])->group(function () {
+
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {

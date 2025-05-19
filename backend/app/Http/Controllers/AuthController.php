@@ -55,14 +55,19 @@ class AuthController extends Controller
         $web = Web::where('api_key', $request->api_key)->first();
         $credentials = $request->only('username', 'password');
 
-        // Thay đổi tên field mặc định thành username
-        config(['auth.providers.users.field' => 'username']);
 
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        // Tìm user theo username
+        $user = \App\Models\User::where('username', $credentials['username'])->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 401);
         }
 
-        $user = Auth::user();
+        // So sánh password sử dụng SHA-512
+        if (!Hash::check($credentials["password"], $user->password)) {
+            return response()->json(['error' => 'Invalid password'], 401);
+        }
+
 
         // ✅ Build payload + tạo access token
         $claims = $this->buildJwtClaims($user, $request);
@@ -70,7 +75,14 @@ class AuthController extends Controller
 
         // Tạo refresh token
         $refreshToken = $this->generateRefreshToken($user, $request);
-        // dd($claims);
+
+        RefreshToken::create([
+            'user_id' => $user->id,
+            'refresh_token' => $refreshToken,
+            'expires_at' => Carbon::now()->addDays(env('JWT_REFRESH_EXPIRE_TIME', 30)),
+            'revoked' => false,
+        ]);
+
         return response()->json([
             'access_token' => $accessToken,
             'refresh_token' => $refreshToken,
@@ -79,6 +91,8 @@ class AuthController extends Controller
 
         ]);
     }
+
+
 
     public function refreshToken(Request $request)
     {
@@ -110,8 +124,36 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->validate(['refresh_token' => 'required']);
-        RefreshToken::where('refresh_token', $request->refresh_token)->update(['revoked' => true]);
-        return response()->json(['message' => 'Logged out']);
+        RefreshToken::where('user_id', $request->user_id)->delete();
+        return response()->json(['message' => 'Logged out', "status" => true, 'data' => []], 200);
+    }
+    public function register(Request $request)
+    {
+        // $request->validate([
+        //     'username' => 'required|string|max:255',
+        //     'password' => 'required|string|min:8|confirmed',
+        //     'fullname' => 'required|string|max:255',
+        //     "avatar_url" => 'string|max:255',
+        // ]);
+        // dd($request);
+        $user = User::create([
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
+            'fullname' => $request->fullname,
+            'avatar_url' => $request->avatar_url,
+        ]);
+
+        return response()->json(['message' => 'User registered successfully']);
+    }
+    public function generateAccessToken($user, $apiKey)
+    {
+        $payload = [
+            'sub' => $user->id,
+            'web_id' => $user->web_id,
+            'api_key' => $apiKey,
+            'exp' => time() + env('JWT_EXPIRE_TIME', 60 * 60) // 1 giờ
+        ];
+
+        return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
     }
 }

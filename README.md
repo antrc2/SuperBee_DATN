@@ -1,9 +1,11 @@
 # Ghi chú nội dung cuộc họp
+
 2. **21:30:00 19/05/2025**
 * Đăng nhập: 
     * Khi muốn test đăng nhập, thì phải gửi API Key ở header Authorization. Và sẽ nhận về `access_token`. Và sẽ có thêm `web_id` tương ứng với API Key gửi vào ở trong `$request`
     * Khi muốn test đăng kí, thì vẫn phải gửi API Key ở Header Authorization, và sẽ chỉ nhận về `messages`. Và vẫn sẽ có thêm `web_id` tương ứng với API Key gửi vào ở trong `$request`
     * Khi muốn test đăng xuất, thì phải gửi `access_token` đã nhận từ lúc đăng nhập, thì mới được. Khi gửi `access_token` vào, thì sẽ nhận được `web_id` và `user_id` tương ứng với `access_token` đã gửi ở trong `$request`
+
 1. **21:30:00 18/05/2025**
 * Cấu trúc thư mục: 
     * Các Controller hông cần thiết phải cho vào Controllers/Api/, mà chỉ cần cho vào Controllers/ thôi
@@ -76,3 +78,5 @@
     * Cái này sẽ tự động sử dụng, tính theo thời gian nạp thẻ, không phải thời gian callback về
     * Khi khuyến mãi nạp thẻ được sửa, nếu đã có người sử dụng rồi thì không được sửa nữa, chỉ có thể xóa mềm thôi
     * Mỗi trang web chỉ tồn tại 1 và chỉ 1 sự kiện khuyến mãi nạp thẻ thôi
+    * Khi mã giảm giá đã quá hạn sử dụng, thì không được sửa nữa
+

@@ -11,9 +11,9 @@ class AuthenticateMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-        $authHeader = $request->header('shopkey');
+        $authHeader = $request->header('authorization');
 
-        if (!$authHeader || !preg_match('/Key\s(\S+)/', $authHeader, $matches)) {
+        if (!$authHeader || !preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
             return response()->json(['error' => 'API Key not provided'], 401);
         }
 
@@ -31,7 +31,7 @@ class AuthenticateMiddleware
         // $userId = $apiKeyRecord->user_id;
 
         // Thêm web_id vào request
-        $request->merge(['web_id' => $webId, 'shopkey' => $authHeader]);
+        $request->merge(['web_id' => $webId, 'shopkey' => $apiKey]);
 
         return $next($request);
     }

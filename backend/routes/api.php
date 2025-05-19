@@ -7,6 +7,7 @@ use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\CategoryController;
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -45,7 +46,9 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
-    
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [HomeController::class, "domain"]);
+    });
 });
 
 Route::middleware(['jwt'])->group(function () {
@@ -161,12 +164,5 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");
-    });
-
-});
-
-Route::prefix("/domain")->group(function () {
-    Route::get("/", function () {
-        return response()->json(['message' => "lay thanh cong", 'status' => true, 'data' => []]);
     });
 });

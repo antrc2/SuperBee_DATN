@@ -1,12 +1,14 @@
-import React, { Children } from "react";
+import { Outlet } from "react-router-dom";
 
-export default function HomeLayout({ children }) {
+export default function HomeLayout() {
   return (
     <div>
       <header>
         <h1>Header</h1>
       </header>
-      <main>{children}</main>
+      <main>
+        <Outlet />
+      </main>
       <footer>
         <h1>Footer</h1>
       </footer>

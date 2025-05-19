@@ -10,7 +10,6 @@ const defaultConfig = {
   timeout: 10_000
 };
 
-
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {
@@ -21,7 +20,7 @@ api.interceptors.request.use((config) => {
     if (!apiKey) {
       // Ném lỗi sẽ được catch ở tầng gọi API
       const reload = () => {
-        window.location.reload;
+        window.location.reload();
       };
       runAfter3Seconds(reload, 100);
       // throw new axios.Cancel("NO_API_KEY");

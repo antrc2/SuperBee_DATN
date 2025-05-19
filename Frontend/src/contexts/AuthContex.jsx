@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
       writeToLocalStorage("Shop_Key", fetchedApiKey);
     }
     setApiKeyHook(apiKey);
-  }, [fetchedApiKey, shouldFetchKey]);
+  }, [apiKey, fetchedApiKey, setApiKey, shouldFetchKey]);
 
   return (
     <AuthContext.Provider

@@ -2,10 +2,13 @@
 
 namespace App\Http\Middleware;
 
+use App\Mail\SendEmailDomain;
+use App\Models\User;
 use App\Models\Web;
 use Closure;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Mail;
+
 
 class AuthenticateMiddleware
 {
@@ -24,11 +27,29 @@ class AuthenticateMiddleware
 
 
         if (!$apiKeyRecord) {
-            return response()->json(['error' => 'Invalid API Key'], 401);
+            return response()->json(['error' => 'Invalid API Key', "code" => "NO_API_KEY"], 401);
         }
         if ($apiKeyRecord->status == 0) {
+            $userID = $apiKeyRecord->user_id;
+
+            $user = User::where("id", $userID)->first();
+
+            if ($user && $user->email) {
+                $data = [
+                    'name' => $user->fullname,
+                    'message' => 'Đây là email thử nghiệm từ Hải',
+                    "apiKey" => $apiKeyRecord->api_key
+                ];
+                try {
+                    Mail::to($user->email)->queue(new SendEmailDomain($data));
+                } catch (\Exception $e) {
+
+                    return response()->json(["error" => "WEB_NOT_ACTIVE", "code" => "SendEmailFAIL"], 404);
+                }
+            }
             return response()->json(["error" => "WEB_NOT_ACTIVE", "code" => "NO_ACTIVE"], 404);
         }
+
 
         // Lấy web_id từ bản ghi
         $webId = $apiKeyRecord->id;

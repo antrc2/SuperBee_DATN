@@ -13,7 +13,7 @@ class AuthenticateMiddleware
     {
         $authHeader = $request->header('shopkey');
 
-        if (!$authHeader || !preg_match('/KEY\s(\S+)/', $authHeader, $matches)) {
+        if (!$authHeader || !preg_match('/Key\s(\S+)/', $authHeader, $matches)) {
             return response()->json(['error' => 'API Key not provided'], 401);
         }
 

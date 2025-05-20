@@ -203,4 +203,5 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+    // Thiếu phần patch (khôi phục xóa mềm)
 }

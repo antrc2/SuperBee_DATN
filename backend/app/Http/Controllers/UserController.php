@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Account;
+use App\Models\User;
 use Exception;
 use Illuminate\Http\Request;
 
-class AccountController extends Controller
+class UserController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -14,7 +15,7 @@ class AccountController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Account::query();
+            $query = User::query();
 
             //lọc theo tên nếu có filed
             if ($request->filled('filed')) {

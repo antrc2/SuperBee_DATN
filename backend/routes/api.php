@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 
 
-
+Route::post("/domain/active", [HomeController::class, "active"]);
 Route::middleware(['authenticate'])->group(function () {
 
 
@@ -59,7 +59,7 @@ Route::middleware(['authenticate'])->group(function () {
 Route::middleware(['jwt'])->group(function () {
 
 
-    
+
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -173,5 +173,4 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-
 });

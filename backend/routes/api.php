@@ -2,18 +2,22 @@
 
 
 
+
 use App\Http\Controllers\DiscountCodeController;
 
 use App\Http\Controllers\CategoryController;
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
 
+
 Route::middleware(['authenticate'])->group(function () {
+
 
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
@@ -163,4 +167,5 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+
 });

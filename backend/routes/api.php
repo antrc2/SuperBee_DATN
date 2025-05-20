@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Route;
 
 
 use App\Http\Controllers\DonatePromotionController;
-
+use App\Http\Controllers\UserController;
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -118,7 +118,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::prefix("/accounts")->group(function () {
 
         Route::get("/", [UserController::class, 'index']);
-        Route::post("/", [UserController::class, 'store']); // Tạo mới
+        Route::post("/",[AuthController::class, 'register'] ); // Tạo mới
         Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
         Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
         Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 

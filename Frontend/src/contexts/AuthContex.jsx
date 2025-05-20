@@ -1,11 +1,11 @@
 import { createContext, useEffect } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { useApiKey } from "../utils/getApiKey";
+import { useApiKey } from "@utils/getApiKey";
 import {
   setApiKeyHook,
   useLocalStorage,
   writeToLocalStorage
-} from "../utils/hook";
+} from "@utils/hook";
 
 const AuthContext = createContext({});
 
@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
       writeToLocalStorage("Shop_Key", fetchedApiKey);
     }
     setApiKeyHook(apiKey);
-  }, [fetchedApiKey, shouldFetchKey]);
+  }, [apiKey, fetchedApiKey, setApiKey, shouldFetchKey]);
 
   return (
     <AuthContext.Provider

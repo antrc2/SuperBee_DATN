@@ -14,7 +14,10 @@ use App\Http\Controllers\HomeController;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UserController;
+
+
+use App\Http\Controllers\DonatePromotionController;
+
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -113,12 +116,14 @@ Route::middleware(['jwt'])->group(function () {
     });
 
     Route::prefix("/accounts")->group(function () {
+
         Route::get("/", [UserController::class, 'index']);
         Route::post("/", [UserController::class, 'store']); // Tạo mới
         Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
         Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
         Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 
         Route::delete("/{id}", [UserController::class, 'destroy']); // xóa mềm 
+
     });
     Route::prefix("/cart")->group(function () {
         Route::get("/");
@@ -163,10 +168,10 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
 
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [DonatePromotionController::class, 'index']);
+        Route::get("/{id}", [DonatePromotionController::class, 'show']);
+        Route::post("/", [DonatePromotionController::class, 'store']);
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");

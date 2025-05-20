@@ -1,12 +1,24 @@
 <?php
 
+
+
+
+
+use App\Http\Controllers\DiscountCodeController;
+
+
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
-Route::post("/domain/active", [HomeController::class, "active"]);
+
+
+
 Route::middleware(['authenticate'])->group(function () {
 
 
@@ -44,8 +56,9 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/", [HomeController::class, "domain"]);
     });
 });
-
+Route::get('/demo', [HomeController::class, 'domain']);
 Route::middleware(['jwt'])->group(function () {
+
 
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
@@ -160,4 +173,5 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+
 });

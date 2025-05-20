@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import api from "./http";
 // Quản lý trạng thái bật/tắt
 // const [isOpen, toggleOpen] = useToggle(false);
@@ -9,43 +9,57 @@ function useToggle(initialValue = false) {
 }
 // useFetch - Gọi API và quản lý trạng thái
 // Công dụng: Xử lý việc gọi API, quản lý trạng thái loading, dữ liệu trả về và lỗi.
-// const { data, loading, error } = useFetch("/auth/login", "post", {
-//   email: "abc@example.com",
-//   password: "123456"
+// post
+// const { data, loading, error } = useFetch("/login", "post", {
+//   data: { username: "admin", password: "123456" }
 // });
-function useFetch(url, method = "get", payload = null) {
+// get
+// const { data, loading, error } = useFetch("/products", "get", {
+//   params: { category: "fruit" }
+// });
+function useFetch(url, method = "get", options = {}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const stableOptions = useMemo(() => JSON.stringify(options), [options]);
+
   useEffect(() => {
     const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    setData(null); // reset lại khi url/method/options thay đổi
 
-    async function fetchData() {
-      setLoading(true);
+    const fetchData = async () => {
       try {
-        const response = await api.request({
+        const res = await api.request({
           url,
           method,
-          data: payload,
-          signal: controller.signal
+          signal: controller.signal,
+          ...options
         });
-        setData(response.data);
+        if (res.status == 200) {
+          setData(res.data);
+          setLoading(false);
+        }
       } catch (err) {
         if (err.name !== "CanceledError" && err.name !== "AbortError") {
           setError(err);
+          setLoading(false);
         }
-      } finally {
-        setLoading(false);
       }
-    }
+    };
 
     fetchData();
-    return () => controller.abort();
-  }, [url, method, JSON.stringify(payload)]); // cần stringify để tránh loop
+
+    return () => {
+      controller.abort();
+    };
+  }, [url, method, stableOptions]);
 
   return { data, loading, error };
 }
+
 // useDebounce - Trì hoãn cập nhật giá trị
 // Công dụng: Trì hoãn cập nhật giá trị, hữu ích trong các trường hợp như tìm kiếm để giảm tần suất xử lý.
 // const debouncedValue = useDebounce(inputValue, 500);

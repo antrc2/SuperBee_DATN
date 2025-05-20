@@ -3,17 +3,20 @@
 
 
 
+
 use App\Http\Controllers\DiscountCodeController;
 
-use App\Http\Controllers\CategoryController;
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
+
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AccountController;
+
 
 
 Route::middleware(['authenticate'])->group(function () {
@@ -50,12 +53,14 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [HomeController::class, "domain"]);
+    });
 });
-Route::get('/demo', [HomeController::class, 'domain']);
 Route::middleware(['jwt'])->group(function () {
 
 
-    Route::post('/logout', [AuthController::class, 'logout']);
+    
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -109,6 +114,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+<<<<<<< HEAD
     Route::middleware(['jwt'])->prefix("/accounts")->group(function () {
         Route::get("/", [AccountController::class, 'index']);
         Route::post("/", [AccountController::class, 'store']); // Tạo mới
@@ -116,6 +122,16 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [AccountController::class, 'update']); // cập nhật toàn bộ
         Route::patch("/{id}", [AccountController::class, 'restore']); // cập nhật 1 phần 
         Route::delete("/{id}", [AccountController::class, 'destroy']); // xóa mềm 
+=======
+    Route::prefix("/accounts")->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
+        Route::get("/");
+        Route::get("/{id}");
+        Route::post("/");
+        Route::put("/{id}");
+        Route::patch("/{id}");
+        Route::delete("/{id}");
+>>>>>>> 068a65f30c020bebf3750845f2725c1be17e7501
     });
     Route::prefix("/cart")->group(function () {
         Route::get("/");

@@ -3,12 +3,12 @@ import { useRoutes } from "react-router-dom";
 import adminRoutes from "@routers/Admin";
 import clientRoutes from "./routers/Client";
 import authRoutes from "./routers/Auth";
-import { useFetch } from "./utils/hook";
+import { useGet } from "./utils/hook";
 import LoadingDomain from "./components/Loading/LoadingDomain";
-import { ActiveDomain } from "./pages";
-
+import { ActiveDomain, NotFound } from "./pages";
+import AuthContext from "./contexts/AuthContex";
 export default function App() {
-  const { data, loading, error } = useFetch("/domain", "get");
+  const { loading, error } = useGet("/domain");
   const routes = useRoutes([...authRoutes, ...clientRoutes, ...adminRoutes]);
 
   if (loading) return <LoadingDomain />;
@@ -17,6 +17,8 @@ export default function App() {
     const code = error?.response?.data?.code;
     if (code === "NO_ACTIVE") {
       return <ActiveDomain />;
+    } else if (code === "NO_API_KEY") {
+      return <NotFound />;
     }
   }
 

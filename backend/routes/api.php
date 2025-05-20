@@ -56,11 +56,10 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/", [HomeController::class, "domain"]);
     });
 });
-Route::get('/demo', [HomeController::class, 'domain']);
 Route::middleware(['jwt'])->group(function () {
 
 
-    Route::post('/logout', [AuthController::class, 'logout']);
+    
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -115,6 +114,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
     Route::prefix("/accounts")->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout']);
         Route::get("/");
         Route::get("/{id}");
         Route::post("/");

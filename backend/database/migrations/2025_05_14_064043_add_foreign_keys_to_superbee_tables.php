@@ -22,14 +22,14 @@ return new class extends Migration
 
         // bank_histories
         Schema::table('bank_histories', function (Blueprint $table) {
-            $table->foreign('discount_code_id')->references('id')->on('discount_codes')->onDelete('set null');
+            $table->foreign('donate_promotion_id')->references('id')->on('donate_promotions')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('web_id')->references('id')->on('webs')->onDelete('set null');
         });
 
         // card_histories
         Schema::table('card_histories', function (Blueprint $table) {
-            $table->foreign('discount_code_id')->references('id')->on('discount_codes')->onDelete('set null');
+            $table->foreign('donate_promotion_id')->references('id')->on('donate_promotions')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->foreign('web_id')->references('id')->on('webs')->onDelete('set null');
         });

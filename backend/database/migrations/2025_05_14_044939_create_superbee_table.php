@@ -47,7 +47,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable();
             $table->unsignedBigInteger('web_id')->nullable();
             $table->integer('amount')->nullable();
-            $table->unsignedBigInteger("discount_code_id")->nullable();
+            $table->unsignedBigInteger("donate_promotion_id")->nullable();
             $table->timestamps();
         });
 
@@ -65,7 +65,7 @@ return new class extends Migration
             $table->integer('status')->nullable();
             $table->integer('message')->nullable();
             $table->text('sign')->nullable();
-            $table->unsignedBigInteger("discount_code_id")->nullable();
+            $table->unsignedBigInteger("donate_promotion_id")->nullable();
             $table->timestamps();
         });
 

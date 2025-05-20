@@ -15,8 +15,9 @@ use App\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-use App\Http\Controllers\AccountController;
+
 use App\Http\Controllers\DonatePromotionController;
+
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -115,13 +116,13 @@ Route::middleware(['jwt'])->group(function () {
     });
 
     Route::prefix("/accounts")->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+
+        Route::get("/", [UserController::class, 'index']);
+        Route::post("/", [UserController::class, 'store']); // Tạo mới
+        Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
+        Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
+        Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 
+        Route::delete("/{id}", [UserController::class, 'destroy']); // xóa mềm 
 
     });
     Route::prefix("/cart")->group(function () {

@@ -203,4 +203,33 @@ class CategoryController extends Controller
             ], 500);
         }
     }
+
+    public function updatePatch(Request $request, $id)
+    {
+        try {
+            $category = Category::findOrFail($id);
+
+            $category->update([
+                'status' => 1,
+                'updated_by' => $request->user_id
+            ]);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Khôi phục danh mục thành công',
+                'data' => $category
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Danh mục không tồn tại'
+            ], 404);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra khi khôi phục danh mục',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

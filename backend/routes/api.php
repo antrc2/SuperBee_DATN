@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\DonatePromotionController;
 use App\Http\Controllers\UserController;
+use App\Models\DonatePromotion;
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -172,9 +173,9 @@ Route::middleware(['jwt'])->group(function () {
         Route::get("/", [DonatePromotionController::class, 'index']);
         Route::get("/{id}", [DonatePromotionController::class, 'show']);
         Route::post("/", [DonatePromotionController::class, 'store']);
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::put("/{id}", [DonatePromotionController::class,'update']);
+        Route::patch("/{id}", [DonatePromotionController::class,'undo']);
+        Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
     });
 
     

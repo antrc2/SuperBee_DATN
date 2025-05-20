@@ -16,8 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\AccountController;
-
-
+use App\Http\Controllers\DonatePromotionController;
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -114,15 +113,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
-<<<<<<< HEAD
-    Route::middleware(['jwt'])->prefix("/accounts")->group(function () {
-        Route::get("/", [AccountController::class, 'index']);
-        Route::post("/", [AccountController::class, 'store']); // Tạo mới
-        Route::get("/{id}", [AccountController::class, 'show']); // Chi tiết   
-        Route::put("/{id}", [AccountController::class, 'update']); // cập nhật toàn bộ
-        Route::patch("/{id}", [AccountController::class, 'restore']); // cập nhật 1 phần 
-        Route::delete("/{id}", [AccountController::class, 'destroy']); // xóa mềm 
-=======
+
     Route::prefix("/accounts")->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get("/");
@@ -131,7 +122,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");
->>>>>>> 068a65f30c020bebf3750845f2725c1be17e7501
+
     });
     Route::prefix("/cart")->group(function () {
         Route::get("/");
@@ -176,10 +167,10 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
 
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [DonatePromotionController::class, 'index']);
+        Route::get("/{id}", [DonatePromotionController::class, 'show']);
+        Route::post("/", [DonatePromotionController::class, 'store']);
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");

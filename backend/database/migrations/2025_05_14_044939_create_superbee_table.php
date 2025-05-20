@@ -139,6 +139,7 @@ return new class extends Migration
             $table->integer('amount')->nullable();
             $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();
+            $table->integer('status')->nullable()->default(1);
             $table->timestamps();
         });
 

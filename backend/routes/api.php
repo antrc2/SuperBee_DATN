@@ -81,7 +81,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::prefix('/categories')->group(function () {
         Route::post("/", [CategoryController::class, 'store']);
         Route::put("/{id}", [CategoryController::class, 'update']);
-        // Route::patch("/{id}", [CategoryController::class, 'partialUpdate']);
+        Route::patch("/{id}", [CategoryController::class, 'updatePatch']);
         Route::delete("/{id}", [CategoryController::class, 'destroy']);
     });
     Route::prefix('/news')->group(function () {

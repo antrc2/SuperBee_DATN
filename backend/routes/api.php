@@ -12,7 +12,6 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 
 

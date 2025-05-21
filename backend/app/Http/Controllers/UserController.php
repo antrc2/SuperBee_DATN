@@ -20,7 +20,6 @@ class UserController extends Controller
         try {
             $query = User::query();
 
-            //lọc theo tên nếu có field
             // Tìm kiếm theo field nếu có
             if ($request->filled('field') && trim($request->field) !== '') {
                 $search = $request->field;
@@ -34,13 +33,10 @@ class UserController extends Controller
                 });
             }
 
+            // Lọc theo web_id nếu có
             if ($request->filled('web_id')) {
                 $query->where('web_id', $request->web_id);
             }
-
-            //phân trang 
-            $offset = (int) $request->input('offset', 0);
-            $limit = (int) $request->input('limit', 10);
 
             // Lấy các trường cần select, mặc định là lấy tất cả
             $fields = $request->input('fields');
@@ -48,7 +44,15 @@ class UserController extends Controller
                 $fields = explode(',', $fields);
                 $query->select($fields);
             }
-            $accounts = $query->offset($offset)->limit($limit)->get();
+
+            // Áp dụng phân trang nếu có truyền vào offset hoặc limit
+            if ($request->filled('offset') || $request->filled('limit')) {
+                $offset = (int) $request->input('offset', 0);
+                $limit = (int) $request->input('limit', 10);
+                $query->offset($offset)->limit($limit);
+            }
+
+            $accounts = $query->get();
 
             return response()->json([
                 'status' => true,
@@ -63,6 +67,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -105,6 +110,17 @@ class UserController extends Controller
     {
         try {
             $query = User::find($id);
+            $validatedData = $request->validate([
+                'username' => 'sometimes|string|max:255',
+                'fullname' => 'sometimes|string|max:255',
+                'email'    => 'sometimes|email|max:255',
+                'phone'    => 'sometimes|string|max:20',
+                'avatar_url' => 'sometimes|url',
+                'password' => 'sometimes|string|min:6',
+            ]);
+            if (isset($validatedData['password'])) {
+                $validatedData['password'] = Hash::make($validatedData['password']);
+            }
             if (!$query) {
                 return response()->json([
                     'status' => false,
@@ -112,13 +128,7 @@ class UserController extends Controller
                 ]);
             }
 
-            // Lấy các field hợp lệ    
-            $input = $request->only($query->getfillable());
-            if ($request->filled('password')) {
-                $input['password'] = Hash::make($request->input('password'));
-            }
-
-            $query->update($input);
+            $query->update($validatedData);
             return response()->json([
                 'status' => true,
                 'message' => 'Cập nhật tài khoản',

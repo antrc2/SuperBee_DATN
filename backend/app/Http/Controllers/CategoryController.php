@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
@@ -14,22 +13,28 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        try {
-            // $query = $request->input('query', '');
-            // $perPage = $request->input('per_page', 10);
+       try {
+            $limit = $request->input('limit', 10);
+            $offset = $request->input('offset', 0);
 
-            $categories = Category::all();
+            $categories = Category::skip($offset)
+                                ->take($limit)
+                                ->get();
+
+            $total = Category::count();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy danh sách danh mục thành công',
-                'data' => $categories
+                'data' => $categories,
+                'total' => $total,
+                'limit' => $limit,
+                'offset' => $offset
             ]);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi lấy danh sách danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -39,7 +44,7 @@ class CategoryController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'image_url' => 'nullable|string|max:255',
+                'image_url' => 'required|string|max:255',
             ]);
 
             if ($validator->fails()) {
@@ -49,8 +54,6 @@ class CategoryController extends Controller
                     'errors' => $validator->errors()
                 ], 400);
             }
-
-            // Kiểm tra tên danh mục đã tồn tại chưa
             $existingCategory = Category::where('name', $request->name)->first();
             if ($existingCategory) {
                 return response()->json([
@@ -64,6 +67,7 @@ class CategoryController extends Controller
                 'image_url' => $request->image_url,
                 'status' => 1,
                 'created_by' => $request->user_id,
+                'updated_by' => $request->user_id
             ]);
 
             return response()->json([
@@ -75,7 +79,6 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi tạo danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -98,7 +101,6 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi lấy thông tin danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -109,19 +111,23 @@ class CategoryController extends Controller
             $category = Category::findOrFail($id);
 
             $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
+                'name' => 'nullable|string|max:255',
                 'image_url' => 'nullable|string|max:255',
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Dữ liệu không hợp lệ hoặc thiếu thông tin',
+                    'message' => 'Dữ liệu không hợp lệ',
                     'errors' => $validator->errors()
                 ], 400);
             }
 
-            if ($request->name !== $category->name) {
+            $updateData = [
+                'updated_by' => $request->user_id,
+            ];
+
+            if ($request->has('name') && $request->filled('name')) {
                 $existingCategory = Category::where('name', $request->name)
                     ->where('id', '!=', $category->id)
                     ->first();
@@ -129,21 +135,14 @@ class CategoryController extends Controller
                 if ($existingCategory) {
                     return response()->json([
                         'status' => false,
-                        'message' => 'Tài nguyên đã tồn tại'
+                        'message' => 'Tên danh mục đã tồn tại'
                     ], 409);
                 }
+                $updateData['name'] = $request->name;
             }
 
-            $updateData = [
-                'name' => $request->name,
-                'updated_by' => $request->user_id,
-            ];
-
-            if ($request->has('image_url') && $request->image_url !== null && $request->image_url !== '') {
+            if ($request->has('image_url') && $request->filled('image_url')) {
                 $updateData['image_url'] = $request->image_url;
-            }
-            if ($request->filled('status')) {
-                $updateData['status'] = $request->status;
             }
 
             $category->update($updateData);
@@ -162,14 +161,13 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi cập nhật danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     public function destroy(Request $request, $id)
     {
-        try {
+       try {
             $category = Category::findOrFail($id);
 
             if ($category->products()->exists()) {
@@ -199,16 +197,21 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi xóa danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
-
     }
 
     public function updatePatch(Request $request, $id)
     {
         try {
             $category = Category::findOrFail($id);
+
+            if ($category->status === 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Danh mục đã được khôi phục trước đó'
+                ], 400);
+            }
 
             $category->update([
                 'status' => 1,
@@ -229,10 +232,7 @@ class CategoryController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi khôi phục danh mục',
-                'error' => $e->getMessage()
             ], 500);
         }
 
-    }
-    // Thiếu phần patch (khôi phục xóa mềm)
 }

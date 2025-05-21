@@ -123,7 +123,8 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         RefreshToken::where('user_id', $request->user_id)->delete();
-        return response()->json(['message' => 'Logged out', "status" => true, 'data' => []], 200);
+        $user = User::find($request->user_id);
+        return response()->json(['message' => 'Logged out', "status" => true, 'data' => ["user" => $user]], 200);
     }
     public function register(Request $request)
     {

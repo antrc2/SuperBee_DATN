@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Route;
 Route::post("/domain/active", [HomeController::class, "active"]);
 
 
-
+Route::post("/domain/active", [HomeController::class, "active"]);
 Route::middleware(['authenticate'])->group(function () {
 
 
@@ -60,6 +60,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
 
     Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");

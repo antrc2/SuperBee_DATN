@@ -10,10 +10,6 @@ const defaultConfig = {
   timeout: 10_000
 };
 
-<<<<<<< HEAD
-
-=======
->>>>>>> b4a9075cb145a0852bc09413c7d824a2244102e9
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {

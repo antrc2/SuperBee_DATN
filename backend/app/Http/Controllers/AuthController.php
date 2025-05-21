@@ -57,7 +57,7 @@ class AuthController extends Controller
 
 
         // Tìm user theo username
-        $user = \App\Models\User::where('username', $credentials['username'])->first();
+        $user = \App\Models\User::where('username', $credentials['username'])->where('web_id', $web->id)->first();
 
         if (!$user) {
             return response()->json(['error' => 'User not found'], 401);
@@ -67,8 +67,6 @@ class AuthController extends Controller
         if (!Hash::check($credentials["password"], $user->password)) {
             return response()->json(['error' => 'Invalid password'], 401);
         }
-
-
         // ✅ Build payload + tạo access token
         $claims = $this->buildJwtClaims($user, $request);
         $accessToken = auth()->claims($claims)->login($user);
@@ -130,12 +128,11 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         // $request->validate([
-        //     'username' => 'required|string|max:255',
-        //     'password' => 'required|string|min:8|confirmed',
+        //     'username' => 'required|string|max:255|unique:users',
+        //     'password' => 'required|string|min:8',
         //     'fullname' => 'required|string|max:255',
-        //     "avatar_url" => 'string|max:255',
+        //     'avatar_url' => 'nullable|url',
         // ]);
-        // dd($request);
         $user = User::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
@@ -143,7 +140,7 @@ class AuthController extends Controller
             'avatar_url' => $request->avatar_url,
         ]);
 
-        return response()->json(['message' => 'User registered successfully']);
+        return response()->json(['message' => 'User registered successfully', 'status' => true, 'data' => $user], 201);
     }
     public function generateAccessToken($user, $apiKey)
     {

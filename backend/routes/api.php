@@ -57,6 +57,7 @@ Route::middleware(['authenticate'])->group(function () {
 });
 Route::middleware(['jwt'])->group(function () {
 
+    Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
 
     Route::get('/me', [AuthController::class, 'me']);
     Route::prefix('/reviews')->group(function () {

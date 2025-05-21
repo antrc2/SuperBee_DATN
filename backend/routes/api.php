@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 Route::post("/domain/active", [HomeController::class, "active"]);
 
 
-
+Route::post("/domain/active", [HomeController::class, "active"]);
 Route::middleware(['authenticate'])->group(function () {
 
 
@@ -192,5 +192,4 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
 
     });
-
 });

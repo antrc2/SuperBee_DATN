@@ -4,12 +4,15 @@
 
 
 
+
 use App\Http\Controllers\DiscountCodeController;
 
 use App\Http\Controllers\DonatePromotionController;
 use App\Http\Controllers\UserController;
+
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 
 
@@ -51,6 +54,7 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
+   
     Route::prefix('/card_histories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
@@ -170,6 +174,15 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
 
+
+    Route::prefix("/discount_codes")->group(function () {
+        Route::get("/", [DiscountCodeController::class, 'index']);
+        Route::get("/{id}", [DiscountCodeController::class, 'show']);
+        Route::post("/", [DiscountCodeController::class, 'store']);
+        Route::put("/{id}", [DiscountCodeController::class, 'update']);
+        Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
+        Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
+
     Route::prefix("/donate_promotions")->group(function () {
         Route::get("/", [DonatePromotionController::class, 'index']);
         Route::get("/{id}", [DonatePromotionController::class, 'show']);
@@ -177,6 +190,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DonatePromotionController::class,'update']);
         Route::patch("/{id}", [DonatePromotionController::class,'undo']);
         Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
+
     });
 
 });

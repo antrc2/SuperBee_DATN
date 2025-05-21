@@ -17,28 +17,17 @@ class DiscountCodeController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = DiscountCode::orderBy('created_at', 'desc');
-
-            // Xử lý phân trang
-            $limit = $request->query('limit', 10);
-            $offset = $request->query('offset', 0);
-
-            $total = $query->count();
-            $codes = $query->skip($offset)->take($limit)->get();
+            // $query = DiscountCode::orderBy('created_at', 'desc');
+            $codes = DiscountCode::all();
 
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
                 'status' => true,
-                'data' => [
-                    'codes' => $codes,
-                    'total' => $total,
-                    'limit' => (int) $limit,
-                    'offset' => (int) $offset
-                ]
+                'data' => $codes 
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi khi lấy danh sách mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra',
                 'status' => false
             ], 500);
         }

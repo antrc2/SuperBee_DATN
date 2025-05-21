@@ -12,7 +12,6 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 
 
@@ -64,9 +63,6 @@ Route::middleware(['authenticate'])->group(function () {
     });
 });
 Route::middleware(['jwt'])->group(function () {
-
-
-
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -182,7 +178,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DiscountCodeController::class, 'update']);
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
-
+    });
     Route::prefix("/donate_promotions")->group(function () {
         Route::get("/", [DonatePromotionController::class, 'index']);
         Route::get("/{id}", [DonatePromotionController::class, 'show']);

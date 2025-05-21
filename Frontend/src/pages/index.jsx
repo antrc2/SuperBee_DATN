@@ -15,6 +15,7 @@ import Login from "./Auth/Login";
 import Home from "./Clients/Home/Home";
 import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
 import Error from "./Error/Error";
+import NotFound from "./NotFound/NotFound";
 
 export {
   AccountListPage,
@@ -30,5 +31,6 @@ export {
   Login,
   ActiveDomain,
   Home,
+  NotFound,
   Error
 };

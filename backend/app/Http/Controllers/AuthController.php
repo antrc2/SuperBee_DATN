@@ -52,7 +52,7 @@ class AuthController extends Controller
     }
     public function login(Request $request)
     {
-        $web = Web::where('api_key', $request->api_key)->first();
+        $web = Web::where('id', $request->web_id)->first();
         $credentials = $request->only('username', 'password');
 
 

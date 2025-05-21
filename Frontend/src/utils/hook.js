@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { useHistory, useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "./http";
 import queryString from "query-string";
 // Quản lý trạng thái bật/tắt
@@ -213,49 +213,59 @@ function setSessionValue(key, value) {
   }
 }
 function useUrlUtils() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const location = useLocation();
 
-  // Hàm 1: Điều hướng đến một URL mới
+  /**
+   * Navigate to a new URL
+   * @param {string} url - target URL/path
+   * @param {{ replace?: boolean, state?: any }} options
+   */
   const navigateTo = (url, options = {}) => {
-    const { replace = false, state = {} } = options;
-    if (replace) {
-      history.replace(url, state);
-    } else {
-      history.push(url, state);
-    }
+    const { replace = false, state } = options;
+    navigate(url, { replace, state });
   };
 
-  // Hàm 2: Lấy toàn bộ thông tin URL hiện tại
-  const getCurrentUrlInfo = () => {
-    return {
-      pathname: location.pathname,
-      search: location.search,
-      hash: location.hash,
-      state: location.state,
-      fullUrl: `${location.pathname}${location.search}${location.hash}`
-    };
-  };
+  /**
+   * Get current URL information
+   */
+  const getCurrentUrlInfo = () => ({
+    pathname: location.pathname,
+    search: location.search,
+    hash: location.hash,
+    state: location.state,
+    fullUrl: `${location.pathname}${location.search}${location.hash}`
+  });
 
-  // Hàm 3: Lấy query parameters từ URL
-  const getQueryParams = () => {
-    return queryString.parse(location.search);
-  };
+  /**
+   * Parse and return query parameters as an object
+   */
+  const getQueryParams = () => queryString.parse(location.search);
 
-  // Hàm 4: Thêm hoặc cập nhật query parameters
-  const updateQueryParams = (newParams) => {
+  /**
+   * Add or update query parameters
+   * @param {Record<string, any>} newParams
+   * @param {{ replace?: boolean, state?: any }} options
+   */
+  const updateQueryParams = (newParams, options = {}) => {
     const currentParams = queryString.parse(location.search);
-    const updatedParams = { ...currentParams, ...newParams };
-    const newSearch = queryString.stringify(updatedParams);
-    history.push(`${location.pathname}?${newSearch}`);
+    const updated = { ...currentParams, ...newParams };
+    const newSearch = queryString.stringify(updated);
+    const path = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+    navigate(path, options);
   };
 
-  // Hàm 5: Xóa một query parameter
-  const removeQueryParam = (paramName) => {
+  /**
+   * Remove a specific query parameter
+   * @param {string} paramName
+   * @param {{ replace?: boolean, state?: any }} options
+   */
+  const removeQueryParam = (paramName, options = {}) => {
     const currentParams = queryString.parse(location.search);
     delete currentParams[paramName];
     const newSearch = queryString.stringify(currentParams);
-    history.push(`${location.pathname}?${newSearch}`);
+    const path = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
+    navigate(path, options);
   };
 
   return {
@@ -266,6 +276,7 @@ function useUrlUtils() {
     removeQueryParam
   };
 }
+
 
 // Ví dụ sử dụng trong một component
 // function MyComponent() {

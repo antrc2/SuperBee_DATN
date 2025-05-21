@@ -51,4 +51,12 @@ class DiscountCode extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+    public function bank(): BelongsTo
+    {
+        return $this->belongsTo(BankHistory::class);
+    }
+    public function card(): BelongsTo
+    {
+        return $this->belongsTo(CardHistory::class);
+    }
 }

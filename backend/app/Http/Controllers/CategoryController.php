@@ -202,6 +202,7 @@ class CategoryController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+
     }
 
     public function updatePatch(Request $request, $id)
@@ -231,5 +232,7 @@ class CategoryController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+
     }
+    // Thiếu phần patch (khôi phục xóa mềm)
 }

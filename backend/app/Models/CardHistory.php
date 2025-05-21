@@ -37,4 +37,8 @@ class CardHistory extends Model
     {
         return $this->belongsTo(Web::class);
     }
+        public function discount_code(): BelongsTo
+    {
+        return $this->belongsTo(DiscountCode::class);
+    }
 }

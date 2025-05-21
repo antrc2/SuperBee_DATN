@@ -1,17 +1,11 @@
 <?php
 
-
-
-
-
-
-use App\Http\Controllers\DiscountCodeController;
-
 use App\Http\Controllers\DonatePromotionController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 
 
@@ -29,7 +23,6 @@ Route::middleware(['authenticate'])->group(function () {
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
-
     });
     // Categories
     Route::prefix('/categories')->group(function () {
@@ -53,7 +46,7 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
-   
+
     Route::prefix('/card_histories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
@@ -63,6 +56,11 @@ Route::middleware(['authenticate'])->group(function () {
     });
 });
 Route::middleware(['jwt'])->group(function () {
+
+    Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
+
+    Route::get('/me', [AuthController::class, 'me']);
+    Route::get('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -120,7 +118,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::prefix("/accounts")->group(function () {
 
         Route::get("/", [UserController::class, 'index']);
-        Route::post("/",[AuthController::class, 'register'] ); // Tạo mới
+        Route::post("/", [AuthController::class, 'register']); // Tạo mới
         Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
         Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
         Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 
@@ -178,14 +176,14 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DiscountCodeController::class, 'update']);
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
-    });
-    Route::prefix("/donate_promotions")->group(function () {
-        Route::get("/", [DonatePromotionController::class, 'index']);
-        Route::get("/{id}", [DonatePromotionController::class, 'show']);
-        Route::post("/", [DonatePromotionController::class, 'store']);
-        Route::put("/{id}", [DonatePromotionController::class,'update']);
-        Route::patch("/{id}", [DonatePromotionController::class,'undo']);
-        Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
 
+        Route::prefix("/donate_promotions")->group(function () {
+            Route::get("/", [DonatePromotionController::class, 'index']);
+            Route::get("/{id}", [DonatePromotionController::class, 'show']);
+            Route::post("/", [DonatePromotionController::class, 'store']);
+            Route::put("/{id}", [DonatePromotionController::class, 'update']);
+            Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
+            Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+        });
     });
 });

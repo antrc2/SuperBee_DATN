@@ -16,7 +16,7 @@ export function useApiKey(enabled = true) {
         console.error(err);
         setApiKey(null);
       });
-  }, []);
+  }, [enabled]);
 
   return apiKey;
 }

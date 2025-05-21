@@ -14,6 +14,8 @@ import Login from "./Auth/Login";
 // Client
 import Home from "./Clients/Home/Home";
 import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
+import Error from "./Error/Error";
+import NotFound from "./NotFound/NotFound";
 
 export {
   AccountListPage,
@@ -28,5 +30,7 @@ export {
   EditDonatePromotionPage,
   Login,
   ActiveDomain,
-  Home
+  Home,
+  NotFound,
+  Error
 };

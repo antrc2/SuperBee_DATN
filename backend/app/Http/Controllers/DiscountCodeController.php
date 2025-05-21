@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DiscountCode;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -41,10 +42,12 @@ class DiscountCodeController extends Controller
                 'status' => false
             ], 500);
         }
+
     }
 
     // GET /discount_codes/{id}
     public function show($id)
+
     {
         try {
             $code = DiscountCode::find($id);
@@ -529,5 +532,6 @@ class DiscountCodeController extends Controller
                 'status' => false
             ], 500);
         }
+
     }
 }

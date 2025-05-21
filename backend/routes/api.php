@@ -2,21 +2,35 @@
 
 
 
-use App\Http\Controllers\CategoryController;
 
+
+
+use App\Http\Controllers\DiscountCodeController;
+
+use App\Http\Controllers\DonatePromotionController;
+use App\Http\Controllers\UserController;
+
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
+
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+
+Route::post("/domain/active", [HomeController::class, "active"]);
 
 
 
 Route::middleware(['authenticate'])->group(function () {
 
+
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
+
     });
     // Categories
     Route::prefix('/categories')->group(function () {
@@ -45,12 +59,14 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [HomeController::class, "domain"]);
+    });
 });
-Route::get('/demo', [HomeController::class, 'domain']);
 Route::middleware(['jwt'])->group(function () {
 
 
-    Route::post('/logout', [AuthController::class, 'logout']);
+
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -81,7 +97,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::prefix('/categories')->group(function () {
         Route::post("/", [CategoryController::class, 'store']);
         Route::put("/{id}", [CategoryController::class, 'update']);
-        // Route::patch("/{id}", [CategoryController::class, 'partialUpdate']);
+        Route::patch("/{id}", [CategoryController::class, 'updatePatch']);
         Route::delete("/{id}", [CategoryController::class, 'destroy']);
     });
     Route::prefix('/news')->group(function () {
@@ -104,13 +120,16 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
+
     Route::prefix("/accounts")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+
+        Route::get("/", [UserController::class, 'index']);
+        Route::post("/",[AuthController::class, 'register'] ); // Tạo mới
+        Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
+        Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
+        Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 
+        Route::delete("/{id}", [UserController::class, 'destroy']); // xóa mềm 
+
     });
     Route::prefix("/cart")->group(function () {
         Route::get("/");
@@ -155,6 +174,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
 
+
     Route::prefix("/discount_codes")->group(function () {
         Route::get("/", [DiscountCodeController::class, 'index']);
         Route::get("/{id}", [DiscountCodeController::class, 'show']);
@@ -162,5 +182,15 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DiscountCodeController::class, 'update']);
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
+
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [DonatePromotionController::class, 'index']);
+        Route::get("/{id}", [DonatePromotionController::class, 'show']);
+        Route::post("/", [DonatePromotionController::class, 'store']);
+        Route::put("/{id}", [DonatePromotionController::class,'update']);
+        Route::patch("/{id}", [DonatePromotionController::class,'undo']);
+        Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
+
     });
+
 });

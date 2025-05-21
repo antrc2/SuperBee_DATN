@@ -6,7 +6,8 @@
 
 use App\Http\Controllers\DiscountCodeController;
 
-
+use App\Http\Controllers\DonatePromotionController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
@@ -16,9 +17,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
-use App\Http\Controllers\DonatePromotionController;
-use App\Http\Controllers\UserController;
-use App\Models\DonatePromotion;
+Route::post("/domain/active", [HomeController::class, "active"]);
+
+
 
 Route::middleware(['authenticate'])->group(function () {
 
@@ -61,7 +62,7 @@ Route::middleware(['authenticate'])->group(function () {
 Route::middleware(['jwt'])->group(function () {
 
 
-    
+
     Route::prefix('/reviews')->group(function () {
         Route::post("/");
         Route::put("/{id}");
@@ -178,5 +179,4 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
     });
 
-    
 });

@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useHistory, useLocation } from "react-router-dom";
 import api from "./http";
+import queryString from "query-string";
 // Quản lý trạng thái bật/tắt
 // const [isOpen, toggleOpen] = useToggle(false);
 function useToggle(initialValue = false) {
@@ -9,42 +11,82 @@ function useToggle(initialValue = false) {
 }
 // useFetch - Gọi API và quản lý trạng thái
 // Công dụng: Xử lý việc gọi API, quản lý trạng thái loading, dữ liệu trả về và lỗi.
-// const { data, loading, error } = useFetch("/auth/login", "post", {
-//   email: "abc@example.com",
-//   password: "123456"
+// post
+// const { data, loading, error } = useFetch("/login", "post", {
+//   data: { username: "admin", password: "123456" }
 // });
-function useFetch(url, method = "get", payload = null) {
+// get
+// const { data, loading, error } = useFetch("/products", "get", {
+//   params: { category: "fruit" }
+// });
+function useFetchBase(url, method, options = {}) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const stableOptions = useMemo(() => JSON.stringify(options), [options]);
+
   useEffect(() => {
     const controller = new AbortController();
+    setLoading(true);
+    setError(null);
+    setData(null);
 
-    async function fetchData() {
-      setLoading(true);
+    const fetchData = async () => {
       try {
-        const response = await api.request({
+        const res = await api.request({
           url,
           method,
-          data: payload,
-          signal: controller.signal
+          signal: controller.signal,
+          ...options
         });
-        setData(response.data);
+        if (res.status >= 200 && res.status < 300) {
+          setData(res.data);
+          setLoading(false); // Chỉ tắt loading sau khi setData
+        } else {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
       } catch (err) {
         if (err.name !== "CanceledError" && err.name !== "AbortError") {
           setError(err);
+          setLoading(false); // Tắt loading khi có lỗi
         }
-      } finally {
-        setLoading(false);
       }
-    }
+    };
 
     fetchData();
-    return () => controller.abort();
-  }, [url, method, JSON.stringify(payload)]); // cần stringify để tránh loop
+
+    return () => {
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url, method, stableOptions]);
 
   return { data, loading, error };
+}
+// Hook cho GET
+function useGet(url, options = {}) {
+  return useFetchBase(url, "get", options);
+}
+
+// Hook cho POST
+function usePost(url, options = {}) {
+  return useFetchBase(url, "post", options);
+}
+
+// Hook cho PUT
+function usePut(url, options = {}) {
+  return useFetchBase(url, "put", options);
+}
+
+// Hook cho DELETE
+function useDelete(url, options = {}) {
+  return useFetchBase(url, "delete", options);
+}
+
+// Hook cho PATCH
+function usePatch(url, options = {}) {
+  return useFetchBase(url, "patch", options);
 }
 // useDebounce - Trì hoãn cập nhật giá trị
 // Công dụng: Trì hoãn cập nhật giá trị, hữu ích trong các trường hợp như tìm kiếm để giảm tần suất xử lý.
@@ -139,14 +181,144 @@ function setApiKeyHook(key) {
 function getApiKey() {
   return apiKey;
 }
+function useSessionStorage(key, initialValue = null) {
+  // Khởi tạo state từ sessionStorage (hoặc initialValue nếu chưa có)
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.sessionStorage.getItem(key);
+      return item !== null ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.error(`Lỗi đọc sessionStorage key="${key}":`, error);
+      return initialValue;
+    }
+  });
+
+  // Mỗi khi key hoặc storedValue thay đổi, update vào sessionStorage
+  useEffect(() => {
+    try {
+      window.sessionStorage.setItem(key, JSON.stringify(storedValue));
+    } catch (error) {
+      console.error(`Lỗi ghi sessionStorage key="${key}":`, error);
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setStoredValue];
+}
+function setSessionValue(key, value) {
+  try {
+    const serialized = JSON.stringify(value);
+    sessionStorage.setItem(key, serialized);
+  } catch (e) {
+    console.error(`Không thể lưu sessionStorage với key="${key}":`, e);
+  }
+}
+function useUrlUtils() {
+  const history = useHistory();
+  const location = useLocation();
+
+  // Hàm 1: Điều hướng đến một URL mới
+  const navigateTo = (url, options = {}) => {
+    const { replace = false, state = {} } = options;
+    if (replace) {
+      history.replace(url, state);
+    } else {
+      history.push(url, state);
+    }
+  };
+
+  // Hàm 2: Lấy toàn bộ thông tin URL hiện tại
+  const getCurrentUrlInfo = () => {
+    return {
+      pathname: location.pathname,
+      search: location.search,
+      hash: location.hash,
+      state: location.state,
+      fullUrl: `${location.pathname}${location.search}${location.hash}`
+    };
+  };
+
+  // Hàm 3: Lấy query parameters từ URL
+  const getQueryParams = () => {
+    return queryString.parse(location.search);
+  };
+
+  // Hàm 4: Thêm hoặc cập nhật query parameters
+  const updateQueryParams = (newParams) => {
+    const currentParams = queryString.parse(location.search);
+    const updatedParams = { ...currentParams, ...newParams };
+    const newSearch = queryString.stringify(updatedParams);
+    history.push(`${location.pathname}?${newSearch}`);
+  };
+
+  // Hàm 5: Xóa một query parameter
+  const removeQueryParam = (paramName) => {
+    const currentParams = queryString.parse(location.search);
+    delete currentParams[paramName];
+    const newSearch = queryString.stringify(currentParams);
+    history.push(`${location.pathname}?${newSearch}`);
+  };
+
+  return {
+    navigateTo,
+    getCurrentUrlInfo,
+    getQueryParams,
+    updateQueryParams,
+    removeQueryParam
+  };
+}
+
+// Ví dụ sử dụng trong một component
+// function MyComponent() {
+//   const {
+//     navigateTo,
+//     getCurrentUrlInfo,
+//     getQueryParams,
+//     updateQueryParams,
+//     removeQueryParam
+//   } = useUrlUtils();
+
+//   const handleNavigate = () => {
+//     navigateTo("/home", { state: { from: "MyComponent" } });
+//   };
+
+//   const handleUpdateQuery = () => {
+//     updateQueryParams({ search: "react", page: 1 });
+//   };
+
+//   const handleRemoveQuery = () => {
+//     removeQueryParam("page");
+//   };
+
+//   const urlInfo = getCurrentUrlInfo();
+//   const queryParams = getQueryParams();
+
+//   return (
+//     <div>
+//       <button onClick={handleNavigate}>Go to Home</button>
+//       <button onClick={handleUpdateQuery}>Update Query Params</button>
+//       <button onClick={handleRemoveQuery}>Remove Page Param</button>
+//       <p>Current URL Info: {JSON.stringify(urlInfo)}</p>
+//       <p>Query Params: {JSON.stringify(queryParams)}</p>
+//     </div>
+//   );
+// }
+
+// export default MyComponent;
 export {
   useClickOutside,
   useDebounce,
-  useFetch,
   useLocalStorage,
   useScrollPosition,
   useToggle,
   writeToLocalStorage,
   getApiKey,
-  setApiKeyHook
+  setApiKeyHook,
+  setSessionValue,
+  useSessionStorage,
+  useGet,
+  usePost,
+  usePut,
+  useDelete,
+  usePatch,
+  useUrlUtils
 };

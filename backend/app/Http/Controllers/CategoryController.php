@@ -13,7 +13,7 @@ class CategoryController extends Controller
 {
     public function index(Request $request)
     {
-        try {
+       try {
             $limit = $request->input('limit', 10);
             $offset = $request->input('offset', 0);
 
@@ -167,7 +167,7 @@ class CategoryController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        try {
+       try {
             $category = Category::findOrFail($id);
 
             if ($category->products()->exists()) {
@@ -234,5 +234,5 @@ class CategoryController extends Controller
                 'message' => 'Có lỗi xảy ra khi khôi phục danh mục',
             ], 500);
         }
-    }
+
 }

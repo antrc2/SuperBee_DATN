@@ -5,12 +5,18 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+
+Route::prefix("/callback")-> group( function (){
+    Route::post("/card");
+    Route::post("/bank");
+});
 
 Route::post("/domain/active", [HomeController::class, "active"]);
 
@@ -41,6 +47,11 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/");
         Route::get("/{id}");
     });
+
+    Route::prefix('/donate_promotions')->group(function(){
+        Route::get("/", [DonatePromotionController::class, 'index']);
+        Route::get("/{id}", [DonatePromotionController::class, 'show']);
+    });
     Route::prefix('/bank_histories')->group(function () {
         Route::get("/");
         Route::get("/{id}");
@@ -58,10 +69,12 @@ Route::middleware(['jwt'])->group(function () {
 
 
     Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
-
+    
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
+        Route::get("/");
+        Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");
         Route::patch("/{id}");
@@ -76,12 +89,16 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
     Route::prefix('/card_histories')->group(function () {
+        Route::get("/");
+        Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
     Route::prefix('/bank_histories')->group(function () {
+        Route::get("/");
+        Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");
         Route::patch("/{id}");
@@ -89,18 +106,24 @@ Route::middleware(['jwt'])->group(function () {
     });
     // Categories
     Route::prefix('/categories')->group(function () {
+        Route::get("/", [CategoryController::class, 'index']);
+        Route::get("/{id}", [CategoryController::class, 'show']);
         Route::post("/", [CategoryController::class, 'store']);
         Route::put("/{id}", [CategoryController::class, 'update']);
         Route::patch("/{id}", [CategoryController::class, 'updatePatch']);
         Route::delete("/{id}", [CategoryController::class, 'destroy']);
     });
     Route::prefix('/news')->group(function () {
+        Route::get("/");
+        Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");
         Route::patch("/{id}");
         Route::delete("/{id}");
     });
     Route::prefix('/products')->group(function () {
+        Route::get("/");
+        Route::get("/{id}");
         Route::post("/");
         Route::put("/{id}");
         Route::patch("/{id}");

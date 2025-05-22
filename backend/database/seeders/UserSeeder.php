@@ -12,6 +12,15 @@ class UserSeeder extends Seeder
     /**
      * Run the database seeds.
      */
+    public static function generateCode(int $length = 8): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+        return $code;
+    }
     public function run(): void
     {
         DB::table("users")->insert([
@@ -24,6 +33,7 @@ class UserSeeder extends Seeder
             "balance"=>0,
             "role_id"=>4,
             "web_id"=>1,
+            "donate_code"=>$this->generateCode(8),
             "affiliated_by"=>null
             
         ]);

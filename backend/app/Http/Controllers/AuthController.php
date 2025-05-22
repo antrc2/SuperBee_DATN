@@ -115,6 +115,32 @@ class AuthController extends Controller
                 'error'   => $e->getMessage()
             ], 500);
         }
+
+        // So sánh password sử dụng SHA-512
+        if (!Hash::check($credentials["password"], $user->password)) {
+            return response()->json(['error' => 'Invalid password'], 401);
+        }
+        // ✅ Build payload + tạo access token
+        $claims = $this->buildJwtClaims($user, $request);
+        $accessToken = auth()->claims($claims)->login($user);
+
+        // Tạo refresh token
+        $refreshToken = $this->generateRefreshToken($user, $request);
+
+        RefreshToken::create([
+            'user_id' => $user->id,
+            'refresh_token' => $refreshToken,
+            'expires_at' => Carbon::now()->addDays(env('JWT_REFRESH_EXPIRE_TIME', 30)),
+            'revoked' => false,
+        ]);
+
+        return response()->json([
+            'access_token' => $accessToken,
+            'refresh_token' => $refreshToken,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
+
+        ]);
     }
 
 

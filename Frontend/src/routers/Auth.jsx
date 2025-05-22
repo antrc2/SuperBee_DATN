@@ -1,15 +1,16 @@
 import { Navigate } from "react-router-dom";
 import { AuthLayout } from "@layouts";
 import { authModules } from "./AuthModules";
+import Login from "../pages/Auth/Login";
 
 const authRoutes = [
   {
-    path: "/login",
+    path: "/auth",
     element: <AuthLayout />,
     children: [
       {
         index: true,
-        element: <div className="text-center">Clients</div>
+        element: <Login />
       },
 
       ...authModules.map((e) => {

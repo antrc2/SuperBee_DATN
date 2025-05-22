@@ -67,7 +67,6 @@ Route::middleware(['authenticate'])->group(function () {
 });
 Route::middleware(['jwt'])->group(function () {
 
-
     Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
     
     Route::get('/me', [AuthController::class, 'me']);
@@ -200,15 +199,13 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
 
-    });
-    Route::prefix("/donate_promotions")->group(function () {
-        Route::get("/", [DonatePromotionController::class, 'index']);
-        Route::get("/{id}", [DonatePromotionController::class, 'show']);
-        Route::post("/", [DonatePromotionController::class, 'store']);
-        Route::put("/{id}", [DonatePromotionController::class,'update']);
-        Route::patch("/{id}", [DonatePromotionController::class,'undo']);
-        Route::delete("/{id}", [DonatePromotionController::class,'destroy']);
-
-
+        Route::prefix("/donate_promotions")->group(function () {
+            Route::get("/", [DonatePromotionController::class, 'index']);
+            Route::get("/{id}", [DonatePromotionController::class, 'show']);
+            Route::post("/", [DonatePromotionController::class, 'store']);
+            Route::put("/{id}", [DonatePromotionController::class, 'update']);
+            Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
+            Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+        });
     });
 });

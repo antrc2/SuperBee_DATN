@@ -198,6 +198,15 @@ class AuthController extends Controller
             ], 500);
         }
     }
+    public static function generateCode(int $length = 8): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+        return $code;
+    }
     public function register(Request $request)
     {
         try {
@@ -223,6 +232,7 @@ class AuthController extends Controller
 
             // 3. Gán mặc định web_id nếu chưa có
             $validated['web_id'] = $validated['web_id'] ?? 1;
+            $validated['donate_code'] = $this->generateCode(8);
 
             // 4. Tạo người dùng
             $user = User::create($validated);

@@ -2649,4 +2649,3 @@ paths:
                   message:
                     type: string
                     example: Bạn không có quyền truy cập tài nguyên này
-    

@@ -1,8 +1,12 @@
-import { Login } from "@pages";
+import { Login, Register } from "@pages";
 
 export const authModules = [
   {
-    path: "/login",
+    path: "login",
     view: Login
+  },
+  {
+    path: "register",
+    view: Register
   }
 ];

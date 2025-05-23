@@ -28,6 +28,7 @@ return new class extends Migration
             $table->unsignedBigInteger('web_id')->nullable()->default(1);
             $table->unsignedBigInteger('affiliated_by')->nullable();
             $table->integer('status')->nullable()->default(1);
+            $table->text("donate_code");
             $table->timestamps();
         });
 

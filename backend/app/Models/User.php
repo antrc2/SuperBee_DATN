@@ -30,7 +30,8 @@ class User extends Authenticatable implements JWTSubject
         'web_id',
         'affiliated_by',
         'status',
-        'donate_code'
+        "donate_code"
+
     ];
 
     /**

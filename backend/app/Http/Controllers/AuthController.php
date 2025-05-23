@@ -233,10 +233,10 @@ class AuthController extends Controller
             // 3. Gán mặc định web_id nếu chưa có
             $validated['web_id'] = $validated['web_id'] ?? 1;
             $validated['donate_code'] = $this->generateCode(8);
-
+            // dd($validated);
             // 4. Tạo người dùng
             $user = User::create($validated);
-
+            // dd($user);
             // 5. Trả kết quả thành công
             return response()->json([
                 'message' => 'Registration successful',

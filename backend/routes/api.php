@@ -2,6 +2,7 @@
 
 
 use App\Http\Controllers\DonatePromotionController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
@@ -121,12 +122,13 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
     Route::prefix('/products')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::get('/', [ProductController::class, 'index']);
+        Route::post('/', [ProductController::class, 'store']);
+        Route::put('/{id}', [ProductController::class, 'update']);
+        Route::post('/{id}/destroy', [ProductController::class, 'destroy']);
+        Route::post('/{id}/cancel', [ProductController::class, 'cancel']);
+        Route::post('/{id}/approve', [ProductController::class, 'approve']);
+        Route::post('/{id}/reject', [ProductController::class, 'reject']);
     });
     Route::prefix("/webs")->group(function () {
         Route::get("/");

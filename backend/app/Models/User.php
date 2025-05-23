@@ -31,6 +31,7 @@ class User extends Authenticatable implements JWTSubject
         'affiliated_by',
         'status',
         "donate_code"
+
     ];
 
     /**

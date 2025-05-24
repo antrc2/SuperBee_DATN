@@ -1,5 +1,6 @@
 # Ghi chú nội dung cuộc họp
-
+3. **22:15:00 24/05/2025**
+* Tiến độ hơi chậm, vì mới chỉ có API của Backend, chưa có giao diện
 2. **21:30:00 19/05/2025**
 * Đăng nhập: 
     * Khi muốn test đăng nhập, thì phải gửi API Key ở header Authorization. Và sẽ nhận về `access_token`. Và sẽ có thêm `web_id` tương ứng với API Key gửi vào ở trong `$request`

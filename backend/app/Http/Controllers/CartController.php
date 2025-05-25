@@ -6,7 +6,6 @@ use App\Models\Cart;
 use App\Models\CartDetail;
 use App\Models\ProductDetail;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class CartController extends Controller
@@ -16,30 +15,32 @@ class CartController extends Controller
      * - Chỉ cho phép xem giỏ hàng của chính mình
      * - Trả về thông tin chi tiết sản phẩm trong giỏ hàng
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // Lấy thông tin user đang đăng nhập
-            $user = Auth::user();
-            if (!$user) {
+            // Lấy thông tin user từ JWT token
+            $userId = $request->user_id;
+            $webId = $request->web_id;
+
+            if (!$userId || !$webId) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Người dùng chưa đăng nhập'
+                    'message' => 'Thông tin người dùng không hợp lệ'
                 ], 401);
             }
             // Tìm giỏ hàng của user với web_id tương ứng
             $cart = Cart::with([
                 'cartDetails.productDetail.product'
             ])
-            ->where('user_id', $user->id)
-            ->where('web_id', $user->web_id)
+            ->where('user_id', $userId)
+            ->where('web_id', $webId)
             ->first();
 
             // Nếu không có giỏ hàng
             if (!$cart) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Chưa có sản phẩm nào trong giỏ hàng'
+                    'message' => 'Giỏ hàng của bạn đang trống.'
                 ], 200);
             }
 
@@ -65,28 +66,48 @@ class CartController extends Controller
                 'product_detail_id' => 'required|exists:product_details,id'
             ]);
     
-            $user = Auth::user();
+            $userId = $request->user_id;
+            $webId = $request->web_id;
+    
+            if (!$userId || !$webId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Thông tin người dùng không hợp lệ'
+                ], 401);
+            }
     
             $productDetail = ProductDetail::with('product')
                 ->where([
                     ['id', $request->product_detail_id],
-                    ['web_id', $user->web_id]
+                    ['web_id', $webId]
                 ])
                 ->first();
     
-            if (!$productDetail || $productDetail->product->status !== 1) {
+            if (!$productDetail || !$productDetail->product || $productDetail->product->status !== 1) {
                 return response()->json([
                     'status' => false,
-                    'message' => 'Sản phẩm không hợp lệ hoặc không khả dụng'
+                    'message' => 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'
                 ], 400);
             }
     
             DB::beginTransaction();
     
             $cart = Cart::firstOrCreate([
-                'user_id' => $user->id,
-                'web_id' => $user->web_id
+                'user_id' => $userId,
+                'web_id' => $webId
             ]);
+
+            // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
+            $existingCartDetail = $cart->cartDetails()
+                ->where('product_detail_id', $productDetail->id)
+                ->first();
+
+            if ($existingCartDetail) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Sản phẩm đã có trong giỏ hàng của bạn.'
+                ], 400);
+            }
     
             $cartDetail = $cart->cartDetails()->create([
                 'product_detail_id' => $productDetail->id,
@@ -110,21 +131,28 @@ class CartController extends Controller
         }
     }
     
-
     /**
      * Xóa sản phẩm khỏi giỏ hàng
      * - Xóa cứng sản phẩm khỏi giỏ hàng
      * - Nếu giỏ hàng trống thì xóa luôn giỏ hàng
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
-            $user = Auth::user();
+            $userId = $request->user_id;
+            $webId = $request->web_id;
+
+            if (!$userId || !$webId) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Thông tin người dùng không hợp lệ'
+                ], 401);
+            }
 
             // Tìm chi tiết giỏ hàng cần xóa
-            $cartDetail = CartDetail::whereHas('cart', function ($query) use ($user) {
-                $query->where('user_id', $user->id)
-                    ->where('web_id', $user->web_id);
+            $cartDetail = CartDetail::whereHas('cart', function ($query) use ($userId, $webId) {
+                $query->where('user_id', $userId)
+                    ->where('web_id', $webId);
             })->findOrFail($id);
 
             // Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu
@@ -146,7 +174,7 @@ class CartController extends Controller
 
                 return response()->json([
                     'status' => true,
-                    'message' => 'Xóa sản phẩm khỏi giỏ hàng thành công'
+                    'message' => 'Đã xóa sản phẩm khỏi giỏ hàng.'
                 ], 200);
 
             } catch (\Exception $e) {

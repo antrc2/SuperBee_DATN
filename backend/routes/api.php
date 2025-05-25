@@ -9,6 +9,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CartController;
 
 
 use Illuminate\Http\Request;
@@ -150,12 +151,9 @@ Route::middleware(['jwt'])->group(function () {
 
     });
     Route::prefix("/cart")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::get("/", [CartController::class, 'index']);
+        Route::post("/", [CartController::class, 'store']);
+        Route::delete("/{id}", [CartController::class, 'destroy']);
     });
     Route::prefix("/order")->group(function () {
         Route::get("/");

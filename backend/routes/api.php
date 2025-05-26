@@ -124,6 +124,9 @@ Route::middleware(['jwt'])->group(function () {
     });
     Route::prefix('/products')->group(function () {
         Route::get('/', [ProductController::class, 'index']);
+        Route::get('/partner');
+        Route::get('/admin');
+        Route::get('/{id}');
         Route::post('/', [ProductController::class, 'store']);
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::post('/{id}/destroy', [ProductController::class, 'destroy']);

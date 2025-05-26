@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AWSController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
@@ -16,11 +17,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
-Route::prefix("/callback")-> group( function (){
+Route::prefix("/callback")->group(function () {
     Route::post("/card");
     Route::post("/bank");
 });
+// use App\Http\Controllers\ImageUploadController;
 
+Route::post('/upload-image', [AWSController::class, 'upload']);
 Route::post("/domain/active", [HomeController::class, "active"]);
 
 
@@ -51,7 +54,7 @@ Route::middleware(['authenticate'])->group(function () {
         Route::get("/{id}");
     });
 
-    Route::prefix('/donate_promotions')->group(function(){
+    Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [DonatePromotionController::class, 'index']);
         Route::get("/{id}", [DonatePromotionController::class, 'show']);
     });
@@ -70,7 +73,7 @@ Route::middleware(['authenticate'])->group(function () {
 Route::middleware(['jwt'])->group(function () {
 
     Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
-    
+
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/logout', [AuthController::class, 'logout']);
     Route::prefix('/reviews')->group(function () {
@@ -200,13 +203,13 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DiscountCodeController::class, 'update']);
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
- });
-        Route::prefix("/donate_promotions")->group(function () {
-            Route::get("/", [DonatePromotionController::class, 'index']);
-            Route::get("/{id}", [DonatePromotionController::class, 'show']);
-            Route::post("/", [DonatePromotionController::class, 'store']);
-            Route::put("/{id}", [DonatePromotionController::class, 'update']);
-            Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
-            Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
-        });
+    });
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [DonatePromotionController::class, 'index']);
+        Route::get("/{id}", [DonatePromotionController::class, 'show']);
+        Route::post("/", [DonatePromotionController::class, 'store']);
+        Route::put("/{id}", [DonatePromotionController::class, 'update']);
+        Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
+        Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+    });
 });

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -170,24 +171,39 @@ class CategoryController extends Controller
        try {
             $category = Category::findOrFail($id);
 
-            if ($category->products()->exists()) {
-                $category->update([
-                    'status' => 0,
-                    'updated_by' => $request->user_id
+            Product::where("category_id",$id)->update([
+                    "category_id"=>1
                 ]);
-
-                return response()->json([
+                // $category->update([
+                //     'status' => 0,
+                //     'updated_by' => $request->user_id
+                // ]);
+            $category->delete();
+            return response()->json([
                     'status' => true,
-                    'message' => 'Đã xóa mềm danh mục thành công'
+                    'message' => 'Đã xóa danh mục thành công'
                 ]);
-            } else {
-                $category->delete();
+            // if ($category->products()->exists()) {
+            //     Product::where("category_id",$id)->update([
+            //         "category_id"=>1
+            //     ]);
+            //     // $category->update([
+            //     //     'status' => 0,
+            //     //     'updated_by' => $request->user_id
+            //     // ]);
+            //     $category->delete();
+            //     return response()->json([
+            //         'status' => true,
+            //         'message' => 'Đã xóa danh mục thành công'
+            //     ]);
+            // } else {
+            //     $category->delete();
 
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Đã xóa cứng danh mục thành công'
-                ]);
-            }
+            //     return response()->json([
+            //         'status' => true,
+            //         'message' => 'Đã xóa cứng danh mục thành công'
+            //     ]);
+            // }
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => false,
@@ -235,4 +251,5 @@ class CategoryController extends Controller
             ], 500);
         }
 
+}
 }

@@ -20,6 +20,7 @@ class DiscountCodeController extends Controller
             // $query = DiscountCode::orderBy('created_at', 'desc');
             $codes = DiscountCode::all();
 
+
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
                 'status' => true,
@@ -28,6 +29,7 @@ class DiscountCodeController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Đã có lỗi xảy ra',
+
                 'status' => false
             ], 500);
         }
@@ -66,6 +68,7 @@ class DiscountCodeController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
+
                 'code' => 'required|string|unique:discount_codes,code',
                 'usage_limit' => 'nullable|integer',
                 'discount_amount' => 'required|integer|min:0',
@@ -86,6 +89,7 @@ class DiscountCodeController extends Controller
                     'errors' => $validator->errors()
                 ], 422);
             }
+
 
             $validated = $validator->validated();
 
@@ -108,6 +112,7 @@ class DiscountCodeController extends Controller
                 $validated['created_by'] = $request->user_id;
                 $validated['updated_by'] = $request->user_id;
             }
+
 
             DB::beginTransaction();
             $code = DiscountCode::create($validated);
@@ -132,6 +137,7 @@ class DiscountCodeController extends Controller
             ], 500);
         }
     }
+
 
     // PUT /discount_codes/{id} (Cập nhật toàn bộ)
     public function update(Request $request, $id)
@@ -213,149 +219,42 @@ class DiscountCodeController extends Controller
     public function patch(Request $request, $id)
     {
         try {
-            $code = DiscountCode::find($id);
+
+            $code = DiscountCode::onlyTrashed()->find($id);
 
             if (!$code) {
                 return response()->json([
-                    'message' => 'Không tìm thấy mã giảm giá',
+                    'message' => 'Không tìm thấy mã giảm giá đã bị xóa',
                     'status' => false
                 ], 404);
             }
 
-            $rules = [];
-            $data = $request->all();
+            // Chỉ cho phép cập nhật status = active (gỡ soft delete)
+            $request->validate([
+                'status' => 'required|in:active'
+            ]);
 
-            // Chỉ áp dụng validation cho các trường được gửi lên
-            if (isset($data['code'])) {
-                $rules['code'] = 'string|unique:discount_codes,code,' . $id;
-            }
+            $code->restore(); // Gỡ deleted_at
 
-            if (isset($data['usage_limit'])) {
-                $rules['usage_limit'] = 'nullable|integer';
-            }
-
-            if (isset($data['discount_amount'])) {
-                $rules['discount_amount'] = 'integer|min:0';
-            }
-
-            if (isset($data['min_discount_amount'])) {
-                $rules['min_discount_amount'] = 'nullable|integer|min:0';
-            }
-
-            if (isset($data['max_discount_amount'])) {
-                $rules['max_discount_amount'] = 'nullable|integer|min:0';
-
-                // Nếu có cả min và max hoặc nếu đã có min trong DB
-                if (isset($data['min_discount_amount']) || $code->min_discount_amount) {
-                    $min_value = isset($data['min_discount_amount']) ? $data['min_discount_amount'] : $code->min_discount_amount;
-                    if ($min_value && isset($data['max_discount_amount']) && $data['max_discount_amount'] <= $min_value) {
-                        return response()->json([
-                            'message' => 'Dữ liệu không hợp lệ',
-                            'status' => false,
-                            'errors' => ['max_discount_amount' => ['Giá trị tối đa phải lớn hơn giá trị tối thiểu']]
-                        ], 422);
-                    }
-                }
-            }
-
-            if (isset($data['start_date'])) {
-                $rules['start_date'] = 'date';
-
-                // Kiểm tra với end_date nếu có
-                if (isset($data['end_date'])) {
-                    $rules['end_date'] = 'date|after_or_equal:start_date';
-                } elseif ($code->end_date) {
-                    // Kiểm tra với end_date trong DB
-                    $end_date = new \DateTime($code->end_date);
-                    $start_date = new \DateTime($data['start_date']);
-
-                    if ($start_date > $end_date) {
-                        return response()->json([
-                            'message' => 'Dữ liệu không hợp lệ',
-                            'status' => false,
-                            'errors' => ['start_date' => ['Ngày bắt đầu phải trước hoặc bằng ngày kết thúc']]
-                        ], 422);
-                    }
-                }
-            }
-
-            if (isset($data['end_date'])) {
-                $rules['end_date'] = 'date';
-
-                // Kiểm tra với start_date
-                $start_date_value = isset($data['start_date']) ? $data['start_date'] : $code->start_date;
-                $start_date = new \DateTime($start_date_value);
-                $end_date = new \DateTime($data['end_date']);
-
-                if ($end_date < $start_date) {
-                    return response()->json([
-                        'message' => 'Dữ liệu không hợp lệ',
-                        'status' => false,
-                        'errors' => ['end_date' => ['Ngày kết thúc phải sau hoặc bằng ngày bắt đầu']]
-                    ], 422);
-                }
-            }
-
-            if (isset($data['user_id'])) {
-                $rules['user_id'] = 'nullable|exists:users,id';
-            }
-
-            if (isset($data['web_id'])) {
-                $rules['web_id'] = 'nullable|exists:webs,id';
-            }
-
-            $validator = Validator::make($data, $rules);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'status' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $validated = $validator->validated();
-
-            // Xử lý usage_limit nếu được gửi lên
-            if (isset($validated['usage_limit'])) {
-                if ($validated['usage_limit'] === null) {
-                    $validated['usage_limit'] = -1;
-                } elseif ($validated['usage_limit'] < 1 && $validated['usage_limit'] != -1) {
-                    $validated['usage_limit'] = 1;
-                }
-            }
-
-            // Lấy user_id từ người dùng đăng nhập nếu có
-            if (Auth::check()) {
-                $validated['updated_by'] = Auth::id();
-            } else {
-                // Hoặc lấy từ request nếu được cung cấp
-                $validated['updated_by'] = $request->user_id;
-            }
-
-            DB::beginTransaction();
-            $code->update($validated);
-            DB::commit();
+            $code->update([
+                'status' => $request->status,
+                'updated_by' => Auth::id()
+            ]);
 
             return response()->json([
-                'message' => 'Cập nhật một phần mã giảm giá thành công',
+                'message' => 'Khôi phục mã giảm giá thành công',
                 'status' => true,
                 'data' => $code
             ]);
-        } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'Dữ liệu không hợp lệ',
-                'status' => false,
-                'errors' => $e->errors()
-            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi cập nhật mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+
                 'status' => false
             ], 500);
         }
     }
+
 
     // DELETE /discount_codes/{id}
     public function destroy($id)
@@ -398,129 +297,4 @@ class DiscountCodeController extends Controller
         }
     }
 
-    // Phương thức kiểm tra mã giảm giá có hợp lệ hay không
-    public function validateCode(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'code' => 'required|string',
-                'user_id' => 'nullable|exists:users,id',
-                'web_id' => 'nullable|exists:webs,id',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'status' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            $code = DiscountCode::where('code', $request->code)
-                ->where(function ($query) use ($request) {
-                    $query->whereNull('user_id')
-                        ->orWhere('user_id', $request->user_id);
-                })
-                ->where(function ($query) use ($request) {
-                    $query->whereNull('web_id')
-                        ->orWhere('web_id', $request->web_id);
-                })
-                ->where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->where(function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('usage_limit', '>', DB::raw('used_count'))
-                            ->where('usage_limit', '>', 0);
-                    })->orWhere('usage_limit', -1);
-                })
-                ->first();
-
-            if (!$code) {
-                return response()->json([
-                    'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
-                    'status' => false
-                ], 404);
-            }
-
-            return response()->json([
-                'message' => 'Mã giảm giá hợp lệ',
-                'status' => true,
-                'data' => $code
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Lỗi khi kiểm tra mã giảm giá: ' . $e->getMessage(),
-                'status' => false
-            ], 500);
-        }
-    }
-
-    // Phương thức sử dụng mã giảm giá
-    public function useDiscountCode(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'code' => 'required|string',
-                'user_id' => 'nullable|exists:users,id',
-                'web_id' => 'nullable|exists:webs,id',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'status' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            DB::beginTransaction();
-
-            $code = DiscountCode::where('code', $request->code)
-                ->where(function ($query) use ($request) {
-                    $query->whereNull('user_id')
-                        ->orWhere('user_id', $request->user_id);
-                })
-                ->where(function ($query) use ($request) {
-                    $query->whereNull('web_id')
-                        ->orWhere('web_id', $request->web_id);
-                })
-                ->where('start_date', '<=', now())
-                ->where('end_date', '>=', now())
-                ->where(function ($query) {
-                    $query->where(function ($q) {
-                        $q->where('usage_limit', '>', DB::raw('used_count'))
-                            ->where('usage_limit', '>', 0);
-                    })->orWhere('usage_limit', -1);
-                })
-                ->lockForUpdate()
-                ->first();
-
-            if (!$code) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'Mã giảm giá không hợp lệ hoặc đã hết hạn',
-                    'status' => false
-                ], 404);
-            }
-
-            // Tăng số lần sử dụng
-            $code->used_count += 1;
-            $code->save();
-
-            DB::commit();
-
-            return response()->json([
-                'message' => 'Sử dụng mã giảm giá thành công',
-                'status' => true,
-                'data' => $code
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return response()->json([
-                'message' => 'Lỗi khi sử dụng mã giảm giá: ' . $e->getMessage(),
-                'status' => false
-            ], 500);
-        }
-
-    }
 }

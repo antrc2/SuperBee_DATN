@@ -77,7 +77,7 @@ def test(mb):
             run(mb)
         except Exception as e:
             # Thiết lập lại kết nối
-            mb = mbbank.MBBank(username="0838411897", password="Sqrtflo@to1")
+            mb = mbbank.MBBank(username=accountNo, password=password)
 if __name__ == "__main__":
-    mb = mbbank.MBBank(username="0838411897", password="Sqrtflo@to1")
+    mb = mbbank.MBBank(username=accountNo, password=password)
     test(mb)

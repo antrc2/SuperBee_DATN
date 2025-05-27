@@ -1,5 +1,13 @@
 # Ghi chú nội dung cuộc họp
-
+4. **21:00:00 26/05/2025**
+* API quản lí sản phẩm
+    * 1. Khi User chưa đăng nhập, và khi admin muốn xem danh sách sản phẩm của web đó, thì Endpoint là `GET /products/`
+    * 2. Khi Cộng tác viên ở trang quản lí sản phẩm, thì Endpoint là `GET /products/partner`
+    * 3. Khi admin ở trang quản lí sản phẩm, thì Endpoint là `GET /products/admin`
+* Push code:
+    * Khi push code thì không nên `git add .`, mà hãy add từng file vào, để tránh bị mất code của người khác
+3. **22:15:00 24/05/2025**
+* Tiến độ hơi chậm, vì mới chỉ có API của Backend, chưa có giao diện
 2. **21:30:00 19/05/2025**
 * Đăng nhập: 
     * Khi muốn test đăng nhập, thì phải gửi API Key ở header Authorization. Và sẽ nhận về `access_token`. Và sẽ có thêm `web_id` tương ứng với API Key gửi vào ở trong `$request`

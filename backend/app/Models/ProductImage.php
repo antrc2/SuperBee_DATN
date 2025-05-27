@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductImage extends Model
 {
+    public $timestamps = false;
     protected $fillable = ['product_id', 'image_url'];
 
     public function product(): BelongsTo

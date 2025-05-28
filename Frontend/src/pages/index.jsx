@@ -18,6 +18,13 @@ import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
 import Error from "./Error/Error";
 import NotFound from "./NotFound/NotFound";
 import RechargeCard from "./Clients/RechargeCard/RechargeCard";
+import ShopAccount from "./Clients/ShopAccount/ShopAccount";
+import ListProducts from "./Clients/ListProducts/ListProducts";
+import Pay from "./Clients/Pay/Pay";
+import HistoryProducts from "./Clients/HistoryProducts/HistoryProducts";
+import Profile from "./Clients/Profile/Profile";
+import ChangePassword from "./Clients/Profile/ChangePassword";
+import TransactionHistoryPage from "./Clients/Profile/TransactionHistoryPage";
 
 export {
   AccountListPage,
@@ -36,5 +43,12 @@ export {
   NotFound,
   Error,
   Register,
-  RechargeCard
+  RechargeCard,
+  ShopAccount,
+  ListProducts,
+  Pay,
+  HistoryProducts,
+  Profile,
+  ChangePassword,
+  TransactionHistoryPage
 };

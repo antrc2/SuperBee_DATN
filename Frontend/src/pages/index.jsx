@@ -17,6 +17,7 @@ import Home from "./Clients/Home/Home";
 import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
 import Error from "./Error/Error";
 import NotFound from "./NotFound/NotFound";
+import RechargeCard from "./Clients/RechargeCard/RechargeCard";
 
 export {
   AccountListPage,
@@ -34,5 +35,6 @@ export {
   Home,
   NotFound,
   Error,
-  Register
+  Register,
+  RechargeCard
 };

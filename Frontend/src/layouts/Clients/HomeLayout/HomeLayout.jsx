@@ -1,16 +1,18 @@
 import { Outlet } from "react-router-dom";
+import Header from "../../../components/Client/layout/Header";
+import Footer from "../../../components/Client/layout/Footer";
 
 export default function HomeLayout() {
   return (
     <div>
       <header>
-        <h1>Header</h1>
+        <Header />
       </header>
-      <main>
+      <main className="min-h-[90svh]">
         <Outlet />
       </main>
       <footer>
-        <h1>Footer</h1>
+        <Footer />
       </footer>
     </div>
   );

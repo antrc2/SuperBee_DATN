@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class DiscountCode extends Model
 {
     protected $fillable = [
+        "id",
         'code',
         'usage_limit',
         'used_count',

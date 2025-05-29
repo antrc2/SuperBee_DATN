@@ -1,9 +1,10 @@
 import { Navigate } from "react-router-dom";
-import { HomeLayout } from "@layouts";
-import { clientModules } from "./ClientModules";
+import { HomeLayout, ProfileLayout } from "@layouts";
+import { clientModules, profileModule } from "./ClientModules";
 import { Home } from "@pages";
+import { Profile } from "../pages";
 
-const clientRoutes = [
+export const clientRoutes = [
   {
     path: "/",
     element: <HomeLayout />,
@@ -26,4 +27,26 @@ const clientRoutes = [
   }
 ];
 
-export default clientRoutes;
+export const profileRoutes = [
+  {
+    path: "/info",
+    element: <ProfileLayout />,
+    children: [
+      {
+        index: true,
+        element: <Profile />
+      },
+
+      // Các route con bên trong info nên dùng path tương đối, không có dấu "/"
+      ...profileModule.map((e) => {
+        const View = e.view;
+        return {
+          path: e.path, // index route
+          element: <View />
+        };
+      }),
+
+      { path: "*", element: <Navigate to="/" replace /> }
+    ]
+  }
+];

@@ -8,5 +8,6 @@ export const authModules = [
   {
     path: "register",
     view: Register
-  }
+  },
+
 ];

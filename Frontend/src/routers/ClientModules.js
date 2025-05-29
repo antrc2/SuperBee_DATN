@@ -1,3 +1,4 @@
+
 import {
   Home,
   RechargeCard,
@@ -10,6 +11,7 @@ import {
   TransactionHistoryPage
 } from "@pages";
 
+
 export const clientModules = [
   {
     // Trang chủ
@@ -17,6 +19,7 @@ export const clientModules = [
     view: Home
   },
   {
+
     // Trang Thanh Toán
     path: "/recharge-atm",
     view: RechargeCard
@@ -56,5 +59,6 @@ export const profileModule = [
   {
     path: "/info/transactions",
     view: TransactionHistoryPage
+
   }
 ];

@@ -21,7 +21,6 @@ export default function AuthLayout() {
 
   return (
     <div>
-<<<<<<< HEAD
       <header>Header Login</header>
       <div className="mt-4 text-center">
         <a
@@ -32,11 +31,6 @@ export default function AuthLayout() {
           Đăng xuất
         </a>
       </div>
-=======
-      <header>
-        <Header />
-      </header>
->>>>>>> 31a84d95ff1b01166c5a377f3c7ac91f059bb381
       <Outlet />
     </div>
   );

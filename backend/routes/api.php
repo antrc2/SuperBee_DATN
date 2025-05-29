@@ -11,8 +11,7 @@ use App\Http\Controllers\AWSController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
-
-
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -164,12 +163,9 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}", [CartController::class, 'destroy']);
     });
     Route::prefix("/order")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::get("/", [OrderController::class, "index"]);
+        Route::get("/{id}", [OrderController::class, "OrderDetail"]);
+        Route::post("/", [OrderController::class, "Order"]);
     });
 
     Route::prefix("/notifications")->group(function () {
@@ -208,13 +204,14 @@ Route::middleware(['jwt'])->group(function () {
         Route::put("/{id}", [DiscountCodeController::class, 'update']);
         Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
         Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
-    });
-    Route::prefix("/donate_promotions")->group(function () {
-        Route::get("/", [DonatePromotionController::class, 'index']);
-        Route::get("/{id}", [DonatePromotionController::class, 'show']);
-        Route::post("/", [DonatePromotionController::class, 'store']);
-        Route::put("/{id}", [DonatePromotionController::class, 'update']);
-        Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
-        Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+
+        Route::prefix("/donate_promotions")->group(function () {
+            Route::get("/", [DonatePromotionController::class, 'index']);
+            Route::get("/{id}", [DonatePromotionController::class, 'show']);
+            Route::post("/", [DonatePromotionController::class, 'store']);
+            Route::put("/{id}", [DonatePromotionController::class, 'update']);
+            Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
+            Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+        });
     });
 });

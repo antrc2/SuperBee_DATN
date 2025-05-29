@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 export default function Header() {
   return (
     <header className="w-full border-b">
-      <div className="mx-auto flex h-16 items-center justify-between px-4 max-w-7xl">
+      <div className="mx-auto flex h-16 items-center justify-between max-w-7xl">
+
         {/* Left: Logo + Danh mục + Đã xem */}
         <div className="flex items-center gap-4">
           <a href="/" className="flex items-center text-3xl font-bold">

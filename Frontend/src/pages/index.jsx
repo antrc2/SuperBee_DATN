@@ -12,6 +12,7 @@ import EditDonatePromotionPage from "./Admin/DonatePromotion/EditDonatePromotion
 // AUTH
 import Login from "./Auth/Login";
 import Register from "./Auth/Register";
+
 // Client
 import Home from "./Clients/Home/Home";
 import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
@@ -34,5 +35,6 @@ export {
   Home,
   NotFound,
   Error,
-  Register
+  Register,
+ 
 };

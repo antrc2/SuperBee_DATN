@@ -22,7 +22,7 @@ export default function Login() {
         localStorage.setItem("accessToken", res.data.access_token);
         localStorage.setItem("refreshToken", res.data.refresh_token);
         showAlert("Đăng nhập thành công!", "Thành công", "success");
-        navigate("/login");
+        navigate("/auth/login");
       } else {
         showError(res.data?.message || "Đăng nhập thất bại");
       }
@@ -35,6 +35,7 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded shadow-md w-full max-w-sm"

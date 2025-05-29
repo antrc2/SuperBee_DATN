@@ -126,10 +126,12 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
     Route::prefix('/products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);
-        Route::get('/partner');
-        Route::get('/admin');
-        Route::get('/{id}');
+        // Route::get('/', [ProductController::class, 'index']);
+        Route::get('/', [ProductController::class, 'publicList']); // Công khai
+        Route::get('/list/partner', [ProductController::class, 'partnerList']);
+        Route::get('/list/reseller', [ProductController::class, 'resellerList']);
+        Route::get('/list/admin', [ProductController::class, 'adminList']);
+        Route::get('/{id}', [ProductController::class, 'show']);
         Route::post('/', [ProductController::class, 'store']);
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::post('/{id}/destroy', [ProductController::class, 'destroy']);

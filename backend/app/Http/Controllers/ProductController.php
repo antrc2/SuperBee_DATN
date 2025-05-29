@@ -16,35 +16,269 @@ class ProductController extends Controller
     /**
      * Hiển thị danh sách sản phẩm
      */
-    public function index(Request $request)
+    // public function publicList(Request $request)
+    // {
+    //     try {
+    //         $products = Product::with(['productDetails', 'productImages'])
+    //             ->where('status', 1)
+    //             ->when($request->has('web_id'), function ($query) use ($request) {
+    //                 $query->where('web_id', $request->web_id);
+    //             })
+    //             ->orderBy('created_at', 'desc')
+    //             ->get();
+
+    //         return response()->json([
+    //             "status" => true,
+    //             "message" => "Danh sách sản phẩm công khai",
+    //             "data" => $products
+    //         ]);
+    //     } catch (\Throwable $th) {
+    //         return response()->json([
+    //             "status" => false,
+    //             "message" => "Đã có lỗi xảy ra",
+    //             "error" => $th->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+    // public function partnerList(Request $request)
+    // {
+    //     try {
+    //         $user = User::findOrFail($request->user_id);
+
+    //         if ($user->role_id != 2) {
+    //             return response()->json([
+    //                 "status" => false,
+    //                 "message" => "Chỉ cộng tác viên mới được phép xem"
+    //             ], 403);
+    //         }
+
+    //         $products = Product::with(['productDetails', 'productImages'])
+    //             ->where('created_by', $user->id)
+    //             ->orderBy('created_at', 'desc')
+    //             ->get();
+
+    //         return response()->json([
+    //             "status" => true,
+    //             "message" => "Danh sách sản phẩm của cộng tác viên",
+    //             "data" => $products
+    //         ]);
+    //     } catch (ModelNotFoundException $e) {
+    //         return response()->json([
+    //             "status" => false,
+    //             "message" => "Không tìm thấy người dùng"
+    //         ], 404);
+    //     } catch (\Throwable $th) {
+    //         return response()->json([
+    //             "status" => false,
+    //             "message" => "Đã có lỗi xảy ra",
+    //             "error" => $th->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
+
+        /**
+     * Hiển thị danh sách sản phẩm công khai
+     * GET /products/
+     * - User chưa đăng nhập: xem sản phẩm công khai của web cụ thể
+     * - Admin muốn xem danh sách sản phẩm của web: truyền web_id
+     */
+    public function publicList(Request $request)
     {
         try {
-            $user = User::findOrFail($request->user_id);
-            $role = $user->role_id;
-            $web_id = $request->web_id;
+            // Validate web_id nếu có
+            if ($request->has('web_id')) {
+                $validator = Validator::make($request->all(), [
+                    'web_id' => 'required|integer|exists:webs,id'
+                ]);
 
-            $query = Product::with(['productDetails', 'productImages']);
+                if ($validator->fails()) {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Web ID không hợp lệ",
+                        "errors" => $validator->errors()
+                    ], 422);
+                }
+            }
 
-            if ($role == 1) { // User
-                $query->where('web_id', $web_id)->where('status', 1);
-            } elseif ($role == 2) { // Partner
-                $query->where('created_by', $user->id);
-            } elseif ($role == 3) { // Reseller
-                $query->where('web_id', $web_id);
-            } elseif ($role == 4) { // Admin
-                // Xem tất cả sản phẩm
-            } else {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Vai trò không hợp lệ"
-                ], 403);
+            $query = Product::with(['productDetails', 'productImages'])
+                ->where('status', 1); // Chỉ lấy sản phẩm đang bán
+
+            // Nếu có web_id thì lọc theo web
+            if ($request->has('web_id')) {
+                $query->where('web_id', $request->web_id);
             }
 
             $products = $query->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 "status" => true,
-                "message" => "Lấy danh sách sản phẩm thành công",
+                "message" => "Danh sách sản phẩm công khai",
+                "data" => $products,
+                "total" => $products->count()
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Hiển thị danh sách sản phẩm của cộng tác viên
+     * GET /products/partner
+     * - Partner chỉ xem được sản phẩm do mình tạo
+     */
+    public function partnerList(Request $request)
+    {
+        try {
+            // Validate user_id
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Dữ liệu không hợp lệ",
+                    "errors" => $validator->errors()
+                ], 422);
+            }
+
+            $user = User::findOrFail($request->user_id);
+
+            // Kiểm tra role
+            if ($user->role_id != 2) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Chỉ cộng tác viên mới được phép xem"
+                ], 403);
+            }
+
+            // Lấy tất cả sản phẩm do partner tạo (bao gồm cả các trạng thái khác nhau)
+            $products = Product::with(['productDetails', 'productImages'])
+                ->where('created_by', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Thống kê theo trạng thái
+            $statusCount = [
+                'total' => $products->count(),
+                'approved' => $products->where('status', 1)->count(), // Đang bán
+                'pending' => $products->where('status', 2)->count(),   // Đợi duyệt
+                'rejected' => $products->where('status', 0)->count(),  // Bị từ chối
+                'cancelled' => $products->where('status', 3)->count(), // Đã hủy
+                'sold' => $products->where('status', 4)->count()       // Đã bán
+            ];
+
+            return response()->json([
+                "status" => true,
+                "message" => "Danh sách sản phẩm của cộng tác viên",
+                "data" => $products,
+                "statistics" => $statusCount
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Không tìm thấy người dùng"
+            ], 404);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Hiển thị danh sách sản phẩm cho reseller
+     * GET /products/reseller
+     * - Reseller xem được tất cả sản phẩm thuộc web của mình
+     */
+    public function resellerList(Request $request)
+    {
+        try {
+            // Validate user_id
+            $validator = Validator::make($request->all(), [
+                'user_id' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Dữ liệu không hợp lệ",
+                    "errors" => $validator->errors()
+                ], 422);
+            }
+
+            $user = User::findOrFail($request->user_id);
+
+            // Kiểm tra role
+            if ($user->role_id != 3) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Chỉ reseller mới được phép xem"
+                ], 403);
+            }
+
+            // Lấy tất cả sản phẩm thuộc web của reseller
+            $products = Product::with(['productDetails', 'productImages'])
+                ->where('web_id', $user->web_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            // Thống kê theo trạng thái
+            $statusCount = [
+                'total' => $products->count(),
+                'approved' => $products->where('status', 1)->count(),
+                'pending' => $products->where('status', 2)->count(),
+                'rejected' => $products->where('status', 0)->count(),
+                'cancelled' => $products->where('status', 3)->count(),
+                'sold' => $products->where('status', 4)->count()
+            ];
+
+            return response()->json([
+                "status" => true,
+                "message" => "Danh sách sản phẩm của web " . $user->web_id,
+                "data" => $products,
+                "statistics" => $statusCount
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Không tìm thấy người dùng"
+            ], 404);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage()
+            ], 500);
+        }
+    }
+    public function adminList(Request $request)
+    {
+        try {
+            $user = User::findOrFail($request->user_id);
+
+            if ($user->role_id != 4) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Chỉ admin mới được phép xem toàn bộ sản phẩm"
+                ], 403);
+            }
+
+            $products = Product::with(['productDetails', 'productImages'])
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                "status" => true,
+                "message" => "Danh sách sản phẩm cho admin",
                 "data" => $products
             ]);
         } catch (ModelNotFoundException $e) {
@@ -55,7 +289,69 @@ class ProductController extends Controller
         } catch (\Throwable $th) {
             return response()->json([
                 "status" => false,
-                "message" => "Đã có lỗi xảy ra"
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage()
+            ], 500);
+        }
+    }
+    /**
+     * Xem chi tiết sản phẩm
+     */
+
+    public function show(Request $request, $id)
+    {
+        try {
+            $user = User::findOrFail($request->user_id);
+            $role = $user->role_id;
+
+            $product = Product::with(['productDetails', 'productImages'])->findOrFail($id);
+
+            // Phân quyền xem chi tiết
+            if ($role == 1) { // User
+                if ($product->web_id != $request->web_id || $product->status != 1) {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Bạn không có quyền xem sản phẩm này"
+                    ], 403);
+                }
+            } elseif ($role == 2) { // Partner
+                if ($product->created_by != $user->id) {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Bạn chỉ được xem sản phẩm do mình tạo"
+                    ], 403);
+                }
+            } elseif ($role == 3) { // Reseller
+                if ($product->web_id != $request->web_id) {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Bạn chỉ được xem sản phẩm thuộc web của bạn"
+                    ], 403);
+                }
+            } elseif ($role == 4) {
+                // Admin được xem tất cả
+            } else {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Vai trò không hợp lệ"
+                ], 403);
+            }
+
+            return response()->json([
+                "status" => true,
+                "message" => "Lấy thông tin sản phẩm thành công",
+                "data" => $product
+            ]);
+        } catch (ModelNotFoundException $e) {
+            return response()->json([
+                "status" => false,
+                "message" => "Không tìm thấy sản phẩm hoặc người dùng1"
+            ], 404);
+        } catch (\Throwable $th) {
+            return response()->json([
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage()
             ], 500);
         }
     }
@@ -63,6 +359,7 @@ class ProductController extends Controller
     /**
      * Tạo sản phẩm mới
      */
+
     public function store(Request $request)
     {
         try {

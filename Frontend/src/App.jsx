@@ -17,6 +17,5 @@ export default function App() {
     ...adminRoutes,
     ...profileRoutes
   ]);
-
   return routes;
 }

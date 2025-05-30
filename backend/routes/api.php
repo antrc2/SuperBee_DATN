@@ -11,8 +11,7 @@ use App\Http\Controllers\AWSController;
 use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CartController;
-
-
+use App\Http\Controllers\OrderController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -126,10 +125,12 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}");
     });
     Route::prefix('/products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);
-        Route::get('/partner');
-        Route::get('/admin');
-        Route::get('/{id}');
+        // Route::get('/', [ProductController::class, 'index']);
+        Route::get('/', [ProductController::class, 'publicList']); // Công khai
+        Route::get('/list/partner', [ProductController::class, 'partnerList']);
+        Route::get('/list/reseller', [ProductController::class, 'resellerList']);
+        Route::get('/list/admin', [ProductController::class, 'adminList']);
+        Route::get('/{id}', [ProductController::class, 'show']);
         Route::post('/', [ProductController::class, 'store']);
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::post('/{id}/destroy', [ProductController::class, 'destroy']);
@@ -162,12 +163,9 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete("/{id}", [CartController::class, 'destroy']);
     });
     Route::prefix("/order")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
+        Route::get("/", [OrderController::class, "index"]);
+        Route::get("/{id}", [OrderController::class, "OrderDetail"]);
+        Route::post("/", [OrderController::class, "Order"]);
     });
 
     Route::prefix("/notifications")->group(function () {

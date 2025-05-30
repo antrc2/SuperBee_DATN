@@ -1,16 +1,16 @@
-
 import {
   Home,
   RechargeCard,
   ShopAccount,
   ListProducts,
-  Pay,
+  ProductDetail,
   HistoryProducts,
   Profile,
   ChangePassword,
-  TransactionHistoryPage
+  TransactionHistoryPage,
+  CartPage,
+  Pay
 } from "@pages";
-
 
 export const clientModules = [
   {
@@ -19,7 +19,6 @@ export const clientModules = [
     view: Home
   },
   {
-
     // Trang Thanh Toán
     path: "/recharge-atm",
     view: RechargeCard
@@ -34,15 +33,25 @@ export const clientModules = [
     path: "/mua-acc/:slug",
     view: ListProducts
   },
-  // Trang thanh toán
+  // Trang chi tiết sản phẩm
   {
     path: "/acc/:id",
-    view: Pay
+    view: ProductDetail
   },
   // Trang lịch sử đã xem
   {
     path: "/viewed",
     view: HistoryProducts
+  },
+  // trang giỏ hàng
+  {
+    path: "/cart",
+    view: CartPage
+  },
+  // trang thanh toán
+  {
+    path: "/pay",
+    view: Pay
   }
 ];
 
@@ -52,13 +61,14 @@ export const profileModule = [
     path: "/info",
     view: Profile
   },
+  // thay đổi mk
   {
     path: "/info/change-password",
     view: ChangePassword
   },
+  // lịch sử giao dịch
   {
     path: "/info/transactions",
     view: TransactionHistoryPage
-
   }
 ];

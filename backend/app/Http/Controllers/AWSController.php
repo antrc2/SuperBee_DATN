@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
+// use Illuminate\Support\Facades\Validator;
 
 class AWSController extends Controller
 {
@@ -13,44 +13,56 @@ class AWSController extends Controller
      */
     public function upload(Request $request)
     {
-        // Validate file ảnh
-        $validator = Validator::make($request->all(), [
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        // Validate file
+        $request->validate([
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        if ($validator->fails()) {
+        try {
+            // Lấy file từ request
+            $file = $request->file('image');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+
+            // Upload lên S3
+            $path = Storage::disk('s3')->putFileAs('uploads', $file, $fileName, 'public');
+
+            // Kiểm tra xem upload có thành công không
+            if ($path) {
+                // Kiểm tra sự tồn tại của file trên S3 (tùy chọn)
+                if (Storage::disk('s3')->exists($path)) {
+                    // Lấy URL của ảnh
+                    $url = Storage::disk('s3')->url($path);
+
+                    return response()->json([
+                        'success' => true,
+                        'url' => $url,
+                        'message' => 'Ảnh đã được upload thành công!'
+                    ], 200);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Upload thất bại: File không tồn tại trên S3.'
+                    ], 500);
+                }
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Upload thất bại: Không thể lưu file lên S3.'
+                ], 500);
+            }
+        } catch (S3Exception $e) {
+            // Xử lý lỗi từ AWS S3
             return response()->json([
-                'message' => $validator->messages()->first(),
-                'messageType' => 'error',
-                'status' => 400
-            ], 400);
+                'success' => false,
+                'message' => 'Lỗi từ AWS S3: ' . $e->getMessage()
+            ], 500);
+        } catch (\Exception $e) {
+            // Xử lý các lỗi khác
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage()
+            ], 500);
         }
-
-        // Lấy file ảnh từ request
-        $image = $request->file('image');
-        $uploadFolder = 'uploads'; // Thư mục lưu trữ trên S3
-        $fileName = time() . '_' . $image->getClientOriginalName();
-
-        // Upload file lên S3
-        $path = $image->storeAs($uploadFolder, $fileName, 's3');
-
-        // Đặt quyền công khai cho file
-        Storage::disk('s3')->setVisibility($path, 'public');
-
-        // Lấy URL của file trên S3
-        $url = Storage::disk('s3')->url($path);
-
-        // Trả về response
-        return response()->json([
-            'message' => 'File uploaded successfully',
-            'messageType' => 'success',
-            'status' => 200,
-            'data' => [
-                'image_name' => $fileName,
-                'image_url' => $url,
-                'mime' => $image->getClientMimeType(),
-            ]
-        ], 200);
     }
 
     /**

@@ -2,9 +2,11 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { resolve } from "path";
+import svgr from "vite-plugin-svgr";
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react(), tailwindcss(), svgr({})],
+
   resolve: {
     alias: {
       // eslint-disable-next-line no-undef
@@ -21,19 +23,6 @@ export default defineConfig({
       "@routers": resolve(__dirname, "src/routers"),
       // eslint-disable-next-line no-undef
       "@utils": resolve(__dirname, "src/utils")
-    }
-  },
-  theme: {
-    extend: {
-      keyframes: {
-        fadeIn: {
-          "0%": { opacity: 0, transform: "translateY(-10px)" },
-          "100%": { opacity: 1, transform: "translateY(0)" }
-        }
-      },
-      animation: {
-        fadeIn: "fadeIn 0.3s ease-out"
-      }
     }
   }
 });

@@ -2,17 +2,18 @@
 // src/routers/Admin.jsx
 
 import { Navigate, Outlet, useLoaderData } from "react-router-dom";
-import AdminLayout from "@layouts/Admin/AdminLayout";
 import { adminModules } from "@routers/adminModules";
-
+import AppLayout from "@layouts/Admin/AppLayout";
+import Home from "@pages/Admin/Dashboard/Home";
+import NotFound from "@pages/Admin/OtherPage/NotFound";
 const adminRoutes = [
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: <AppLayout />,
     children: [
       {
         index: true,
-        element: <div className="text-center">Admin Dashboard</div>
+        element: <Home />
       },
       // cho mỗi module
 
@@ -24,13 +25,13 @@ const adminRoutes = [
             { index: true, element: <List /> },
             { path: "new", element: <Create /> },
             { path: ":id/edit", element: <Edit /> },
-            { path: "*", element: <Navigate to={`/admin/${name}`} replace /> }
+            { path: "*", element: <NotFound /> }
           ]
         })
       ),
 
       // catch-all /admin/*
-      { path: "*", element: <Navigate to="/admin" replace /> }
+      { path: "*", element: <NotFound /> }
     ]
   }
 ];

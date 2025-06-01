@@ -1,0 +1,2651 @@
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+# Sử dụng Extension Swagger Viewer để xem tài liệu
+
+openapi: 3.0.0
+info:
+  title: SuperBee
+  version: "1.0.0"
+  description: API Website
+servers:
+  - description: SuperBee Backend
+    url: http://localhost:8000/api
+paths:
+  /roles:
+    get:
+      tags:
+        - Role
+      summary: Lấy danh sách vai trò
+      operationId: getRoles
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Các trường dữ liệu muốn trả về
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Số lượng bản ghi muốn bỏ qua
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Giới hạn tối đa muốn trả về
+      responses:
+        '200':
+          description: Danh sách vai trò
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy danh sách vai trò thành công
+                  data: 
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: 
+                          type: integer
+                          example: 1
+                        role_name: 
+                          type: string
+                          example: admin
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    post:
+      tags:
+        - Role
+      summary: Thêm một vai trò
+      operationId: postRole
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  example: admin
+      responses:
+        '201':
+          description: Tạo vai trò thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Thêm vai trò mới thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      username: 
+                        type: string
+                        example: admin
+
+              
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin
+        '409':
+          description: Vai trì đã tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Vai trò đã tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+  /roles/{role_id}:
+    get: 
+      tags:
+        - Role
+      summary: Lấy thông tin vai trò
+      operationId: getRoleById
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Thông tin vai trò
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy thông tin vai trò thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      role_name: 
+                        type: string
+                        example: admin
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':  
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+        '404':
+          description: Not Found - Vai trò không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Vai trò không tồn tại
+    put:
+      tags:
+        - Role
+      summary: Sửa role 
+      operationId: PutRoles
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: Role ID
+          in: header
+          required: true
+          schema:
+            type: string
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  example: admin
+      responses:
+        '200':
+          description: Cập nhật vai trò thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cập nhật vai trò thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      role_name: 
+                        type: string
+                        example: admin
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin
+        '404':
+          description: Not Found - Vai trò không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Vai trò không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    delete:
+      tags:
+        - Role
+      summary: Xóa vai trò
+      operationId: deleteRole
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: Role ID
+          in: header
+          required: true
+          schema:
+            type: string
+            example: 1
+      responses:
+        '200':
+          description: Xóa vai trò thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Xóa vai trò thành công
+        '404':
+          description: Not Found - Vai trò không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Vai trò không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    
+  /webs:
+    get:
+      tags:
+        - Web
+      summary: Lấy danh sách các trang web
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Các trường dữ liệu muốn trả về
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Số lượng bản ghi muốn bỏ qua
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Giới hạn tối đa muốn trả về
+      operationId: getWebsites
+      responses:
+        '200':
+          description: Danh sách các trang web
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy danh sách các trang web thành công
+                  data: 
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: 
+                          type: integer
+                          example: 1
+                        subdomain: 
+                          type: string
+                          example: antrc2
+                        url:
+                          type: string
+                          example: antrc2.superbee.com
+                        user_id: 
+                          type: integer
+                          example: 1
+                        fullname:
+                          type: string
+                          example: Nguyen Van A
+                        api_key: 
+                          type: string
+                          example: 1234567890abcdef
+                        status:
+                          type: string
+                          example: Đang hoạt động / Đã bị khóa
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at:
+                          type: string
+                          format: date-time
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    post:
+      tags:
+        - Web
+      summary: Tạo một trang web mới
+      operationId: createWebsite
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subdomain:
+                  type: string
+                  example: antrc2
+                url:
+                  type: string
+                  example: antrc2.superbee.com
+                user_id:
+                  type: integer
+                  example: 1
+                api_key:
+                  type: string
+                  example: 1234567890abcdef
+      responses:
+        '201':
+          description: Tạo trang web thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Thêm trang web mới thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      subdomain: 
+                        type: string
+                        example: antrc2
+                      url:
+                        type: string
+                        example: antrc2.superbee.com
+                      user_id:
+                        type: integer
+                        example: 1
+                      api_key:
+                        type: string
+                        example: 1234567890abcdef
+                      status:
+                        type: string
+                        example: Đang hoạt động / Đã bị khóa 
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin
+
+        '409':
+          description: Conflict - Subdomain đã tồn tại hoặc không hợp lệ, hoặc user_id không tồn tại trong hệ thống.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Subdomain đã tồn tại hoặc không hợp lệ, hoặc user_id không tồn tại trong hệ thống.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+  /webs/{web_id}:
+    get:
+      tags:
+        - Web
+      summary: Lấy thông tin trang web
+      operationId: getWebsite
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: web_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Thông tin trang web
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy thông tin trang web thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      subdomain: 
+                        type: string
+                        example: antrc2
+                      user_id:
+                        type: integer
+                        example: 1
+                      fullname:
+                        type: string
+                        example: Nguyen Van A
+                      api_key:
+                        type: string
+                        example: 1234567890abcdef
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+
+        '404':
+          description: Not Found - Trang web không tồn tại hoặc không hợp lệ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Trang web không tồn tại hoặc không hợp lệ.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    put:
+      tags:
+        - Web
+      summary: Cập nhật thông tin trang web
+      operationId: updateWebsite
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: web_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subdomain:
+                  type: string
+                  example: antrc2
+                user_id:
+                  type: integer
+                  example: 1
+                api_key:
+                  type: string
+                  example: 1234567890abcdef
+      responses:
+        '200':
+          description: Cập nhật trang web thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cập nhật trang web thành công
+
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin.
+        '404':
+          description: Not Found - Trang web không tồn tại hoặc không hợp lệ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Trang web không tồn tại hoặc không hợp lệ.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description:
+            Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    delete:
+      tags:
+        - Web
+      summary: Xóa trang web
+      operationId: deleteWebsite
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: web_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Xóa trang web thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Xóa trang web thành công
+
+        '404':
+          description: Not Found - Trang web không tồn tại hoặc không hợp lệ.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Trang web không tồn tại hoặc không hợp lệ.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description:
+            Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+
+        
+  /accounts:
+    get:
+      tags:
+        - Account
+      summary: Lấy danh sách tài khoản
+      operationId: getAccounts
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            description: Các trường dữ liệu muốn trả về
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Số lượng bản ghi muốn bỏ qua
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            description: Giới hạn tối đa muốn trả về
+      responses:
+        '200':
+          description: Danh sách tài khoản
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy danh sách tài khoản thành công
+                  data: 
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: 
+                          type: integer
+                          example: 1
+                        username: 
+                          type: string
+                          example: admin
+                        fullname: 
+                          type: string
+                          example: Nguyen Van A
+                        password:
+                          type: string
+                          example: sha256-hashed
+                        email: 
+                          type: string
+                          format: email
+                          example: admin@example.com
+                        phone: 
+                          type: string
+                          example: 0987654321
+                        role_id:
+                          type: integer
+                          example: 1
+                        role:
+                          type: string
+                          example: admin
+                        web_id: 
+                          type: integer
+                          example: 1
+                        affiliated_by: 
+                          type: integer
+                          example: 2
+                        affiliated_fullname:
+                          type: string
+                          example: Nguyen Van B
+                        status:
+                          type: string
+                          example: Đang hoạt động / Đã bị khóa
+                        created_at:
+                          type: string
+                          format: date-time
+                        updated_at: 
+                          type: string
+                          format: date-time
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    post:
+      tags:
+        - Account
+      summary: Tạo tài khoản mới
+      operationId: createAccount
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: newuser
+                password:
+                  type: string
+                  example: password123
+                email:
+                  type: string
+                  format: email
+                  example: newuser@example.com
+                phone:
+                  type: string
+                  example: "0912345678"
+                fullname:
+                  type: string
+                  example: Nguyễn Văn C
+                affiliated_by:
+                  type: integer
+                  example: 2
+      responses:
+        '201':
+          description: Tạo tài khoản thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Thêm tài khoản mới thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      username: 
+                        type: string
+                        example: admin
+                      fullname: 
+                        type: string
+                        example: Nguyen Van A
+                      password:
+                        type: string
+                        example: sha256-hashed
+                      email: 
+                        type: string
+                        format: email
+                        example: admin@example.com
+                      phone: 
+                        type: string
+                        example: 0987654321
+                      role:
+                        type: string
+                        example: admin
+                      web_id: 
+                        type: integer
+                        example: 1
+                      affiliated_by: 
+                        type: integer
+                        example: 2
+                      affiliated_fullname:
+                        type: string
+                        example: Nguyen Van B
+                      status:
+                        type: string
+                        example: Đang hoạt động
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at: 
+                        type: string
+                        format: date-time
+                    
+                  
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin
+        '409':
+          description: Conflict - Email, số điện thoại, hoặc tên người dùng đã tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Email, số điện thoại, hoặc tên người dùng đã tồn tại
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+        '401': 
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+  /accounts/{account_id}:
+    get:
+      tags:
+        - Account
+      summary: Lấy thông tin tài khoản
+      operationId: getAccountById
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Thông tin tài khoản
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                  message:
+                    type: string
+                    example: Lấy thông tin tài khoản thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      username: 
+                        type: string
+                        example: admin
+                      fullname: 
+                        type: string
+                        example: Nguyen Van A
+                      password:
+                        type: string
+                        example: sha256-hashed
+                      email: 
+                        type: string
+                        format: email
+                        example: admin@example.com
+                      phone:
+                        type: string
+                        example: 0987654321
+                      role:
+                        type: string
+                        example: admin
+                      web_id: 
+                        type: integer
+                        example: 1
+                      affiliated_by:
+                        type: integer
+                        example: 2
+                      affiliated_fullname:
+                        type: string
+                        example: Nguyen Van B
+                      status:
+                        type: string
+                        example: Đang hoạt động
+                      created_at:
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        '404':
+          description: Not Found - Tài khoản không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Tài khoản không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403': 
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    put:
+      tags:
+        - Account
+      summary: Cập nhật thông tin tài khoản
+      operationId: updateAccount
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: admin
+                fullname:
+                  type: string
+                  example: Nguyen Van A
+                email:
+                  type: string
+                  format: email
+                  example: admin@example.com
+                phone:
+                  type: string
+                  example: 0987654321
+                role:
+                  type: string
+                  example: admin
+                status:
+                  type: string
+                  example: Đang hoạt động
+      responses: 
+        '200':
+          description: Cập nhật tài khoản thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cập nhật tài khoản thành công
+                  data: 
+                    type: object
+                    properties:
+                      id: 
+                        type: integer
+                        example: 1
+                      username: 
+                        type: string
+                        example: admin
+                      fullname: 
+                        type: string
+                        example: Nguyen Van A
+                      password:
+                        type: string
+                        example: sha256-hashed
+                      email: 
+                        type: string
+                        format: email
+                        example: admin@example.com
+                      phone: 
+                        type: string
+                        example: 0987654321
+                      role: 
+                        type: string
+                        example: admin  
+                      web_id: 
+                        type: integer
+                        example: 1
+                      affiliated_by:
+                        type: integer
+                        example: 2
+                      affiliated_fullname:
+                        type: string
+                        example: Nguyen Van B
+                      status:
+                        type: string
+                        example: Đang hoạt động
+                      created_at: 
+                        type: string
+                        format: date-time
+                      updated_at:
+                        type: string
+                        format: date-time
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin
+        '404':
+          description: Not Found - Tài khoản không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Tài khoản không tồn tại
+        '409':  
+          description: Conflict - Email, số điện thoại, hoặc tên người dùng đã tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Email, số điện thoại, hoặc tên người dùng đã tồn tại
+        '401':
+          description: Unauthorized - Chưa đăng nhập hoặc token không hợp lệ
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Chưa đăng nhập hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có quyền truy cập
+    delete: 
+      tags:
+        - Account
+      summary: Xóa tài khoản
+      operationId: deleteAccount
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: account_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Xóa tài khoản thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Xóa tài khoản thành công
+        '404':
+          description: Not Found - Tài khoản không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Tài khoản không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+  /categories:
+    get:
+      tags:
+        - Category
+      summary: Lấy danh sách danh mục
+      operationId: getCategories
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      responses:
+        '200':
+          description: Danh sách danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Lấy danh sách danh mục thành công
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        category_name:
+                          type: string
+                          example: Điện thoại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+        '404':
+          description: Not Found - Danh mục không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục không tồn tại
+    post: 
+      tags:
+        - Category
+      summary: Tạo danh mục mới
+      operationId: createCategory
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_name:
+                  type: string
+                  example: Điện thoại
+      responses:
+        '201':
+          description: Tạo danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Tạo danh mục thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      category_name:
+                        type: string
+                        example: Điện thoại
+
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này.
+        '409':
+          description: Conflict - Danh mục đã tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục đã tồn tại.
+  /categories/{category_id}:
+    get:
+      tags:
+        - Category
+      summary: Lấy thông tin danh mục
+      operationId: getCategoryById
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Thông tin danh mục
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Lấy thông tin danh mục thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      category_name:
+                        type: string
+                        example: Điện thoại
+        '404':
+          description: Not Found - Danh mục không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    put:
+      tags:
+        - Category
+      summary: Cập nhật thông tin danh mục
+      operationId: updateCategory
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category_name:
+                  type: string
+                  example: Điện thoại thông minh
+      responses:
+        '200':
+          description: Cập nhật danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cập nhật danh mục thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      category_name:
+                        type: string
+                        example: Điện thoại thông minh
+
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin.
+        '404':
+          description: Not Found - Danh mục không tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục không tồn tại.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này.
+        '409':
+          description: Conflict - Tài nguyên đã tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Tài nguyên đã tồn tại.
+    delete:
+      tags:
+        - Category
+      summary: Xóa danh mục
+      operationId: deleteCategory
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: category_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Xóa danh mục thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Xóa danh mục thành công
+        '404':
+          description: Not Found - Danh mục không tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục không tồn tại.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này.
+  /discount_codes:
+    get:
+      tags:
+        - Discount Code
+      summary: Lấy danh sách mã giảm giá
+      operationId: getDiscountCodes
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            example: 0
+        - name: field
+          in: query
+          required: false
+          schema:
+            type: string
+            example: code
+        - name: user_id
+          in: query
+          required: false
+          schema: 
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Danh sách mã giảm giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Lấy danh sách mã giảm giá thành công
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        code:
+                          type: string
+                          example: DISCOUNT10
+                        usage_limit:
+                          type: integer
+                          example: 1000
+                        used_count:
+                          type: integer
+                          example: 50
+                        end_date:
+                          type: string
+                          format: date-time
+                          example: "2023-12-31T23:59:59Z"
+                        discount_amount:
+                          type: integer
+                          example: 10
+                        min_discount_amount:
+                          type: integer
+                          example: 1000000
+                        max_discount_amount:
+                          type: integer
+                          example: 5000000
+                        user_id:
+                          type: integer
+                          example: 0
+                        created_at:
+                          type: string
+                          format: date-time 
+                        updated_at:
+                          type: string 
+                          format: date-time 
+                        start_date:
+                          type: string 
+                          format: date-time
+                          example: "2023-01-01T00:00:00Z"
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+        '404':
+          description: Not Found - Danh mục không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Danh mục không tồn tại
+    post:
+      tags:
+        - Discount Code
+      summary: Tạo mã giảm giá mới
+      operationId: createDiscountCode
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: DISCOUNT10
+                usage_limit:
+                  type: integer
+                  example: 1000
+                used_count:
+                  type: integer
+                  example: 50
+                end_date:
+                  type: string
+                  format: date-time
+                  example: "2023-12-31T23:59:59Z"
+                discount_amount:
+                  type: integer
+                  example: 10
+                min_discount_amount:
+                  type: integer
+                  example: 1000000
+                max_discount_amount:
+                  type: integer
+                  example: 5000000
+                user_id:
+                  type: integer
+                  example: 0
+                created_at:
+                  type: string
+                  format: date-time
+                  example: "2023-01-01T00:00:00Z"
+                updated_at:
+                  type: string
+                  format: date-time
+                  example: "2023-01-01T00:00:00Z"
+                start_date:
+                  type: string
+                  format: date-time
+                  example: "2023-01-01T00:00:00Z"
+      responses:
+        '201':
+          description: Tạo mã giảm giá thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Tạo mã giảm giá thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      code:
+                        type: string
+                        example: DISCOUNT10
+                      usage_limit:
+                        type: integer
+                        example: 1000
+                      used_count:
+                        type: integer
+                        example: 50
+                      end_date:
+                        type: string
+                        format: date-time
+                        example: "2023-12-31T23:59:59Z"
+                      discount_amount:
+                        type: integer
+                        example: 10
+                      min_discount_amount:
+                        type: integer
+                        example: 1000000
+                      max_discount_amount:
+                        type: integer
+                        example: 5000000
+                      user_id:
+                        type: integer
+                        example: 0
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      start_date:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này.
+        '409':
+          description: Conflict - Mã giảm giá đã tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Mã giảm giá đã tồn tại.
+  /discount_codes/{discount_code_id}:
+    get:
+      tags:
+        - Discount Code
+      summary: Lấy thông tin mã giảm giá
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: discount_code_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Success - Thông tin mã giảm giá
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Lấy thông tin mã giảm giá thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      code:
+                        type: string
+                        example: DISCOUNT10
+                      usage_limit:
+                        type: integer
+                        example: 1000
+                      used_count:
+                        type: integer
+                        example: 50
+                      end_date:
+                        type: string
+                        format: date-time
+                        example: "2023-12-31T23:59:59Z"
+                      discount_amount:
+                        type: integer
+                        example: 10
+                      min_discount_amount:
+                        type: integer
+                        example: 1000000
+                      max_discount_amount:
+                        type: integer
+                        example: 5000000
+                      user_id:
+                        type: integer
+                        example: 0
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      start_date:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+        '404':
+          description: Not Found - Mã giảm giá không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Mã giảm giá không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này
+    put:
+      tags:
+        - Discount Code
+      summary: Cập nhật thông tin mã giảm giá
+      operationId: updateDiscountCode
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+        - name: discount_code_id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: DISCOUNT10
+                usage_limit:
+                  type: integer
+                  example: 1000
+                used_count:
+                  type: integer
+                  example: 50
+                end_date:
+                  type: string
+                  format: date-time
+                  example: "2023-12-31T23:59:59Z"
+                discount_amount:
+                  type: integer
+                  example: 10
+                min_discount_amount:
+                  type: integer
+                  example: 1000000
+                max_discount_amount:
+                  type: integer
+                  example: 5000000
+                user_id:
+                  type: integer
+                  example: 0
+                start_date:
+                  type: string
+                  format: date-time
+                  example: "2023-01-01T00:00:00Z"
+      responses:
+        '200':
+          description: Cập nhật mã giảm giá thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Cập nhật mã giảm giá thành công
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      code:
+                        type: string
+                        example: DISCOUNT10
+                      usage_limit:
+                        type: integer
+                        example: 1000
+                      used_count:
+                        type: integer
+                        example: 50
+                      end_date:
+                        type: string
+                        format: date-time
+                        example: "2023-12-31T23:59:59Z"
+                      discount_amount:
+                        type: integer
+                        example: 10
+                      min_discount_amount:
+                        type: integer
+                        example: 1000000
+                      max_discount_amount:
+                        type: integer
+                        example: 5000000
+                      user_id:
+                        type: integer
+                        example: 0
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+                      start_date:
+                        type: string
+                        format: date-time
+                        example: "2023-01-01T00:00:00Z"
+        '400':
+          description: Bad Request - Dữ liệu không hợp lệ hoặc thiếu thông tin.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Dữ liệu không hợp lệ hoặc thiếu thông tin.
+        '404':
+          description: Not Found - Mã giảm giá không tồn tại.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Mã giảm giá không tồn tại.
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ.
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này.
+    delete:
+      tags:
+        - Discount Code
+      summary: Xóa mã giảm giá
+      operationId: deleteDiscountCode
+      parameters:
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Bearer <Token>
+      responses:
+        '200':
+          description: Xóa mã giảm giá thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: 
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Xóa mã giảm giá thành công
+        '404':
+          description: Not Found - Mã giảm giá không tồn tại
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Mã giảm giá không tồn tại
+        '401':
+          description: Unauthorized - Token không hợp lệ hoặc không có token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Không có token hoặc token không hợp lệ
+        '403':
+          description: Forbidden - Người dùng không có quyền truy cập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Bạn không có quyền truy cập tài nguyên này

@@ -21,7 +21,9 @@ class User extends Authenticatable
         'web_id',
         'status',
     ];
-
+    protected $hidden = [
+        'password',
+    ];
     public function web()
     {
         return $this->belongsTo(Web::class);

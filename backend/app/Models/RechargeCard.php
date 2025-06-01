@@ -26,7 +26,9 @@ class RechargeCard extends Model
         'sign',
         'donate_promotion_id',
     ];
-
+    protected $hidden = [
+        'sign',
+    ];
     public function walletTransaction()
     {
         return $this->belongsTo(WalletTransaction::class);

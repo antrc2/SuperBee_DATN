@@ -368,7 +368,16 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('affiliated_by')->nullable();
-            $table->decimal('commission_amount', 15, 0)->default(0.00); // Số tiền hoa hồng
+            // $table->decimal('commission_amount', 15, 0)->default(0.00); // Số tiền hoa hồng
+            $table->timestamps();
+        });
+        
+        // Bảng lịch sử affiliate
+        Schema::create("affiliate_histories", function(Blueprint $table){
+            $table->id(); 
+            $table->unsignedBigInteger('affiliate_id'); // id của bảng affiliate
+            $table->decimal('commission_amount', 15, 0); // Số tiền hoa hồng nhận được của mỗi đơn hàng
+            $table->unsignedBigInteger('order_id'); 
             $table->timestamps();
         });
 

@@ -5,14 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
+class ProductReport extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'web_id',
-        'star',
+        'product_id',
+        'reason',
+        'status',
     ];
 
     public function user()
@@ -20,8 +21,8 @@ class Review extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function web()
+    public function product()
     {
-        return $this->belongsTo(Web::class);
+        return $this->belongsTo(Product::class);
     }
 }

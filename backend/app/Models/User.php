@@ -5,206 +5,167 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable,  HasRoles;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'username',
-        'password',
-        'fullname',
+        'password', // Make sure to hash this in a mutator or service
         'email',
         'phone',
         'avatar_url',
-        'balance',
-        'role_id',
+        'donate_code',
         'web_id',
-        'affiliated_by',
         'status',
-        "donate_code"
-
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'password',
-    ];
-
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
-    protected function casts(): array
-    {
-        return [
-            'password' => 'hashed',
-            'balance' => 'integer',
-            'status' => 'integer',
-        ];
-    }
-
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [
-
-            'api_key' => $this->apikey,      // nếu có
-            'web_id' => $this->id,       // nếu có
-            // thêm gì tùy bạn
-
-        ];
-    }
-    /**
-     * Get the role that the user belongs to.
-     */
-    public function role(): BelongsTo
-    {
-        return $this->belongsTo(Role::class);
-    }
-
-    /**
-     * Get the web that the user is associated with.
-     */
-    public function web(): BelongsTo
+    public function web()
     {
         return $this->belongsTo(Web::class);
     }
 
-    /**
-     * Get the user who referred this user.
-     */
-    public function affiliatedBy(): BelongsTo
+    public function createdWebs()
     {
-        return $this->belongsTo(User::class, 'affiliated_by');
+        return $this->hasMany(Web::class, 'user_id');
     }
 
-    /**
-     * Get the webs owned by the user.
-     */
-    public function webs(): HasMany
+    public function createdCategories()
     {
-        return $this->hasMany(Web::class);
+        return $this->hasMany(Category::class, 'created_by');
     }
 
-    /**
-     * Get the bank histories for the user.
-     */
-    public function bankHistories(): HasMany
+    public function updatedCategories()
     {
-        return $this->hasMany(BankHistory::class);
+        return $this->hasMany(Category::class, 'updated_by');
     }
 
-    /**
-     * Get the card histories for the user.
-     */
-    public function cardHistories(): HasMany
-    {
-        return $this->hasMany(CardHistory::class);
-    }
-
-    /**
-     * Get the carts for the user.
-     */
-    public function carts(): HasMany
-    {
-        return $this->hasMany(Cart::class);
-    }
-
-    /**
-     * Get the chats for the user.
-     */
-    public function chats(): HasMany
-    {
-        return $this->hasMany(Chat::class);
-    }
-
-    /**
-     * Get the discount codes for the user.
-     */
-    public function discountCodes(): HasMany
-    {
-        return $this->hasMany(DiscountCode::class);
-    }
-
-    /**
-     * Get the logs for the user.
-     */
-    public function logs(): HasMany
-    {
-        return $this->hasMany(Log::class);
-    }
-
-    /**
-     * Get the notifications for the user.
-     */
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    /**
-     * Get the orders for the user.
-     */
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    /**
-     * Get the products created by the user.
-     */
-    public function createdProducts(): HasMany
+    public function createdProducts()
     {
         return $this->hasMany(Product::class, 'created_by');
     }
 
-    /**
-     * Get the products updated by the user.
-     */
-    public function updatedProducts(): HasMany
+    public function updatedProducts()
     {
         return $this->hasMany(Product::class, 'updated_by');
     }
 
-    /**
-     * Get the refresh tokens for the user.
-     */
-    public function refreshTokens(): HasMany
-    {
-        return $this->hasMany(RefreshToken::class);
-    }
-
-    /**
-     * Get the reviews for the user.
-     */
-    public function reviews(): HasMany
+    public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    /**
-     * Get the tickets for the user.
-     */
-    public function tickets(): HasMany
+    public function productReports()
     {
-        return $this->hasMany(Ticket::class);
+        return $this->hasMany(ProductReport::class);
+    }
+
+    public function cart()
+    {
+        // Giả sử một user chỉ có một cart
+        return $this->hasOne(Cart::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function wallet()
+    {
+        // Giả sử một user chỉ có một wallet
+        return $this->hasOne(Wallet::class);
+    }
+
+    public function rechargeCards()
+    {
+        return $this->hasMany(RechargeCard::class);
+    }
+
+    public function rechargeBanks()
+    {
+        return $this->hasMany(RechargeBank::class);
+    }
+
+    public function withdrawals()
+    {
+        return $this->hasMany(Withdrawal::class);
+    }
+
+    public function createdPromotions()
+    {
+        return $this->hasMany(Promotion::class, 'created_by');
+    }
+
+    public function updatedPromotions()
+    {
+        return $this->hasMany(Promotion::class, 'updated_by');
+    }
+
+    public function createdDonatePromotions()
+    {
+        return $this->hasMany(DonatePromotion::class, 'created_by');
+    }
+
+    public function updatedDonatePromotions()
+    {
+        return $this->hasMany(DonatePromotion::class, 'updated_by');
+    }
+
+    public function systemLogs()
+    {
+        return $this->hasMany(SystemLog::class);
+    }
+
+    public function postsAuthored()
+    {
+        return $this->hasMany(Post::class, 'author_id');
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function createdChatRooms()
+    {
+        return $this->hasMany(ChatRoom::class, 'created_by');
+    }
+
+    public function sentMessages()
+    {
+        return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    public function createdBanners()
+    {
+        return $this->hasMany(Banner::class, 'created_by');
+    }
+
+    public function updatedBanners()
+    {
+        return $this->hasMany(Banner::class, 'updated_by');
+    }
+
+    public function affiliateData() // User này là một affiliate
+    {
+        return $this->hasOne(Affiliate::class, 'user_id');
+    }
+
+    public function referredAffiliates() // User này đã giới thiệu các affiliates khác
+    {
+        return $this->hasMany(Affiliate::class, 'affiliated_by');
+    }
+
+    public function refreshTokens()
+    {
+        return $this->hasMany(RefreshToken::class);
     }
 }

@@ -2,54 +2,72 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Product extends Model
 {
-    
+    use HasFactory;
+
     protected $fillable = [
         'category_id',
-        'username',
-        'password',
+        'sku',
+        'price',
+        'sale',
         'status',
+        'web_id',
         'created_by',
         'updated_by',
-        'web_id',
     ];
 
-    protected $casts = [
-        'status' => 'integer',
-    ];
-
-    public function category(): BelongsTo
+    public function category()
     {
         return $this->belongsTo(Category::class);
     }
 
-    public function createdBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    public function web(): BelongsTo
+    public function web()
     {
         return $this->belongsTo(Web::class);
     }
 
-    public function productDetails(): HasMany
+    public function creator()
     {
-        return $this->hasMany(ProductDetail::class);
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function productImages(): HasMany
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function gameAttributes()
+    {
+        // Giả sử một product có một bộ game attributes
+        return $this->hasOne(ProductGameAttribute::class);
+    }
+
+    public function credentials()
+    {
+        return $this->hasMany(ProductCredential::class);
+    }
+
+    public function images()
     {
         return $this->hasMany(ProductImage::class);
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(ProductReport::class);
+    }
+
+    public function cartItems()
+    {
+        return $this->hasMany(CartItem::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 }

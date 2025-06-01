@@ -2,20 +2,27 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Notification extends Model
 {
-    protected $fillable = ['user_id', 'web_id', 'message', 'type', 'url'];
+    use HasFactory;
 
-    public function user(): BelongsTo
+    protected $fillable = [
+        'user_id',
+        'title',
+        'content',
+        'link',
+        'is_read', // Often updated separately, not on creation
+    ];
+
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
+
+    public function user()
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function web(): BelongsTo
-    {
-        return $this->belongsTo(Web::class);
     }
 }

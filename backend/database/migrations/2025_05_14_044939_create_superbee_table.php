@@ -17,9 +17,9 @@ return new class extends Migration
             $table->string('email', 255); // Đặt độ dài cụ thể
             $table->string('phone', 20)->nullable(); // Có thể null
             $table->string('avatar_url')->default('https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg');
-            $table->string('donate_code')->nullable();
+            $table->string('donate_code');
             $table->unsignedBigInteger('web_id');
-            $table->integer('status')->default(1); // Mặc định hoạt động
+            $table->integer('status')->default(0); // Mặc định k hoạt động
             $table->timestamps();
             $table->unique(['username', 'email', 'web_id']);
         });
@@ -30,7 +30,7 @@ return new class extends Migration
             $table->string('subdomain', 255)->unique(); // Đặt độ dài cụ thể
             $table->unsignedBigInteger('user_id')->nullable(); // Người tạo/quản lý web con, không thể null
             $table->string('api_key', 255); // API Key bắt buộc
-            $table->integer('status')->default(1); // Mặc định hoạt động
+            $table->integer('status')->default(0); // Mặc định k hoạt động
             $table->timestamps();
         });
 
@@ -51,18 +51,21 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
             $table->string('sku', 50)->unique();           // SKU duy nhất
+            $table->integer('price');
+            $table->integer('sale')->nullable();
             $table->integer('status')->default(1);         // Trạng thái (mặc định = 1: hoạt động)
             $table->unsignedBigInteger('web_id');          // Sản phẩm thuộc web con nào
             $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
             $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
             $table->timestamps();
+
         });
 
         // Bảng product_game_attributes (EAV cho thông tin riêng theo game)
         Schema::create('product_game_attributes', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('product_id');      // Khóa liên kết tới products
-            $table->string('game_code', 50);               // Mã game (ví dụ: 'lol', 'ff', ...)
+            // $table->string('game_code', 50);               // Mã game (ví dụ: 'lol', 'ff', ...)
             $table->string('attribute_key', 100);          // Tên thuộc tính (ví dụ: 'rank', 'num_champions', ...)
             $table->string('attribute_value', 255);        // Giá trị tương ứng (luôn lưu dạng chuỗi)
             $table->timestamps();
@@ -74,9 +77,9 @@ return new class extends Migration
         Schema::create('product_credentials', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('product_id')->unique(); // Mỗi sản phẩm chỉ có 1 bộ credentials duy nhất
-            $table->string('email', 255);       // Email đăng nhập
+            $table->string('username', 255);       // Email đăng nhập
             $table->string('password', 255);    // Mật khẩu (hãy mã hóa ở tầng ứng dụng)
-            $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
+            // $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
             $table->timestamps();
         });
 
@@ -85,7 +88,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('product_id');   // Ảnh thuộc về sản phẩm nào
             $table->string('image_url', 255);           // Đường dẫn ảnh
-            $table->boolean('is_primary')->default(false); // Ảnh chính hay không
+            // $table->boolean('is_primary')->default(false); // Ảnh chính hay không
             $table->string('alt_text', 255)->nullable(); // Văn bản thay thế (alt)
             $table->timestamps();
         });
@@ -129,14 +132,15 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');               // Ai đặt hàng
             $table->string('order_code', 50)->unique();          // Mã đơn hàng duy nhất
-            $table->decimal('total_amount', 15, 2);              // Tổng tiền (sau khi trừ khuyến mãi, nếu có)
+            $table->decimal('total_amount', 15, 0);              // Tổng tiền (sau khi trừ khuyến mãi, nếu có)
+            // $table->integer('total_amount');
             $table->unsignedBigInteger('wallet_transaction_id'); // ID giao dịch ví (nếu có)
-            $table->string('payment_method', 50)->nullable();    // Phương thức thanh toán (ví, bank, card, ...)
-            $table->integer('status')->default(0);               // Trạng thái đơn: 0 = pending, 1 = completed, 2 = cancelled
-
-            // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
+            // $table->string('payment_method', 50)->nullable();    // Phương thức thanh toán (ví, bank, card, ...)
+            $table->integer('status')->default(1);               // Trạng thái đơn: 0 = pending, 1 = completed, 2 = cancelled
+            // $table->unsignedBigInteger('promotion_id')->nullable();
+            // // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
             $table->string('promo_code', 50)->nullable();        // Lưu mã khuyến mãi (nếu có)
-            $table->decimal('discount_amount', 15, 2)->nullable(); // Số tiền giảm tương ứng (nếu có)
+            $table->decimal('discount_amount', 15, 0)->nullable(); // Số tiền giảm tương ứng (nếu có)
 
             $table->timestamps();
         });
@@ -146,7 +150,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('order_id');   // Thuộc đơn hàng nào
             $table->unsignedBigInteger('product_id'); // Sản phẩm trong đơn hàng
-            $table->decimal('unit_price', 15, 2);     // Giá tại thời điểm đặt hàng
+            $table->decimal('unit_price', 15, 0);     // Giá tại thời điểm đặt hàng
             $table->timestamps();
         });
 
@@ -154,7 +158,7 @@ return new class extends Migration
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->unique(); // Mỗi user có 1 ví duy nhất
-            $table->decimal('balance', 15, 2)->default(0.00); // Số dư mặc định 0
+            $table->decimal('balance', 15, 0)->default(0.00); // Số dư mặc định 0
             $table->string('currency', 10)->default('VND'); // Đơn vị tiền tệ
             $table->timestamps();
         });
@@ -163,12 +167,13 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('wallet_id'); // Giao dịch thuộc ví nào
-            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission']); // Thêm 'commission' cho affiliate
-            $table->decimal('amount', 15, 2); // Số tiền giao dịch, không null
+            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission','refund']); 
+            //                     Nạp card         Nạp bank        Mua hàng    Rút         Hoa hồng      Hoàn tiền
+            $table->decimal('amount', 15, 0); // Số tiền giao dịch, không null
             $table->unsignedBigInteger('related_id')->nullable(); // ID của giao dịch liên quan (nạp thẻ, bank, đơn hàng, rút tiền...)
             $table->string('related_type', 255)->nullable(); // Loại model liên quan (e.g., App\Models\RechargeCard)
-            $table->integer('status')->default(0); // Trạng thái giao dịch (0: pending, 1: completed, 2: failed)
-            $table->text('description')->nullable(); // Mô tả giao dịch
+            $table->integer('status')->default(1); // Trạng thái giao dịch (0: pending, 1: completed, 2: failed)
+            // $table->text('description')->nullable(); // Mô tả giao dịch
             $table->timestamps(); // Đổi thành timestamps() để có created_at và updated_at
         });
 
@@ -178,14 +183,22 @@ return new class extends Migration
             $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // Liên kết với giao dịch ví, có thể null nếu giao dịch chưa được tạo hoàn chỉnh
             $table->unsignedBigInteger('user_id'); // Ai nạp thẻ
             $table->unsignedBigInteger('web_id')->nullable(); // Nạp cho web nào (nếu có web con)
+            $table->integer('amount');// Số tiền bạn nhận về (VND)
             $table->integer('value'); // Giá trị thực của thẻ
             $table->integer('declared_value'); // Giá trị khai báo (ví dụ 50k, 100k)
             $table->string('telco', 50); // Nhà mạng
             $table->string('serial', 50); // Serial thẻ
             $table->string('code', 50); // Mã thẻ
-            $table->integer('status')->default(0); // Trạng thái (0: pending, 1: success, 2: failed)
-            $table->text('message')->nullable(); // Thông báo lỗi/thành công từ hệ thống nạp thẻ
-            $table->text('sign')->nullable(); // Chữ ký (nếu có cho API)
+
+            $table->integer('status');
+            /// status = 1 ==> thẻ đúng
+            /// status = 2 ==> thẻ sai mệnh giá
+            /// status = 3 ==> thẻ lỗi
+            /// status = 99 ==> thẻ chờ xử lý
+
+            $table->text('message'); // Thông báo lỗi/thành công từ hệ thống nạp thẻ
+            $table->text('sign'); // Chữ ký (nếu có cho API)
+            $table->unsignedBigInteger("donate_promotion_id")->nullable();
             $table->timestamps();
         });
 
@@ -195,11 +208,12 @@ return new class extends Migration
             $table->unsignedBigInteger('wallet_transaction_id'); // Liên kết với giao dịch ví
             $table->unsignedBigInteger('user_id'); // Ai nạp tiền
             $table->unsignedBigInteger('web_id'); // Nạp cho web nào
-            $table->decimal('amount', 15, 2); // Số tiền nạp
-            $table->string('bank_account_number', 50); // Số tài khoản ngân hàng của người nạp
-            $table->string('bank_name', 100); // Tên ngân hàng của người nạp
+            $table->decimal('amount', 15, 0); // Số tiền nạp
+            // $table->string('bank_account_number', 50); // Số tài khoản ngân hàng của người nạp
+            // $table->string('bank_name', 100); // Tên ngân hàng của người nạp
             $table->string('transaction_reference', 100)->nullable(); // Mã giao dịch của ngân hàng (có thể null nếu chưa có)
-            $table->integer('status')->default(0); // Trạng thái (0: pending, 1: success, 2: failed)
+            $table->integer('status')->default(1); // Trạng thái (0: pending, 1: success, 2: failed)
+            $table->unsignedBigInteger("donate_promotion_id")->nullable();
             $table->timestamps();
         });
 
@@ -208,7 +222,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // Liên kết với giao dịch ví
             $table->unsignedBigInteger('user_id'); // Ai rút tiền
-            $table->decimal('amount', 15, 2); // Số tiền rút
+            $table->decimal('amount', 15, 0); // Số tiền rút
             $table->string('bank_account_number', 50); // Số tài khoản nhận
             $table->string('bank_name', 100); // Tên ngân hàng nhận
             $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
@@ -222,31 +236,14 @@ return new class extends Migration
             $table->id();
             $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
             $table->text('description')->nullable(); // Mô tả khuyến mãi
-            $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
-            $table->decimal('discount_value', 15, 2); // Giá trị giảm giá
+            // $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
+            $table->decimal('discount_value', 15, 0); // Giá trị giảm giá
+            $table->integer('min_discount_amount')->nullable();
+            $table->integer('max_discount_amount')->nullable();
             $table->date('start_date'); // Ngày bắt đầu
             $table->date('end_date'); // Ngày kết thúc
-            $table->integer('usage_limit')->nullable(); // Giới hạn số lần sử dụng tổng cộng (null nếu không giới hạn)
-            $table->integer('per_user_limit')->default(1); // Giới hạn số lần sử dụng cho mỗi người dùng
-            $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
-            $table->integer('status')->default(1); // Trạng thái (1: active, 0: inactive)
-            $table->unsignedBigInteger('created_by'); // Ai tạo
-            $table->unsignedBigInteger('updated_by'); // Ai cập nhật
-            $table->timestamps();
-        });
-
-        // Bảng domate_promotions (Mã khuyến mãi cho nạp thẻ/ngân hàng)
-        Schema::create('domate_promotions', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('web_id')->nullable(); // Thuộc web nào (có thể là khuyến mãi chung cho toàn hệ thống)
-            $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
-            $table->text('description')->nullable(); // Thêm mô tả
-            $table->enum('promotion_type', ['percentage', 'fixed_amount']); // Loại khuyến mãi
-            $table->decimal('amount', 15, 2); // Giá trị khuyến mãi
-            $table->date('start_date'); // Ngày bắt đầu
-            $table->date('end_date'); // Ngày kết thúc
-            $table->integer('usage_limit')->nullable(); // Giới hạn số lần sử dụng tổng cộng
-            $table->integer('per_user_limit')->default(1); // Giới hạn mỗi người dùng
+            $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
+            $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
             $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
             $table->integer('status')->default(1); // Trạng thái
             $table->unsignedBigInteger('created_by'); // Ai tạo
@@ -254,18 +251,37 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Bảng promotion_usages (Lịch sử sử dụng mã khuyến mãi)
-        Schema::create('promotion_usages', function (Blueprint $table) {
+        // Bảng domate_promotions (Mã khuyến mãi cho nạp thẻ/ngân hàng)
+        Schema::create('donate_promotions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // (Đổi từ 'account_id' thành 'user_id' để thống nhất)
-            $table->unsignedBigInteger('promotion_id')->nullable(); // ID của promotion nếu áp dụng cho sản phẩm
-            $table->unsignedBigInteger('domate_promotion_id')->nullable(); // ID của domate_promotion nếu áp dụng cho nạp thẻ
-            $table->timestamp('used_at')->useCurrent(); // Thời gian sử dụng, mặc định là thời gian hiện tại
-            $table->decimal('amount_discounted', 15, 2); // Số tiền đã được giảm giá
-            $table->unsignedBigInteger('related_order_id')->nullable(); // Liên kết với đơn hàng nếu áp dụng cho đơn hàng
-            $table->unsignedBigInteger('related_wallet_txn_id')->nullable(); // Liên kết với giao dịch ví nếu áp dụng cho nạp tiền
-            // Bạn có thể thêm các trường `created_at`, `updated_at` nếu cần theo dõi thời gian tạo/cập nhật bản ghi này.
+            $table->unsignedBigInteger('web_id')->nullable(); // Thuộc web nào (có thể là khuyến mãi chung cho toàn hệ thống)
+            $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
+            // $table->text('description')->nullable(); // Thêm mô tả
+            // $table->enum('promotion_type', ['percentage', 'fixed_amount']); // Loại khuyến mãi
+            $table->decimal('amount', 15, 0); // Giá trị khuyến mãi
+            $table->date('start_date'); // Ngày bắt đầu
+            $table->date('end_date'); // Ngày kết thúc
+            $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
+            $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
+            $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
+            $table->integer('status')->default(1); // Trạng thái
+            $table->unsignedBigInteger('created_by'); // Ai tạo
+            $table->unsignedBigInteger('updated_by'); // Ai cập nhật
+            $table->timestamps();
         });
+
+        // // Bảng promotion_usages (Lịch sử sử dụng mã khuyến mãi)
+        // Schema::create('promotion_usages', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->unsignedBigInteger('user_id'); // (Đổi từ 'account_id' thành 'user_id' để thống nhất)
+        //     $table->unsignedBigInteger('promotion_id')->nullable(); // ID của promotion nếu áp dụng cho sản phẩm
+        //     $table->unsignedBigInteger('domate_promotion_id')->nullable(); // ID của domate_promotion nếu áp dụng cho nạp thẻ
+        //     $table->timestamp('used_at')->useCurrent(); // Thời gian sử dụng, mặc định là thời gian hiện tại
+        //     $table->decimal('amount_discounted', 15, 0); // Số tiền
+        //     $table->unsignedBigInteger('related_order_id')->nullable(); // Liên kết với đơn hàng nếu áp dụng cho đơn hàng
+        //     $table->unsignedBigInteger('related_wallet_txn_id')->nullable(); // Liên kết với giao dịch ví nếu áp dụng cho nạp tiền
+        //     // Bạn có thể thêm các trường `created_at`, `updated_at` nếu cần theo dõi thời gian tạo/cập nhật bản ghi này.
+        // });
 
         // Bảng system_logs (Ghi log hệ thống)
         Schema::create('system_logs', function (Blueprint $table) {
@@ -338,6 +354,7 @@ return new class extends Migration
         // Bảng banners (Banner tiêu đề)
         Schema::create('banners', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('web_id');
             $table->string('title', 255)->nullable(); // Tiêu đề banner (có thể null nếu chỉ là ảnh)
             $table->string('image_url', 255); // Đường dẫn ảnh banner
             $table->string('link', 255)->nullable(); // Link khi click vào banner
@@ -351,7 +368,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('affiliated_by')->nullable();
-            $table->decimal('commission_amount', 15, 2)->default(0.00);
+            $table->decimal('commission_amount', 15, 0)->default(0.00); // Số tiền hoa hồng
             $table->timestamps();
         });
 
@@ -379,7 +396,7 @@ return new class extends Migration
         Schema::dropIfExists('comments');
         Schema::dropIfExists('posts');
         Schema::dropIfExists('system_logs');
-        Schema::dropIfExists('promotion_usages');
+        // Schema::dropIfExists('promotion_usages');
         Schema::dropIfExists('domate_promotions');
         Schema::dropIfExists('promotions');
         Schema::dropIfExists('withdrawals');
@@ -391,7 +408,7 @@ return new class extends Migration
         Schema::dropIfExists('orders');
         Schema::dropIfExists('cart_items');
         Schema::dropIfExists('carts');
-        Schema::dropIfExists('general_complaints'); // Bảng mới
+        // Schema::dropIfExists('general_complaints'); // Bảng mới
         Schema::dropIfExists('product_reports');
         Schema::dropIfExists('reviews');
         Schema::dropIfExists('product_images');

@@ -124,7 +124,7 @@ return new class extends Migration
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
 
-        Schema::table('domate_promotions', function (Blueprint $table) {
+        Schema::table('donate_promotions', function (Blueprint $table) {
             // web_id in domate_promotions IS nullable.
             $table->foreign('web_id')->references('id')->on('webs')->onDelete('set null');
             // created_by in domate_promotions is not nullable.
@@ -133,17 +133,17 @@ return new class extends Migration
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('restrict');
         });
 
-        Schema::table('promotion_usages', function (Blueprint $table) {
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            // promotion_id in promotion_usages IS nullable.
-            $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('set null');
-            // domate_promotion_id in promotion_usages IS nullable.
-            $table->foreign('domate_promotion_id')->references('id')->on('domate_promotions')->onDelete('set null');
-            // related_order_id in promotion_usages IS nullable.
-            $table->foreign('related_order_id')->references('id')->on('orders')->onDelete('set null');
-            // related_wallet_txn_id in promotion_usages IS nullable.
-            $table->foreign('related_wallet_txn_id')->references('id')->on('wallet_transactions')->onDelete('set null');
-        });
+        // Schema::table('promotion_usages', function (Blueprint $table) {
+        //     $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        //     // promotion_id in promotion_usages IS nullable.
+        //     $table->foreign('promotion_id')->references('id')->on('promotions')->onDelete('set null');
+        //     // domate_promotion_id in promotion_usages IS nullable.
+        //     $table->foreign('domate_promotion_id')->references('id')->on('domate_promotions')->onDelete('set null');
+        //     // related_order_id in promotion_usages IS nullable.
+        //     $table->foreign('related_order_id')->references('id')->on('orders')->onDelete('set null');
+        //     // related_wallet_txn_id in promotion_usages IS nullable.
+        //     $table->foreign('related_wallet_txn_id')->references('id')->on('wallet_transactions')->onDelete('set null');
+        // });
 
         Schema::table('system_logs', function (Blueprint $table) {
             // user_id in system_logs IS nullable.
@@ -178,6 +178,7 @@ return new class extends Migration
         });
 
         Schema::table('banners', function (Blueprint $table) {
+            $table->foreign('web_id')->references('id')->on('webs')->onDelete('cascade');
             // created_by in banners is not nullable.
             $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
             // updated_by in banners is not nullable.
@@ -289,19 +290,19 @@ return new class extends Migration
             $table->dropForeign(['updated_by']);
         });
 
-        Schema::table('domate_promotions', function (Blueprint $table) {
+        Schema::table('donate_promotions', function (Blueprint $table) {
             $table->dropForeign(['web_id']);
             $table->dropForeign(['created_by']);
             $table->dropForeign(['updated_by']);
         });
 
-        Schema::table('promotion_usages', function (Blueprint $table) {
-            $table->dropForeign(['user_id']);
-            $table->dropForeign(['promotion_id']);
-            $table->dropForeign(['domate_promotion_id']);
-            $table->dropForeign(['related_order_id']);
-            $table->dropForeign(['related_wallet_txn_id']);
-        });
+        // Schema::table('promotion_usages', function (Blueprint $table) {
+        //     $table->dropForeign(['user_id']);
+        //     $table->dropForeign(['promotion_id']);
+        //     $table->dropForeign(['domate_promotion_id']);
+        //     $table->dropForeign(['related_order_id']);
+        //     $table->dropForeign(['related_wallet_txn_id']);
+        // });
 
         Schema::table('system_logs', function (Blueprint $table) {
             $table->dropForeign(['user_id']);

@@ -5,14 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Review extends Model
+class Wallet extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'web_id',
-        'star',
+        'balance', // Typically updated via transactions, not direct fill
+        'currency',
     ];
 
     public function user()
@@ -20,8 +20,8 @@ class Review extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function web()
+    public function transactions()
     {
-        return $this->belongsTo(Web::class);
+        return $this->hasMany(WalletTransaction::class);
     }
 }

@@ -5,15 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ProductImage extends Model
+class ProductGameAttribute extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'product_id',
-        'image_url',
-        // 'is_primary', // This was commented out
-        'alt_text',
+        // 'game_code', // This was commented out in your migration
+        'attribute_key',
+        'attribute_value',
     ];
 
     public function product()

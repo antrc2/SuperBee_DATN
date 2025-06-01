@@ -12,21 +12,24 @@ return new class extends Migration
         // 'accounts' đổi tên thành 'users' theo chuẩn Laravel và đã có trong code của bạn.
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('username', 255)->unique(); // Đặt độ dài cụ thể cho string
+            $table->string('username', 255); // Đặt độ dài cụ thể cho string
             $table->string('password', 255); // Đặt độ dài cụ thể
-            $table->string('email', 255)->unique(); // Đặt độ dài cụ thể
+            $table->string('email', 255); // Đặt độ dài cụ thể
             $table->string('phone', 20)->nullable(); // Có thể null
-            $table->unsignedBigInteger('web_id')->nullable(); // Một user có thể chưa thuộc web nào (như admin nền tảng) hoặc web con có thể được tạo sau.
+            $table->string('avatar_url')->default('https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg');
+            $table->string('donate_code')->nullable();
+            $table->unsignedBigInteger('web_id');
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->timestamps();
+            $table->unique(['username', 'email', 'web_id']);
         });
 
         // Bảng webs (Các Web con)
         Schema::create('webs', function (Blueprint $table) {
             $table->id();
             $table->string('subdomain', 255)->unique(); // Đặt độ dài cụ thể
-            $table->unsignedBigInteger('user_id'); // Người tạo/quản lý web con, không thể null
-            $table->string('api_key', 255)->nullable(); // API Key có thể được tạo sau hoặc không bắt buộc
+            $table->unsignedBigInteger('user_id')->nullable(); // Người tạo/quản lý web con, không thể null
+            $table->string('api_key', 255); // API Key bắt buộc
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->timestamps();
         });
@@ -38,39 +41,52 @@ return new class extends Migration
             $table->string('name', 255); // Đặt độ dài cụ thể
             $table->string('slug', 255)->unique(); // Slug phải duy nhất, không null
             $table->integer('status')->default(1); // Mặc định hoạt động
-            $table->unsignedBigInteger('created_by')->nullable(); // Có thể null nếu hệ thống tự tạo
-            $table->unsignedBigInteger('updated_by')->nullable(); // Có thể null
+            $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
+            $table->unsignedBigInteger('updated_by'); // Có thể null
             $table->timestamps();
         });
 
-        // Bảng products (Sản phẩm)
+        // Bảng products
         Schema::create('products', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('category_id'); // Sản phẩm phải thuộc một danh mục
-            $table->string('sku', 50)->nullable(); // SKU có thể không bắt buộc hoặc tự sinh
-            $table->json('data')->nullable(); // Lưu các dữ liệu khác dưới dạng JSON, có thể null
-            $table->integer('status')->default(1); // Mặc định hoạt động
-            $table->unsignedBigInteger('web_id'); // Sản phẩm phải thuộc một web con
-            $table->unsignedBigInteger('created_by')->nullable(); // Có thể null
-            $table->unsignedBigInteger('updated_by')->nullable(); // Có thể null
+            $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
+            $table->string('sku', 50)->unique();           // SKU duy nhất
+            $table->integer('status')->default(1);         // Trạng thái (mặc định = 1: hoạt động)
+            $table->unsignedBigInteger('web_id');          // Sản phẩm thuộc web con nào
+            $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
+            $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
             $table->timestamps();
         });
 
-        // Bảng product_credentials (Thông tin đăng nhập sản phẩm)
+        // Bảng product_game_attributes (EAV cho thông tin riêng theo game)
+        Schema::create('product_game_attributes', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('product_id');      // Khóa liên kết tới products
+            $table->string('game_code', 50);               // Mã game (ví dụ: 'lol', 'ff', ...)
+            $table->string('attribute_key', 100);          // Tên thuộc tính (ví dụ: 'rank', 'num_champions', ...)
+            $table->string('attribute_value', 255);        // Giá trị tương ứng (luôn lưu dạng chuỗi)
+            $table->timestamps();
+
+            // Để sau sẽ thêm unique ['product_id','game_code','attribute_key']
+        });
+
+        // Bảng product_credentials
         Schema::create('product_credentials', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id')->unique(); // Mỗi sản phẩm chỉ có 1 bộ credentials, duy nhất
-            $table->text('credential_data'); // Không thể null
+            $table->unsignedBigInteger('product_id')->unique(); // Mỗi sản phẩm chỉ có 1 bộ credentials duy nhất
+            $table->string('email', 255);       // Email đăng nhập
+            $table->string('password', 255);    // Mật khẩu (hãy mã hóa ở tầng ứng dụng)
+            $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
             $table->timestamps();
         });
 
-        // Bảng product_images (Ảnh demo sản phẩm)
+        // Bảng product_images
         Schema::create('product_images', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('product_id'); // Ảnh phải thuộc về một sản phẩm
-            $table->string('image_url', 255); // Đường dẫn ảnh không null
-            $table->boolean('is_primary')->default(0); // Có thể null
-            $table->string('alt_text', 255)->nullable(); // Văn bản thay thế có thể null
+            $table->unsignedBigInteger('product_id');   // Ảnh thuộc về sản phẩm nào
+            $table->string('image_url', 255);           // Đường dẫn ảnh
+            $table->boolean('is_primary')->default(false); // Ảnh chính hay không
+            $table->string('alt_text', 255)->nullable(); // Văn bản thay thế (alt)
             $table->timestamps();
         });
 
@@ -80,8 +96,6 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // Ai đánh giá
             $table->unsignedBigInteger('web_id'); // Đánh giá web nào
             $table->integer('star'); // Số sao (1-5), không null
-            $table->text('comment')->nullable(); // Thêm trường comment để lưu nội dung đánh giá
-            $table->integer('status')->default(0); // Mặc định chờ duyệt (0: pending, 1: approved, 2: rejected)
             $table->timestamps();
         });
 
@@ -92,18 +106,6 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id'); // Khiếu nại sản phẩm nào
             $table->text('reason'); // Lý do không null
             $table->integer('status')->default(0); // Mặc định chờ xử lý (0: pending, 1: resolved, 2: rejected)
-            $table->timestamps();
-        });
-
-        // Bảng general_complaints (Khiếu nại chung)
-        Schema::create('general_complaints', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id')->nullable(); // Người dùng khiếu nại (có thể là khách vãng lai)
-            $table->string('email', 255)->nullable(); // Email liên hệ nếu không phải user
-            $table->string('subject', 255); // Tiêu đề khiếu nại không null
-            $table->text('description'); // Nội dung khiếu nại không null
-            $table->enum('type', ['service', 'bug', 'suggestion', 'other'])->default('other'); // Loại khiếu nại
-            $table->integer('status')->default(0); // Mặc định chờ xử lý
             $table->timestamps();
         });
 
@@ -119,29 +121,32 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('cart_id'); // Thuộc giỏ hàng nào
             $table->unsignedBigInteger('product_id'); // Sản phẩm trong giỏ
-            $table->integer('quantity')->default(1); // Số lượng
             $table->timestamps();
         });
 
         // Bảng orders (Đơn hàng)
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); // Ai đặt hàng
-            $table->string('order_code', 50)->unique(); // Mã đơn hàng duy nhất
-            $table->decimal('total_amount', 15, 2); // Tổng tiền, không null
-            $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // ID giao dịch ví nếu thanh toán qua ví (có thể thanh toán bằng cách khác)
-            $table->string('payment_method', 50)->nullable(); // Phương thức thanh toán (ví, bank, card, ...)
-            $table->integer('status')->default(0); // Trạng thái đơn hàng (0: pending, 1: completed, 2: cancelled)
+            $table->unsignedBigInteger('user_id');               // Ai đặt hàng
+            $table->string('order_code', 50)->unique();          // Mã đơn hàng duy nhất
+            $table->decimal('total_amount', 15, 2);              // Tổng tiền (sau khi trừ khuyến mãi, nếu có)
+            $table->unsignedBigInteger('wallet_transaction_id'); // ID giao dịch ví (nếu có)
+            $table->string('payment_method', 50)->nullable();    // Phương thức thanh toán (ví, bank, card, ...)
+            $table->integer('status')->default(0);               // Trạng thái đơn: 0 = pending, 1 = completed, 2 = cancelled
+
+            // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
+            $table->string('promo_code', 50)->nullable();        // Lưu mã khuyến mãi (nếu có)
+            $table->decimal('discount_amount', 15, 2)->nullable(); // Số tiền giảm tương ứng (nếu có)
+
             $table->timestamps();
         });
 
-        // Bảng order_items (Chi tiết Đơn hàng)
+        // Bảng order_items (Chi tiết đơn hàng)
         Schema::create('order_items', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('order_id'); // Thuộc đơn hàng nào
+            $table->unsignedBigInteger('order_id');   // Thuộc đơn hàng nào
             $table->unsignedBigInteger('product_id'); // Sản phẩm trong đơn hàng
-            $table->integer('quantity'); // Số lượng, không null
-            $table->decimal('unit_price', 15, 2); // Giá tại thời điểm đặt hàng, không null
+            $table->decimal('unit_price', 15, 2);     // Giá tại thời điểm đặt hàng
             $table->timestamps();
         });
 
@@ -187,9 +192,9 @@ return new class extends Migration
         // Bảng recharges_bank (Nạp bằng ngân hàng / chuyển khoản)
         Schema::create('recharges_bank', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // Liên kết với giao dịch ví
+            $table->unsignedBigInteger('wallet_transaction_id'); // Liên kết với giao dịch ví
             $table->unsignedBigInteger('user_id'); // Ai nạp tiền
-            $table->unsignedBigInteger('web_id')->nullable(); // Nạp cho web nào
+            $table->unsignedBigInteger('web_id'); // Nạp cho web nào
             $table->decimal('amount', 15, 2); // Số tiền nạp
             $table->string('bank_account_number', 50); // Số tài khoản ngân hàng của người nạp
             $table->string('bank_name', 100); // Tên ngân hàng của người nạp
@@ -225,8 +230,8 @@ return new class extends Migration
             $table->integer('per_user_limit')->default(1); // Giới hạn số lần sử dụng cho mỗi người dùng
             $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
             $table->integer('status')->default(1); // Trạng thái (1: active, 0: inactive)
-            $table->unsignedBigInteger('created_by')->nullable(); // Ai tạo
-            $table->unsignedBigInteger('updated_by')->nullable(); // Ai cập nhật
+            $table->unsignedBigInteger('created_by'); // Ai tạo
+            $table->unsignedBigInteger('updated_by'); // Ai cập nhật
             $table->timestamps();
         });
 
@@ -244,8 +249,8 @@ return new class extends Migration
             $table->integer('per_user_limit')->default(1); // Giới hạn mỗi người dùng
             $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
             $table->integer('status')->default(1); // Trạng thái
-            $table->unsignedBigInteger('created_by')->nullable(); // Ai tạo
-            $table->unsignedBigInteger('updated_by')->nullable(); // Ai cập nhật
+            $table->unsignedBigInteger('created_by'); // Ai tạo
+            $table->unsignedBigInteger('updated_by'); // Ai cập nhật
             $table->timestamps();
         });
 
@@ -316,8 +321,7 @@ return new class extends Migration
         Schema::create('chat_rooms', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255)->nullable(); // Tên phòng chat (có thể null nếu là chat riêng)
-            $table->boolean('is_private')->default(false); // Phòng chat riêng tư hay công khai
-            $table->unsignedBigInteger('created_by')->nullable(); // Người tạo phòng (null nếu là hệ thống tạo)
+            $table->unsignedBigInteger('created_by'); // Người tạo phòng (null nếu là hệ thống tạo)
             $table->timestamps();
         });
 
@@ -337,10 +341,9 @@ return new class extends Migration
             $table->string('title', 255)->nullable(); // Tiêu đề banner (có thể null nếu chỉ là ảnh)
             $table->string('image_url', 255); // Đường dẫn ảnh banner
             $table->string('link', 255)->nullable(); // Link khi click vào banner
-            $table->string('position', 50); // Vị trí hiển thị (e.g., 'homepage_top', 'sidebar')
             $table->integer('status')->default(1); // Trạng thái
-            $table->unsignedBigInteger('created_by')->nullable(); // Ai tạo
-            $table->unsignedBigInteger('updated_by')->nullable(); // Ai cập nhật
+            $table->unsignedBigInteger('created_by'); // Ai tạo
+            $table->unsignedBigInteger('updated_by'); // Ai cập nhật
             $table->timestamps();
         });
         // Bảng affiliates
@@ -393,6 +396,7 @@ return new class extends Migration
         Schema::dropIfExists('reviews');
         Schema::dropIfExists('product_images');
         Schema::dropIfExists('product_credentials');
+        Schema::dropIfExists('product_game_attributes');
         Schema::dropIfExists('products');
         Schema::dropIfExists('categories');
         Schema::dropIfExists('webs');

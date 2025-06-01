@@ -191,6 +191,14 @@ return new class extends Migration
             $table->foreign('affiliated_by')->references('id')->on('users')->onDelete('set null');
         });
 
+        Schema::table('affiliate_histories', function (Blueprint $table) {
+            $table->foreign('affiliate_id')->references('id')->on('affiliates')->onDelete('cascade');
+            // affiliated_by in affiliates IS nullable.
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+            
+            // $table->foreign('affiliated_by')->references('id')->on('users')->onDelete('set null');
+        });
+
         Schema::table('refresh_tokens', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
@@ -340,6 +348,11 @@ return new class extends Migration
         Schema::table('affiliates', function (Blueprint $table) {
             $table->dropForeign(['user_id']);
             $table->dropForeign(['affiliated_by']);
+        });
+
+        Schema::table('affiliate_histories', function (Blueprint $table) {
+            $table->dropForeign(['affiliate_id']);
+            $table->dropForeign(['order_id']);
         });
 
         Schema::table('refresh_tokens', function (Blueprint $table) {

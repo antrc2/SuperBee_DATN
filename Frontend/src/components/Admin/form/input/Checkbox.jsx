@@ -1,21 +1,12 @@
-import type React from "react";
+import React from "react"; // Import React for JSX
 
-interface CheckboxProps {
-  label?: string;
-  checked: boolean;
-  className?: string;
-  id?: string;
-  onChange: (checked: boolean) => void;
-  disabled?: boolean;
-}
-
-const Checkbox: React.FC<CheckboxProps> = ({
+const Checkbox = ({
   label,
   checked,
   id,
   onChange,
   className = "",
-  disabled = false,
+  disabled = false
 }) => {
   return (
     <label
@@ -33,6 +24,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
           onChange={(e) => onChange(e.target.checked)}
           disabled={disabled}
         />
+        {/* SVG for checked state */}
         {checked && (
           <svg
             className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
@@ -51,6 +43,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
             />
           </svg>
         )}
+        {/* SVG for disabled state (if needed, though typically disabled checkboxes don't have a checkmark unless checked) */}
         {disabled && (
           <svg
             className="absolute transform -translate-x-1/2 -translate-y-1/2 pointer-events-none top-1/2 left-1/2"
@@ -70,6 +63,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
           </svg>
         )}
       </div>
+      {/* Optional label for the checkbox */}
       {label && (
         <span className="text-sm font-medium text-gray-800 dark:text-gray-200">
           {label}

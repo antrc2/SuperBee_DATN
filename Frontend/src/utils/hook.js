@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "./http";
 import queryString from "query-string";
+import { jwtDecode } from "jwt-decode";
 // Quản lý trạng thái bật/tắt
 // const [isOpen, toggleOpen] = useToggle(false);
 function useToggle(initialValue = false) {
@@ -277,7 +278,6 @@ function useUrlUtils() {
   };
 }
 
-
 // Ví dụ sử dụng trong một component
 // function MyComponent() {
 //   const {
@@ -313,6 +313,10 @@ function useUrlUtils() {
 //     </div>
 //   );
 // }
+const decodeData = (token) => {
+  const decoded = jwtDecode(token);
+  return decoded;
+};
 
 // export default MyComponent;
 export {
@@ -331,5 +335,6 @@ export {
   usePut,
   useDelete,
   usePatch,
-  useUrlUtils
+  useUrlUtils,
+  decodeData
 };

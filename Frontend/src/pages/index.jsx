@@ -16,7 +16,7 @@ import Register from "./Auth/Register";
 // Client
 import Home from "./Clients/Home/Home";
 import ActiveDomain from "./Clients/ActiveDomain/ActiveDomain";
-import Error from "./Error/Error";
+
 import NotFound from "./NotFound/NotFound";
 import RechargeCard from "./Clients/RechargeCard/RechargeCard";
 import CartPage from "./Clients/CartPage/CartPage";
@@ -44,7 +44,6 @@ export {
   ActiveDomain,
   Home,
   NotFound,
-  Error,
   Register,
   RechargeCard,
   ShopAccount,

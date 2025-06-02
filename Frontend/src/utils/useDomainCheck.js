@@ -26,13 +26,13 @@ export function useDomainCheck(apiKey) {
 
     try {
       const response = await api.get("/domain");
-      console.log("🚀 ~ checkDomain ~ response:", response);
+      // console.log("🚀 ~ checkDomain ~ response:", response);
 
       if (response.status === 404) {
         throw new Error("Endpoint /domain không tồn tại (404).");
       }
       const code = response.data?.code;
-      console.log("🚀 ~ checkDomain ~ code:", code);
+      // console.log("🚀 ~ checkDomain ~ code:", code);
 
       if (code === "ACTIVE") {
         setDomainStatus("active");

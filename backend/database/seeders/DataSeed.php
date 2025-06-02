@@ -384,12 +384,12 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
         Affiliate::create([
             'user_id' => $affiliateUser->id,
             'affiliated_by' => $user1->id, // Referred by user1
-            'commission_amount' => 0 // Initial commission
+            // 'commission_amount' => 0 // Initial commission
         ]);
         Affiliate::create([
             'user_id' => $user2->id, // user2 is also an affiliate
             'affiliated_by' => null, // Not referred by anyone in this record
-            'commission_amount' => 0
+            // 'commission_amount' => 0
         ]);
 
         RefreshToken::create([

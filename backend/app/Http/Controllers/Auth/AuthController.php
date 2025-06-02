@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\User;
+use App\Models\Wallet;
 use App\Models\Web;
 use App\Models\RefreshToken;
 use Firebase\JWT\JWT;
@@ -12,50 +13,112 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
-
+use Illuminate\Support\Facades\Log; // Added for logging
 
 class AuthController extends Controller
 {
-    //
+    /**
+     * Handles domain activation status.
+     * This method appears to be a placeholder and always returns a 'WEB_NOT_ACTIVE' error.
+     * Consider implementing actual domain validation logic here.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function domain(Request $request)
     {
-        $a =   $request->header('authorization');
-        return response()->json(["error" => "WEB_NOT_ACTIVE", "code" => "ACTIVE"], 200);
-    }
-    public function active(Request $request)
-    {
-        $shopKey = $request->keyShop;
-        $shop = Web::where('api_key', $shopKey)->first();
-        if ($shop == null) {
-            return response()->json(["message" => "Key không tồn tại hoặc sai", "status" => false], 401);
-        }
-        $shop->status = 1;
-        $shop->save();
-        return response()->json(["message" => "Kích Hoạt web thành công", "status" => true], 200);
-    }
-    protected function encodeToken(array $payload, int $expireTime): string
-    {
-        $payload['exp'] = time() + $expireTime;
-        return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
+        // This method currently always returns an error.
+        // Implement actual domain validation logic here if needed.
+        return response()->json([
+            "error" => "WEB_NOT_ACTIVE",
+            "code" => "ACTIVE"
+        ], 200);
     }
 
     /**
-     * Hàm tạo access token
+     * Activates a web instance using a provided API key.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function active(Request $request)
+    {
+        $request->validate([
+            'keyShop' => 'required|string',
+        ]);
+
+        $shopKey = $request->keyShop;
+        $shop = Web::where('api_key', $shopKey)->first();
+
+        if (is_null($shop)) {
+            return response()->json([
+                "message" => "Key does not exist or is incorrect.",
+                "status" => false
+            ], 401);
+        }
+
+        $shop->status = 1;
+        $shop->save();
+
+        return response()->json([
+            "message" => "Web activation successful.",
+            "status" => true
+        ], 200);
+    }
+
+    /**
+     * Encodes a JWT token with the given payload, expiration time, and type.
+     * Uses different secret keys for access and refresh tokens.
+     *
+     * @param array $payload
+     * @param int $expireTime
+     * @param string $type "acc" for access token, "ref" for refresh token.
+     * @return string The encoded JWT token.
+     */
+    protected function encodeToken(array $payload, int $expireTime, string $type): string
+    {
+        $payload['exp'] = time() + $expireTime;
+
+        if ($type === "acc") {
+            return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
+        }
+
+        if ($type === "ref") {
+            return JWT::encode($payload, env('JWT_SECRET'), 'HS256');
+        }
+
+        // Fallback or error for unknown token type
+        throw new \InvalidArgumentException("Invalid token type provided.");
+    }
+
+    /**
+     * Generates an access token for the given user.
+     *
+     * @param User $user
+     * @param Request $request (kept for consistency with original, though not directly used in payload)
+     * @return string The generated access token.
      */
     protected function generateAccessToken(User $user, Request $request): string
     {
+        $wallet = Wallet::where('user_id', $user->id)->first();
         $payload = [
             'name' => $user->username,
             'user_id' => $user->id,
             'web_id' => $user->web_id,
-            'role_id' => $user->role_id,
+            'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
+            'money' => $wallet->balance ?? "0"
         ];
-        $expireTime = env('JWT_EXPIRE_TIME', 3600); // Mặc định 1 giờ
-        return $this->encodeToken($payload, $expireTime);
+        $expireTime = env('JWT_EXPIRE_TIME', 3600); // Default to 1 hour
+
+        return $this->encodeToken($payload, $expireTime, "acc");
     }
 
     /**
-     * Hàm tạo refresh token
+     * Generates a refresh token for the given user.
+     *
+     * @param User $user
+     * @param Request $request (kept for consistency with original, though not directly used in payload)
+     * @return string The generated refresh token.
      */
     protected function generateRefreshToken(User $user, Request $request): string
     {
@@ -63,114 +126,145 @@ class AuthController extends Controller
             'name' => $user->username,
             'user_id' => $user->id,
             'web_id' => $user->web_id,
-            'role_id' => $user->role_id,
+            'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
         ];
-        $expireTime = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30); // Mặc định 30 ngày
-        return $this->encodeToken($payload, $expireTime);
+        $expireTime = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30); // Default to 30 days
+
+        return $this->encodeToken($payload, $expireTime, "ref");
     }
 
     /**
-     * Đăng ký
+     * Registers a new user.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function register(Request $request)
     {
         try {
-            // 1. Validate dữ liệu
-            $validated = $request->validate([
-                'username'   => [
-                    'required',
-                    'string'
-                ],
-                'password'   => 'required|string|min:6',
-                'email'      => 'required|email|unique:users,email',
-                'web_id'     => 'required|exists:webs,id',
-                'aff'   => 'exists:users,id',
+            $validatedData = $request->validate([
+                'username' => ['required', 'string', 'unique:users,username,NULL,id,web_id,' . $request->web_id],
+                'password' => 'required|string|min:6',
+                'email' => ['required', 'email', 'unique:users,email,NULL,id,web_id,' . $request->web_id],
+                'web_id' => 'required|exists:webs,id',
+                'aff' => 'nullable|exists:users,id',
             ]);
-            // check user xem tồn tại ở web id chưa
-            $is_user = User::where('username', '=', $request->username)->where('web_id', '=', $request->web_id)->first();
+
+            // Check if user with this email already exists on this web_id
+            $is_user = User::where('email', $validatedData['email'])
+                ->where('web_id', $validatedData['web_id'])
+                ->first();
+
             if ($is_user) {
                 return response()->json([
-                    'message' => 'Account already exists.',
-                    'status'  => false,
-                    'data'    => []
-                ], 201);
+                    'message' => 'Account with this email already exists on this website.',
+                    'status' => false,
+                    'data' => []
+                ], 409); // Use 409 Conflict for resource conflicts
             }
 
-            // 2. Mã hóa mật khẩu
-            $validated['password'] = Hash::make($validated['password']);
-
-            // // 3. Gán mặc định web_id nếu chưa có
-            // $validated['web_id'] = $validated['web_id'] ?? 1;
+            $validatedData['password'] = Hash::make($validatedData['password']);
 
             $donate_code = "";
             do {
                 $donate_code = $this->generateCode(16);
-            } while (User::where("donate_code", $donate_code)->first() !== NULL);
+            } while (User::where("donate_code", $donate_code)->exists()); // Use exists() for efficiency
 
-            $validated['donate_code'] = $donate_code;
-            // dd($validated);
-            // 4. Tạo người dùng
-            $user = User::create($validated);
-            // gán role cho người dùng
-            $user->assignRole('user');
-            // kiểm tra xem có user là giới thiệu không
-            $affiliated_by = $validated['aff'] ??  null;
-            if ($affiliated_by) {
-                Affiliate::create(['user_id' => $user->id, 'affiliated_by' => $affiliated_by]);
+            $validatedData['donate_code'] = $donate_code;
+
+            $user = User::create($validatedData);
+            $user->assignRole('user'); // Assign 'user' role
+
+            // Handle affiliate
+            if (isset($validatedData['aff'])) {
+                Affiliate::create([
+                    'user_id' => $user->id,
+                    'affiliated_by' => $validatedData['aff']
+                ]);
             }
-            // dd($user);
-            // 5. Trả kết quả thành công
+
+            // Create wallet
+            Wallet::create([
+                'user_id' => $user->id,
+                "balance" => 0,
+                "currency" => "VND"
+            ]);
+
+            $accessToken = $this->generateAccessToken($user, $request);
+            $refreshToken = $this->generateRefreshToken($user, $request);
+
+            // Delete any existing refresh tokens for this user before creating a new one
+            RefreshToken::where('user_id', $user->id)->delete();
+            RefreshToken::create([
+                'user_id' => $user->id,
+                'refresh_token' => $refreshToken,
+                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'revoked' => false,
+            ]);
+
+            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
+
+            $cookie = cookie(
+                'refresh_token',
+                $refreshToken,
+                $cookieExpirationMinutes,
+                '/',
+                null,
+                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // HttpOnly
+                false, // Raw
+                'Strict' // SameSite
+            );
+
             return response()->json([
-                'message' => 'Registration successful',
-                'status'  => true,
-                'data'    => $user
-            ], 201);
+                "message" => "Registration successful",
+                'access_token' => $accessToken,
+            ])->withCookie($cookie);
         } catch (ValidationException $e) {
-            // Nếu validate lỗi, trả về JSON thông báo lỗi
             return response()->json([
                 'message' => 'The provided data is invalid.',
-                'errors'  => $e->errors()
+                'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            // Nếu có lỗi hệ thống khác
+            Log::error("Registration error: " . $e->getMessage() . " on line " . $e->getLine());
             return response()->json([
                 'message' => 'An internal server error occurred.',
-                'error'   => $e->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Đăng nhập và trả về access token cùng refresh token
+     * Logs in a user and returns access and refresh tokens.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request)
     {
         try {
-            $request->validate([
+            $validatedData = $request->validate([
                 'username' => 'required|string',
                 'password' => 'required|string',
-                'web_id'   => 'required|exists:webs,id',
+                'web_id' => 'required|exists:webs,id',
             ]);
 
-            $web = Web::findOrFail($request->web_id);
-            $credentials = $request->only('username', 'password');
+            $web = Web::findOrFail($validatedData['web_id']);
 
-            $user = User::where('username', $credentials['username'])
+            $user = User::where('username', $validatedData['username'])
                 ->where('web_id', $web->id)
                 ->first();
 
-            if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            if (!$user || !Hash::check($validatedData['password'], $user->password)) {
                 return response()->json([
-                    'message' => 'Invalid credentials',
-                    'status'  => false
+                    'message' => 'Invalid credentials.',
+                    'status' => false
                 ], 401);
             }
 
-            $user->getRoleNames();
-            // $user->getAllPermissions();
-
             $accessToken = $this->generateAccessToken($user, $request);
             $refreshToken = $this->generateRefreshToken($user, $request);
+
             RefreshToken::where('user_id', $user->id)->delete();
             RefreshToken::create([
                 'user_id' => $user->id,
@@ -179,120 +273,160 @@ class AuthController extends Controller
                 'revoked' => false,
             ]);
 
-            // Thiết lập cookie cho refresh_token (dùng HTTP, không bắt buộc HTTPS)
+            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+
             $cookie = cookie(
-                'refresh_token',                    // Tên cookie
-                $refreshToken,                      // Giá trị cookie
-                env('JWT_REFRESH_EXPIRE_TIME', 20160), // Thời gian sống (phút)
-                '/',                                // Path
-                null,                               // Domain (mặc định)
-                false,                              // Secure = false (cho phép HTTP)
-                true,                               // HttpOnly (true để bảo mật)
-                false,                              // Raw
-                'Strict'                            // SameSite
+                'refresh_token',
+                $refreshToken,
+                $cookieExpirationMinutes,
+                '/',
+                null,
+                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // HttpOnly
+                false, // Raw
+                'Strict' // SameSite
             );
 
-            // Trả về response JSON và đính kèm cookie
             return response()->json([
+                "message" => "Login successful",
                 'access_token' => $accessToken,
             ])->withCookie($cookie);
         } catch (ValidationException $e) {
             return response()->json([
-                'message' => 'Validation failed',
-                'status'  => false,
-                'errors'  => $e->errors()
+                'message' => 'Validation failed.',
+                'status' => false,
+                'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
+            Log::error("Login error: " . $e->getMessage() . " on line " . $e->getLine());
             return response()->json([
                 'message' => 'An internal server error occurred.',
-                'status'  => false,
-                'error'   => $e->getMessage()
+                'status' => false,
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Làm mới access token bằng refresh token
+     * Refreshes the access token using a valid refresh token from the cookie.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function refreshToken(Request $request)
     {
         try {
-            // Lấy refresh token từ cookie (name = 'refresh_token')
             $refreshToken = $request->cookie('refresh_token');
 
-            // Nếu không có cookie hoặc cookie rỗng, trả về lỗi 401
-            if (!$refreshToken) {
-                return response()->json(['error' => 'No refresh token provided'], 401);
+            if (empty($refreshToken)) {
+                return response()->json(['error' => 'No refresh token provided.'], 401);
             }
 
-            // Kiểm tra refresh token còn hợp lệ trong database
             $refresh = RefreshToken::where('refresh_token', $refreshToken)
                 ->where('revoked', false)
-                ->where('expires_at', '>', now())
+                ->where('expires_at', '>', Carbon::now())
                 ->first();
 
-            if (!$refresh) {
-                return response()->json(['error' => 'Invalid or expired refresh token'], 401);
+            if (is_null($refresh)) {
+                return response()->json(['error' => 'Invalid or expired refresh token.'], 401);
             }
 
-            // Lấy user tương ứng
-            $user = User::find($refresh->user_id)->first();
+            $user = User::find($refresh->user_id); // find() directly returns model or null
 
-            if (! $user) {
-                return response()->json(['error' => 'User not found'], 404);
+            if (is_null($user)) {
+                return response()->json(['error' => 'User not found.'], 404);
             }
 
-            $accessToken = $this->generateAccessToken($user, $request);
-            $refreshToken = $this->generateRefreshToken($user, $request);
-            RefreshToken::where('user_id', $user->id)->delete();
+            $newAccessToken = $this->generateAccessToken($user, $request);
+            $newRefreshToken = $this->generateRefreshToken($user, $request);
+
+            // Invalidate the old refresh token and create a new one
+            $refresh->delete(); // Delete the old refresh token
             RefreshToken::create([
                 'user_id' => $user->id,
-                'refresh_token' => $refreshToken,
+                'refresh_token' => $newRefreshToken,
                 'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
 
-            // Thiết lập cookie cho refresh_token (dùng HTTP, không bắt buộc HTTPS)
+            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+
             $cookie = cookie(
-                'refresh_token',                    // Tên cookie
-                $refreshToken,                      // Giá trị cookie
-                env('JWT_REFRESH_EXPIRE_TIME', 20160), // Thời gian sống (phút)
-                '/',                                // Path
-                null,                               // Domain (mặc định)
-                false,                              // Secure = false (cho phép HTTP)
-                true,                               // HttpOnly (true để bảo mật)
-                false,                              // Raw
-                'Strict'                            // SameSite
+                'refresh_token',
+                $newRefreshToken,
+                $cookieExpirationMinutes,
+                '/',
+                null,
+                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // HttpOnly
+                false, // Raw
+                'Strict' // SameSite
             );
 
-            // Trả về response JSON và đính kèm cookie
             return response()->json([
-                'access_token' => $accessToken,
+                'access_token' => $newAccessToken,
             ])->withCookie($cookie);
         } catch (\Exception $e) {
+            Log::error("Refresh Token error: " . $e->getMessage() . " on line " . $e->getLine());
             return response()->json([
                 'message' => 'An internal server error occurred.',
-                'error'   => $e->getMessage()
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Đăng xuất người dùng
+     * Logs out the user by revoking their refresh token.
+     * This function needs to be implemented.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {
-        // Giữ nguyên logic hiện có
+        try {
+            $refreshToken = $request->cookie('refresh_token');
+
+            if (empty($refreshToken)) {
+                return response()->json(['message' => 'No refresh token provided.'], 200);
+            }
+
+            // Find and revoke the refresh token
+            $refresh = RefreshToken::where('refresh_token', $refreshToken)->first();
+
+            if ($refresh) {
+                $refresh->revoked = true;
+                $refresh->save();
+            }
+
+            // Clear the refresh token cookie
+            $cookie = cookie()->forget('refresh_token');
+
+            return response()->json([
+                'message' => 'Logged out successfully.'
+            ])->withCookie($cookie);
+        } catch (\Exception $e) {
+            Log::error("Logout error: " . $e->getMessage() . " on line " . $e->getLine());
+            return response()->json([
+                'message' => 'An internal server error occurred.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
     /**
-     * Tạo mã xác thực
+     * Generates a random alphanumeric code of a specified length.
+     *
+     * @param int $length The desired length of the code.
+     * @return string The generated code.
      */
-    public function generateCode(int $length = 16)
+    public function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $code = '';
+        $max = strlen($characters) - 1;
         for ($i = 0; $i < $length; $i++) {
-            $code .= $characters[random_int(0, strlen($characters) - 1)];
+            $code .= $characters[random_int(0, $max)];
         }
         return $code;
     }

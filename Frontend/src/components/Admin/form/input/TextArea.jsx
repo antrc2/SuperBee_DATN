@@ -1,44 +1,38 @@
-import React from "react";
+import React from "react"; // Import React for JSX
 
-interface TextareaProps {
-  placeholder?: string; // Placeholder text
-  rows?: number; // Number of rows
-  value?: string; // Current value
-  onChange?: (value: string) => void; // Change handler
-  className?: string; // Additional CSS classes
-  disabled?: boolean; // Disabled state
-  error?: boolean; // Error state
-  hint?: string; // Hint text to display
-}
-
-const TextArea: React.FC<TextareaProps> = ({
+const TextArea = ({
   placeholder = "Enter your message", // Default placeholder
   rows = 3, // Default number of rows
-  value = "", // Default value
-  onChange, // Callback for changes
-  className = "", // Additional custom styles
+  value = "", // Current value
+  onChange, // Change handler
+  className = "", // Additional CSS classes
   disabled = false, // Disabled state
   error = false, // Error state
-  hint = "", // Default hint text
+  hint = "" // Hint text to display
 }) => {
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Handles the change event for the textarea and calls the onChange prop if provided.
+  const handleChange = (e) => {
     if (onChange) {
       onChange(e.target.value);
     }
   };
 
+  // Base classes for the textarea
   let textareaClasses = `w-full rounded-lg border px-4 py-2.5 text-sm shadow-theme-xs focus:outline-hidden ${className} `;
 
+  // Apply conditional classes based on disabled, error, or default states
   if (disabled) {
     textareaClasses += ` bg-gray-100 opacity-50 text-gray-500 border-gray-300 cursor-not-allowed opacity40 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700`;
   } else if (error) {
-    textareaClasses += ` bg-transparent  border-gray-300 focus:border-error-300 focus:ring-3 focus:ring-error-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-error-800`;
+    textareaClasses += ` bg-transparent border-gray-300 focus:border-error-300 focus:ring-3 focus:ring-error-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-error-800`;
   } else {
+    // Default styling for active/enabled state
     textareaClasses += ` bg-transparent text-gray-900 dark:text-gray-300 text-gray-900 border-gray-300 focus:border-brand-300 focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800`;
   }
 
   return (
     <div className="relative">
+      {/* The textarea element */}
       <textarea
         placeholder={placeholder}
         rows={rows}
@@ -47,6 +41,7 @@ const TextArea: React.FC<TextareaProps> = ({
         disabled={disabled}
         className={textareaClasses}
       />
+      {/* Optional hint text display */}
       {hint && (
         <p
           className={`mt-2 text-sm ${

@@ -1,28 +1,30 @@
 <?php
 
-
-use App\Http\Controllers\DonatePromotionController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\UserController;
-
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AWSController;
-use App\Http\Controllers\DiscountCodeController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 
+
+
+
+// Xác thực trang web
+Route::post("/domain/active", [AuthController::class, "active"]);
+
+
 // chưa đăng nhập
-Route::middleware('authenticate')->prefix('/')->group(function () {
+Route::middleware('authenticate')->group(function () {
     Route::get('/', function () {
         return response()->json([
             "status" => false,
             "data" => [],
             'message' => "no message"
         ]);
+    });
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [AuthController::class, "domain"]);
+    });
+    Route::prefix("/accounts")->group(function () {
+        Route::post("/login", [AuthController::class, 'login']);
+        Route::post("/register", [AuthController::class, 'register']);
     });
 });
 

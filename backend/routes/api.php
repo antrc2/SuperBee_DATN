@@ -30,8 +30,8 @@ Route::middleware('authenticate')->group(function () {
 
 
 // user
-Route::middleware(['role:user', 'jwt'])->prefix('/')->group(function () {
-    Route::get('/', function () {
+Route::middleware(['jwt'])->group(function () {
+    Route::get('/abc', function () {
         return response()->json([
             "status" => false,
             "data" => [],

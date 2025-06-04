@@ -30,7 +30,7 @@ class AuthController extends Controller
         // This method currently always returns an error.
         // Implement actual domain validation logic here if needed.
         return response()->json([
-            "error" => "WEB_NOT_ACTIVE",
+            "error" => "WEB_ACTIVE",
             "code" => "ACTIVE"
         ], 200);
     }

@@ -13,7 +13,7 @@ const defaultConfig = {
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = localStorage.getItem("access_token");
   if (!token) {
     const apiKey = getApiKey();
     if (!apiKey) {

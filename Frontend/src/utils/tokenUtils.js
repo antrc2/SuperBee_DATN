@@ -8,7 +8,7 @@ import { jwtDecode } from "jwt-decode"; // Đảm bảo đã cài đặt 'jwt-de
  * @returns {object | null} Payload của token nếu hợp lệ, ngược lại là null.
  */
 export function getDecodedToken() {
-  const token = localStorage.getItem("access_token");
+  const token = sessionStorage.getItem("access_token");
 
   if (!token || typeof token !== "string") {
     // console.log("No token found or invalid token type in localStorage.");
@@ -24,14 +24,14 @@ export function getDecodedToken() {
 
     if (decoded.exp && decoded.exp < currentTime) {
       console.log("Token has expired.");
-      localStorage.removeItem("access_token"); // Xóa token hết hạn
+      // localStorage.removeItem("access_token"); // Xóa token hết hạn
       return null;
     }
 
     return decoded;
   } catch (error) {
     console.error("Error decoding token from localStorage:", error);
-    localStorage.removeItem("access_token"); // Xóa token lỗi/không hợp lệ
+    sessionStorage.removeItem("access_token"); // Xóa token lỗi/không hợp lệ
     return null;
   }
 }

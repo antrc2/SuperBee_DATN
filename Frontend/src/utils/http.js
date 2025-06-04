@@ -13,7 +13,7 @@ const defaultConfig = {
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("access_token");
   if (!token) {
     const apiKey = getApiKey();
     if (!apiKey) {
@@ -45,10 +45,12 @@ api.interceptors.response.use(
       if (!originalReq._retry) {
         originalReq._retry = true;
         if (!isRefreshing) {
+          // localStorage.removeItem("")
+          sessionStorage.removeItem("access_token");
           isRefreshing = true;
           return refreshToken()
             .then((newToken) => {
-              localStorage.setItem("accessToken", newToken);
+              sessionStorage.setItem("access_token", newToken);
               isRefreshing = false;
               queue.forEach((cb) => cb(newToken));
               queue = [];
@@ -56,6 +58,7 @@ api.interceptors.response.use(
               return api(originalReq);
             })
             .catch((err) => {
+              console.log("🚀 ~ err:", err);
               queue = [];
               window.location.href = "/login";
               return Promise.reject(err);

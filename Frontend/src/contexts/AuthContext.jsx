@@ -72,24 +72,58 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }
   };
+  const register = async (credentials) => {
+    setLoading(true);
+    setError(null); // Xóa lỗi cũ
+    // Không cần setUser(null) ở đây, vì nếu login thành công sẽ set lại
+    // Nếu thất bại thì error sẽ được set và user vẫn là null (nếu trước đó là null)
 
+    try {
+      const res = await api.post("/accounts/register", {
+        email: credentials.email,
+        username: credentials.username,
+        aff: credentials.aff,
+        password: credentials.password
+      });
+      // console.log("🚀 ~ register ~ res:", res);
+
+      if (!res?.data?.access_token) {
+        throw new Error("Không nhận được access_token từ server.");
+      }
+
+      const accessToken = res.data.access_token;
+      localStorage.setItem("access_token", accessToken);
+
+      const decoded = getDecodedToken(); // Sử dụng hàm đã tách
+      if (decoded) {
+        setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
+        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+      } else {
+        // Nếu token không giải mã được sau khi nhận từ API
+        throw new Error("Không thể giải mã token từ phản hồi server.");
+      }
+
+      return { success: true, data: res.data };
+    } catch (err) {
+      console.error("Login error from AuthContext:", err);
+      // Kiểm tra nếu lỗi từ server phản hồi
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Đăng nhập thất bại. Vui lòng thử lại.";
+      setError({ message: errorMessage, code: err.response?.status || 500 });
+      return { success: false, message: errorMessage };
+    } finally {
+      setLoading(false);
+    }
+  };
+  // đăng xuất
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem("access_token");
     setError(null);
     navigate("/"); // Điều hướng về trang đăng nhập
   }, [navigate]); // Thêm navigate vào dependencies nếu bạn đang dùng nó bên trong useCallback
-
-  // **Quan trọng:** Logic khởi tạo user từ token trong localStorage chỉ nên nằm ở đây (hoặc trong hàm getDecodedToken).
-  // Việc kiểm tra token ở đây và set user ngay ngoài function component là không đúng trong React
-  // const token = localStorage.getItem("access_token") ?? null;
-  // if (token) {
-  //   const data = decodeData(token);
-  //   const { name, money } = data;
-  //   setUser({ name, money });
-  // }
-  // <-- Đoạn code này cần bị xóa khỏi AuthProvider trực tiếp.
-  //    Thay vào đó, nó được xử lý bởi `useState(() => ...)` và `useEffect`.
 
   // --- Các logic về API key và domain check vẫn giữ nguyên ---
   // 1. Quản lý API key
@@ -184,7 +218,7 @@ export function AuthProvider({ children }) {
         enterKey,
         retryDomain,
         login,
-        // register, // Nếu hàm register chưa được triển khai hoàn chỉnh, có thể tạm thời bỏ qua
+        register,
         user,
         loading,
         error,

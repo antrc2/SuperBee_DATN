@@ -10,8 +10,8 @@ use App\Models\Web;
 use App\Models\RefreshToken;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log; // Added for logging
 
@@ -78,7 +78,6 @@ class AuthController extends Controller
     protected function encodeToken(array $payload, int $expireTime, string $type): string
     {
         $payload['exp'] = time() + $expireTime;
-
         if ($type === "acc") {
             return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
         }
@@ -108,8 +107,8 @@ class AuthController extends Controller
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
             'money' => $wallet->balance ?? "0"
         ];
-        $expireTime = env('JWT_EXPIRE_TIME', 3600); // Default to 1 hour
-
+        $expireTime = env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
+        // dd(time() + $expireTime, date('Y-m-d H:i:s'));
         return $this->encodeToken($payload, $expireTime, "acc");
     }
 
@@ -128,7 +127,7 @@ class AuthController extends Controller
             'web_id' => $user->web_id,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
         ];
-        $expireTime = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30); // Default to 30 days
+        $expireTime = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
 
         return $this->encodeToken($payload, $expireTime, "ref");
     }
@@ -198,11 +197,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
+            $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
 
             $cookie = cookie(
                 'refresh_token',
@@ -210,10 +209,10 @@ class AuthController extends Controller
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // Secure: true in production, false otherwise
                 true, // HttpOnly
                 false, // Raw
-                'Strict' // SameSite
+                'none' // SameSite
             );
 
             return response()->json([
@@ -269,11 +268,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+            $cookieExpirationMinutes = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60;
 
             $cookie = cookie(
                 'refresh_token',
@@ -281,10 +280,10 @@ class AuthController extends Controller
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // Secure: true in production, false otherwise
                 true, // HttpOnly
                 false, // Raw
-                'Strict' // SameSite
+                'none' // SameSite
             );
 
             return response()->json([
@@ -316,10 +315,11 @@ class AuthController extends Controller
     public function refreshToken(Request $request)
     {
         try {
+
             $refreshToken = $request->cookie('refresh_token');
 
             if (empty($refreshToken)) {
-                return response()->json(['error' => 'No refresh token provided.'], 401);
+                return response()->json(['error' => 'No refresh token provided.'], 402);
             }
 
             $refresh = RefreshToken::where('refresh_token', $refreshToken)
@@ -328,10 +328,10 @@ class AuthController extends Controller
                 ->first();
 
             if (is_null($refresh)) {
-                return response()->json(['error' => 'Invalid or expired refresh token.'], 401);
+                return response()->json(['error' => 'Invalid or expired refresh token.'], 408);
             }
 
-            $user = User::find($refresh->user_id); // find() directly returns model or null
+            $user = User::find($refresh->user_id)->first(); // find() directly returns model or null
 
             if (is_null($user)) {
                 return response()->json(['error' => 'User not found.'], 404);
@@ -345,11 +345,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $newRefreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int)env(key: 'JWT_REFRESH_TOKEN_TTL')),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+            $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL');
 
             $cookie = cookie(
                 'refresh_token',
@@ -357,10 +357,10 @@ class AuthController extends Controller
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // Secure: true in production, false otherwise
                 true, // HttpOnly
                 false, // Raw
-                'Strict' // SameSite
+                'none' // SameSite
             );
 
             return response()->json([
@@ -386,18 +386,11 @@ class AuthController extends Controller
     {
         try {
             $refreshToken = $request->cookie('refresh_token');
-
             if (empty($refreshToken)) {
                 return response()->json(['message' => 'No refresh token provided.'], 200);
             }
-
             // Find and revoke the refresh token
-            $refresh = RefreshToken::where('refresh_token', $refreshToken)->first();
-
-            if ($refresh) {
-                $refresh->revoked = true;
-                $refresh->save();
-            }
+            $refresh = RefreshToken::where('refresh_token', $refreshToken)->delete();
 
             // Clear the refresh token cookie
             $cookie = cookie()->forget('refresh_token');

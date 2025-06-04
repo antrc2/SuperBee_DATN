@@ -59,7 +59,7 @@ class AuthenticateMiddleware
         ];
 
         try {
-            Mail::to($recipientEmail)->send(new SendEmailDomain($emailData));
+            Mail::to($recipientEmail)->queue(new SendEmailDomain($emailData));
         } catch (\Exception $e) {
             // Log the error if the email sending fails
             // \Log::error("Failed to send deactivation email to $recipientEmail for domain $domain: " . );

@@ -28,8 +28,12 @@ import Profile from "./Clients/Profile/Profile";
 import ChangePassword from "./Clients/Profile/ChangePassword";
 import TransactionHistoryPage from "./Clients/Profile/TransactionHistoryPage";
 import ProductDetail from "./Clients/ProductDetail/ProductDetail";
-
+import EmailVerification from "./Clients/EmailVerification/EmailVerification";
+import ResetPassword from "./Clients/ResetPassword/ResetPassword";
+import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
 export {
+  ForgotPassword,
+  ResetPassword,
   AccountListPage,
   CategoryPage,
   CreateCategoryPage,
@@ -54,5 +58,6 @@ export {
   ChangePassword,
   TransactionHistoryPage,
   CartPage,
-  ProductDetail
+  ProductDetail,
+  EmailVerification
 };

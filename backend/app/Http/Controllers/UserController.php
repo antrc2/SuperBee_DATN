@@ -45,13 +45,7 @@ class UserController extends Controller
                 $query->select($fields);
             }
 
-            // Áp dụng phân trang nếu có truyền vào offset hoặc limit
-            if ($request->filled('offset') || $request->filled('limit')) {
-                $offset = (int) $request->input('offset', 0);
-                $limit = (int) $request->input('limit', 10);
-                $query->offset($offset)->limit($limit);
-            }
-
+            
             $accounts = $query->get();
 
             return response()->json([

@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
-
+// cấp lại token
+Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
 
 // chưa đăng nhập
 Route::middleware('authenticate')->group(function () {
@@ -31,6 +32,7 @@ Route::middleware('authenticate')->group(function () {
 
 // user
 Route::middleware(['jwt'])->group(function () {
+    Route::post("/logout", [AuthController::class, 'logout']);
     Route::get('/abc', function () {
         return response()->json([
             "status" => false,

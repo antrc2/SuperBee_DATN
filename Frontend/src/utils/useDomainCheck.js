@@ -19,7 +19,12 @@ export function useDomainCheck(apiKey) {
       setErrorMessage("Không có API key.");
       return;
     }
-
+    const active = sessionStorage.getItem("code");
+    if (active == "active") {
+      setDomainStatus("active");
+      setErrorMessage(null);
+      return;
+    }
     setDomainStatus("checking");
     setErrorMessage(null);
     // Header Authorization đã được axios interceptor tự thêm từ getApiKey()
@@ -36,6 +41,7 @@ export function useDomainCheck(apiKey) {
 
       if (code === "ACTIVE") {
         setDomainStatus("active");
+        sessionStorage.setItem("code", "active");
         setErrorMessage(null);
       } else if (code === "NO_ACTIVE") {
         setDomainStatus("inactive");

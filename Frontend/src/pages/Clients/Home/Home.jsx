@@ -62,7 +62,8 @@ export default function Home() {
 
   return (
     <div>
-      {/* <button onClick={() => setIsLoading(true)}>click</button> */}
+      {/* <button onClick={() => setIsLoading(true)}>click</button>
+      <button onClick={() => setIsLoading(false)}>clicks</button> */}
       {/* {isLoading && <LoadingDomain />} */}
       <div className="mt-4">
         <BannerAndCart />
@@ -70,7 +71,7 @@ export default function Home() {
       <div>
         <ListCategoryCha />
       </div>
-      {/* LQ
+      {/* LQ */}
       <div>
         <ListCategoryCon
           items={sampleData}
@@ -78,7 +79,7 @@ export default function Home() {
           title="KHO NICK LIÊN QUÂN"
         />
       </div>
-      {/* FF */}
+      {/* {/* FF */}
       <div>
         <ListCategoryCon
           items={sampleData}

@@ -7,15 +7,21 @@ import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
 import RechargeCard from "../RechargeCard/RechargeCard";
+// import { useEffect, useState } from "react";
+// import api from "../../../utils/http";
 export default function Home() {
-  // const [isLoading, setIsLoading] = useState(true);
+  // const [isLoading, setIsLoading] = useState(false);
 
   // useEffect(() => {
   //   // Giả sử load dữ liệu từ API
-  //   setTimeout(() => {
-  //     setIsLoading(false); // Khi dữ liệu đã load xong
-  //   }, 2000); // Ví dụ: chờ 5 giây
-  // }, []);
+  //   if (isLoading) {
+  //     const get = async () => {
+  //       const res = await api.get("/abc");
+  //       console.log("🚀 ~ get ~ res:", res);
+  //     };
+  //     get();
+  //   }
+  // }, [isLoading]);
   const sampleData = [
     {
       name: "Nick Liên Quân Trắng Thông Tin",
@@ -56,6 +62,7 @@ export default function Home() {
 
   return (
     <div>
+      {/* <button onClick={() => setIsLoading(true)}>click</button> */}
       {/* {isLoading && <LoadingDomain />} */}
       <div className="mt-4">
         <BannerAndCart />
@@ -63,7 +70,7 @@ export default function Home() {
       <div>
         <ListCategoryCha />
       </div>
-      {/* LQ */}
+      {/* LQ
       <div>
         <ListCategoryCon
           items={sampleData}

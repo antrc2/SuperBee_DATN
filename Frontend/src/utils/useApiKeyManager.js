@@ -14,9 +14,10 @@ export function useApiKeyManager() {
 
   // 1. Khi mount, nếu chưa có key, fetch /data.json
   useEffect(() => {
-    const existing = getApiKey();
-    if (existing) {
-      setApiKeyState(existing);
+    const sessionStorageAPI = sessionStorage.getItem("web") ?? null;
+    if (sessionStorageAPI) {
+      setApiKeyHook(sessionStorageAPI);
+      setApiKeyState(sessionStorageAPI);
       setStatus("ready");
       setErrorMessage(null);
       return;
@@ -38,6 +39,7 @@ export function useApiKeyManager() {
         if (json && json.API_KEY) {
           // Lưu vào biến module qua setApiKeyHook
           setApiKeyHook(json.API_KEY);
+          sessionStorage.setItem("web", json.API_KEY);
           setApiKeyState(json.API_KEY);
           setStatus("ready");
           setErrorMessage(null);
@@ -47,6 +49,7 @@ export function useApiKeyManager() {
       })
       .catch((err) => {
         console.error("useApiKeyManager error:", err);
+        sessionStorage.removeItem("web");
         setApiKeyState(null);
         setStatus("error");
         setErrorMessage(err.message);
@@ -55,7 +58,8 @@ export function useApiKeyManager() {
 
   // Hàm để user nhập thủ công API key (override data.json)
   const saveKeyManually = useCallback((newKey) => {
-    setApiKeyHook(newKey);
+    setApiKeyHook();
+    sessionStorage.setItem("web", newKey);
     setApiKeyState(newKey);
     setStatus("ready");
     setErrorMessage(null);
@@ -65,6 +69,7 @@ export function useApiKeyManager() {
   const clearKey = useCallback(() => {
     setApiKeyHook(null);
     setApiKeyState(null);
+    sessionStorage.removeItem("web");
     setStatus("idle");
     setErrorMessage(null);
   }, []);

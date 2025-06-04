@@ -47,8 +47,7 @@ export function AuthProvider({ children }) {
       }
 
       const accessToken = res.data.access_token;
-      localStorage.setItem("access_token", accessToken);
-
+      sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken(); // Sử dụng hàm đã tách
       if (decoded) {
         setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
@@ -92,7 +91,7 @@ export function AuthProvider({ children }) {
       }
 
       const accessToken = res.data.access_token;
-      localStorage.setItem("access_token", accessToken);
+      sessionStorage.setItem("access_token", accessToken);
 
       const decoded = getDecodedToken(); // Sử dụng hàm đã tách
       if (decoded) {
@@ -118,11 +117,22 @@ export function AuthProvider({ children }) {
     }
   };
   // đăng xuất
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem("access_token");
-    setError(null);
-    navigate("/"); // Điều hướng về trang đăng nhập
+  const logout = useCallback(async () => {
+    try {
+      const res = await api.post("/logout");
+      if (res?.status == 500) {
+        throw new Error("Không đăng xuất đc.");
+      }
+      setUser(null);
+      sessionStorage.removeItem("access_token");
+      setError(null);
+      navigate("/"); // Điều hướng về trang đăng nhập
+    } catch (err) {
+      console.error("Login error from AuthContext:", err);
+      // Kiểm tra nếu lỗi từ server phản hồi
+    } finally {
+      setLoading(false);
+    }
   }, [navigate]); // Thêm navigate vào dependencies nếu bạn đang dùng nó bên trong useCallback
 
   // --- Các logic về API key và domain check vẫn giữ nguyên ---

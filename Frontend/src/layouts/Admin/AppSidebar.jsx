@@ -13,7 +13,8 @@ import {
   PieChartIcon,
   PlugInIcon,
   TableIcon,
-  UserCircleIcon
+  UserCircleIcon,
+  UserIcon
 } from "@assets/icons";
 import { useSidebar } from "@contexts/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -23,6 +24,11 @@ const navItems = [
     icon: <GridIcon />,
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/admin", pro: false }]
+  },
+  {
+    icon: <UserIcon />,
+    name: "Users",
+   path: "/admin/users"
   },
   {
     icon: <CalenderIcon />,

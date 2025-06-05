@@ -336,5 +336,6 @@ export {
   useDelete,
   usePatch,
   useUrlUtils,
-  decodeData
+  decodeData,
+  useFetchBase
 };

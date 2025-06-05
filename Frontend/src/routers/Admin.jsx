@@ -18,12 +18,13 @@ const adminRoutes = [
       // cho mỗi module
 
       ...adminModules.map(
-        ({ name, list: List, create: Create, edit: Edit }) => ({
+        ({ name, list: List, create: Create, edit: Edit,show:Show }) => ({
           path: name,
           element: <Outlet />, // nested
           children: [
             { index: true, element: <List /> },
             { path: "new", element: <Create /> },
+            { path: ":id", element: <Show /> },
             { path: ":id/edit", element: <Edit /> },
             { path: "*", element: <NotFound /> }
           ]

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthController as ControllersAuthController;
+use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -37,6 +38,9 @@ Route::middleware('authenticate')->group(function () {
 // user
 Route::middleware(['jwt'])->group(function () {
     Route::post("/logout", [AuthController::class, 'logout']);
+    Route::get('/user/profile', [UserProfileController::class, 'show']);
+    Route::post('/user/profile-update', [UserProfileController::class, 'update']);
+    Route::post('/user/change-password', [UserProfileController::class, 'changePassword']); // <-- Thêm dòng này
     Route::get('/abc', function () {
         return response()->json([
             "status" => false,

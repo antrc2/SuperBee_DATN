@@ -24,8 +24,9 @@ export function AuthProvider({ children }) {
           name: decoded.name,
           money: decoded.money /* other user data from token */
         }
-      : null;
+      : sessionStorage.getItem("access_token");
   });
+  console.log("🚀 ~ const[user,setUser]=useState ~ user:", user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // Đổi tên `navigator` thành `Maps` cho chuẩn React Router

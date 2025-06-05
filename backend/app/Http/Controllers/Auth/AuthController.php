@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResetPassword;
+use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
 use App\Models\User;
 use App\Models\Wallet;
@@ -12,8 +14,10 @@ use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log; // Added for logging
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -170,7 +174,10 @@ class AuthController extends Controller
             } while (User::where("donate_code", $donate_code)->exists()); // Use exists() for efficiency
 
             $validatedData['donate_code'] = $donate_code;
+            $tokenEmail = Str::random(60);
+            $validatedData['email_verification_token'] = $tokenEmail;
 
+            $validatedData['email_verification_expires_at'] =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
             $user = User::create($validatedData);
             $user->assignRole('user'); // Assign 'user' role
 
@@ -181,44 +188,14 @@ class AuthController extends Controller
                     'affiliated_by' => $validatedData['aff']
                 ]);
             }
-
-            // Create wallet
-            Wallet::create([
-                'user_id' => $user->id,
-                "balance" => 0,
-                "currency" => "VND"
-            ]);
-
-            $accessToken = $this->generateAccessToken($user, $request);
-            $refreshToken = $this->generateRefreshToken($user, $request);
-
-            // Delete any existing refresh tokens for this user before creating a new one
-            RefreshToken::where('user_id', $user->id)->delete();
-            RefreshToken::create([
-                'user_id' => $user->id,
-                'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
-                'revoked' => false,
-            ]);
-
-            $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
-
-            $cookie = cookie(
-                'refresh_token',
-                $refreshToken,
-                $cookieExpirationMinutes,
-                '/',
-                null,
-                true, // Secure: true in production, false otherwise
-                true, // HttpOnly
-                false, // Raw
-                'none' // SameSite
-            );
+            // Gửi email xác minh tài khoản
+            Mail::to($user->email)->queue(new VerifyEmail($tokenEmail, $user->username));
 
             return response()->json([
-                "message" => "Registration successful",
-                'access_token' => $accessToken,
-            ])->withCookie($cookie);
+                'message' => 'Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.',
+                'status' => true,
+                'data' => []
+            ], 201);
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'The provided data is invalid.',
@@ -232,6 +209,119 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $user = User::where('email_verification_token', $request->token)
+            ->where('email_verification_expires_at', '>', now())
+            ->first();
+        if (!$user) {
+            return response()->json(['message' => 'Mã kích hoạt không hợp lệ hoặc đã hết hạn.'], 400);
+        }
+
+        $user->email_verified_at = now();
+        $user->email_verification_token = null; // Xóa token sau khi dùng
+        $user->email_verification_expires_at = null; // Xóa thời gian hết hạn
+        $user->status = 1; // Kích hoạt tài khoản
+        $user->save();
+        // // Create wallet
+        Wallet::create([
+            'user_id' => $user->id,
+            "balance" => 0,
+            "currency" => "VND"
+        ]);
+
+        $accessToken = $this->generateAccessToken($user, $request);
+        $refreshToken = $this->generateRefreshToken($user, $request);
+
+        // Delete any existing refresh tokens for this user before creating a new one
+        RefreshToken::where('user_id', $user->id)->delete();
+        RefreshToken::create([
+            'user_id' => $user->id,
+            'refresh_token' => $refreshToken,
+            'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
+            'revoked' => false,
+        ]);
+
+        $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
+
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            $cookieExpirationMinutes,
+            '/',
+            null,
+            true, // Secure: true in production, false otherwise
+            true, // HttpOnly
+            false, // Raw
+            'none' // SameSite
+        );
+
+        return response()->json([
+            "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
+            'access_token' => $accessToken,
+            'status' => true
+        ], 200)->withCookie($cookie);
+    }
+
+    /**
+     * Sends a password reset email.
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            // Trả về thông báo chung để tránh tiết lộ email nào tồn tại
+            return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
+        }
+
+        $token = $this->generateCode(20);
+        $user->password_reset_token = $token;
+        $user->password_reset_expires_at = now()->addSeconds((int)env('PASSWORD_RESET_TTL', 3600));
+        $user->save();
+
+        try {
+            Mail::to($user->email)->queue(new ResetPassword($token, $user->username));
+            return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
+        } catch (\Exception $e) {
+
+            return response()->json(['message' => 'Không thể gửi email đặt lại mật khẩu lúc này. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    /**
+     * Resets the user's password using a token.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::where('password_reset_token', $request->token)
+            ->where('password_reset_expires_at', '>', now())
+            ->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'], 400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->password_reset_token = null; // Xóa token sau khi dùng
+        $user->password_reset_expires_at = null; // Xóa thời gian hết hạn
+        $user->save();
+
+        return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
+    }
+
 
     /**
      * Logs in a user and returns access and refresh tokens.

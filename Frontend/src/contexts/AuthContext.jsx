@@ -11,6 +11,7 @@ import { useDomainCheck } from "@utils/useDomainCheck.js"; // Đảm bảo đư�
 import api from "../utils/http";
 import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
+import { showNotification } from "../utils/notification";
 
 const AuthContext = createContext();
 
@@ -23,8 +24,9 @@ export function AuthProvider({ children }) {
           name: decoded.name,
           money: decoded.money /* other user data from token */
         }
-      : null;
+      : sessionStorage.getItem("access_token");
   });
+  console.log("🚀 ~ const[user,setUser]=useState ~ user:", user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // Đổi tên `navigator` thành `Maps` cho chuẩn React Router
@@ -86,21 +88,23 @@ export function AuthProvider({ children }) {
       });
       // console.log("🚀 ~ register ~ res:", res);
 
-      if (!res?.data?.access_token) {
+      if (res?.data?.status == false) {
         throw new Error("Không nhận được access_token từ server.");
       }
+      // alert(res?.data?.message);
+      showNotification("info", res?.data?.message, 5000);
+      navigate("/");
+      // const accessToken = res.data.access_token;
+      // sessionStorage.setItem("access_token", accessToken);
 
-      const accessToken = res.data.access_token;
-      sessionStorage.setItem("access_token", accessToken);
-
-      const decoded = getDecodedToken(); // Sử dụng hàm đã tách
-      if (decoded) {
-        setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
-        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
-      } else {
-        // Nếu token không giải mã được sau khi nhận từ API
-        throw new Error("Không thể giải mã token từ phản hồi server.");
-      }
+      // const decoded = getDecodedToken(); // Sử dụng hàm đã tách
+      // if (decoded) {
+      //   setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
+      //   navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+      // } else {
+      //   // Nếu token không giải mã được sau khi nhận từ API
+      //   throw new Error("Không thể giải mã token từ phản hồi server.");
+      // }
 
       return { success: true, data: res.data };
     } catch (err) {

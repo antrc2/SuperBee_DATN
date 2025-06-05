@@ -30,9 +30,7 @@ export default function SignUpForm() {
   const onSubmit = async (data) => {
     clearErrors(); // Clear all errors from react-hook-form
     // setFormError("general", { type: "manual", message: "" }); // Optionally reset general form error
-
     const affiliateId = getAffiliateId(); // Get affiliate ID from URL
-    console.log("🚀 ~ onSubmit ~ affiliateId:", affiliateId);
     getAffiliateId();
     try {
       const result = await authRegister({ ...data, aff: affiliateId }); // Call authRegister from AuthContext

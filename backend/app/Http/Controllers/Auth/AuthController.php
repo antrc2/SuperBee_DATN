@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ResetPassword;
+use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
 use App\Models\User;
 use App\Models\Wallet;
@@ -10,10 +12,12 @@ use App\Models\Web;
 use App\Models\RefreshToken;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log; // Added for logging
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -30,7 +34,7 @@ class AuthController extends Controller
         // This method currently always returns an error.
         // Implement actual domain validation logic here if needed.
         return response()->json([
-            "error" => "WEB_NOT_ACTIVE",
+            "error" => "WEB_ACTIVE",
             "code" => "ACTIVE"
         ], 200);
     }
@@ -78,7 +82,6 @@ class AuthController extends Controller
     protected function encodeToken(array $payload, int $expireTime, string $type): string
     {
         $payload['exp'] = time() + $expireTime;
-
         if ($type === "acc") {
             return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
         }
@@ -108,8 +111,8 @@ class AuthController extends Controller
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
             'money' => $wallet->balance ?? "0"
         ];
-        $expireTime = env('JWT_EXPIRE_TIME', 3600); // Default to 1 hour
-
+        $expireTime = env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
+        // dd(time() + $expireTime, date('Y-m-d H:i:s'));
         return $this->encodeToken($payload, $expireTime, "acc");
     }
 
@@ -128,7 +131,7 @@ class AuthController extends Controller
             'web_id' => $user->web_id,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
         ];
-        $expireTime = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30); // Default to 30 days
+        $expireTime = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
 
         return $this->encodeToken($payload, $expireTime, "ref");
     }
@@ -171,7 +174,10 @@ class AuthController extends Controller
             } while (User::where("donate_code", $donate_code)->exists()); // Use exists() for efficiency
 
             $validatedData['donate_code'] = $donate_code;
+            $tokenEmail = Str::random(60);
+            $validatedData['email_verification_token'] = $tokenEmail;
 
+            $validatedData['email_verification_expires_at'] =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
             $user = User::create($validatedData);
             $user->assignRole('user'); // Assign 'user' role
 
@@ -182,44 +188,14 @@ class AuthController extends Controller
                     'affiliated_by' => $validatedData['aff']
                 ]);
             }
-
-            // Create wallet
-            Wallet::create([
-                'user_id' => $user->id,
-                "balance" => 0,
-                "currency" => "VND"
-            ]);
-
-            $accessToken = $this->generateAccessToken($user, $request);
-            $refreshToken = $this->generateRefreshToken($user, $request);
-
-            // Delete any existing refresh tokens for this user before creating a new one
-            RefreshToken::where('user_id', $user->id)->delete();
-            RefreshToken::create([
-                'user_id' => $user->id,
-                'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
-                'revoked' => false,
-            ]);
-
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
-
-            $cookie = cookie(
-                'refresh_token',
-                $refreshToken,
-                $cookieExpirationMinutes,
-                '/',
-                null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
-                true, // HttpOnly
-                false, // Raw
-                'Strict' // SameSite
-            );
+            // Gửi email xác minh tài khoản
+            Mail::to($user->email)->queue(new VerifyEmail($tokenEmail, $user->username));
 
             return response()->json([
-                "message" => "Registration successful",
-                'access_token' => $accessToken,
-            ])->withCookie($cookie);
+                'message' => 'Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.',
+                'status' => true,
+                'data' => []
+            ], 201);
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'The provided data is invalid.',
@@ -233,6 +209,119 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    public function verifyEmail(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+        ]);
+
+        $user = User::where('email_verification_token', $request->token)
+            ->where('email_verification_expires_at', '>', now())
+            ->first();
+        if (!$user) {
+            return response()->json(['message' => 'Mã kích hoạt không hợp lệ hoặc đã hết hạn.'], 400);
+        }
+
+        $user->email_verified_at = now();
+        $user->email_verification_token = null; // Xóa token sau khi dùng
+        $user->email_verification_expires_at = null; // Xóa thời gian hết hạn
+        $user->status = 1; // Kích hoạt tài khoản
+        $user->save();
+        // // Create wallet
+        Wallet::create([
+            'user_id' => $user->id,
+            "balance" => 0,
+            "currency" => "VND"
+        ]);
+
+        $accessToken = $this->generateAccessToken($user, $request);
+        $refreshToken = $this->generateRefreshToken($user, $request);
+
+        // Delete any existing refresh tokens for this user before creating a new one
+        RefreshToken::where('user_id', $user->id)->delete();
+        RefreshToken::create([
+            'user_id' => $user->id,
+            'refresh_token' => $refreshToken,
+            'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
+            'revoked' => false,
+        ]);
+
+        $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
+
+        $cookie = cookie(
+            'refresh_token',
+            $refreshToken,
+            $cookieExpirationMinutes,
+            '/',
+            null,
+            true, // Secure: true in production, false otherwise
+            true, // HttpOnly
+            false, // Raw
+            'none' // SameSite
+        );
+
+        return response()->json([
+            "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
+            'access_token' => $accessToken,
+            'status' => true
+        ], 200)->withCookie($cookie);
+    }
+
+    /**
+     * Sends a password reset email.
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            // Trả về thông báo chung để tránh tiết lộ email nào tồn tại
+            return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
+        }
+
+        $token = $this->generateCode(20);
+        $user->password_reset_token = $token;
+        $user->password_reset_expires_at = now()->addSeconds((int)env('PASSWORD_RESET_TTL', 3600));
+        $user->save();
+
+        try {
+            Mail::to($user->email)->queue(new ResetPassword($token, $user->username));
+            return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
+        } catch (\Exception $e) {
+
+            return response()->json(['message' => 'Không thể gửi email đặt lại mật khẩu lúc này. Vui lòng thử lại sau.'], 500);
+        }
+    }
+
+    /**
+     * Resets the user's password using a token.
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'token' => 'required|string',
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = User::where('password_reset_token', $request->token)
+            ->where('password_reset_expires_at', '>', now())
+            ->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'], 400);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->password_reset_token = null; // Xóa token sau khi dùng
+        $user->password_reset_expires_at = null; // Xóa thời gian hết hạn
+        $user->save();
+
+        return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
+    }
+
 
     /**
      * Logs in a user and returns access and refresh tokens.
@@ -269,11 +358,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+            $cookieExpirationMinutes = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60;
 
             $cookie = cookie(
                 'refresh_token',
@@ -281,10 +370,10 @@ class AuthController extends Controller
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // Secure: true in production, false otherwise
                 true, // HttpOnly
                 false, // Raw
-                'Strict' // SameSite
+                'none' // SameSite
             );
 
             return response()->json([
@@ -316,10 +405,11 @@ class AuthController extends Controller
     public function refreshToken(Request $request)
     {
         try {
+
             $refreshToken = $request->cookie('refresh_token');
 
             if (empty($refreshToken)) {
-                return response()->json(['error' => 'No refresh token provided.'], 401);
+                return response()->json(['error' => 'No refresh token provided.'], 402);
             }
 
             $refresh = RefreshToken::where('refresh_token', $refreshToken)
@@ -328,10 +418,10 @@ class AuthController extends Controller
                 ->first();
 
             if (is_null($refresh)) {
-                return response()->json(['error' => 'Invalid or expired refresh token.'], 401);
+                return response()->json(['error' => 'Invalid or expired refresh token.'], 408);
             }
 
-            $user = User::find($refresh->user_id); // find() directly returns model or null
+            $user = User::find($refresh->user_id)->first(); // find() directly returns model or null
 
             if (is_null($user)) {
                 return response()->json(['error' => 'User not found.'], 404);
@@ -345,11 +435,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $newRefreshToken,
-                'expires_at' => Carbon::now()->addSeconds(env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int)env(key: 'JWT_REFRESH_TOKEN_TTL')),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = env('JWT_REFRESH_EXPIRE_TIME', 60 * 60 * 24 * 30) / 60;
+            $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL');
 
             $cookie = cookie(
                 'refresh_token',
@@ -357,10 +447,10 @@ class AuthController extends Controller
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                env('APP_ENV') === 'production', // Secure: true in production, false otherwise
+                true, // Secure: true in production, false otherwise
                 true, // HttpOnly
                 false, // Raw
-                'Strict' // SameSite
+                'none' // SameSite
             );
 
             return response()->json([
@@ -386,18 +476,11 @@ class AuthController extends Controller
     {
         try {
             $refreshToken = $request->cookie('refresh_token');
-
             if (empty($refreshToken)) {
                 return response()->json(['message' => 'No refresh token provided.'], 200);
             }
-
             // Find and revoke the refresh token
-            $refresh = RefreshToken::where('refresh_token', $refreshToken)->first();
-
-            if ($refresh) {
-                $refresh->revoked = true;
-                $refresh->save();
-            }
+            $refresh = RefreshToken::where('refresh_token', $refreshToken)->delete();
 
             // Clear the refresh token cookie
             $cookie = cookie()->forget('refresh_token');

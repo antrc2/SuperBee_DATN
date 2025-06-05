@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\AuthController as ControllersAuthController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -8,8 +9,12 @@ use Illuminate\Support\Facades\Route;
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
-
-
+// cấp lại token
+Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
+// xác minh tài khoản
+Route::get('/verify-email', [AuthController::class, 'verifyEmail']); // Sử dụng GET vì nó là link từ email
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 // chưa đăng nhập
 Route::middleware('authenticate')->group(function () {
     Route::get('/', function () {
@@ -31,6 +36,7 @@ Route::middleware('authenticate')->group(function () {
 
 // user
 Route::middleware(['jwt'])->group(function () {
+    Route::post("/logout", [AuthController::class, 'logout']);
     Route::get('/abc', function () {
         return response()->json([
             "status" => false,

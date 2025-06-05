@@ -20,9 +20,19 @@ class User extends Authenticatable
         'donate_code',
         'web_id',
         'status',
+        'email_verified_at', // Thêm vào fillable
+        'email_verification_token', // Thêm vào fillable
+        'email_verification_expires_at', // Thêm vào fillable
+        'password_reset_token', // Thêm vào fillable
+        'password_reset_expires_at', // Thêm vào fillable
     ];
     protected $hidden = [
         'password',
+        'remember_token', // Nếu có
+        'email_verification_token', // Ẩn token này khỏi API response
+        'email_verification_expires_at', // Ẩn token này khỏi API response
+        'password_reset_token', // Ẩn token này khỏi API response
+        'password_reset_expires_at', // Ẩn token này khỏi API response
     ];
     public function web()
     {

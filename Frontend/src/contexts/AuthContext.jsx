@@ -11,6 +11,7 @@ import { useDomainCheck } from "@utils/useDomainCheck.js"; // Đảm bảo đư�
 import api from "../utils/http";
 import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
+import { showNotification } from "../utils/notification";
 
 const AuthContext = createContext();
 
@@ -47,8 +48,7 @@ export function AuthProvider({ children }) {
       }
 
       const accessToken = res.data.access_token;
-      localStorage.setItem("access_token", accessToken);
-
+      sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken(); // Sử dụng hàm đã tách
       if (decoded) {
         setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
@@ -87,21 +87,23 @@ export function AuthProvider({ children }) {
       });
       // console.log("🚀 ~ register ~ res:", res);
 
-      if (!res?.data?.access_token) {
+      if (res?.data?.status == false) {
         throw new Error("Không nhận được access_token từ server.");
       }
+      // alert(res?.data?.message);
+      showNotification("info", res?.data?.message, 5000);
+      navigate("/");
+      // const accessToken = res.data.access_token;
+      // sessionStorage.setItem("access_token", accessToken);
 
-      const accessToken = res.data.access_token;
-      localStorage.setItem("access_token", accessToken);
-
-      const decoded = getDecodedToken(); // Sử dụng hàm đã tách
-      if (decoded) {
-        setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
-        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
-      } else {
-        // Nếu token không giải mã được sau khi nhận từ API
-        throw new Error("Không thể giải mã token từ phản hồi server.");
-      }
+      // const decoded = getDecodedToken(); // Sử dụng hàm đã tách
+      // if (decoded) {
+      //   setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
+      //   navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+      // } else {
+      //   // Nếu token không giải mã được sau khi nhận từ API
+      //   throw new Error("Không thể giải mã token từ phản hồi server.");
+      // }
 
       return { success: true, data: res.data };
     } catch (err) {
@@ -118,11 +120,22 @@ export function AuthProvider({ children }) {
     }
   };
   // đăng xuất
-  const logout = useCallback(() => {
-    setUser(null);
-    localStorage.removeItem("access_token");
-    setError(null);
-    navigate("/"); // Điều hướng về trang đăng nhập
+  const logout = useCallback(async () => {
+    try {
+      const res = await api.post("/logout");
+      if (res?.status == 500) {
+        throw new Error("Không đăng xuất đc.");
+      }
+      setUser(null);
+      sessionStorage.removeItem("access_token");
+      setError(null);
+      navigate("/"); // Điều hướng về trang đăng nhập
+    } catch (err) {
+      console.error("Login error from AuthContext:", err);
+      // Kiểm tra nếu lỗi từ server phản hồi
+    } finally {
+      setLoading(false);
+    }
   }, [navigate]); // Thêm navigate vào dependencies nếu bạn đang dùng nó bên trong useCallback
 
   // --- Các logic về API key và domain check vẫn giữ nguyên ---

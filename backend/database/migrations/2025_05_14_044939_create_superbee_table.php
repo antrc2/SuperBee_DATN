@@ -15,11 +15,19 @@ return new class extends Migration
             $table->string('username', 255); // Đặt độ dài cụ thể cho string
             $table->string('password', 255); // Đặt độ dài cụ thể
             $table->string('email', 255); // Đặt độ dài cụ thể
+            // Cho kích hoạt tài khoản
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('email_verification_token')->nullable();
+            $table->timestamp('email_verification_expires_at')->nullable();
+            // Nhưng với JWT token, việc lưu token reset vào bảng users tiện hơn để liên kết trực tiếp.
+            $table->string('password_reset_token')->nullable();
             $table->string('phone', 20)->nullable(); // Có thể null
             $table->string('avatar_url')->default('https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg');
             $table->string('donate_code');
             $table->unsignedBigInteger('web_id');
             $table->integer('status')->default(0); // Mặc định k hoạt động
+
+            $table->timestamp('password_reset_expires_at')->nullable();
             $table->timestamps();
             $table->unique(['username', 'email', 'web_id']);
         });
@@ -58,7 +66,6 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
             $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
             $table->timestamps();
-
         });
 
         // Bảng product_game_attributes (EAV cho thông tin riêng theo game)
@@ -167,7 +174,7 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('wallet_id'); // Giao dịch thuộc ví nào
-            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission','refund']); 
+            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission', 'refund']);
             //                     Nạp card         Nạp bank        Mua hàng    Rút         Hoa hồng      Hoàn tiền
             $table->decimal('amount', 15, 0); // Số tiền giao dịch, không null
             $table->unsignedBigInteger('related_id')->nullable(); // ID của giao dịch liên quan (nạp thẻ, bank, đơn hàng, rút tiền...)
@@ -183,7 +190,7 @@ return new class extends Migration
             $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // Liên kết với giao dịch ví, có thể null nếu giao dịch chưa được tạo hoàn chỉnh
             $table->unsignedBigInteger('user_id'); // Ai nạp thẻ
             $table->unsignedBigInteger('web_id')->nullable(); // Nạp cho web nào (nếu có web con)
-            $table->integer('amount');// Số tiền bạn nhận về (VND)
+            $table->integer('amount'); // Số tiền bạn nhận về (VND)
             $table->integer('value'); // Giá trị thực của thẻ
             $table->integer('declared_value'); // Giá trị khai báo (ví dụ 50k, 100k)
             $table->string('telco', 50); // Nhà mạng
@@ -371,13 +378,13 @@ return new class extends Migration
             // $table->decimal('commission_amount', 15, 0)->default(0.00); // Số tiền hoa hồng
             $table->timestamps();
         });
-        
+
         // Bảng lịch sử affiliate
-        Schema::create("affiliate_histories", function(Blueprint $table){
-            $table->id(); 
+        Schema::create("affiliate_histories", function (Blueprint $table) {
+            $table->id();
             $table->unsignedBigInteger('affiliate_id'); // id của bảng affiliate
             $table->decimal('commission_amount', 15, 0); // Số tiền hoa hồng nhận được của mỗi đơn hàng
-            $table->unsignedBigInteger('order_id'); 
+            $table->unsignedBigInteger('order_id');
             $table->timestamps();
         });
 

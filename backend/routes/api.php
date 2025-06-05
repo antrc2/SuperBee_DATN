@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthController as ControllersAuthController;
+use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -48,6 +49,12 @@ Route::middleware(['jwt'])->group(function () {
             'message' => "no message"
         ]);
     });
+    Route::prefix('categories')->group(function(){
+        Route::get('/',[CategoryController::class,'index']);
+        Route::post('/',[CategoryController::class,'store']);
+        Route::put('/{id}',[CategoryController::class,'update']);
+        Route::delete('/{id}',[CategoryController::class,'destroy']);
+    });
 });
 
 // admin
@@ -59,6 +66,7 @@ Route::middleware(['role:admin', 'jwt'])->prefix('/')->group(function () {
             'message' => "no message"
         ]);
     });
+    
 });
 
 Route::prefix("/callback")->group(function () {

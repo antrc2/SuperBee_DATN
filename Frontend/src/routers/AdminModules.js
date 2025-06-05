@@ -7,7 +7,9 @@ import {
   EditDiscountCodePage,
   DonatePromotionPage,
   CreateDonatePromotionPage,
-  EditDonatePromotionPage
+  EditDonatePromotionPage,
+  AccountListPage,
+  ShowAccountPage,
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
@@ -26,12 +28,18 @@ import BasicTables from "@pages/Admin/Tables/BasicTables";
 import FormElements from "@pages/Admin/Forms/FormElements";
 import Blank from "@pages/Admin/Blank";
 
+
 export const adminModules = [
   {
     name: "profile",
     list: UserProfiles,
     create: CreateDonatePromotionPage,
     edit: EditDonatePromotionPage
+  },
+  {
+    name: "users",
+    list: AccountListPage,
+    show: ShowAccountPage,
   },
   {
     name: "calendar",

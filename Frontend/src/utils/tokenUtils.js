@@ -1,6 +1,5 @@
 // src/utils/tokenUtils.js
 import { jwtDecode } from "jwt-decode"; // Đảm bảo đã cài đặt 'jwt-decode'
-
 /**
  * Lấy token từ localStorage và giải mã nó.
  * Kiểm tra tính hợp lệ của token (có tồn tại, là chuỗi, chưa hết hạn).
@@ -9,7 +8,6 @@ import { jwtDecode } from "jwt-decode"; // Đảm bảo đã cài đặt 'jwt-de
  */
 export function getDecodedToken() {
   const token = sessionStorage.getItem("access_token");
-
   if (!token || typeof token !== "string") {
     // console.log("No token found or invalid token type in localStorage.");
     return null;
@@ -24,7 +22,7 @@ export function getDecodedToken() {
 
     if (decoded.exp && decoded.exp < currentTime) {
       console.log("Token has expired.");
-      // localStorage.removeItem("access_token"); // Xóa token hết hạn
+      sessionStorage.removeItem("access_token"); // Xóa token hết hạn
       return null;
     }
 

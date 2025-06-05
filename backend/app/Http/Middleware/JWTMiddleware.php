@@ -2,8 +2,7 @@
 
 namespace App\Http\Middleware;
 
-
-
+use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -12,6 +11,7 @@ use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\SignatureInvalidException;
 use Firebase\JWT\BeforeValidException;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Web; // Assuming you might use this later, but not directly in this improved auth logic
 class JWTMiddleware
 {
@@ -47,7 +47,7 @@ class JWTMiddleware
                     'errorCode' => 'PAYLOAD_MISSING_USER_ID'
                 ], 401);
             }
-            // Add decoded data to the request for use in controllers
+
             $request->merge([
                 'web_id' => $decoded->web_id,
                 'user_id' => $decoded->user_id,

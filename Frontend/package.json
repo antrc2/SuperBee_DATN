@@ -37,6 +37,7 @@
     "react-head": "^3.4.2",
     "react-hook-form": "^7.57.0",
     "react-router-dom": "7.6.0",
+    "react-toastify": "^11.0.5",
     "sweetalert2": "^11.21.0",
     "tailwind": "^4.0.0",
     "tailwind-merge": "^3.3.0",

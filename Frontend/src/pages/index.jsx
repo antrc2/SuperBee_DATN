@@ -1,5 +1,6 @@
 // Admin
 import AccountListPage from "./Admin/Account/AccountPage";
+import ShowAccountPage from "./Admin/Account/ShowAccountPage";
 import CategoryPage from "./Admin/Category/CategoryPage";
 import CreateCategoryPage from "./Admin/Category/CreateCategoryPage";
 import EditCategoryPage from "./Admin/Category/EditCategoryPage";
@@ -28,9 +29,14 @@ import Profile from "./Clients/Profile/Profile";
 import ChangePassword from "./Clients/Profile/ChangePassword";
 import TransactionHistoryPage from "./Clients/Profile/TransactionHistoryPage";
 import ProductDetail from "./Clients/ProductDetail/ProductDetail";
-
+import EmailVerification from "./Clients/EmailVerification/EmailVerification";
+import ResetPassword from "./Clients/ResetPassword/ResetPassword";
+import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
 export {
+  ForgotPassword,
+  ResetPassword,
   AccountListPage,
+  ShowAccountPage,
   CategoryPage,
   CreateCategoryPage,
   EditCategoryPage,
@@ -54,5 +60,6 @@ export {
   ChangePassword,
   TransactionHistoryPage,
   CartPage,
-  ProductDetail
+  ProductDetail,
+  EmailVerification
 };

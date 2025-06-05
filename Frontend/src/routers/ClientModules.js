@@ -11,6 +11,7 @@ import {
   CartPage,
   Pay
 } from "@pages";
+import { EmailVerification, ForgotPassword, ResetPassword } from "../pages";
 
 export const clientModules = [
   {
@@ -52,6 +53,19 @@ export const clientModules = [
   {
     path: "/pay",
     view: Pay
+  },
+  // trang kích hoạt
+  {
+    path: "/verify-email",
+    view: EmailVerification
+  },
+  {
+    path: "/reset-password",
+    view: ResetPassword
+  },
+  {
+    path: "/forgot-password",
+    view: ForgotPassword
   }
 ];
 

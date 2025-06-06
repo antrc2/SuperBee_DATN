@@ -48,6 +48,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable(); // Có thể là danh mục gốc
             $table->string('name', 255); // Đặt độ dài cụ thể
             $table->string('slug', 255)->unique(); // Slug phải duy nhất, không null
+            $table->string('image_url')->nullable();
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
             $table->unsignedBigInteger('updated_by'); // Có thể null

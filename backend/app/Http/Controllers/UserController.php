@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\User;
+use App\Models\Wallet;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -18,7 +19,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = User::query();
+            $query = User::with("wallet", "roles");
 
             // Tìm kiếm theo field nếu có
             if ($request->filled('field') && trim($request->field) !== '') {
@@ -81,7 +82,7 @@ class UserController extends Controller
     {
         try {
 
-            $query = User::find($id);
+            $query = User::with("wallet")->find($id);
             if (!$query) {
                 return response()->json([
                     'status' => false,

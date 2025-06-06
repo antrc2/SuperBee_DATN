@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductCredential extends Model
 {
     use HasFactory;
-
+public $timestamps = false;
     protected $fillable = [
         'product_id',
         'username',

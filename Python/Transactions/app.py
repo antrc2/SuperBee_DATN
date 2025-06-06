@@ -14,8 +14,8 @@ load_dotenv()
 accountNo = os.getenv("ACCOUNT_NO")
 password = os.getenv("PASSWORD")
 url = os.getenv("CALLBACK_URL")
+token = os.getenv("TOKEN")
 headers = {
-    "Authorization": "Bearer Sqrtfl0@t01bfkskvqfayl0AnChimTo18cm",
     "Content-Type": "application/json"
 }
 
@@ -67,6 +67,7 @@ def run(mb):
                 if (j==data["transactionHistoryList"][i]["refNo"]):
                     print(data["transactionHistoryList"][i])
                     payload = data['transactionHistoryList'][i]
+                    payload['token'] = token
                     result = callback(payload, url=url)
                     print(type(result))
                     print(result)

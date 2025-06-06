@@ -48,7 +48,7 @@ return new class extends Migration
             $table->unsignedBigInteger('parent_id')->nullable(); // Có thể là danh mục gốc
             $table->string('name', 255); // Đặt độ dài cụ thể
             $table->string('slug', 255)->unique(); // Slug phải duy nhất, không null
-            $table->string('image_url')->nullable();
+            $table->text('image_url');
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
             $table->unsignedBigInteger('updated_by'); // Có thể null
@@ -62,7 +62,7 @@ return new class extends Migration
             $table->string('sku', 50)->unique();           // SKU duy nhất
             $table->integer('price');
             $table->integer('sale')->nullable();
-            $table->integer('status')->default(1);         // Trạng thái (mặc định = 1: hoạt động)
+            $table->integer('status')->default(0);         // Trạng thái (mặc định = 1: hoạt động)
             $table->unsignedBigInteger('web_id');          // Sản phẩm thuộc web con nào
             $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
             $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
@@ -76,7 +76,7 @@ return new class extends Migration
             // $table->string('game_code', 50);               // Mã game (ví dụ: 'lol', 'ff', ...)
             $table->string('attribute_key', 100);          // Tên thuộc tính (ví dụ: 'rank', 'num_champions', ...)
             $table->string('attribute_value', 255);        // Giá trị tương ứng (luôn lưu dạng chuỗi)
-            $table->timestamps();
+            // $table->timestamps();
 
             // Để sau sẽ thêm unique ['product_id','game_code','attribute_key']
         });
@@ -88,7 +88,7 @@ return new class extends Migration
             $table->string('username', 255);       // Email đăng nhập
             $table->string('password', 255);    // Mật khẩu (hãy mã hóa ở tầng ứng dụng)
             // $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
-            $table->timestamps();
+            // $table->timestamps();
         });
 
         // Bảng product_images
@@ -98,7 +98,7 @@ return new class extends Migration
             $table->string('image_url', 255);           // Đường dẫn ảnh
             // $table->boolean('is_primary')->default(false); // Ảnh chính hay không
             $table->string('alt_text', 255)->nullable(); // Văn bản thay thế (alt)
-            $table->timestamps();
+            // $table->timestamps();
         });
 
         // Bảng reviews (Đánh giá của người dùng về độ tin cậy của web)
@@ -263,7 +263,7 @@ return new class extends Migration
         Schema::create('donate_promotions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('web_id')->nullable(); // Thuộc web nào (có thể là khuyến mãi chung cho toàn hệ thống)
-            $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
+            // $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
             // $table->text('description')->nullable(); // Thêm mô tả
             // $table->enum('promotion_type', ['percentage', 'fixed_amount']); // Loại khuyến mãi
             $table->decimal('amount', 15, 0); // Giá trị khuyến mãi

@@ -12,7 +12,7 @@ class DonatePromotion extends Model
 
     protected $fillable = [
         'web_id',
-        'code',
+        // 'code',
         // 'description', // This was commented out
         // 'promotion_type', // This was commented out
         'amount',

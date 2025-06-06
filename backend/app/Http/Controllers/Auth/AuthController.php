@@ -343,6 +343,18 @@ class AuthController extends Controller
             $user = User::where('username', $validatedData['username'])
                 ->where('web_id', $web->id)
                 ->first();
+            if ($user->status === 0) {
+                return response()->json([
+                    'message' => 'tài khoản bạn chưa kích hoạt',
+                    'status' => false
+                ], 401);
+            }
+            if ($user->status === 3) {
+                return response()->json([
+                    'message' => 'tài khoản bạn bị khóa',
+                    'status' => false
+                ], 401);
+            }
 
             if (!$user || !Hash::check($validatedData['password'], $user->password)) {
                 return response()->json([

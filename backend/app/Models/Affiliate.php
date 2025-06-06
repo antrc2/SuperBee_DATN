@@ -12,7 +12,6 @@ class Affiliate extends Model
     protected $fillable = [
         'user_id',
         'affiliated_by',
-        'commission_amount', // This is often calculated, not directly filled
     ];
 
     public function user()

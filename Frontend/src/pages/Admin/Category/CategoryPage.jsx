@@ -20,7 +20,7 @@ export default function CategoryPage() {
   const currentPage = Math.floor(offset / limit) + 1;
 
   const handleDelete = (id) => { if (window.confirm("Xóa danh mục này?")) setCategories(prev => prev.filter(c => c.id !== id)); };
-
+  
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-4">

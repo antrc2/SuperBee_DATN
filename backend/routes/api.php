@@ -3,7 +3,9 @@
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthController as ControllersAuthController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\User\UserProfileController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
 
@@ -54,6 +56,9 @@ Route::middleware(['jwt'])->group(function () {
         Route::post('/',[CategoryController::class,'store']);
         Route::put('/{id}',[CategoryController::class,'update']);
         Route::delete('/{id}',[CategoryController::class,'destroy']);
+        // User Category
+        Route::get("/getCate",[UserCategoryController::class,'index']);
+        Route::get("/getCate/{id}",[UserCategoryController::class,'show']);
     });
 });
 

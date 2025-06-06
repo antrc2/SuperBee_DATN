@@ -31,6 +31,11 @@ const navItems = [
    path: "/admin/users"
   },
   {
+    icon: <UserIcon />,
+    name: "Categories",
+    path: "/admin/categories"
+  },
+  {
     icon: <CalenderIcon />,
     name: "Calendar",
     path: "/admin/calendar"

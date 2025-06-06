@@ -87,7 +87,7 @@ Route::middleware(['jwt'])->group(function () {
 
     });
 });
-
+});
 // admin
 Route::middleware(['role:admin', 'jwt'])->prefix('/admin')->group(function () {
     Route::get('/', function () {

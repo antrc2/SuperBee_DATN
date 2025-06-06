@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ProductGameAttribute extends Model
 {
     use HasFactory;
-
+public $timestamps = false;
     protected $fillable = [
         'product_id',
         // 'game_code', // This was commented out in your migration

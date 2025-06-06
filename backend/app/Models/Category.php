@@ -12,7 +12,9 @@ class Category extends Model
     protected $fillable = [
         'parent_id',
         'name',
-        'slug', // Often generated automatically, but can be fillable
+        'slug',
+        // Often generated automatically, but can be fillable
+        'image_url',
         'status',
         'created_by',
         'updated_by',

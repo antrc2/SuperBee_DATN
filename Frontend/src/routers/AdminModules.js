@@ -37,6 +37,12 @@ export const adminModules = [
     edit: EditDonatePromotionPage
   },
   {
+    name: "categories",
+    list: CategoryPage,
+    create: CreateCategoryPage,
+    edit: EditCategoryPage
+  },
+  {
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,

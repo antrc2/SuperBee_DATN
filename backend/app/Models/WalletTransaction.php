@@ -39,8 +39,8 @@ class WalletTransaction extends Model
         return $this->hasOne(RechargeBank::class);
     }
 
-    public function withdrawal()
+    public function withdraw()
     {
-        return $this->hasOne(Withdrawal::class);
+        return $this->hasOne(Withdraw::class);
     }
 }

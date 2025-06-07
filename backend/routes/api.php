@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController as ControllersAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\UserProfileController;
@@ -158,6 +159,16 @@ Route::middleware(['role:admin', 'jwt'])->prefix('/admin')->group(function () {
 });
 
 Route::prefix("/callback")->group(function () {
+        // Dữ liệu gửi vào đây nhé 
+        // {
+        //     "telco": "VIETTEL",
+        //     "amount": 10000,
+        //     "serial": "2161199621343",
+        //     "code": "369404179833759"
+        // }
     Route::post("/card", [CardController::class,'callback']);
-    Route::post("/bank");
+
+
+    
+    Route::post("/bank", [BankController::class,'callback']);
 });

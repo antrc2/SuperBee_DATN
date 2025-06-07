@@ -158,6 +158,6 @@ Route::middleware(['role:admin', 'jwt'])->prefix('/admin')->group(function () {
 });
 
 Route::prefix("/callback")->group(function () {
-    Route::post("/card");
+    Route::post("/card", [CardController::class,'callback']);
     Route::post("/bank");
 });

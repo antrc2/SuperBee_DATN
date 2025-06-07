@@ -268,8 +268,8 @@ return new class extends Migration
             // $table->text('description')->nullable(); // Thêm mô tả
             // $table->enum('promotion_type', ['percentage', 'fixed_amount']); // Loại khuyến mãi
             $table->decimal('amount', 15, 0); // Giá trị khuyến mãi
-            $table->date('start_date'); // Ngày bắt đầu
-            $table->date('end_date'); // Ngày kết thúc
+            $table->timestamp('start_date'); // Ngày bắt đầu
+            $table->timestamp('end_date'); // Ngày kết thúc
             // $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
             // $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
             // $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng

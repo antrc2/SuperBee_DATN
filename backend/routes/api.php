@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController as ControllersAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Models\User;
@@ -45,6 +46,13 @@ Route::middleware('authenticate')->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
     });
+
+    Route::prefix("/donate_promotions")->group(function(){
+        Route::get("/",[AdminDonatePromotionController::class,'index']);
+        Route::get("/{id}",[AdminDonatePromotionController::class,'show']);
+    });
+    
+
 });
 
 
@@ -64,6 +72,16 @@ Route::middleware(['jwt'])->group(function () {
         Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
         Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
         Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
+    });
+
+
+    Route::prefix("/donate")->group(function(){
+        Route::prefix("/card")->group(function(){
+            Route::post("/",[CardController::class,'store']);
+        });
+        Route::prefix("/bank")->group(function(){
+            // Route::post()
+        });
     });
 
     Route::get('/abc', function () {

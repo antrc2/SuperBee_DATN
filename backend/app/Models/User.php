@@ -101,9 +101,9 @@ class User extends Authenticatable
         return $this->hasMany(RechargeBank::class);
     }
 
-    public function withdrawals()
+    public function withdraws()
     {
-        return $this->hasMany(Withdrawal::class);
+        return $this->hasMany(Withdraw::class);
     }
 
     public function createdPromotions()

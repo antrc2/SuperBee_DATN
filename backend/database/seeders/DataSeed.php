@@ -273,7 +273,7 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'amount' => 50,
             'bank_account_number' => '1234567890',
             'bank_name' => 'UserBank',
-            'add_description'=>"AWDFWAGDF65468",
+            'withdraw_code'=>"AWDFWAGDF65468",
             // 'account_holder_name' => 'Admin User',
             'note' => 'Withdrawal request',
             'status' => 0 // pending

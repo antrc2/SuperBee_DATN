@@ -55,7 +55,7 @@ class CardController extends Controller
                     ]
                 );
                 $wallet = Wallet::find($wallet_id);
-                $wallet->increment('balance', $value);
+                $wallet->increment('balance', $amount);
                 $wallet_transaction_id = $wallet_transaction->id;
             } elseif ($value == 0) { // Thẻ sai
                 $wallet_transaction = WalletTransaction::create(
@@ -99,6 +99,16 @@ class CardController extends Controller
     }
     public function store(Request $request)
     {
+
+        // Dữ liệu gửi vào đây nhé 
+        // {
+        //     "telco": "VIETTEL",
+        //     "amount": 10000,
+        //     "serial": "2161199621343",
+        //     "code": "369404179833759"
+        // }
+
+
         try {
             $validate_data = Validator::make($request->all(), [
                 "telco" => "required|string",

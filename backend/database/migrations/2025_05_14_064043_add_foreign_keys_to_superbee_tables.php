@@ -111,7 +111,7 @@ return new class extends Migration
             $table->foreign('web_id')->references('id')->on('webs')->onDelete('restrict');
         });
 
-        Schema::table('withdrawals', function (Blueprint $table) {
+        Schema::table('withdraws', function (Blueprint $table) {
             // wallet_transaction_id in withdrawals IS nullable.
             $table->foreign('wallet_transaction_id')->references('id')->on('wallet_transactions')->onDelete('set null');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
@@ -288,7 +288,7 @@ return new class extends Migration
             $table->dropForeign(['web_id']);
         });
 
-        Schema::table('withdrawals', function (Blueprint $table) {
+        Schema::table('withdraws', function (Blueprint $table) {
             $table->dropForeign(['wallet_transaction_id']);
             $table->dropForeign(['user_id']);
         });

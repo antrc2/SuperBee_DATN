@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\AuthController as ControllersAuthController;
@@ -87,6 +88,9 @@ Route::middleware(['jwt'])->group(function () {
 
     });
 });
+    Route::prefix('/donate_promotions')->group(function(){
+        Route::get("/",[AdminDonatePromotionController::class,'index']);
+    });
 });
 // admin
 Route::middleware(['role:admin', 'jwt'])->prefix('/admin')->group(function () {
@@ -97,6 +101,7 @@ Route::middleware(['role:admin', 'jwt'])->prefix('/admin')->group(function () {
             'message' => "no message"
         ]);
     });
+
 
 
 

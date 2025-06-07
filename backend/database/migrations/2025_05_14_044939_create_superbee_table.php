@@ -226,14 +226,15 @@ return new class extends Migration
         });
 
         // Bảng withdrawals (Rút tiền)
-        Schema::create('withdrawals', function (Blueprint $table) {
+        Schema::create('withdraws', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('wallet_transaction_id')->nullable(); // Liên kết với giao dịch ví
             $table->unsignedBigInteger('user_id'); // Ai rút tiền
             $table->decimal('amount', 15, 0); // Số tiền rút
             $table->string('bank_account_number', 50); // Số tài khoản nhận
             $table->string('bank_name', 100); // Tên ngân hàng nhận
-            $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
+            // $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
+            $table->string("add_description",16)->unique();
             $table->text('note')->nullable(); // Ghi chú thêm
             $table->integer('status')->default(0); // Trạng thái (0: pending, 1: completed, 2: rejected)
             $table->timestamps();
@@ -269,9 +270,9 @@ return new class extends Migration
             $table->decimal('amount', 15, 0); // Giá trị khuyến mãi
             $table->date('start_date'); // Ngày bắt đầu
             $table->date('end_date'); // Ngày kết thúc
-            $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
-            $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
-            $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
+            // $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
+            // $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
+            // $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
             $table->integer('status')->default(1); // Trạng thái
             $table->unsignedBigInteger('created_by'); // Ai tạo
             $table->unsignedBigInteger('updated_by'); // Ai cập nhật
@@ -416,7 +417,7 @@ return new class extends Migration
         // Schema::dropIfExists('promotion_usages');
         Schema::dropIfExists('domate_promotions');
         Schema::dropIfExists('promotions');
-        Schema::dropIfExists('withdrawals');
+        Schema::dropIfExists('withdraws');
         Schema::dropIfExists('recharges_bank');
         Schema::dropIfExists('recharges_card');
         Schema::dropIfExists('wallet_transactions');

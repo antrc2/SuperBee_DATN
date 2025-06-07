@@ -19,7 +19,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\RechargeCard; // Corrected if original was RechargeCard
 use App\Models\RechargeBank; // Corrected if original was RechargeBank
-use App\Models\Withdrawal;
+// use App\Models\Withdrawal;
 use App\Models\Promotion;
 use App\Models\DonatePromotion;
 use App\Models\SystemLog;
@@ -31,6 +31,7 @@ use App\Models\Message;
 use App\Models\Banner;
 use App\Models\Affiliate;
 use App\Models\RefreshToken;
+use App\Models\Withdraw;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -266,13 +267,14 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'amount' => 50, // Amount to withdraw
             'status' => 0, // pending initially
         ]);
-        Withdrawal::create([
+        Withdraw::create([
             'wallet_transaction_id' => $wd1WalletTx->id,
             'user_id' => $user1->id,
             'amount' => 50,
             'bank_account_number' => '1234567890',
             'bank_name' => 'UserBank',
-            'account_holder_name' => 'Admin User',
+            'add_description'=>"AWDFWAGDF65468",
+            // 'account_holder_name' => 'Admin User',
             'note' => 'Withdrawal request',
             'status' => 0 // pending
         ]);
@@ -301,7 +303,7 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'amount' => 10, // Value
             'start_date' => now(),
             'end_date' => now()->addMonths(3),
-            'usage_limit' => -1, // unlimited
+            // 'usage_limit' => -1, // unlimited
             'status' => 1, // active
             'created_by' => $user1->id,
             'updated_by' => $user1->id

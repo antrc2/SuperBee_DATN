@@ -742,12 +742,11 @@ const ShowAccountPage = () => {
               Người đã giới thiệu
             </h3>
 
-            {account.referred_affiliates &&
-            account.referred_affiliates.length > 0 ? (
+            {account.referred_users && account.referred_users.length > 0 ? (
               <ul className="list-disc list-inside mt-1 text-gray-900">
-                {account.referred_affiliates.map((ref) => (
+                {account.referred_users.map((ref) => (
                   <li key={ref.id}>
-                    {ref.user?.username || `ID: ${ref.user_id}`} (Affiliate ID:{" "}
+                    {ref?.username || `ID: ${ref.user_id}`} (Affiliate ID:{" "}
                     {ref.id})
                   </li>
                 ))}

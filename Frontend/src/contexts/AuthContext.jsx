@@ -4,7 +4,7 @@ import React, {
   useContext,
   useEffect,
   useState,
-  useCallback
+  useCallback,
 } from "react";
 import { useApiKeyManager } from "@utils/useApiKeyManager.js"; // Đảm bảo đường dẫn đúng
 import { useDomainCheck } from "@utils/useDomainCheck.js"; // Đảm bảo đường dẫn đúng
@@ -22,11 +22,10 @@ export function AuthProvider({ children }) {
     return decoded
       ? {
           name: decoded.name,
-          money: decoded.money /* other user data from token */
+          money: decoded.money /* other user data from token */,
         }
       : sessionStorage.getItem("access_token");
   });
-  console.log("🚀 ~ const[user,setUser]=useState ~ user:", user);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate(); // Đổi tên `navigator` thành `Maps` cho chuẩn React Router
@@ -41,7 +40,7 @@ export function AuthProvider({ children }) {
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
-        password: credentials.password
+        password: credentials.password,
       });
 
       if (!res?.data?.access_token) {
@@ -84,7 +83,7 @@ export function AuthProvider({ children }) {
         email: credentials.email,
         username: credentials.username,
         aff: credentials.aff,
-        password: credentials.password
+        password: credentials.password,
       });
       // console.log("🚀 ~ register ~ res:", res);
 
@@ -146,14 +145,14 @@ export function AuthProvider({ children }) {
     status: keyStatus,
     errorMessage: keyError,
     saveKeyManually,
-    clearKey
+    clearKey,
   } = useApiKeyManager();
 
   // 2. Khi đã có apiKey (keyStatus === "ready"), qua bước check domain
   const {
     domainStatus,
     errorMessage: domainError,
-    retryCheck
+    retryCheck,
   } = useDomainCheck(apiKey);
 
   // 3. Tổng hợp authStatus + combinedError
@@ -237,7 +236,7 @@ export function AuthProvider({ children }) {
         loading,
         error,
         setUser,
-        logout
+        logout,
       }}
     >
       {children}

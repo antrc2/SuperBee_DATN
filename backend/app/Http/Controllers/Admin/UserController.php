@@ -26,18 +26,17 @@ class UserController extends Controller
         try {
             $user = User::with([
                 "wallet.transactions", // Lấy ví và tất cả giao dịch của ví
-                "wallet.transactions.rechargeCard", // Chi tiết nạp thẻ (nếu là giao dịch loại recharge_card)
-                "wallet.transactions.rechargeBank",  // Chi tiết nạp bank (nếu là giao dịch loại recharge_bank)
-                "wallet.transactions.withdrawal",    // Chi tiết rút tiền (nếu là giao dịch loại withdraw)
+                // "wallet.transactions.rechargeCard", // Chi tiết nạp thẻ (nếu là giao dịch loại recharge_card)
+                // "wallet.transactions.rechargeBank",  // Chi tiết nạp bank (nếu là giao dịch loại recharge_bank)
+                // "wallet.transactions.withdraw",    // Chi tiết rút tiền (nếu là giao dịch loại withdraw)
                 "wallet.transactions.order",         // Chi tiết đơn hàng (nếu là giao dịch loại purchase)
                 "orders.items",          // Lấy các đơn hàng và chi tiết từng sản phẩm trong đơn hàng
                 "rechargeCards", // Lịch sử nạp thẻ và khuyến mãi áp dụng
                 "rechargeBanks", // Lịch sử nạp bank và khuyến mãi áp dụng
-                "withdrawals",           // Lịch sử rút tiền
+                "withdraw",           // Lịch sử rút tiền
                 "roles",                 // Vai trò của người dùng (từ Spatie/Permission)
                 "web",                   // Website mà user thuộc về
-                "affiliateData",         // Dữ liệu affiliate nếu user này là affiliate
-                "referredAffiliates.user", // Các user mà user này đã giới thiệu (nếu cần xem ai)
+                "referredUsers", // Các user mà user này đã giới thiệu (nếu cần xem ai)
             ])->find($id);
 
             if (!$user) {

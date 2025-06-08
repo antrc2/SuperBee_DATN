@@ -101,7 +101,7 @@ class User extends Authenticatable
         return $this->hasMany(RechargeBank::class);
     }
 
-    public function withdraws()
+    public function withdraw()
     {
         return $this->hasMany(Withdraw::class);
     }
@@ -175,6 +175,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(Affiliate::class, 'affiliated_by');
     }
+    public function referredUsers()
+{
+    return $this->hasManyThrough(
+        User::class,        // Model cuối cùng
+        Affiliate::class,   // Model trung gian
+        'affiliated_by',    // Khóa ngoại trên Affiliate (trỏ đến user hiện tại)
+        'id',               // Khóa chính của bảng User
+        'id',               // localKey của user hiện tại
+        'user_id'           // khóa ngoại của bảng Affiliate trỏ đến bảng User
+    );
+}
+
 
     public function refreshTokens()
     {

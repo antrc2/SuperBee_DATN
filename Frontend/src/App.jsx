@@ -1,5 +1,5 @@
 // src/App.jsx
-import React from "react";
+import React, { useEffect } from "react";
 import { useRoutes } from "react-router-dom";
 import adminRoutes from "@routers/Admin";
 import { clientRoutes, profileRoutes } from "@routers/Client";
@@ -18,7 +18,7 @@ function AppRoutes() {
     ...authRoutes,
     ...clientRoutes,
     ...adminRoutes,
-    ...profileRoutes
+    ...profileRoutes,
   ]);
 
   switch (authStatus) {

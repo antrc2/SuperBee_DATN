@@ -2,15 +2,10 @@ import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useNavigate } from "react-router-dom";
 
-const roles = {
-  1: "Người dùng",
-  2: "Cộng tác viên",
-  3: "Đại lý",
-};
-
 const AccountListPage = () => {
   const [filterRole, setFilterRole] = useState(0);
   const [accounts, setAccounts] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -20,7 +15,9 @@ const AccountListPage = () => {
       try {
         const res = await api.get("/accounts");
         // Nếu API trả về { data: [...] }
-        const list = res.data?.data ?? res.data ?? [];
+        const list = res.data?.data?.user ?? res.data ?? [];
+        const listRole = res.data?.data?.roles ?? res.data ?? [];
+        setRoles(listRole);
         setAccounts(list);
       } catch (err) {
         // Log lỗi chi tiết để debug
@@ -41,8 +38,8 @@ const AccountListPage = () => {
       } else {
         await api.patch(`/accounts/${id}`);
       }
-      setAccounts(prev =>
-        prev.map(acc =>
+      setAccounts((prev) =>
+        prev.map((acc) =>
           acc.id === id ? { ...acc, status: status === 1 ? 0 : 1 } : acc
         )
       );
@@ -52,9 +49,10 @@ const AccountListPage = () => {
     }
   };
 
- const filteredAccounts = filterRole === 0
-  ? accounts
-  : accounts.filter(acc => acc.roles?.[0]?.pivot?.role_id === filterRole);
+  const filteredAccounts =
+    filterRole === 0
+      ? accounts
+      : accounts.filter((acc) => acc.roles?.[0]?.pivot?.role_id === filterRole);
 
   return (
     <div className="p-6">
@@ -105,8 +103,10 @@ const AccountListPage = () => {
                 <td className="px-3 py-2">{acc.phone}</td>
                 <td className="px-3 py-2">{acc.affiliated_by}</td>
                 <td className="px-3 py-2">
-                  {acc.wallet?.currency 
-                    ? `${Number(acc.wallet?.balance || 0).toLocaleString()} ${acc.wallet.currency}` 
+                  {acc.wallet?.currency
+                    ? `${Number(acc.wallet?.balance || 0).toLocaleString()} ${
+                        acc.wallet.currency
+                      }`
                     : "0 VND"}
                 </td>
                 <td className="px-3 py-2">

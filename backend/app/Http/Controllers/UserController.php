@@ -173,6 +173,32 @@ class UserController extends Controller
             ], 500);
         }
     }
+    public function key(string $id)
+    {
+        try {
+            $query = User::find($id);
+            if (!$query) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy tài khoản'
+                ]);
+            }
+
+            $query->status = 3;
+            $query->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'khóa tài khoản',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra khi khóa tài khoản',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function restore(string $id)
     {

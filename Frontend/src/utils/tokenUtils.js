@@ -1,35 +1,63 @@
 // src/utils/tokenUtils.js
-import { jwtDecode } from "jwt-decode"; // Đảm bảo đã cài đặt 'jwt-decode'
+
+import { jwtDecode } from "jwt-decode";
+
 /**
- * Lấy token từ localStorage và giải mã nó.
- * Kiểm tra tính hợp lệ của token (có tồn tại, là chuỗi, chưa hết hạn).
- *
- * @returns {object | null} Payload của token nếu hợp lệ, ngược lại là null.
+ * Lấy token từ sessionStorage và giải mã nó.
+ * ... (giữ nguyên hàm getDecodedToken của bạn)
  */
 export function getDecodedToken() {
   const token = sessionStorage.getItem("access_token");
   if (!token || typeof token !== "string") {
-    // console.log("No token found or invalid token type in localStorage.");
     return null;
   }
-
   try {
     const decoded = jwtDecode(token);
-
-    // Kiểm tra thời gian hết hạn (expiration time) của token
-    // `exp` thường là số giây từ Epoch (Unix timestamp)
-    const currentTime = Date.now() / 1000; // Thời gian hiện tại tính bằng giây
-
+    const currentTime = Date.now() / 1000;
     if (decoded.exp && decoded.exp < currentTime) {
       console.log("Token has expired.");
-      sessionStorage.removeItem("access_token"); // Xóa token hết hạn
+      sessionStorage.removeItem("access_token");
       return null;
     }
-
     return decoded;
   } catch (error) {
-    console.error("Error decoding token from localStorage:", error);
-    sessionStorage.removeItem("access_token"); // Xóa token lỗi/không hợp lệ
+    console.error("Error decoding token:", error);
+    sessionStorage.removeItem("access_token");
     return null;
   }
 }
+
+/**
+ * Lấy danh sách vai trò (roles) của người dùng hiện tại từ token.
+ * @returns {string[] | null} Mảng các vai trò hoặc null nếu không có token.
+ */
+export const getCurrentUserRoles = () => {
+  const decodedToken = getDecodedToken();
+  if (!decodedToken) {
+    return null;
+  }
+  // Giả sử vai trò được lưu trong `role_ids`. Có thể là 'roles' hoặc tên khác.
+  return decodedToken.role_ids || [];
+};
+
+/**
+ * KIỂM TRA QUYỀN TRUY CẬP DỰA TRÊN VAI TRÒ
+ *
+ * @param {string[]} allowedRoles - Mảng các vai trò được phép truy cập.
+ * @returns {boolean} True nếu người dùng có ít nhất một trong các vai trò được yêu cầu, ngược lại là false.
+ */
+export const hasRequiredRole = (allowedRoles) => {
+  const userRoles = getCurrentUserRoles();
+
+  if (!userRoles) {
+    return false; // Không đăng nhập
+  }
+
+  // Nếu không yêu cầu vai trò cụ thể, chỉ cần đăng nhập là được
+  if (!allowedRoles || allowedRoles.length === 0) {
+    return true;
+  }
+
+  // Kiểm tra xem người dùng có bất kỳ vai trò nào trong danh sách allowedRoles không
+  return userRoles.some((role) => allowedRoles.includes(role));
+};

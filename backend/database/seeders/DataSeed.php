@@ -19,7 +19,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\RechargeCard; // Corrected if original was RechargeCard
 use App\Models\RechargeBank; // Corrected if original was RechargeBank
-use App\Models\Withdrawal;
+// use App\Models\Withdrawal;
 use App\Models\Promotion;
 use App\Models\DonatePromotion;
 use App\Models\SystemLog;
@@ -31,6 +31,7 @@ use App\Models\Message;
 use App\Models\Banner;
 use App\Models\Affiliate;
 use App\Models\RefreshToken;
+use App\Models\Withdraw;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -42,15 +43,15 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
         // --- Core Entities ---
         $this->command->info('Seeding Webs...');
         $web1 = Web::create([
-            'subdomain' => 'main-site-' . Str::random(5), // subdomain must be unique
+            'subdomain' => '' . Str::random(5), // subdomain must be unique
             'user_id' => null, // Web can have a null creator initially
-            'api_key' => Str::random(32),
+            'api_key' => Str::random(16),
             'status' => 1 // Default active
         ]);
         $web2 = Web::create([
-            'subdomain' => 'cool-site-' . Str::random(5), // subdomain must be unique
+            'subdomain' => '' . Str::random(5), // subdomain must be unique
             'user_id' => null,
-            'api_key' => Str::random(32),
+            'api_key' => Str::random(16),
             'status' => 1 // Default active
         ]);
 
@@ -93,6 +94,7 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'name' => 'Electronics',
             'slug' => 'electronics-' . Str::random(5), // slug must be unique
             'status' => 1, // Default active
+            "image_url" => "https://scontent.fhan2-4.fna.fbcdn.net/v/t39.30808-1/487034572_1453794068933197_4817551113423752172_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=100&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeFc3VQcZmHjlXvivxG-y4EolbigoRBaZpyVuKChEFpmnD3rbIhJJb-okwQF6dR1KkQ1-zXzbnbDVA_A-wYUvzNt&_nc_ohc=_zn2npOUg1sQ7kNvwGhZCY4&_nc_oc=Adku21D2BtjiLB_s4B_ZbODP-Lrx8P8AUd3t0cG4DMbaXtLEjdEUx5dBCyGswDkyAKo68x3MLMe5cdDMzvisV0F0&_nc_zt=24&_nc_ht=scontent.fhan2-4.fna&_nc_gid=BjP0fL07AOrhIMtU5kzDWQ&oh=00_AfNXKcoclTr43TuKFoE_Ei8S2VExW7DObZCQs-Lfo7Fmfw&oe=6849060F",
             'created_by' => $user1->id,
             'updated_by' => $user1->id
         ]);
@@ -100,6 +102,8 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'name' => 'Books',
             'slug' => 'books-' . Str::random(5), // slug must be unique
             'status' => 1,
+            "image_url" => "https://scontent.fhan2-4.fna.fbcdn.net/v/t39.30808-1/487034572_1453794068933197_4817551113423752172_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=100&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeFc3VQcZmHjlXvivxG-y4EolbigoRBaZpyVuKChEFpmnD3rbIhJJb-okwQF6dR1KkQ1-zXzbnbDVA_A-wYUvzNt&_nc_ohc=_zn2npOUg1sQ7kNvwGhZCY4&_nc_oc=Adku21D2BtjiLB_s4B_ZbODP-Lrx8P8AUd3t0cG4DMbaXtLEjdEUx5dBCyGswDkyAKo68x3MLMe5cdDMzvisV0F0&_nc_zt=24&_nc_ht=scontent.fhan2-4.fna&_nc_gid=BjP0fL07AOrhIMtU5kzDWQ&oh=00_AfNXKcoclTr43TuKFoE_Ei8S2VExW7DObZCQs-Lfo7Fmfw&oe=6849060F",
+
             'created_by' => $user1->id,
             'updated_by' => $user1->id
         ]);
@@ -107,6 +111,8 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'name' => 'Mobile Phones',
             'slug' => 'mobile-phones-' . Str::random(5), // slug must be unique
             'parent_id' => $category1->id,
+            "image_url" => "https://scontent.fhan2-4.fna.fbcdn.net/v/t39.30808-1/487034572_1453794068933197_4817551113423752172_n.jpg?stp=dst-jpg_s160x160_tt6&_nc_cat=100&ccb=1-7&_nc_sid=1d2534&_nc_eui2=AeFc3VQcZmHjlXvivxG-y4EolbigoRBaZpyVuKChEFpmnD3rbIhJJb-okwQF6dR1KkQ1-zXzbnbDVA_A-wYUvzNt&_nc_ohc=_zn2npOUg1sQ7kNvwGhZCY4&_nc_oc=Adku21D2BtjiLB_s4B_ZbODP-Lrx8P8AUd3t0cG4DMbaXtLEjdEUx5dBCyGswDkyAKo68x3MLMe5cdDMzvisV0F0&_nc_zt=24&_nc_ht=scontent.fhan2-4.fna&_nc_gid=BjP0fL07AOrhIMtU5kzDWQ&oh=00_AfNXKcoclTr43TuKFoE_Ei8S2VExW7DObZCQs-Lfo7Fmfw&oe=6849060F",
+
             'status' => 1,
             'created_by' => $user1->id,
             'updated_by' => $user1->id
@@ -261,13 +267,14 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
             'amount' => 50, // Amount to withdraw
             'status' => 0, // pending initially
         ]);
-        Withdrawal::create([
+        Withdraw::create([
             'wallet_transaction_id' => $wd1WalletTx->id,
             'user_id' => $user1->id,
             'amount' => 50,
             'bank_account_number' => '1234567890',
             'bank_name' => 'UserBank',
-            'account_holder_name' => 'Admin User',
+            'withdraw_code'=>"AWDFWAGDF65468",
+            // 'account_holder_name' => 'Admin User',
             'note' => 'Withdrawal request',
             'status' => 0 // pending
         ]);
@@ -292,11 +299,11 @@ class DataSeed extends Seeder // Renamed from DataSeeder to DataSeed to match cl
         ]);
         DonatePromotion::create([
             'web_id' => $web1->id,
-            'code' => 'DONATE10-' . Str::random(4), // code unique
+            // 'code' => 'DONATE10-' . Str::random(4), // code unique
             'amount' => 10, // Value
             'start_date' => now(),
             'end_date' => now()->addMonths(3),
-            'usage_limit' => -1, // unlimited
+            // 'usage_limit' => -1, // unlimited
             'status' => 1, // active
             'created_by' => $user1->id,
             'updated_by' => $user1->id

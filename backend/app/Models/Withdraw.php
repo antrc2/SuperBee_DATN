@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Withdrawal extends Model
+class Withdraw extends Model
 {
     use HasFactory;
 
@@ -15,7 +15,8 @@ class Withdrawal extends Model
         'amount',
         'bank_account_number',
         'bank_name',
-        'account_holder_name',
+        // 'account_holder_name',
+        "withdraw_code",
         'note',
         'status',
     ];

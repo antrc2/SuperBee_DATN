@@ -170,5 +170,7 @@ Route::prefix("/callback")->group(function () {
 
 
     
-    Route::post("/bank", [BankController::class,'callback']);
+    Route::post("/bank2", [BankController::class,'callback2']);
+    Route::post("/bank/donate", [BankController::class,'donate']);
+    Route::post("/bank/withdraw",[BankController::class,"withdraw"]);
 });

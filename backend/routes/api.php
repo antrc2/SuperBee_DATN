@@ -56,6 +56,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::post('/',[CategoryController::class,'store']);
         Route::put('/{id}',[CategoryController::class,'update']);
         Route::delete('/{id}',[CategoryController::class,'destroy']);
+        Route::get('/{id}',[CategoryController::class,'show']);
         // User Category
         Route::get("/getCate",[UserCategoryController::class,'index']);
         Route::get("/getCate/{id}",[UserCategoryController::class,'show']);

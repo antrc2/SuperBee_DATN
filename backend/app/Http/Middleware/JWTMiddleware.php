@@ -47,7 +47,16 @@ class JWTMiddleware
                     'errorCode' => 'PAYLOAD_MISSING_USER_ID'
                 ], 401);
             }
-
+            $user = User::where('id', $decoded->user_id)
+                ->where('web_id', $decoded->web_id)
+                ->first();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'User not found for provided token.',
+                    'errorCode' => 'USER_NOT_FOUND'
+                ], 401);
+            }
+            Auth::guard('api')->setUser($user); 
             $request->merge([
                 'web_id' => $decoded->web_id,
                 'user_id' => $decoded->user_id,

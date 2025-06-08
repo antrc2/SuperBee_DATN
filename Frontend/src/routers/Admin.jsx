@@ -6,35 +6,53 @@ import { adminModules } from "@routers/adminModules";
 import AppLayout from "@layouts/Admin/AppLayout";
 import Home from "@pages/Admin/Dashboard/Home";
 import NotFound from "@pages/Admin/OtherPage/NotFound";
+import ProtectedRoute from "@components/common/ProtectedRoute";
 const adminRoutes = [
   {
     path: "/admin",
-    element: <AppLayout />,
+    element: (
+      <ProtectedRoute allowedRoles={["admin"]}>
+        <AppLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,
-        element: <Home />
+        element: <Home />,
       },
       // cho mỗi module
 
       ...adminModules.map(
-        ({ name, list: List, create: Create, edit: Edit,show:Show }) => ({
+        // Lấy thêm `allowedRoles` từ mỗi module
+        ({
+          name,
+          list: List,
+          create: Create,
+          edit: Edit,
+          show: Show,
+          allowedRoles,
+        }) => ({
           path: name,
-          element: <Outlet />, // nested
+          // Bọc Outlet bằng ProtectedRoute và truyền `allowedRoles` vào
+          element: (
+            <ProtectedRoute allowedRoles={allowedRoles}>
+              <Outlet />
+            </ProtectedRoute>
+          ),
+          // Các route con bên trong sẽ được bảo vệ bởi Outlet ở trên
           children: [
             { index: true, element: <List /> },
             { path: "new", element: <Create /> },
             { path: ":id", element: <Show /> },
             { path: ":id/edit", element: <Edit /> },
-            { path: "*", element: <NotFound /> }
-          ]
+            { path: "*", element: <NotFound /> },
+          ],
         })
       ),
-
       // catch-all /admin/*
-      { path: "*", element: <NotFound /> }
-    ]
-  }
+      { path: "*", element: <NotFound /> },
+    ],
+  },
 ];
 
 export default adminRoutes;

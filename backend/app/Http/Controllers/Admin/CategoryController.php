@@ -18,7 +18,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::all();
+            $categories = Category::with(['creator', 'updater'])->get();
             
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
@@ -33,8 +33,8 @@ class CategoryController extends Controller
                             'parent_id' => $category->parent_id,
                             'slug' => $category->slug,
                             'status' => $category->status,
-                            'created_by' => $category->created_by,
-                            'updated_by' => $category->updated_by,
+                            'created_by' => $category->creator ? $category->creator->username : null,
+                            'updated_by' => $category->updater ? $category->updater->username : null,
                             'created_at' => $category->created_at,
                             'updated_at' => $category->updated_at,
                             'children' => $children
@@ -118,7 +118,24 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try{
+            $category = Category::findOrFail($id);
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh mục thành công',
+                'data' => $category
+            ], 200);
+        }catch(ModelNotFoundException $e){
+            return response()->json([
+                'status' => false,
+                'message' => 'Danh mục không tồn tại'
+            ], 404);
+        }catch(\Exception $e){
+            return response()->json([
+                'status' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**

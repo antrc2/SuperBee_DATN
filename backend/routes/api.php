@@ -3,12 +3,8 @@
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Auth\AuthController;
-use App\Http\Controllers\AuthController as ControllersAuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
-
-use App\Http\Controllers\User\UserProfileController;
-use App\Models\User;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;

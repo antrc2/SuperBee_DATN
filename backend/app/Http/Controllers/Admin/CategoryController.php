@@ -71,7 +71,7 @@ class CategoryController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'parent_id' => 'nullable|exists:categories,id',
-                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048'
+                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:40000'
             ]);
 
             // Kiểm tra tên danh mục đã tồn tại chưa

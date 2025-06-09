@@ -43,7 +43,7 @@ class Product extends Model
     public function gameAttributes()
     {
         // Giả sử một product có một bộ game attributes
-        return $this->hasOne(ProductGameAttribute::class);
+        return $this->hasMany(ProductGameAttribute::class);
     }
 
     public function credentials()

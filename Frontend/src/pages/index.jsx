@@ -32,7 +32,17 @@ import ProductDetail from "./Clients/ProductDetail/ProductDetail";
 import EmailVerification from "./Clients/EmailVerification/EmailVerification";
 import ResetPassword from "./Clients/ResetPassword/ResetPassword";
 import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
+import ProductsPageLayout from "./Admin/Products/ProductsPageLayout";
+import ProductsListPage from "./Admin/Products/ProductsListPage";
+import EditProducts from "./Admin/Products/EditProducts";
+import CreateProducts from "./Admin/Products/CreateProducts";
+import ProductDetailPage from "./Admin/Products/ProductDetailPage";
 export {
+  ProductDetailPage,
+  CreateProducts,
+  EditProducts,
+  ProductsListPage,
+  ProductsPageLayout,
   ForgotPassword,
   ResetPassword,
   AccountListPage,
@@ -61,5 +71,5 @@ export {
   TransactionHistoryPage,
   CartPage,
   ProductDetail,
-  EmailVerification
+  EmailVerification,
 };

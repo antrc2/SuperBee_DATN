@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\UserProductController;
+use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserProfileController;
 // use App\Models\User;
 use Illuminate\Http\Request;
@@ -28,6 +29,10 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 // cài lại mật khẩu
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 Route::middleware('authenticate')->group(function () {
+    Route::prefix('/home')->group(function () {
+        Route::get("/", [HomeController::class, 'index']);
+    });
+
     Route::prefix('/products')->group(function () {
         Route::get("/", [UserProductController::class, 'index']);
         Route::get("/{id}", [UserProductController::class, 'show']);
@@ -77,16 +82,15 @@ Route::middleware(['jwt'])->group(function () {
         Route::post('/', [CategoryController::class, 'store']);
         Route::put('/{id}', [CategoryController::class, 'update']);
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/{id}',[CategoryController::class,'show']);
+        Route::get('/{id}', [CategoryController::class, 'show']);
         // User Category
         Route::get("/getCate", [UserCategoryController::class, 'index']);
         Route::get("/getCate/{id}", [UserCategoryController::class, 'show']);
-        
     });
     Route::prefix("/products")->group(function () {
-            Route::get("/", [AdminProductController::class, 'index']);
-            Route::get("/{id}", [AdminProductController::class, 'show']);
-        });
+        Route::get("/", [AdminProductController::class, 'index']);
+        Route::get("/{id}", [AdminProductController::class, 'show']);
+    });
     Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
@@ -107,12 +111,12 @@ Route::middleware(['jwt'])->group(function () {
         });
 
 
-    Route::prefix("/products")->group(function () {
-        Route::get("/", [AdminProductController::class, 'index']);
-        Route::get("/{id}", [AdminProductController::class, 'show']);
-        Route::post('/', [AdminProductController::class, 'store']);
-        Route::put('/{id}', [AdminProductController::class, 'update']);
-    });
+        Route::prefix("/products")->group(function () {
+            Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/{id}", [AdminProductController::class, 'show']);
+            Route::post('/', [AdminProductController::class, 'store']);
+            Route::put('/{id}', [AdminProductController::class, 'update']);
+        });
     });
     // {
     //     "category_id": 1,
@@ -140,24 +144,23 @@ Route::middleware(['jwt'])->group(function () {
     //     ]
     // }
 
-    
+
 });
 
 Route::prefix("/callback")->group(function () {
 
-        // Dữ liệu gửi vào đây nhé 
-        // {
-        //     "telco": "VIETTEL",
-        //     "amount": 10000,
-        //     "serial": "2161199621343",
-        //     "code": "369404179833759"
-        // }
-    Route::post("/card", [CardController::class,'callback']);
+    // Dữ liệu gửi vào đây nhé 
+    // {
+    //     "telco": "VIETTEL",
+    //     "amount": 10000,
+    //     "serial": "2161199621343",
+    //     "code": "369404179833759"
+    // }
+    Route::post("/card", [CardController::class, 'callback']);
 
 
-    
+
     // Route::post("/bank2", [BankController::class,'callback2']);
-    Route::post("/bank/donate", [BankController::class,'donate']);
-    Route::post("/bank/withdraw",[BankController::class,"withdraw"]);
-
+    Route::post("/bank/donate", [BankController::class, 'donate']);
+    Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });

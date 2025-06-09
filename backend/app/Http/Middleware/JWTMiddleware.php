@@ -56,7 +56,7 @@ class JWTMiddleware
                     'errorCode' => 'USER_NOT_FOUND'
                 ], 401);
             }
-            Auth::guard('api')->setUser($user); 
+            Auth::guard(name: 'api')->setUser($user); 
             $request->merge([
                 'web_id' => $decoded->web_id,
                 'user_id' => $decoded->user_id,

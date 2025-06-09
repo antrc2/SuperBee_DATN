@@ -18,7 +18,10 @@ export default function CategoryForm({ initialData, onSave }) {
     name: "",
     parent_id: "",
     status: "1", // Default to active
+    // initialData.image_url sẽ chứa URL ảnh hiện tại nếu ở chế độ chỉnh sửa
+    // Không cần thêm vào formData trực tiếp vì nó là URL, không phải File
   });
+  const [imageFile, setImageFile] = useState(null); // State mới để lưu trữ file ảnh
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -30,16 +33,26 @@ export default function CategoryForm({ initialData, onSave }) {
         name: initialData.name || "",
         parent_id: initialData.parent_id?.toString() || "",
         status: initialData.status?.toString() || "1",
+        // initialData.image_url không được set vào formData vì nó là URL, không phải file
       });
+      // Nếu có ảnh ban đầu, bạn có thể muốn hiển thị nó,
+      // nhưng không cần thiết lập vào imageFile state vì đó không phải file mới
+      // Bạn có thể thêm một state khác để lưu trữ URL ảnh hiện có để hiển thị preview
     }
   }, [initialData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    const { name, value, files } = e.target; // Lấy `files` nếu là input type="file"
+
+    if (name === "image_url" && files && files[0]) {
+      // Nếu input là file và có file được chọn
+      setImageFile(files[0]);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -47,8 +60,26 @@ export default function CategoryForm({ initialData, onSave }) {
     setLoading(true);
     setError(null);
 
+    // Tạo FormData object
+    const dataToSend = new FormData();
+
+    dataToSend.append("name", formData.name);
+    dataToSend.append("parent_id", formData.parent_id);
+    dataToSend.append("status", formData.status);
+
+    // --- ĐIỂM QUAN TRỌNG: ĐẢM BẢO imageFile CÓ GIÁ TRỊ ---
+    if (imageFile) {
+      dataToSend.append("image_url", imageFile); // 'image_url' là tên trường mà Laravel mong đợi
+    } else if (initialData && initialData.image_url && !imageFile) {
+      // Nếu không có file mới được chọn, nhưng có ảnh cũ, gửi lại URL ảnh cũ
+      // Đây là cách bạn có thể xử lý việc giữ ảnh cũ.
+      // Tuy nhiên, nếu bạn chỉ muốn gửi file khi có file mới, bạn có thể bỏ dòng này.
+      // Backend Laravel của bạn sẽ cần xử lý trường hợp này (nhận một chuỗi URL thay vì một file)
+      dataToSend.append("image_url", initialData.image_url);
+    }
+
     try {
-      await onSave(formData);
+      await onSave(dataToSend); // onSave phải nhận FormData
     } catch (error) {
       setError(error.message || "Failed to save category");
       console.error("Error saving category:", error);
@@ -56,33 +87,40 @@ export default function CategoryForm({ initialData, onSave }) {
       setLoading(false);
     }
   };
-
   const renderCategoryOptions = (categories, level = 0) => {
-    return categories.map((category) => {
-      if (initialData && category.id.toString() === initialData.id.toString()) {
-        return null;
-      }
+    return categories
+      .map((category) => {
+        if (
+          initialData &&
+          category.id.toString() === initialData.id.toString()
+        ) {
+          return null;
+        }
 
-      const dashes = level === 0 ? "--" : "----".repeat(level);
-      return (
-        <React.Fragment key={category.id}>
-          <option value={category.id.toString()}>
-            {dashes} {category.name}
-          </option>
-          {category.children && category.children.length > 0 && 
-            renderCategoryOptions(category.children, level + 1)}
-        </React.Fragment>
-      );
-    }).filter(Boolean);
+        const dashes = level === 0 ? "--" : "----".repeat(level);
+        return (
+          <React.Fragment key={category.id}>
+            <option value={category.id.toString()}>
+              {dashes} {category.name}
+            </option>
+            {category.children &&
+              category.children.length > 0 &&
+              renderCategoryOptions(category.children, level + 1)}
+          </React.Fragment>
+        );
+      })
+      .filter(Boolean);
   };
 
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card className="w-full max-w-[800px] mx-auto">
-        <CardHeader 
-          variant="gradient" 
-          color={initialData ? "amber" : "green"} 
-          className={`mb-8 p-6 relative ${initialData ? 'bg-amber-50' : 'bg-green-50'}`}
+        <CardHeader
+          variant="gradient"
+          color={initialData ? "amber" : "green"}
+          className={`mb-8 p-6 relative ${
+            initialData ? "bg-amber-50" : "bg-green-50"
+          }`}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -90,23 +128,29 @@ export default function CategoryForm({ initialData, onSave }) {
                 variant="text"
                 color={initialData ? "amber" : "green"}
                 onClick={() => navigate("/admin/categories")}
-                className={initialData ? "hover:bg-amber-100" : "hover:bg-green-100"}
+                className={
+                  initialData ? "hover:bg-amber-100" : "hover:bg-green-100"
+                }
               >
                 <ArrowLeftIcon className="h-5 w-5" />
               </IconButton>
-              <Typography 
-                variant="h5" 
-                color={initialData ? "amber" : "green"} 
+              <Typography
+                variant="h5"
+                color={initialData ? "amber" : "green"}
                 className="font-semibold"
               >
                 {initialData ? "Edit Category" : "Create New Category"}
               </Typography>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                initialData ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
-              }`}>
-                {initialData ? 'Edit Mode' : 'Create Mode'}
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  initialData
+                    ? "bg-amber-100 text-amber-800"
+                    : "bg-green-100 text-green-800"
+                }`}
+              >
+                {initialData ? "Edit Mode" : "Create Mode"}
               </span>
             </div>
           </div>
@@ -115,8 +159,17 @@ export default function CategoryForm({ initialData, onSave }) {
           <form onSubmit={handleSubmit} className="flex flex-col gap-8">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 {error}
               </div>
@@ -124,7 +177,11 @@ export default function CategoryForm({ initialData, onSave }) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="col-span-2">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
+                <Typography
+                  variant="small"
+                  color={initialData ? "amber" : "green"}
+                  className="mb-2 font-medium"
+                >
                   Category Name
                 </Typography>
                 <Input
@@ -142,8 +199,71 @@ export default function CategoryForm({ initialData, onSave }) {
                 />
               </div>
 
+              {/* Input cho File ảnh (image_url) */}
+              <div className="col-span-2">
+                <Typography
+                  variant="small"
+                  color={initialData ? "amber" : "green"}
+                  className="mb-2 font-medium"
+                >
+                  Category Image
+                </Typography>
+
+                <Input
+                  type="file"
+                  name="image_url" // Tên input phải là 'image_url' để khớp với backend
+                  onChange={handleChange}
+                  accept="image/*" // Chỉ chấp nhận file ảnh
+                  label={null} // Material-Tailwind Input có thể yêu cầu label hoặc placeholder
+                  placeholder="Choose category image"
+                  className="!text-base"
+                  containerProps={{
+                    className: "min-w-[100px]",
+                  }}
+                />
+                {/* Hiển thị ảnh hiện tại (nếu có) hoặc preview ảnh mới được chọn */}
+                {initialData && initialData.image_url && !imageFile && (
+                  <div className="mt-4">
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="mb-2"
+                    >
+                      Current Image:
+                    </Typography>
+                    <img
+                      src={`${import.meta.env.VITE_BACKEND_IMG}${
+                        initialData.image_url
+                      }`}
+                      alt="Current Category"
+                      className="max-w-[200px] h-auto rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+                {imageFile && (
+                  <div className="mt-4">
+                    <Typography
+                      variant="small"
+                      color="blue-gray"
+                      className="mb-2"
+                    >
+                      New Image Preview:
+                    </Typography>
+                    <img
+                      src={URL.createObjectURL(imageFile)}
+                      alt="New Category Preview"
+                      className="max-w-[200px] h-auto rounded-lg shadow-md"
+                    />
+                  </div>
+                )}
+              </div>
+
               <div className="col-span-2 md:col-span-1">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
+                <Typography
+                  variant="small"
+                  color={initialData ? "amber" : "green"}
+                  className="mb-2 font-medium"
+                >
                   Parent Category
                 </Typography>
                 <select
@@ -151,18 +271,23 @@ export default function CategoryForm({ initialData, onSave }) {
                   value={formData.parent_id}
                   onChange={handleChange}
                   className={`w-full rounded-lg border ${
-                    initialData 
-                      ? 'border-amber-200 focus:border-amber-500' 
-                      : 'border-green-200 focus:border-green-500'
+                    initialData
+                      ? "border-amber-200 focus:border-amber-500"
+                      : "border-green-200 focus:border-green-500"
                   } bg-white px-3 py-2.5 text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50`}
                 >
                   <option value="">None (Root Category)</option>
-                  {categoriesData?.data && renderCategoryOptions(categoriesData.data)}
+                  {categoriesData?.data &&
+                    renderCategoryOptions(categoriesData.data)}
                 </select>
               </div>
 
               <div className="col-span-2 md:col-span-1">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
+                <Typography
+                  variant="small"
+                  color={initialData ? "amber" : "green"}
+                  className="mb-2 font-medium"
+                >
                   Status
                 </Typography>
                 <div className="flex gap-6">
@@ -222,16 +347,30 @@ export default function CategoryForm({ initialData, onSave }) {
               >
                 {loading ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg
+                      className="animate-spin h-4 w-4 text-black"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
                     </svg>
                     Saving...
                   </>
                 ) : (
-                  <>
-                    {initialData ? "Update Category" : "Create Category"}
-                  </>
+                  <>{initialData ? "Update Category" : "Create Category"}</>
                 )}
               </Button>
             </div>

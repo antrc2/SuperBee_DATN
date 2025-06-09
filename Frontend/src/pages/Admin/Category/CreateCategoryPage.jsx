@@ -7,14 +7,13 @@ export default function CreateCategoryPage() {
   const navigate = useNavigate();
 
   const handleSave = async (data) => {
-    console.log("🚀 ~ handleSave ~ data:", data);
     try {
       const response = await api.post("/categories", data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
-      if (response.status === 201) {
+      if (response.status === 201 || response.status === 200) {
         navigate("/admin/categories");
       }
       return response.data;

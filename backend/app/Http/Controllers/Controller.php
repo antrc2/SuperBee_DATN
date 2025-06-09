@@ -55,4 +55,24 @@ abstract class Controller
             return null; // Trả về null nếu có lỗi
         }
     }
+    public function deleteFile(string $relativePath, string $disk = 'public'): bool
+    {
+        try {
+            // Kiểm tra file tồn tại
+            if (!Storage::disk($disk)->exists($relativePath)) {
+                // File không tồn tại xem như đã xóa thành công
+                return true;
+            }
+
+            // Xóa file
+            return Storage::disk($disk)->delete($relativePath);
+        } catch (\Exception $e) {
+            Log::error('Error deleting file: ' . $e->getMessage(), [
+                'relative_path' => $relativePath,
+                'disk' => $disk,
+                'exception_trace' => $e->getTraceAsString()
+            ]);
+            return false;
+        }
+    }
 }

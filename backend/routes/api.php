@@ -115,7 +115,12 @@ Route::middleware(['jwt'])->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
             Route::post('/', [AdminProductController::class, 'store']);
+            
+            Route::post("/{id}/deny", [AdminProductController::class,'deny']); // Từ chối sản phẩm
+            Route::post("/{id}/accept", [AdminProductController::class,'accept']); // Chấp nhận sản phẩm 
+            Route::post("/{id}/cancel",[AdminProductController::class,'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
+            // Route::post("/")
         });
     });
     // {

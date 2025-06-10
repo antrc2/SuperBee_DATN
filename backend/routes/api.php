@@ -32,7 +32,10 @@ Route::middleware('authenticate')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
     });
-
+    Route::prefix("/categories")->group(function(){
+        Route::get("/", [UserCategoryController::class, 'index']);
+        Route::get("/{id}", [UserCategoryController::class, 'show']);
+    });
     Route::prefix('/products')->group(function () {
         Route::get("/", [UserProductController::class, 'index']);
         Route::get("/{id}", [UserProductController::class, 'show']);
@@ -53,7 +56,7 @@ Route::middleware('authenticate')->group(function () {
 
 
 // user
-Route::middleware(['jwt'])->group(function () {
+Route::middleware(['jwt'])->prefix('/user')->group(function () {
     // đăng xuất
     Route::post("/logout", [AuthController::class, 'logout']);
     // info
@@ -77,15 +80,9 @@ Route::middleware(['jwt'])->group(function () {
         });
     });
 
-    Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);
-        Route::post('/', [CategoryController::class, 'store']);
-        Route::put('/{id}', [CategoryController::class, 'update']);
-        Route::delete('/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/{id}', [CategoryController::class, 'show']);
-        // User Category
-        Route::get("/getCate", [UserCategoryController::class, 'index']);
-        Route::get("/getCate/{id}", [UserCategoryController::class, 'show']);
+    Route::prefix("/categories")->group(function(){
+        Route::get("/", [UserCategoryController::class, 'index']);
+        Route::get("/{id}", [UserCategoryController::class, 'show']);
     });
     Route::prefix("/products")->group(function () {
         Route::get("/", [AdminProductController::class, 'index']);
@@ -110,7 +107,15 @@ Route::middleware(['jwt'])->group(function () {
             ]);
         });
 
+        Route::prefix('categories')->group(function () {
+            Route::get('/', [CategoryController::class, 'index']);
+            Route::post('/', [CategoryController::class, 'store']);
+            Route::put('/{id}', [CategoryController::class, 'update']);
+            Route::delete('/{id}', [CategoryController::class, 'destroy']);
+            Route::get('/{id}', [CategoryController::class, 'show']);
+            // User Category
 
+        });
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
@@ -118,7 +123,7 @@ Route::middleware(['jwt'])->group(function () {
             
             Route::post("/{id}/deny", [AdminProductController::class,'deny']); // Từ chối sản phẩm
             Route::post("/{id}/accept", [AdminProductController::class,'accept']); // Chấp nhận sản phẩm 
-            Route::post("/{id}/restore", [AdminProductController::class,'restore']); // Chấp nhận sản phẩm 
+            Route::post("/{id}/restore", [AdminProductController::class,'restore']); // Sau khi hủy bán, tôi muốn bán lại
             Route::post("/{id}/cancel",[AdminProductController::class,'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")

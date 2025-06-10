@@ -16,8 +16,6 @@ class BankController extends Controller
 {   
     public function donate(Request $request){
         try {
-            // $authHeader = $request->header('Authorization');
-            // var_dump($authHeader);
             if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
                 return response()->json([
                     "status"=>false,

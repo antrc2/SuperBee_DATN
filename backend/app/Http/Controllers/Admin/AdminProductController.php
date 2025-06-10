@@ -233,7 +233,7 @@ class AdminProductController extends Controller
             // Validate dữ liệu gửi lên
             $validatedData = $request->validate([
                 'category_id' => 'required|integer|exists:categories,id',
-                'sku' => 'required|string|unique:products,sku',
+                // 'sku' => 'required|string|unique:products,sku',
                 'price' => 'required|numeric|min:0',
                 'sale' => 'nullable|numeric|min:0',
                 'username' => 'required|string',
@@ -255,11 +255,24 @@ class AdminProductController extends Controller
 
             // Bắt đầu transaction
             DB::beginTransaction();
+            function generate_sku($length = 20){
+                $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                $code = '';
+                for ($i = 0; $i < $length ; $i++) {
+                    $code .= $characters[random_int(0, strlen($characters) - 1)];
+                }
+                return $code;
+            }
 
+            $sku = "";
+
+            do {
+                $sku = generate_sku();
+            } while (Product::where('sku',$sku)->first() !== NULL);
             // Tạo sản phẩm
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
-                "sku" => $validatedData['sku'],
+                "sku" => generate_sku(8),
                 "price" => $validatedData['price'],
                 "sale" => $validatedData['sale'] ?? null,
                 "web_id" => $request->web_id,
@@ -326,6 +339,112 @@ class AdminProductController extends Controller
                 "message" => "Đã có lỗi xảy ra",
                 "error" => $th->getMessage(),
             ], 500);
+        }
+    }
+
+    private function check_isset_product_by_id($id) {
+        return Product::where("id", $id)->exists();
+    }
+
+    public function cancel(Request $request, $id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",1)->update([
+                    "status"=>3
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Đã hủy bán sản phẩm",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể hủy bán sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
+    }
+
+    public function accept(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",2)->update([
+                    "status"=>1
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Chấp nhận bán sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể chấp nhận bán sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
+    }
+
+    public function deny(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",2)->update([
+                    "status"=>0
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Từ chối sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể từ chối sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
         }
     }
 }

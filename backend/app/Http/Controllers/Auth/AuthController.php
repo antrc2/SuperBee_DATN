@@ -433,8 +433,8 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Invalid or expired refresh token.'], 408);
             }
 
-            $user = User::find($refresh->user_id)->first(); 
-dd($user);
+            $user = User::find($refresh->user_id);
+
             if (is_null($user)) {
                 return response()->json(['error' => 'User not found.'], 404);
             }

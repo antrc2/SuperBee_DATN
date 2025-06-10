@@ -13,12 +13,12 @@ export function getDecodedToken() {
   }
   try {
     const decoded = jwtDecode(token);
-    const currentTime = Date.now() / 1000;
-    if (decoded.exp && decoded.exp < currentTime) {
-      console.log("Token has expired.");
-      sessionStorage.removeItem("access_token");
-      return null;
-    }
+    // const currentTime = Date.now() / 1000;
+    // if (decoded.exp && decoded.exp < currentTime) {
+    //   console.log("Token has expired.");
+    //   sessionStorage.removeItem("access_token");
+    //   return null;
+    // }
     return decoded;
   } catch (error) {
     console.error("Error decoding token:", error);

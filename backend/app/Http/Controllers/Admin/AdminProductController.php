@@ -14,183 +14,247 @@ use Illuminate\Support\Facades\DB;
 
 class AdminProductController extends Controller
 {
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         try {
-            $products = Product::with('category')->with("images")->with("gameAttributes")->with("credentials")->get(); 
+            $products = Product::with('category')->with("images")->with("gameAttributes")->with("credentials")->get();
 
             return response()->json(
                 [
-                    "status"=>true,
-                    "message"=>"Lấy danh sách sản phẩm thành công",
-                    "data"=>$products
+                    "status" => true,
+                    "message" => "Lấy danh sách sản phẩm thành công",
+                    "data" => $products
                 ]
             );
         } catch (\Throwable $th) {
             return response()->json(
                 [
-                    "status"=>false,
-                    "message"=>"Lấy danh sách sản phẩm thất bại",
-                    "data"=>[]
+                    "status" => false,
+                    "message" => "Lấy danh sách sản phẩm thất bại",
+                    "data" => []
                 ]
             );
         }
     }
-    public function show(Request $request, $id){
+    public function show(Request $request, $id)
+    {
         try {
-            $product = Product::with('category')->with("images")->with("gameAttributes")->with("credentials")->where('id',$id)->get();
+            $product = Product::with(['category', "images", "gameAttributes", "credentials", "updater", "creator"])->where('id', $id)->get();
             if (count($product) == 0) {
                 return response()->json(
                     [
-                        "status"=>false,
-                        "message"=>"Không tìm thấy sản phẩm",
-                        "data"=> []
-                    ],404
+                        "status" => false,
+                        "message" => "Không tìm thấy sản phẩm",
+                        "data" => []
+                    ],
+                    404
                 );
             }
 
             return response()->json(
                 [
-                    "status"=>True,
-                    "message"=>"Xem chi tiết sản phẩm thành công",
-                    "data"=>$product
+                    "status" => True,
+                    "message" => "Xem chi tiết sản phẩm thành công",
+                    "data" => $product
                 ]
-                );
+            );
         } catch (\Throwable $th) {
             return response()->json([
-                "status"=>False,
-                "message"=>"Đã có lỗi xảy ra",
-                'data'=>[]
-            ],500);
+                "status" => False,
+                "message" => "Đã có lỗi xảy ra",
+                'data' => []
+            ], 500);
         }
     }
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         try {
-            $product = Product::with('category')->with("images")->with("gameAttributes")->with("credentials")->where('id',$id)->get();
+            // Lấy product kèm quan hệ
+            $product = Product::with(['category','images','gameAttributes','credentials'])
+            ->find($id);
             if (!$product) {
                 return response()->json([
-                    "status" => false,
-                    "message" => "Không tìm thấy sản phẩm",
-                    "data" => []
+                    'status'  => false,
+                    'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
 
-            $validatedData = $request->validate([
-                'category_id' => 'nullable|integer',
-                'price'       => 'nullable|integer',
-                'sale'        => 'nullable|integer',
-                'username'    => 'nullable|string',
-                'password'    => 'nullable|string',
-                'images'      => 'nullable|array',
-                'attributes'  => 'nullable|array'
-            ]);
-
-            if (isset($validatedData['sale']) && isset($validatedData['price'])) {
-                if ($validatedData['price'] <= $validatedData['sale']) {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Giá sale không được lớn hơn hoặc bằng giá gốc",
-                        "data" => []
-                    ], 400);
-                }
-                $sale = $validatedData['sale'];
-            } else {
-                $sale = null;
+            // Nếu attributes là JSON string, decode nó
+            $attrs = $request->input('attributes');
+            if (is_string($attrs)) {
+                $attrs = json_decode($attrs, true);
+                $request->merge(['attributes' => $attrs]);
             }
 
-            if (isset($validatedData['category_id'])) {
-                $categoryExists = Category::where('id', $validatedData['category_id'])->exists();
-                if (!$categoryExists) {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Danh mục không tồn tại",
-                        "data" => []
-                    ], 404);
-                }
+            // Validate dữ liệu
+            $validated = $request->validate([
+                'category_id'                 => 'nullable|integer|exists:categories,id',
+                'price'                       => 'nullable|numeric|min:0',
+                'sale'                        => 'nullable|numeric|min:0',
+                'username'                    => 'nullable|string',
+                'password'                    => 'nullable|string',
+                'attributes'                  => 'nullable|array',
+                'attributes.*.attribute_key'  => 'required_with:attributes|string',
+                'attributes.*.attribute_value' => 'required_with:attributes|string',
+                'images'                      => 'nullable|array',
+                'images.*'                    => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+            ]);
+
+            // Kiểm tra sale < price
+            if (
+                isset($validated['sale'], $validated['price']) &&
+                $validated['sale'] >= $validated['price']
+            ) {
+                return response()->json([
+                    'status'  => false,
+                    'message' => 'Giá sale phải nhỏ hơn giá gốc',
+                ], 400);
             }
 
             DB::beginTransaction();
 
-            Product::where('id', $id)->update([
-                "category_id" => $validatedData['category_id'] ?? $product->category_id,
-                "price"       => $validatedData['price'] ?? $product->price,
-                "sale"        => $sale,
-                "updated_by"  => $request->user_id
+            // Cập nhật fields cơ bản
+            $product->update([
+                'category_id' => $validated['category_id'] ?? $product->category_id,
+                'price'       => $validated['price'] ?? $product->price,
+                'sale'        => $validated['sale']  ?? $product->sale,
+                'updated_by'  => $request->user_id,
             ]);
 
-            $imagesData = $validatedData['images'] ?? [];
-            if (!empty($imagesData)) {
-                ProductImage::where('product_id', $id)->delete();
-                foreach ($imagesData as $image) {
-                    ProductImage::create([
-                        'product_id' => $id,
-                        'alt_text'   => $image['alt_text'],
-                        'image_url'  => $image['image_url']
-                    ]);
-                }
+            // Lấy danh sách đường dẫn ảnh cũ phía client muốn giữ lại (ví dụ: ["/storage/product_images/…", …])
+            $keepList = $request->input('existing_images', []);
+            if (is_string($keepList)) {
+                $keepList = json_decode($keepList, true) ?: [];
             }
 
-            $attributes = $validatedData['attributes'] ?? [];
-            if (!empty($attributes)) {
-                ProductGameAttribute::where('product_id', $id)->delete();
-                foreach($attributes as $attribute){
-                    foreach($attribute as $key=>$value){
-                        ProductGameAttribute::create([
-                        "product_id"      => $id,
-                        "attribute_key"   => $key,
-                        "attribute_value" => $value
-                    ]);
+            // Đếm số ảnh phía DB
+            $dbCount = $product->images->count();
+            // Đếm số keepList
+            $keepCount = count($keepList);
+
+            // Nếu có file mới upload, hoặc số ảnh giữ lại khác với số ảnh DB => cần xử lý lại
+            if ($request->hasFile('images') || $keepCount !== $dbCount) {
+                // 1) Xóa những ảnh DB mà client không giữ lại
+                foreach ($product->images as $img) {
+                    if (! in_array($img->image_url, $keepList, true)) {
+                        // Chuyển URL public về đường dẫn relative: "product_images/uuid.jpg"
+                        $relative = ltrim(parse_url($img->image_url, PHP_URL_PATH), '/storage/');
+                        $this->deleteFile($relative);
+                        $img->delete();
+                    }
+                }
+
+                // 2) Nếu có file mới, upload rồi lưu vào DB
+                if ($request->hasFile('images')) {
+                    foreach ($request->file('images') as $file) {
+                        $url = $this->uploadFile($file, 'product_images');
+                        if (is_null($url)) {
+                            DB::rollBack();
+                            return response()->json([
+                                'status'  => false,
+                                'message' => 'Upload ảnh thất bại',
+                            ], 500);
+                        }
+                        ProductImage::create([
+                            'product_id' => $product->id,
+                            'alt_text'   => $file->getClientOriginalName(),
+                            'image_url'  => $url,
+                        ]);
                     }
                 }
             }
+            // Cập nhật credentials nếu có
+            if (isset($validated['username'], $validated['password'])) {
+                $cred = $product->credentials()->first();  // trả về ProductCredential|null
+                if ($cred) {
+                    $cred->update([
+                        'username' => $validated['username'],
+                        'password' => $validated['password'],
+                    ]);
+                } else {
+                    // Nếu chưa có credential, bạn có thể tạo mới:
+                    $product->credentials()->create([
+                        'username' => $validated['username'],
+                        'password' => $validated['password'],
+                    ]);
+                }
+            }
+
+            // Xử lý attributes nếu có
+            if (!empty($validated['attributes'])) {
+                // Xóa cũ
+                ProductGameAttribute::where('product_id', $product->id)->delete();
+
+                // Thêm mới
+                foreach ($validated['attributes'] as $attr) {
+                    ProductGameAttribute::create([
+                        'product_id'      => $product->id,
+                        'attribute_key'   => $attr['attribute_key'],
+                        'attribute_value' => $attr['attribute_value'],
+                    ]);
+                }
+            }
+
             DB::commit();
 
             return response()->json([
-                "status" => true,
-                "message" => "Sửa sản phẩm thành công",
+                'status'  => true,
+                'message' => 'Cập nhật sản phẩm thành công',
             ], 200);
-
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                'status'  => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors'  => $e->errors(),
+            ], 422);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
-                "status" => false,
-                "message" => "Đã có lỗi xảy ra",
-                'error'=>$th->getMessage()
+                'status'  => false,
+                'message' => 'Đã có lỗi xảy ra',
+                'error'   => $th->getMessage(),
             ], 500);
         }
     }
 
-    public function store(Request $request){
+
+    public function store(Request $request)
+    {
         try {
+            $data = $request->json()->all();
+
+            // Nếu attributes là chuỗi JSON, chuyển nó thành mảng
+            $attributes = is_string($request->input('attributes'))
+                ? json_decode($request->input('attributes'), true)
+                : $request->input('attributes');
+            $request->merge(['attributes' => $attributes]);
+
+            // Validate dữ liệu gửi lên
             $validatedData = $request->validate([
-                'category_id'      => 'required|integer',
-                'price'  =>  'required|integer',
-                'sale'    =>  'nullable|integer',
-                "username"=>"required|string",
-                "password"=>'required|string',
-                "images" => "required|array",
-                "attributes" => "required|array"
+                'category_id' => 'required|integer|exists:categories,id',
+                // 'sku' => 'required|string|unique:products,sku',
+                'price' => 'required|numeric|min:0',
+                'sale' => 'nullable|numeric|min:0',
+                'username' => 'required|string',
+                'password' => 'required|string',
+                'attributes' => 'required|array',
+                'attributes.*.attribute_key' => 'required|string',
+                'attributes.*.attribute_value' => 'required|string',
+                'images' => 'required|array',
+                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
-            
-            if (count(Category::where('id',$request->category_id)->get())==0){
-                return response()->json(
-                    [
-                        "status"=>False,
-                        'message'=>"Danh mục không tồn tại"
-                    ], 404
-                );
+
+            // Kiểm tra giá sale so với giá gốc
+            if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Giá sale phải nhỏ hơn giá gốc",
+                ], 400);
             }
-            if (isset($validatedData['sale'])) {
-                if ($validatedData['price'] <= $validatedData['sale']) {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Giá sale không được lớn hơn hoặc bằng giá gốc",
-                        "data" => []
-                    ], 400);
-                }
-                $sale = $validatedData['sale'];
-            } else {
-                $sale = null;
-            }
+
+            // Bắt đầu transaction
+            DB::beginTransaction();
             function generate_sku($length = 20){
                 $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                 $code = '';
@@ -205,57 +269,216 @@ class AdminProductController extends Controller
             do {
                 $sku = generate_sku();
             } while (Product::where('sku',$sku)->first() !== NULL);
-            DB::beginTransaction(); 
+            // Tạo sản phẩm
             $product = Product::create([
-                "category_id"=>$validatedData['category_id'],
-                "sku"=>$sku,
-                "price"=>$validatedData['price'],
-                "sale"=>$sale,
-                "web_id"=>$request->web_id,
-                "created_by"=>$request->user_id,
-                "updated_by"=>$request->user_id
+                "category_id" => $validatedData['category_id'],
+                "sku" => generate_sku(8),
+                "price" => $validatedData['price'],
+                "sale" => $validatedData['sale'] ?? null,
+                "web_id" => $request->web_id,
+                'status' => 1, // Mặc định là 1 (có sẵn)
+                "created_by" => $request->user_id,
+                "updated_by" => $request->user_id,
             ]);
 
-            foreach ($validatedData['images'] as $image){
+            // Xử lý upload hình ảnh
+            $images = $request->file('images'); // Lấy mảng các file
+            foreach ($images as $image) {
+                // Gọi uploadFile cho từng file riêng lẻ
+                $imageUrl = $this->uploadFile($image, 'product_images');
+
+                if (is_null($imageUrl)) {
+                    // Rollback nếu upload thất bại
+                    DB::rollBack();
+                    return response()->json(['message' => 'Failed to upload product image.'], 500);
+                }
+
+                // Lưu thông tin hình ảnh vào bảng ProductImage
                 ProductImage::create([
                     'product_id' => $product->id,
-                    'alt_text'   => $image['alt_text'],
-                    'image_url'  => $image['image_url']
+                    'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
+                    'image_url' => $imageUrl, // Đường dẫn đã upload
                 ]);
             }
 
-            ProductCredential::create(
-                [
-                    'product_id'=>$product->id,
-                    "username" => $validatedData['username'],
-                    "password"=>$validatedData['password']
-                ]
-            );
+            // Lưu thông tin đăng nhập
+            ProductCredential::create([
+                'product_id' => $product->id,
+                'username' => $validatedData['username'],
+                'password' => $validatedData['password'],
+            ]);
 
+            // Lưu attributes
             foreach ($validatedData['attributes'] as $attribute) {
-                foreach ($attribute as $key => $value) {
-                    ProductGameAttribute::create([
-                        "product_id"      => $product->id,
-                        "attribute_key"   => $key,
-                        "attribute_value" => $value
-                    ]);
-                }
+                ProductGameAttribute::create([
+                    "product_id" => $product->id,
+                    "attribute_key" => $attribute['attribute_key'],
+                    "attribute_value" => $attribute['attribute_value'],
+                ]);
             }
 
+            // Commit transaction
             DB::commit();
+
             return response()->json([
-                "status"=>True,
-                "message"=>"Thêm sản phẩm thành công",
+                "status" => true,
+                "message" => "Thêm sản phẩm thành công",
             ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Lỗi validate
+            return response()->json([
+                "status" => false,
+                "message" => "Dữ liệu không hợp lệ",
+                "errors" => $e->errors(),
+            ], 422);
         } catch (\Throwable $th) {
+            // Rollback nếu có lỗi
             DB::rollBack();
-            $response = [
+            return response()->json([
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage(),
+            ], 500);
+        }
+    }
+
+    private function check_isset_product_by_id($id) {
+        return Product::where("id", $id)->exists();
+    }
+
+    public function cancel(Request $request, $id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",1)->update([
+                    "status"=>3
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Đã hủy bán sản phẩm",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể hủy bán sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
                 "status"=>False,
                 'message'=>"Đã có lỗi xảy ra",
-                
-            ];
-            $status_code = 500;
+            ],500);
         }
-        return response()->json($response,$status_code);
+    }
+
+    public function accept(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",2)->update([
+                    "status"=>1
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Chấp nhận bán sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể chấp nhận bán sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
+    }
+    public function restore(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",3)->update([
+                    "status"=>1
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Khôi phục sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể Khôi phục sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
+    }
+    
+
+    public function deny(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",2)->update([
+                    "status"=>0
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Từ chối sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể từ chối sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
     }
 }

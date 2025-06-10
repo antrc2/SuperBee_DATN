@@ -12,7 +12,6 @@ export default function CreateFormProducts({
 }) {
   const [formData, setFormData] = useState({
     category_id: "",
-    sku: "",
     price: 0,
     sale: 0,
     username: "",
@@ -25,6 +24,9 @@ export default function CreateFormProducts({
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [categories, setCategories] = useState([]);
+  console.log("🚀 ~ categories:", categories);
+  const [categoriesSelect, setCategoriesSelect] = useState([]);
+  console.log("🚀 ~ categoriesSelect:", categoriesSelect);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -48,6 +50,7 @@ export default function CreateFormProducts({
         id: 1,
         code: "LQ",
         name: "Liên Quân",
+        category_id: 18,
         attributes: [
           { key: "Mức Rank", label: "Mức Rank (LQ)" },
           { key: "Đẳng Ký", label: "Đẳng Ký (LQ)" },
@@ -59,6 +62,7 @@ export default function CreateFormProducts({
         id: 2,
         code: "FF",
         name: "Free Fire",
+        category_id: 7,
         attributes: [
           { key: "Thẻ Võ Cực", label: "Thẻ Võ Cực (FF)" },
           { key: "Skin Súng", label: "Skin Súng (FF)" },
@@ -74,7 +78,6 @@ export default function CreateFormProducts({
     if (initialData) {
       setFormData({
         category_id: initialData.category_id || "",
-        sku: initialData.sku || "",
         price: initialData.price || 0,
         sale: initialData.sale || 0,
         username: initialData.credentials[0]?.username || "",
@@ -85,39 +88,52 @@ export default function CreateFormProducts({
             attribute_value: attr.attribute_value,
           })) || [],
       });
-      setSelectedGame(initialData.game_code || "");
+      setSelectedGame(initialData.game_code || "none");
       setExistingImages(initialData.images || []);
       setNewImages([]);
     }
   }, [initialData]);
 
-  // Generate SKU when game selected (optional)
   useEffect(() => {
-    if (!isEditing && selectedGame) {
-      const selected = availableGames.find((g) => g.code === selectedGame);
-      if (selected) {
-        const now = new Date();
-        const ts = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(
-          2,
-          "0"
-        )}${String(now.getDate()).padStart(2, "0")}${String(
-          now.getHours()
-        ).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}${String(
-          now.getSeconds()
-        ).padStart(2, "0")}`;
-        setFormData((prev) => ({
-          ...prev,
-          sku: `#${selectedGame}-${ts}`,
-          attributes: selected.attributes.map((a) => ({
-            attribute_key: a.label,
-            attribute_value: "",
-          })),
-        }));
-      }
-    } else if (!selectedGame) {
-      setFormData((prev) => ({ ...prev, sku: "", attributes: [] }));
+    // Bỏ qua nếu đang trong chế độ chỉnh sửa
+    if (isEditing) return;
+
+    // Tìm game được chọn trong danh sách
+    const selected = availableGames.find((g) => g.code === selectedGame);
+
+    // TRƯỜNG HỢP 1: Người dùng đã chọn một game cụ thể
+    if (selected) {
+      // Tìm danh mục cha của game đó
+      const parentCategory = categories.find(
+        (c) => c.id === selected.category_id
+      );
+
+      // Cập nhật danh sách select chỉ với các danh mục con
+      setCategoriesSelect(parentCategory?.children || []);
+
+      // Tự động điền các thuộc tính của game vào form
+      setFormData((prev) => ({
+        ...prev,
+        category_id: "", // Reset lại lựa chọn danh mục con
+        attributes: selected.attributes.map((a) => ({
+          attribute_key: a.label,
+          attribute_value: "",
+        })),
+      }));
     }
-  }, [selectedGame, isEditing, availableGames]);
+    // TRƯỜNG HỢP 2: Người dùng chọn "Không chọn" hoặc trạng thái ban đầu
+    else {
+      // Đưa danh sách select về mảng rỗng để render lại toàn bộ
+      setCategoriesSelect([]);
+
+      // Xóa các thuộc tính đã điền tự động
+      setFormData((prev) => ({
+        ...prev,
+        attributes: [],
+        category_id: "", // Reset lại lựa chọn danh mục
+      }));
+    }
+  }, [selectedGame, categories, availableGames, isEditing]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -172,8 +188,6 @@ export default function CreateFormProducts({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Basic validations
-    if (!formData.sku) return alert("Vui lòng có SKU.");
     if (!formData.category_id) return alert("Vui lòng chọn danh mục.");
     if (!formData.price) return alert("Vui lòng nhập giá.");
     if (!formData.username) return alert("Vui lòng nhập username.");
@@ -230,16 +244,13 @@ export default function CreateFormProducts({
                 type="radio"
                 name="game"
                 value=""
-                checked={!selectedGame}
-                onChange={() => setSelectedGame("")}
+                checked={selectedGame == "none"}
+                onChange={() => setSelectedGame("none")}
                 className="mr-2"
               />
               Không chọn
             </label>
           </div>
-          {selectedGame && (
-            <p className="mt-2 text-sm">Mã game FE: {selectedGame}</p>
-          )}
         </div>
       )}
 
@@ -247,7 +258,7 @@ export default function CreateFormProducts({
       <div className="p-6 border bg-white rounded shadow-sm">
         <h3 className="mb-4 font-medium text-gray-900">Thông tin cơ bản</h3>
         <div className="grid md:grid-cols-2 gap-6">
-          <div>
+          {/* <div>
             <label htmlFor="sku" className="block mb-1 text-sm">
               SKU
             </label>
@@ -259,7 +270,7 @@ export default function CreateFormProducts({
               readOnly
               className="w-full p-2 bg-gray-100 rounded border"
             />
-          </div>
+          </div> */}
           <div>
             <label htmlFor="category_id" className="block mb-1 text-sm">
               Danh mục
@@ -273,7 +284,14 @@ export default function CreateFormProducts({
               className="w-full p-2 rounded border"
             >
               <option value="">-- Chọn --</option>
-              {renderCategory(categories)}
+
+              {categoriesSelect.length > 0
+                ? categoriesSelect.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))
+                : renderCategory(categories)}
             </select>
           </div>
           <div>
@@ -370,7 +388,6 @@ export default function CreateFormProducts({
                 value={attr.attribute_key}
                 onChange={(e) => handleAttributeChange(index, e)}
                 className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
-                readOnly
               />
               <input
                 type="text"

@@ -8,6 +8,7 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\UserProfileController;
 // use App\Models\User;
@@ -90,6 +91,12 @@ Route::middleware(['jwt'])->group(function () {
     Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
+
+     Route::prefix("/cart")->group(function () {
+        Route::get("/", [UserCartController::class, 'index']);
+        Route::post("/", [UserCartController::class, 'store']);
+        Route::delete("/{id}", [UserCartController::class, 'destroy']);
+    });
 });
 // admin
 Route::middleware(['jwt'])->group(function () {
@@ -105,7 +112,6 @@ Route::middleware(['jwt'])->group(function () {
                 'message' => "no message"
             ]);
         });
-
 
     Route::prefix("/products")->group(function () {
         Route::get("/", [AdminProductController::class, 'index']);

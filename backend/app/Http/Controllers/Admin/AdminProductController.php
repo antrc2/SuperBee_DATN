@@ -413,6 +413,40 @@ class AdminProductController extends Controller
             ],500);
         }
     }
+    public function restore(Request $request,$id){
+        try {
+            if ($this->check_isset_product_by_id($id)){
+                $product = Product::where("id",$id)->where("status",3)->update([
+                    "status"=>1
+                ]);
+
+
+                if ($product) {
+                    return response()->json([
+                        "status" => true,
+                        "message" => "Khôi phục sản phẩm thành công",
+                    ]);
+                } else {
+                    return response()->json([
+                        "status" => false,
+                        "message" => "Không thể Khôi phục sản phẩm",
+                    ], 400);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm không tồn tại",
+                ],404);
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra",
+            ],500);
+        }
+    }
+    
 
     public function deny(Request $request,$id){
         try {

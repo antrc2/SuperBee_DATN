@@ -118,6 +118,7 @@ Route::middleware(['jwt'])->group(function () {
             
             Route::post("/{id}/deny", [AdminProductController::class,'deny']); // Từ chối sản phẩm
             Route::post("/{id}/accept", [AdminProductController::class,'accept']); // Chấp nhận sản phẩm 
+            Route::post("/{id}/restore", [AdminProductController::class,'restore']); // Chấp nhận sản phẩm 
             Route::post("/{id}/cancel",[AdminProductController::class,'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")

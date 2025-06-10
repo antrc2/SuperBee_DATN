@@ -1,46 +1,50 @@
 // @pages/Admin/Products/ProductsListPage.jsx
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { FilePenLine, Trash2, LoaderCircle, Eye } from "lucide-react";
-import {
-  getProducts,
-  deleteProduct,
-} from "@pages/Admin/Products/product.service.js"; // Điều chỉnh đường dẫn nếu cần
+import { FilePenLine, LoaderCircle, Eye, Lock, Key } from "lucide-react";
 import ProductsPageLayout from "./ProductsPageLayout";
-
+import api from "@utils/http"; // Giả sử bạn có một file api.js để cấu hình axios
 export default function ProductsListPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/products"); // API trả về { data: [...] }
+      setProducts(response.data.data); // Giả sử API trả về data trong response.data.data
+    } catch (err) {
+      setError("Không thể tải danh sách sản phẩm.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const response = await getProducts(); // API trả về { data: [...] }
-        setProducts(response.data.data); // Giả sử API trả về data trong response.data.data
-      } catch (err) {
-        setError("Không thể tải danh sách sản phẩm.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchProducts();
   }, []);
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa sản phẩm này?")) {
+  const handleLock = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn Khóa sản phẩm này?")) {
       try {
-        await deleteProduct(id);
-        // Cập nhật lại state sau khi xóa thành công
-        setProducts(products.filter((p) => p.id !== id));
+        const res = await api.post(`/admin/products/${id}/cancel`);
+        fetchProducts();
         // toast.success("Xóa sản phẩm thành công!");
       } catch (err) {
         // toast.error("Lỗi! Không thể xóa sản phẩm.");
         console.error(err);
       }
+    }
+  };
+  const handleKey = async (id) => {
+    try {
+      const res = await api.post(`/admin/products/${id}/restore`);
+      // Cập nhật lại state sau khi xóa thành công
+      fetchProducts();
+    } catch (err) {
+      // toast.error("Lỗi! Không thể xóa sản phẩm.");
+      console.error(err);
     }
   };
 
@@ -125,17 +129,28 @@ export default function ProductsListPage() {
                         size={20}
                       />
                     </Link>
-
+                    {product.status === 1 ? (
+                      <button
+                        onClick={() => handleLock(product.id)}
+                        title="Hủy Bán"
+                      >
+                        <Lock
+                          className="text-red-500 hover:text-red-700 cursor-pointer"
+                          size={20}
+                        />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleKey(product.id)}
+                        title="Bán Lại"
+                      >
+                        <Key
+                          className="text-red-500 hover:text-red-700 cursor-pointer"
+                          size={20}
+                        />
+                      </button>
+                    )}
                     {/* NÚT XÓA */}
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      title="Xóa"
-                    >
-                      <Trash2
-                        className="text-red-500 hover:text-red-700 cursor-pointer"
-                        size={20}
-                      />
-                    </button>
                   </div>
                 </td>
               </tr>

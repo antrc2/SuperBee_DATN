@@ -30,13 +30,6 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::prefix("/callback")->group(function () {
 
-    // Dữ liệu gửi vào đây nhé 
-    // {
-    //     "telco": "VIETTEL",
-    //     "amount": 10000,
-    //     "serial": "2161199621343",
-    //     "code": "369404179833759"
-    // }
     Route::post("/card", [CardController::class, 'callback']);
 
 
@@ -81,6 +74,13 @@ Route::middleware(['jwt'])->group(function () {
         Route::post('/profile-update', [UserProfileController::class, 'update']);
         Route::post('/change-password', [UserProfileController::class, 'changePassword']);
     });
+        // Dữ liệu gửi vào đây nhé 
+    // {
+    //     "telco": "VIETTEL",
+    //     "amount": 10000,
+    //     "serial": "2161199621343",
+    //     "code": "369404179833759"
+    // }
     Route::prefix("/donate")->group(function () {
         Route::prefix("/card")->group(function () {
             Route::post("/", [CardController::class, 'store']);
@@ -118,8 +118,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::get('/{id}', [CategoryController::class, 'show']);
             // User Category
 
-        });
 
+        });
         Route::prefix('/accounts')->group(function () {
             Route::get('/', [UserController::class, 'index']);
             Route::get('/{id}', [UserController::class, 'show']);
@@ -127,7 +127,6 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
     });
-
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);

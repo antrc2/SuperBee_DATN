@@ -9,16 +9,22 @@ use Illuminate\Http\Request;
 class HomeController extends Controller
 {
     //
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         $banner = Banner::where('web_id', $request->web_id)
             ->where('status', 1)
             ->orderBy('id', 'asc')
             ->get();
-            return response()->json([
-                'status' => 200,
-                'message' => 'thanh cong',
-                'data' => $banner
-            ]);
+        $category = new UserCategoryController();
+        $categories = $category->index()->getData();
+        $data = [
+            'banners' => $banner,
+            'categories' => $categories->data
+        ];
+        return response()->json([
+            'status' => 200,
+            'message' => 'thanh cong',
+            'data' => $data
+        ]);
     }
-
 }

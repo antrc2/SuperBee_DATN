@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 
@@ -25,6 +26,7 @@ class UserCategoryController extends Controller
                         $tree[] = [
                             'id' => $category->id,
                             'name' => $category->name,
+                            'image' => $category->image_url,
                             'parent_id' => $category->parent_id,
                             'slug' => $category->slug,
                             'children' => $children
@@ -63,13 +65,8 @@ class UserCategoryController extends Controller
             }
 
             $category = Category::where('id', $id)
-                ->where('status', 1)
-                ->with(['products' => function($query) {
-                    $query->where('status', 1)
-                        ->with(['images', 'gameAttributes'])
-                        ->orderBy('created_at', 'desc');
-                }])
-                ->first();
+                ->where('status', 1)->first();
+               
 
             if (!$category) {
                 return response()->json([
@@ -77,12 +74,16 @@ class UserCategoryController extends Controller
                     'message' => 'Không tìm thấy danh mục này'
                 ], 404);
             }
-
+            if($category->parent_id !== null) {
+             $data = Product::with(['images','gameAttributes'])->where('status', 1)->where('category_id',$category->id)->get();
+            }else{
+                $data = $category->where('parent_id',$category->id)->get();
+            }
             return response()->json([
                 'status' => true,
                 'data' => [
                     'category' => $category,
-                    'products' => $category->products
+                    'dataProducts' => $data
                 ]
             ], 200);
 

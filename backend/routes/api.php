@@ -8,8 +8,10 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\UserProfileController;
+use App\Models\DiscountCode;
 // use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -64,6 +66,14 @@ Route::middleware(['jwt'])->group(function () {
         Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
         Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
     });
+    Route::prefix('/discountcode')->group(function () {
+        Route::get('/', [DiscountCodeController::class, 'index']);
+        Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
+        Route::post('/', [DiscountCodeController::class, 'store']);
+        Route::put('/{id}', [DiscountCodeController::class, 'update']); // Sửa thành {id}
+        Route::patch('/{id}', [DiscountCodeController::class, 'patch']); // Sửa thành {id}
+        Route::delete('/{id}', [DiscountCodeController::class, 'destroy']); // Sửa thành {id}
+    });
 
 
     Route::prefix("/donate")->group(function () {
@@ -77,16 +87,15 @@ Route::middleware(['jwt'])->group(function () {
         Route::post('/', [CategoryController::class, 'store']);
         Route::put('/{id}', [CategoryController::class, 'update']);
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/{id}',[CategoryController::class,'show']);
+        Route::get('/{id}', [CategoryController::class, 'show']);
         // User Category
         Route::get("/getCate", [UserCategoryController::class, 'index']);
         Route::get("/getCate/{id}", [UserCategoryController::class, 'show']);
-        
     });
     Route::prefix("/products")->group(function () {
-            Route::get("/", [AdminProductController::class, 'index']);
-            Route::get("/{id}", [AdminProductController::class, 'show']);
-        });
+        Route::get("/", [AdminProductController::class, 'index']);
+        Route::get("/{id}", [AdminProductController::class, 'show']);
+    });
     Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
@@ -107,12 +116,12 @@ Route::middleware(['jwt'])->group(function () {
         });
 
 
-    Route::prefix("/products")->group(function () {
-        Route::get("/", [AdminProductController::class, 'index']);
-        Route::get("/{id}", [AdminProductController::class, 'show']);
-        Route::post('/', [AdminProductController::class, 'store']);
-        Route::put('/{id}', [AdminProductController::class, 'update']);
-    });
+        Route::prefix("/products")->group(function () {
+            Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/{id}", [AdminProductController::class, 'show']);
+            Route::post('/', [AdminProductController::class, 'store']);
+            Route::put('/{id}', [AdminProductController::class, 'update']);
+        });
     });
     // {
     //     "category_id": 1,
@@ -140,24 +149,23 @@ Route::middleware(['jwt'])->group(function () {
     //     ]
     // }
 
-    
+
 });
 
 Route::prefix("/callback")->group(function () {
 
-        // Dữ liệu gửi vào đây nhé 
-        // {
-        //     "telco": "VIETTEL",
-        //     "amount": 10000,
-        //     "serial": "2161199621343",
-        //     "code": "369404179833759"
-        // }
-    Route::post("/card", [CardController::class,'callback']);
+    // Dữ liệu gửi vào đây nhé 
+    // {
+    //     "telco": "VIETTEL",
+    //     "amount": 10000,
+    //     "serial": "2161199621343",
+    //     "code": "369404179833759"
+    // }
+    Route::post("/card", [CardController::class, 'callback']);
 
 
-    
+
     // Route::post("/bank2", [BankController::class,'callback2']);
-    Route::post("/bank/donate", [BankController::class,'donate']);
-    Route::post("/bank/withdraw",[BankController::class,"withdraw"]);
-
+    Route::post("/bank/donate", [BankController::class, 'donate']);
+    Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });

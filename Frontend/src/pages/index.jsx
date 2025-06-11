@@ -6,6 +6,7 @@ import CreateCategoryPage from "./Admin/Category/CreateCategoryPage";
 import EditCategoryPage from "./Admin/Category/EditCategoryPage";
 import CreateDiscountCodePage from "./Admin/DiscountCode/CreateDiscountCodePage";
 import DiscountCodePage from "./Admin/DiscountCode/DiscountCodePage";
+import ShowDiscountCodePage from "./Admin/DiscountCode/ShowDiscountCodePage";
 import EditDiscountCodePage from "./Admin/DiscountCode/EditDiscountCodePage";
 import CreateDonatePromotionPage from "./Admin/DonatePromotion/CreateDonatePromotionPage";
 import DonatePromotionPage from "./Admin/DonatePromotion/DonatePromotionPage";
@@ -61,5 +62,6 @@ export {
   TransactionHistoryPage,
   CartPage,
   ProductDetail,
-  EmailVerification
+  EmailVerification,
+  ShowDiscountCodePage
 };

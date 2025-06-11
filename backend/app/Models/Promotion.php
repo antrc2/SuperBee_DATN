@@ -36,4 +36,12 @@ class Promotion extends Model
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
+    public function orders()
+    {
+        return $this->hasMany(\App\Models\Order::class, 'promo_code', 'code');
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserProfileController;
@@ -107,13 +108,15 @@ Route::middleware(['jwt'])->prefix('/user')->group(function () {
     Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
+
+     Route::prefix("/cart")->group(function () {
+        Route::get("/", [UserCartController::class, 'index']);
+        Route::post("/", [UserCartController::class, 'store']);
+        Route::delete("/{id}", [UserCartController::class, 'destroy']);
+    });
 });
 // admin
 Route::middleware(['jwt'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user()->getRoleNames(); // Debug để xem vai trò user ở đây
-    });
-
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
         Route::get('/', function () {
             return response()->json([
@@ -153,6 +156,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")
         });
+
     });
     // {
     //     "category_id": 1,

@@ -12,12 +12,18 @@ import {
   Pay,
 } from "@pages";
 import { EmailVerification, ForgotPassword, ResetPassword } from "../pages";
+import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
 
 export const clientModules = [
   {
     // Trang chủ
     path: "/",
     view: Home,
+  },
+  {
+    // Bạn không có quyền truy cập
+    path: "/not-authorized",
+    view: UnauthorizedPage,
   },
   {
     // Trang Thanh Toán

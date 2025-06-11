@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AuthenticateMiddleware;
+use App\Http\Middleware\CheckApiKey;
 use App\Http\Middleware\JWTMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -21,7 +22,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // alias cho các middleware hiện có
         $middleware->alias([
-            'authenticate'          => AuthenticateMiddleware::class,
+            // 'authenticate'          => AuthenticateMiddleware::class,
+            'authenticate'          => CheckApiKey::class,
             'jwt'                   => JWTMiddleware::class,        // định nghĩa alias 'cors'
             'role'                  => RoleMiddleware::class,
             'permission'            => PermissionMiddleware::class,

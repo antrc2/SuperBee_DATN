@@ -12,8 +12,6 @@ use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserProfileController;
-// use App\Models\User;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
@@ -41,8 +39,9 @@ Route::prefix("/callback")->group(function () {
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });
 
-// Những router chưa đăng nhập
+// Những router client chưa và đã đăng nhập
 Route::middleware('authenticate')->group(function () {
+    // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
     });
@@ -61,16 +60,12 @@ Route::middleware('authenticate')->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
     });
-
     Route::prefix("/donate_promotions")->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
     });
-});
-
-
-// user
-Route::middleware(['jwt'])->prefix('/user')->group(function () {
+//   đã đăng nhập 
+Route::middleware(['jwt'])->group(function () {
     // đăng xuất
     Route::post("/logout", [AuthController::class, 'logout']);
     // info
@@ -79,10 +74,6 @@ Route::middleware(['jwt'])->prefix('/user')->group(function () {
         Route::post('/profile-update', [UserProfileController::class, 'update']);
         Route::post('/change-password', [UserProfileController::class, 'changePassword']);
     });
-    Route::prefix('/accounts')->group(function () {
-        Route::get('/{id}', [UserController::class, 'show']);
-    });
-
         // Dữ liệu gửi vào đây nhé 
     // {
     //     "telco": "VIETTEL",
@@ -95,25 +86,19 @@ Route::middleware(['jwt'])->prefix('/user')->group(function () {
             Route::post("/", [CardController::class, 'store']);
         });
     });
-
-    Route::prefix("/categories")->group(function(){
-        Route::get("/", [UserCategoryController::class, 'index']);
-        Route::get("/{id}", [UserCategoryController::class, 'show']);
-    });
-    Route::prefix("/products")->group(function () {
-        Route::get("/", [AdminProductController::class, 'index']);
-        Route::get("/{id}", [AdminProductController::class, 'show']);
-    });
     Route::prefix('/donate_promotions')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
-
      Route::prefix("/cart")->group(function () {
         Route::get("/", [UserCartController::class, 'index']);
         Route::post("/", [UserCartController::class, 'store']);
         Route::delete("/{id}", [UserCartController::class, 'destroy']);
     });
 });
+});
+
+
+
 // admin
 Route::middleware(['jwt'])->group(function () {
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {

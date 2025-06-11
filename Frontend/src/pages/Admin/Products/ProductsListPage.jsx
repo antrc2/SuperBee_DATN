@@ -11,7 +11,7 @@ export default function ProductsListPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/products"); // API trả về { data: [...] }
+      const response = await api.get("/admin/products"); // API trả về { data: [...] }
       setProducts(response.data.data); // Giả sử API trả về data trong response.data.data
     } catch (err) {
       setError("Không thể tải danh sách sản phẩm.");

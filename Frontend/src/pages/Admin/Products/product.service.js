@@ -6,7 +6,7 @@ import api from "@utils/http"; // Import axios instance bạn đã cung cấp
  * @returns {Promise<object>}
  */
 export const getProducts = (params) => {
-  return api.get("/products", { params });
+  return api.get("/admin/products", { params });
 };
 
 /**
@@ -15,7 +15,7 @@ export const getProducts = (params) => {
  * @returns {Promise<object>}
  */
 export const getProductById = (id) => {
-  return api.get(`/products/${id}`);
+  return api.get(`/admin/products/${id}`);
 };
 
 /**
@@ -27,7 +27,7 @@ export const createProduct = (productData) => {
   // Dữ liệu form thường là multipart/form-data nếu có upload file
   // Nếu chỉ có text, 'application/json' là đủ.
   // API client đã cấu hình header mặc định.
-  return api.post("/products", productData);
+  return api.post("/admin/products", productData);
 };
 
 /**
@@ -40,9 +40,9 @@ export const updateProduct = (id, productData) => {
   // Với phương thức PUT/PATCH, đôi khi backend yêu cầu multipart/form-data
   // để xử lý file. Nếu không có file, JSON là đủ.
   // Để hỗ trợ cả hai, thường dùng POST và thêm trường _method: 'PUT'
-  // return api.put(`/products/${id}`, productData);
+  // return api.put(`/admin/products/${id}`, productData);
   // Hoặc nếu API hỗ trợ đúng chuẩn PUT/PATCH
-  return api.patch(`/products/${id}`, productData);
+  return api.patch(`/admin/products/${id}`, productData);
 };
 
 /**
@@ -51,7 +51,7 @@ export const updateProduct = (id, productData) => {
  * @returns {Promise<object>}
  */
 export const deleteProduct = (id) => {
-  return api.delete(`/products/${id}`);
+  return api.delete(`/admin/products/${id}`);
 };
 
 /**
@@ -59,5 +59,5 @@ export const deleteProduct = (id) => {
  * @returns {Promise<object>}
  */
 export const getCategories = () => {
-  return api.get("/categories");
+  return api.get("/admin/categories");
 };

@@ -28,6 +28,26 @@ Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 // cài lại mật khẩu
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
+Route::prefix("/callback")->group(function () {
+
+    // Dữ liệu gửi vào đây nhé 
+    // {
+    //     "telco": "VIETTEL",
+    //     "amount": 10000,
+    //     "serial": "2161199621343",
+    //     "code": "369404179833759"
+    // }
+    Route::post("/card", [CardController::class, 'callback']);
+
+
+
+    // Route::post("/bank2", [BankController::class,'callback2']);
+    Route::post("/bank/donate", [BankController::class, 'donate']);
+    Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
+});
+
+// Những router chưa đăng nhập
 Route::middleware('authenticate')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
@@ -66,11 +86,7 @@ Route::middleware(['jwt'])->prefix('/user')->group(function () {
         Route::post('/change-password', [UserProfileController::class, 'changePassword']);
     });
     Route::prefix('/accounts')->group(function () {
-        Route::get('/', [UserController::class, 'index']);
-        Route::get('/{id}', [UserController::class, 'show']); // Sửa thành {id}
-        Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
-        Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
-        Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+        Route::get('/{id}', [UserController::class, 'show']);
     });
 
 
@@ -116,6 +132,15 @@ Route::middleware(['jwt'])->group(function () {
             // User Category
 
         });
+
+        Route::prefix('/accounts')->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::get('/{id}', [UserController::class, 'show']);
+            Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
+            Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
+            Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+    });
+
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
@@ -158,20 +183,4 @@ Route::middleware(['jwt'])->group(function () {
 
 });
 
-Route::prefix("/callback")->group(function () {
 
-    // Dữ liệu gửi vào đây nhé 
-    // {
-    //     "telco": "VIETTEL",
-    //     "amount": 10000,
-    //     "serial": "2161199621343",
-    //     "code": "369404179833759"
-    // }
-    Route::post("/card", [CardController::class, 'callback']);
-
-
-
-    // Route::post("/bank2", [BankController::class,'callback2']);
-    Route::post("/bank/donate", [BankController::class, 'donate']);
-    Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
-});

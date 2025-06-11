@@ -8,7 +8,7 @@ export default function CreateCategoryPage() {
 
   const handleSave = async (data) => {
     try {
-      const response = await api.post("/categories", data, {
+      const response = await api.post("/admin/categories", data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

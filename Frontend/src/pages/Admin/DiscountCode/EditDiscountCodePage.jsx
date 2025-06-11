@@ -22,7 +22,7 @@ const EditDiscountCodePage = () => {
   useEffect(() => {
     const fetchDiscountCode = async () => {
       try {
-        const response = await api.get(`/discountcode/${id}`);
+        const response = await api.get(`/admin/discountcode/${id}`);
         const data = response.data?.data || {};
         setForm({
           code: data.code || "",
@@ -79,7 +79,7 @@ const EditDiscountCodePage = () => {
         max_discount_amount: form.max_discount_amount ? Number(form.max_discount_amount) : null,
       };
 
-      await api.put(`/discountcode/${id}`, payload);
+      await api.put(`/admin/discountcode/${id}`, payload);
       alert("Cập nhật mã giảm giá thành công!");
       navigate("/admin/discountcode");
     } catch (err) {

@@ -1,243 +1,230 @@
+// @components/Admin/Product/CreateFormProducts.jsx
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useGet } from "@utils/hook";
-import {
-  Card,
-  CardHeader,
-  CardBody,
-  Typography,
-  Button,
-  Input,
-  IconButton,
-} from "@material-tailwind/react";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { getCategories } from "@pages/Admin/Products/product.service.js"; // Điều chỉnh đường dẫn
 
-export default function CategoryForm({ initialData, onSave }) {
-  const navigate = useNavigate();
+// Component này nhận vào:
+// - initialData: Dữ liệu ban đầu để điền form (dùng cho chức năng Edit)
+// - onSubmit: Hàm sẽ được gọi khi form được gửi đi
+// - isEditing: Cờ boolean để biết đây là form sửa hay tạo mới
+// - isLoading: Cờ boolean để vô hiệu hóa nút submit khi đang xử lý
+export default function CreateFormProducts({
+  initialData,
+  onSubmit,
+  isEditing = false,
+  isLoading = false,
+}) {
   const [formData, setFormData] = useState({
-    name: "",
-    parent_id: "",
-    status: "1", // Default to active
+    category_id: "",
+    sku: "",
+    price: 0,
+    sale: 0,
+    status: 1,
+    username: "", // from product_credentials
+    password: "", // from product_credentials
+    // Thêm các trường khác ở đây nếu cần
+    // Ví dụ: attributes, images
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const { data: categoriesData } = useGet("/categories");
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
+    // Lấy danh sách danh mục khi component được mount
+    getCategories()
+      .then((res) => setCategories(res.data.data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Nếu có initialData (chế độ edit), điền dữ liệu vào form
     if (initialData) {
       setFormData({
-        name: initialData.name || "",
-        parent_id: initialData.parent_id?.toString() || "",
-        status: initialData.status?.toString() || "1",
+        category_id: initialData.category_id || "",
+        sku: initialData.sku || "",
+        price: initialData.price || 0,
+        sale: initialData.sale || 0,
+        status: initialData.status !== undefined ? initialData.status : 1,
+        username: initialData.credentials?.username || "",
+        password: "", // Không bao giờ điền mật khẩu cũ vào form
       });
     }
   }, [initialData]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      await onSave(formData);
-    } catch (error) {
-      setError(error.message || "Failed to save category");
-      console.error("Error saving category:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderCategoryOptions = (categories, level = 0) => {
-    return categories.map((category) => {
-      if (initialData && category.id.toString() === initialData.id.toString()) {
-        return null;
-      }
-
-      const dashes = level === 0 ? "--" : "----".repeat(level);
-      return (
-        <React.Fragment key={category.id}>
-          <option value={category.id.toString()}>
-            {dashes} {category.name}
-          </option>
-          {category.children && category.children.length > 0 && 
-            renderCategoryOptions(category.children, level + 1)}
-        </React.Fragment>
-      );
-    }).filter(Boolean);
+    onSubmit(formData);
   };
 
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
-      <Card className="w-full max-w-[800px] mx-auto">
-        <CardHeader 
-          variant="gradient" 
-          color={initialData ? "amber" : "green"} 
-          className={`mb-8 p-6 relative ${initialData ? 'bg-amber-50' : 'bg-green-50'}`}
-        >
-          <div className="flex items-center justify-between">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Cột trái */}
+        <div className="space-y-6">
+          <div>
+            <label
+              htmlFor="sku"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              SKU
+            </label>
+            <input
+              type="text"
+              name="sku"
+              id="sku"
+              value={formData.sku}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="category_id"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Danh mục
+            </label>
+            <select
+              name="category_id"
+              id="category_id"
+              value={formData.category_id}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">-- Chọn danh mục --</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="price"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Giá gốc
+            </label>
+            <input
+              type="number"
+              name="price"
+              id="price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="sale"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Giá khuyến mãi (nếu có)
+            </label>
+            <input
+              type="number"
+              name="sale"
+              id="sale"
+              value={formData.sale}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Cột phải */}
+        <div className="space-y-6">
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Tài khoản đăng nhập
+            </label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Mật khẩu {isEditing && "(Bỏ trống nếu không muốn thay đổi)"}
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+              required={!isEditing}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trạng thái
+            </label>
             <div className="flex items-center gap-4">
-              <IconButton
-                variant="text"
-                color={initialData ? "amber" : "green"}
-                onClick={() => navigate("/admin/categories")}
-                className={initialData ? "hover:bg-amber-100" : "hover:bg-green-100"}
-              >
-                <ArrowLeftIcon className="h-5 w-5" />
-              </IconButton>
-              <Typography 
-                variant="h5" 
-                color={initialData ? "amber" : "green"} 
-                className="font-semibold"
-              >
-                {initialData ? "Edit Category" : "Create New Category"}
-              </Typography>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                initialData ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
-              }`}>
-                {initialData ? 'Edit Mode' : 'Create Mode'}
-              </span>
+              <label>
+                <input
+                  type="radio"
+                  name="status"
+                  value="1"
+                  checked={formData.status == 1}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Hoạt động
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="status"
+                  value="0"
+                  checked={formData.status == 0}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Ẩn
+              </label>
             </div>
           </div>
-        </CardHeader>
-        <CardBody className="p-6">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-            {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                {error}
-              </div>
-            )}
+        </div>
+      </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="col-span-2">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
-                  Category Name
-                </Typography>
-                <Input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  placeholder="Enter category name"
-                  required
-                  label={null}
-                  className="!text-base"
-                  containerProps={{
-                    className: "min-w-[100px]",
-                  }}
-                />
-              </div>
+      {/* Phần thuộc tính và hình ảnh sẽ phức tạp hơn, có thể làm component riêng */}
+      {/* ... */}
 
-              <div className="col-span-2 md:col-span-1">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
-                  Parent Category
-                </Typography>
-                <select
-                  name="parent_id"
-                  value={formData.parent_id}
-                  onChange={handleChange}
-                  className={`w-full rounded-lg border ${
-                    initialData 
-                      ? 'border-amber-200 focus:border-amber-500' 
-                      : 'border-green-200 focus:border-green-500'
-                  } bg-white px-3 py-2.5 text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50`}
-                >
-                  <option value="">None (Root Category)</option>
-                  {categoriesData?.data && renderCategoryOptions(categoriesData.data)}
-                </select>
-              </div>
-
-              <div className="col-span-2 md:col-span-1">
-                <Typography variant="small" color={initialData ? "amber" : "green"} className="mb-2 font-medium">
-                  Status
-                </Typography>
-                <div className="flex gap-6">
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="1"
-                        checked={formData.status === "1"}
-                        onChange={handleChange}
-                        className="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 focus:ring-green-500"
-                      />
-                      <div className="absolute inset-0 rounded-full bg-green-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-                    <span className="text-sm font-medium text-green-600 group-hover:text-green-700 transition-colors">
-                      Active
-                    </span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer group">
-                    <div className="relative">
-                      <input
-                        type="radio"
-                        name="status"
-                        value="0"
-                        checked={formData.status === "0"}
-                        onChange={handleChange}
-                        className="w-4 h-4 text-red-600 bg-gray-100 border-gray-300 focus:ring-red-500"
-                      />
-                      <div className="absolute inset-0 rounded-full bg-red-100 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-                    <span className="text-sm font-medium text-red-600 group-hover:text-red-700 transition-colors">
-                      Inactive
-                    </span>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4 pt-4 border-t">
-              <Button
-                variant="outlined"
-                color={initialData ? "amber" : "green"}
-                onClick={() => navigate("/admin/categories")}
-                disabled={loading}
-                className="flex items-center gap-2"
-              >
-                <ArrowLeftIcon className="h-4 w-4" />
-                Back to List
-              </Button>
-              <Button
-                type="submit"
-                variant="filled"
-                color={initialData ? "amber" : "green"}
-                disabled={loading}
-                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-200 text-black"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    {initialData ? "Update Category" : "Create Category"}
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardBody>
-      </Card>
-    </div>
+      <div className="pt-6 border-t border-gray-200 flex justify-end">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+        >
+          {isLoading
+            ? "Đang lưu..."
+            : isEditing
+            ? "Cập Nhật Sản Phẩm"
+            : "Tạo Sản Phẩm"}
+        </button>
+      </div>
+    </form>
   );
 }

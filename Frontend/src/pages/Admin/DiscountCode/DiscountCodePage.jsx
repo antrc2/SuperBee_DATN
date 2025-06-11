@@ -10,7 +10,7 @@ const DiscountCodePage = () => {
   useEffect(() => {
     const fetchDiscountCodes = async () => {
       try {
-        const res = await api.get("/discountcode");
+        const res = await api.get("/admin/discountcode");
         setDiscountCodes(res.data?.data || []);
       } catch (err) {
         setError(err);
@@ -24,7 +24,7 @@ const DiscountCodePage = () => {
 const handleDelete = async (id) => {
   if (window.confirm("Bạn có chắc chắn muốn xoá mã giảm giá này không?")) {
     try {
-      const res = await api.delete(`/discountcode/${id}`);
+      const res = await api.delete(`/admin/discountcode/${id}`);
 
       if (res.data?.data) {
         // Xoá mềm: cập nhật lại trạng thái trong danh sách
@@ -46,7 +46,7 @@ const handleDelete = async (id) => {
 const handleUpdate = async (id) => {
   
     try {
-      const res = await api.patch(`/discountcode/${id}`);
+      const res = await api.patch(`/admin/discountcode/${id}`);
         setDiscountCodes((prev) =>
           prev.map((item) =>
             item.id === id ? { ...item, ...res.data.data } : item

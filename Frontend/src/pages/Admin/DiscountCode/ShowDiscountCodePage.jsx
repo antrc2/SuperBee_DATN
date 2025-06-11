@@ -49,7 +49,7 @@ export default function ShowDiscountCodePage() {
   useEffect(() => {
     const fetchDiscountCode = async () => {
       try {
-        const response = await api.get(`/discountcode/${id}`)
+        const response = await api.get(`/admin/discountcode/${id}`)
         setDiscountCode(response.data.data)
       } catch (err) {
         setError(err.response?.data?.message || "Không thể tải chi tiết mã giảm giá!")

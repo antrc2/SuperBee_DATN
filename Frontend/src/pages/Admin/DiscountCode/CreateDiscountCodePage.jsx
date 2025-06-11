@@ -62,7 +62,7 @@ const CreateDiscountCodePage = () => {
       };
 
 
-      await api.post("/discountcode", payload);
+      await api.post("/admin/discountcode", payload);
       alert("Tạo mã giảm giá thành công!");
       navigate("/admin/discountcode");
     } catch (err) {

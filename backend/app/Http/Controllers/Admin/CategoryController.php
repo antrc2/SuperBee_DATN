@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryController extends Controller
 {
@@ -33,6 +34,7 @@ class CategoryController extends Controller
                             'parent_id' => $category->parent_id,
                             'slug' => $category->slug,
                             'status' => $category->status,
+                            "image_url" => $category->image_url,
                             'created_by' => $category->creator ? $category->creator->username : null,
                             'updated_by' => $category->updater ? $category->updater->username : null,
                             'created_at' => $category->created_at,
@@ -68,7 +70,8 @@ class CategoryController extends Controller
             // Kiểm tra dữ liệu đầu vào
             $request->validate([
                 'name' => 'required|string|max:255',
-                'parent_id' => 'nullable|exists:categories,id'
+                'parent_id' => 'nullable|exists:categories,id',
+                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:40000'
             ]);
 
             // Kiểm tra tên danh mục đã tồn tại chưa
@@ -89,11 +92,29 @@ class CategoryController extends Controller
                 $slug = $originalSlug . '-' . $count++;
             }
 
+
+            $imageUrl = null;
+            
+            // 2. Kiểm tra và tải ảnh nếu có
+            if ($request->hasFile('image_url')) {
+                // Gọi hàm uploadFile từ Controller cha
+                $imageUrl = $this->uploadFile(
+                    $request->file('image_url'),
+                    'category_images' // Thư mục bạn muốn lưu ảnh danh mục
+                );
+
+                if (is_null($imageUrl)) {
+                    // Xử lý lỗi nếu việc tải ảnh không thành công
+                    return response()->json(['message' => 'Failed to upload category image.'], 500);
+                }
+            }
+
             // Tạo danh mục mới
             $category = Category::create([
                 'name' => $request->name,
                 'parent_id' => $request->parent_id,
                 'slug' => $slug,
+                'image_url'=> $imageUrl,
                 'status' => $request->status ?? 1,
                 'created_by' => $request->user_id ?? null,
                 'updated_by' => $request->user_id ?? null
@@ -145,8 +166,8 @@ class CategoryController extends Controller
     {
         try {
             // Kiểm tra dữ liệu đầu vào
-            $request->validate([
-                'name' => 'required|string|max:255',
+            $request->validate(rules: [
+                'name' => 'nullable|string|max:255',
                 'parent_id' => [
                     'nullable',
                     'exists:categories,id',
@@ -174,11 +195,11 @@ class CategoryController extends Controller
             }
 
             // Kiểm tra tên đã thay đổi và đã tồn tại chưa
+         
             if ($category->name !== $request->name) {
                 $existingCategory = Category::where('name', $request->name)
                     ->where('id', '!=', $id)
                     ->first();
-                
                 if ($existingCategory) {
                     return response()->json([
                         'status' => false,
@@ -188,17 +209,17 @@ class CategoryController extends Controller
             }
 
             // Kiểm tra xem có thay đổi gì không
-            if (
-                $category->name === $request->name &&
-                $category->parent_id === $request->parent_id &&
-                $category->status == ($request->status ?? $category->status)
-            ) {
-                return response()->json([
-                    'status' => true,
-                    'message' => 'Không có thay đổi nào để cập nhật',
-                    'data' => $category
-                ], 200);
-            }
+            // if (
+            //     $category->name === $request->name &&
+            //     $category->parent_id === $request->parent_id &&
+            //     $category->status == ($request->status ?? $category->status)
+            // ) {
+            //     return response()->json([
+            //         'status' => true,
+            //         'message' => 'Không có thay đổi nào để cập nhật',
+            //         'data' => $category
+            //     ], 200);
+            // }
 
             // Tạo slug mới nếu tên thay đổi
             if ($category->name !== $request->name) {
@@ -214,12 +235,34 @@ class CategoryController extends Controller
             } else {
                 $slug = $category->slug;
             }
+            $imageUrl = $category->image_url;
+            
+            // 2. Kiểm tra và tải ảnh nếu có
+            if ($request->hasFile('image_url')) {
+                // Gọi hàm uploadFile từ Controller cha
+                $imageUrl = $this->uploadFile(
+                    $request->file('image_url'),
+                    'category_images' 
+                );
 
+                if (is_null($imageUrl)) {
+                    // Xử lý lỗi nếu việc tải ảnh không thành công
+                    return response()->json(['message' => 'Failed to upload category image.'], 500);
+                }
+                if ($category->image_url) {
+                    $oldImagePath = str_replace(Storage::url('/'), '', $category->image_url);
+                    // Kiểm tra xem file có tồn tại trên disk 'public' không trước khi xóa
+                    if (Storage::disk('public')->exists($oldImagePath)) {
+                        Storage::disk('public')->delete($oldImagePath);
+                    } 
+                }
+            }
             // Cập nhật danh mục
             $category->update([
-                'name' => $request->name,
-                'parent_id' => $request->parent_id,
-                'slug' => $slug,
+                'name' => $request->name ?? $category->name,
+                'parent_id' => $request->parent_id ?? $category->parent_id,
+                'image_url' => $imageUrl ,
+                'slug' => $slug ?? $category->slug,
                 'status' => $request->status ?? $category->status,
                 'updated_by' => $request->user_id ?? null
             ]);
@@ -236,9 +279,10 @@ class CategoryController extends Controller
                 'message' => 'Danh mục không tồn tại'
             ], 404);
         } catch (\Exception $e) {
+            // $e->getMessage();
             return response()->json([
                 'status' => false,
-                'message' => $e->getMessage()
+                'message' => "Đã xảy ra lỗi"
             ], 500);
         }
     }
@@ -250,12 +294,12 @@ class CategoryController extends Controller
     {
         try {
             // Không cho phép xóa danh mục mặc định
-            if ($id == 1) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Không thể xóa danh mục mặc định'
-                ], 400);
-            }
+            // if ($id == 1) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Không thể xóa danh mục mặc định'
+            //     ], 400);
+            // }
 
             // Tìm danh mục cần xóa
             $category = Category::findOrFail($id);

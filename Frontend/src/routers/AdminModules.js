@@ -28,6 +28,12 @@ import Calendar from "@pages/Admin/Calendar";
 import BasicTables from "@pages/Admin/Tables/BasicTables";
 import FormElements from "@pages/Admin/Forms/FormElements";
 import Blank from "@pages/Admin/Blank";
+import {
+  CreateProducts,
+  EditProducts,
+  ProductDetailPage,
+  ProductsListPage,
+} from "../pages";
 
 export const adminModules = [
   {
@@ -56,12 +62,20 @@ export const adminModules = [
     name: "categories",
     list: CategoryPage,
     create: CreateCategoryPage,
-    edit: EditCategoryPage
+    edit: EditCategoryPage,
   },
   {
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "products",
+    list: ProductsListPage,
+    show: ProductDetailPage,
+    create: CreateProducts,
+    edit: EditProducts,
     allowedRoles: ["admin"],
   },
   {

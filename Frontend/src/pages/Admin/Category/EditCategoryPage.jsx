@@ -7,20 +7,31 @@ import CategoryForm from "@components/Admin/Category/CategoryForm";
 export default function EditCategoryPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { data: categoryData, loading: categoryLoading } = useGet(`/categories/${id}`);
+  const { data: categoryData, loading: categoryLoading } = useGet(
+    `/categories/${id}`
+  );
 
-  const handleSave = async (formData) => {
+  const handleSave = async (data) => {
     try {
-      const data = {
-        name: formData.name,
-        parent_id: formData.parent_id || null,
-        status: formData.status,
-      };
-
-      await api.put(`/categories/${id}`, data);
-      navigate("/admin/categories");
+      data.append("_method", "PUT");
+      const response = await api.post(`/admin/categories/${id}`, data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      if (response.status === 201 || response.status === 200) {
+        navigate("/admin/categories");
+      }
+      return response.data;
     } catch (error) {
-      throw error;
+      console.error(
+        "Error creating category:",
+        error.response?.data || error.message
+      );
+      // Ném lỗi ra ngoài để `CategoryForm` có thể bắt và hiển thị
+      throw new Error(
+        error.response?.data?.message || "Failed to save category"
+      );
     }
   };
 
@@ -32,10 +43,5 @@ export default function EditCategoryPage() {
     );
   }
 
-  return (
-    <CategoryForm
-      initialData={categoryData?.data}
-      onSave={handleSave}
-    />
-  );
+  return <CategoryForm initialData={categoryData?.data} onSave={handleSave} />;
 }

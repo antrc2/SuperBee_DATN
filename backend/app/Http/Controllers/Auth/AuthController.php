@@ -83,11 +83,11 @@ class AuthController extends Controller
     {
         $payload['exp'] = time() + $expireTime;
         if ($type === "acc") {
-            return JWT::encode($payload, env('JWT_SECRET_KEY'), 'HS256');
+            return JWT::encode($payload, (string)env('JWT_SECRET_KEY'), 'HS256');
         }
 
         if ($type === "ref") {
-            return JWT::encode($payload, env('JWT_SECRET'), 'HS256');
+            return JWT::encode($payload, (string)env('JWT_SECRET'), 'HS256');
         }
 
         // Fallback or error for unknown token type
@@ -111,7 +111,7 @@ class AuthController extends Controller
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
             'money' => $wallet->balance ?? "0"
         ];
-        $expireTime = env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
+        $expireTime = (int)env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
         // dd(time() + $expireTime, date('Y-m-d H:i:s'));
         return $this->encodeToken($payload, $expireTime, "acc");
     }
@@ -131,7 +131,7 @@ class AuthController extends Controller
             'web_id' => $user->web_id,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
         ];
-        $expireTime = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
+        $expireTime = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
 
         return $this->encodeToken($payload, $expireTime, "ref");
     }
@@ -433,7 +433,7 @@ class AuthController extends Controller
                 return response()->json(['error' => 'Invalid or expired refresh token.'], 408);
             }
 
-            $user = User::find($refresh->user_id)->first(); // find() directly returns model or null
+            $user = User::find($refresh->user_id);
 
             if (is_null($user)) {
                 return response()->json(['error' => 'User not found.'], 404);

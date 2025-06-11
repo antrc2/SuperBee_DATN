@@ -39,7 +39,7 @@ function useFetchBase(url, method, options = {}) {
           url,
           method,
           signal: controller.signal,
-          ...options
+          ...options,
         });
         if (res.status >= 200 && res.status < 300) {
           setData(res.data);
@@ -235,7 +235,7 @@ function useUrlUtils() {
     search: location.search,
     hash: location.hash,
     state: location.state,
-    fullUrl: `${location.pathname}${location.search}${location.hash}`
+    fullUrl: `${location.pathname}${location.search}${location.hash}`,
   });
 
   /**
@@ -274,10 +274,14 @@ function useUrlUtils() {
     getCurrentUrlInfo,
     getQueryParams,
     updateQueryParams,
-    removeQueryParam
+    removeQueryParam,
   };
 }
-
+const viewImage = (url) => {
+  const urlBE = import.meta.env.VITE_BACKEND_URL;
+  const imageUrl = `${urlBE}${url}`;
+  return imageUrl;
+};
 // Ví dụ sử dụng trong một component
 // function MyComponent() {
 //   const {
@@ -320,6 +324,7 @@ const decodeData = (token) => {
 
 // export default MyComponent;
 export {
+  viewImage,
   useClickOutside,
   useDebounce,
   useLocalStorage,
@@ -337,5 +342,5 @@ export {
   usePatch,
   useUrlUtils,
   decodeData,
-  useFetchBase
+  useFetchBase,
 };

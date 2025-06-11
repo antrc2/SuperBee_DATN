@@ -31,13 +31,7 @@ Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::prefix("/callback")->group(function () {
 
-    // Dữ liệu gửi vào đây nhé 
-    // {
-    //     "telco": "VIETTEL",
-    //     "amount": 10000,
-    //     "serial": "2161199621343",
-    //     "code": "369404179833759"
-    // }
+
     Route::post("/card", [CardController::class, 'callback']);
 
 
@@ -89,7 +83,13 @@ Route::middleware(['jwt'])->prefix('/user')->group(function () {
         Route::get('/{id}', [UserController::class, 'show']);
     });
 
-
+        // Dữ liệu gửi vào đây nhé 
+    // {
+    //     "telco": "VIETTEL",
+    //     "amount": 10000,
+    //     "serial": "2161199621343",
+    //     "code": "369404179833759"
+    // }
     Route::prefix("/donate")->group(function () {
         Route::prefix("/card")->group(function () {
             Route::post("/", [CardController::class, 'store']);

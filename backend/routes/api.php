@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\AdminDiscountCodeController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\DiscountCodeController;
@@ -43,8 +44,9 @@ Route::prefix("/callback")->group(function () {
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });
 
-// Những router chưa đăng nhập
+// Những router client chưa và đã đăng nhập
 Route::middleware('authenticate')->group(function () {
+    // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
     });
@@ -63,84 +65,40 @@ Route::middleware('authenticate')->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
     });
-
     Route::prefix("/donate_promotions")->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
     });
-});
-
-
-// user
-Route::middleware(['jwt'])->prefix('/user')->group(function () {
-    // đăng xuất
-    Route::post("/logout", [AuthController::class, 'logout']);
-    // info
-    Route::prefix('/user')->group(function () {
-        Route::get('/profile', [UserProfileController::class, 'show']);
-        Route::post('/profile-update', [UserProfileController::class, 'update']);
-        Route::post('/change-password', [UserProfileController::class, 'changePassword']);
-    });
-    Route::prefix('/accounts')->group(function () {
-        Route::get('/{id}', [UserController::class, 'show']);
-    });
-
-
-    // Dữ liệu gửi vào đây nhé 
-    // {
-    //     "telco": "VIETTEL",
-    //     "amount": 10000,
-    //     "serial": "2161199621343",
-    //     "code": "369404179833759"
-    // }
-    Route::prefix("/donate")->group(function () {
-        Route::prefix("/card")->group(function () {
-            Route::post("/", [CardController::class, 'store']);
+    //   đã đăng nhập 
+    Route::middleware(['jwt'])->group(function () {
+        // đăng xuất
+        Route::post("/logout", [AuthController::class, 'logout']);
+        // info
+        Route::prefix('/user')->group(function () {
+            Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::post('/profile-update', [UserProfileController::class, 'update']);
+            Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+            Route::prefix('/discountcode')->group(function () {
+                Route::get('/', [DiscountCodeController::class, 'index']);
+                Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
+            });
         });
-    });
-
-    Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);
-        Route::post('/', [CategoryController::class, 'store']);
-        Route::put('/{id}', [CategoryController::class, 'update']);
-        Route::delete('/{id}', [CategoryController::class, 'destroy']);
-        Route::get('/{id}', [CategoryController::class, 'show']);
-        // User Category
-        Route::get("/getCate", [UserCategoryController::class, 'index']);
-        Route::get("/getCate/{id}", [UserCategoryController::class, 'show']);
-    });
-    Route::prefix("/products")->group(function () {
-        Route::get("/", [AdminProductController::class, 'index']);
-        Route::get("/{id}", [AdminProductController::class, 'show']);
-    });
-    Route::prefix('/donate_promotions')->group(function () {
-        Route::get("/", [AdminDonatePromotionController::class, 'index']);
-    });
-
-
-    Route::prefix("/cart")->group(function () {
-        Route::get("/", [UserCartController::class, 'index']);
-        Route::post("/", [UserCartController::class, 'store']);
-        Route::delete("/{id}", [UserCartController::class, 'destroy']);
-    });
-});
-// admin
-Route::middleware(['jwt'])->group(function () {
-    Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
-        Route::get('/', function () {
-            return response()->json([
-                "status" => false,
-                "data" => [],
-                'message' => "no message"
-            ]);
+        Route::prefix('/accounts')->group(function () {
+            Route::get('/{id}', [UserController::class, 'show']);
         });
-        Route::prefix('/discountcode')->group(function () {
-            Route::get('/', [DiscountCodeController::class, 'index']);
-            Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
-            Route::post('/', [DiscountCodeController::class, 'store']);
-            Route::put('/{id}', [DiscountCodeController::class, 'update']); // Sửa thành {id}
-            Route::patch('/{id}', [DiscountCodeController::class, 'patch']); // Sửa thành {id}
-            Route::delete('/{id}', [DiscountCodeController::class, 'destroy']); // Sửa thành {id}
+
+
+        // Dữ liệu gửi vào đây nhé 
+        // {
+        //     "telco": "VIETTEL",
+        //     "amount": 10000,
+        //     "serial": "2161199621343",
+        //     "code": "369404179833759"
+        // }
+        Route::prefix("/donate")->group(function () {
+            Route::prefix("/card")->group(function () {
+                Route::post("/", [CardController::class, 'store']);
+            });
         });
 
         Route::prefix('categories')->group(function () {
@@ -150,64 +108,117 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [CategoryController::class, 'destroy']);
             Route::get('/{id}', [CategoryController::class, 'show']);
             // User Category
+            Route::get("/getCate", [UserCategoryController::class, 'index']);
+            Route::get("/getCate/{id}", [UserCategoryController::class, 'show']);
+        });
+        Route::prefix("/products")->group(function () {
+            Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/{id}", [AdminProductController::class, 'show']);
+        });
+        Route::prefix('/donate_promotions')->group(function () {
+            Route::get("/", [AdminDonatePromotionController::class, 'index']);
+        });
 
-            Route::prefix("/products")->group(function () {
-                Route::get("/", [AdminProductController::class, 'index']);
-                Route::get("/{id}", [AdminProductController::class, 'show']);
-                Route::post('/', [AdminProductController::class, 'store']);
 
-                Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
-                Route::post("/{id}/accept", [AdminProductController::class, 'accept']); // Chấp nhận sản phẩm 
-                Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
-                Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
-                Route::put('/{id}', [AdminProductController::class, 'update']);
-                // Route::post("/")
+        Route::prefix("/cart")->group(function () {
+            Route::prefix('/donate_promotions')->group(function () {
+                Route::get("/", [AdminDonatePromotionController::class, 'index']);
+            });
+            Route::prefix("/cart")->group(function () {
+                Route::get("/", [UserCartController::class, 'index']);
+                Route::post("/", [UserCartController::class, 'store']);
+                Route::delete("/{id}", [UserCartController::class, 'destroy']);
             });
         });
-        // {
-        //     "category_id": 1,
-        //     "price": 123,
-        //     "sale": 123,
-        //     "username": "abc",
-        //     "password": "abc",
-        //     "images": [
-        //         {   
-        //             "alt_text": "abc",
-        //             "image_url": "abc"
-        //         },
-        //         {
-        //             "alt_text": "abc",
-        //             "image_url": "abc"
-        //         }
-        //     ],
-        //     "attributes": [
-        //         {
-        //             "attribute_key": "attribute_value"
-        //         },
-        //         {
-        //             "attribute_key": "attribute_value"
-        //         }
-        //     ]
-        // }
-
-
     });
 
-    Route::prefix("/callback")->group(function () {
-
-        // Dữ liệu gửi vào đây nhé 
-        // {
-        //     "telco": "VIETTEL",
-        //     "amount": 10000,
-        //     "serial": "2161199621343",
-        //     "code": "369404179833759"
-        // }
-        Route::post("/card", [CardController::class, 'callback']);
 
 
+    // admin
+    Route::middleware(['jwt'])->group(function () {
+        Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
+            Route::get('/', function () {
+                return response()->json([
+                    "status" => false,
+                    "data" => [],
+                    'message' => "no message"
+                ]);
+            });
+            Route::prefix('/discountcode')->group(function () {
+                Route::get('/', [AdminDiscountCodeController::class, 'index']);
+                Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+                Route::post('/', [AdminDiscountCodeController::class, 'store']);
+                Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+                Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+                Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+            });
 
-        // Route::post("/bank2", [BankController::class,'callback2']);
-        Route::post("/bank/donate", [BankController::class, 'donate']);
-        Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
+            Route::prefix('categories')->group(function () {
+                Route::get('/', [CategoryController::class, 'index']);
+                Route::post('/', [CategoryController::class, 'store']);
+                Route::put('/{id}', [CategoryController::class, 'update']);
+                Route::delete('/{id}', [CategoryController::class, 'destroy']);
+                Route::get('/{id}', [CategoryController::class, 'show']);
+                // User Category
+
+                Route::prefix("/products")->group(function () {
+                    Route::get("/", [AdminProductController::class, 'index']);
+                    Route::get("/{id}", [AdminProductController::class, 'show']);
+                    Route::post('/', [AdminProductController::class, 'store']);
+
+                    Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
+                    Route::post("/{id}/accept", [AdminProductController::class, 'accept']); // Chấp nhận sản phẩm 
+                    Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
+                    Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
+                    Route::put('/{id}', [AdminProductController::class, 'update']);
+                    // Route::post("/")
+                });
+            });
+            // {
+            //     "category_id": 1,
+            //     "price": 123,
+            //     "sale": 123,
+            //     "username": "abc",
+            //     "password": "abc",
+            //     "images": [
+            //         {   
+            //             "alt_text": "abc",
+            //             "image_url": "abc"
+            //         },
+            //         {
+            //             "alt_text": "abc",
+            //             "image_url": "abc"
+            //         }
+            //     ],
+            //     "attributes": [
+            //         {
+            //             "attribute_key": "attribute_value"
+            //         },
+            //         {
+            //             "attribute_key": "attribute_value"
+            //         }
+            //     ]
+            // }
+
+
+        });
+
+        Route::prefix("/callback")->group(function () {
+
+            // Dữ liệu gửi vào đây nhé 
+            // {
+            //     "telco": "VIETTEL",
+            //     "amount": 10000,
+            //     "serial": "2161199621343",
+            //     "code": "369404179833759"
+            // }
+            Route::post("/card", [CardController::class, 'callback']);
+
+
+
+            // Route::post("/bank2", [BankController::class,'callback2']);
+            Route::post("/bank/donate", [BankController::class, 'donate']);
+            Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
+        });
     });
 });

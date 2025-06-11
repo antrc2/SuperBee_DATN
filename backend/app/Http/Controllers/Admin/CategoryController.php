@@ -279,9 +279,10 @@ class CategoryController extends Controller
                 'message' => 'Danh mục không tồn tại'
             ], 404);
         } catch (\Exception $e) {
+            // $e->getMessage();
             return response()->json([
                 'status' => false,
-                'message' => $e->getMessage()
+                'message' => "Đã xảy ra lỗi"
             ], 500);
         }
     }

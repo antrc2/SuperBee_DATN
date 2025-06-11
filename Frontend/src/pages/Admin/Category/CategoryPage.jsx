@@ -36,7 +36,7 @@ const CategoryPage = () => {
     loading,
     error,
     refetch,
-  } = useGet("/categories");
+  } = useGet("/admin/categories");
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => {
@@ -57,7 +57,7 @@ const CategoryPage = () => {
     setDeleteError(null);
 
     try {
-      const response = await api.delete(`/categories/${deleteId}`);
+      const response = await api.delete(`/admin/categories/${deleteId}`);
 
       if (response.status === 200) {
         setOpenDeleteDialog(false);

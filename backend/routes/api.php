@@ -132,6 +132,7 @@ Route::middleware(['jwt'])->group(function () {
             // User Category
 
         });
+
         Route::prefix('/accounts')->group(function () {
             Route::get('/', [UserController::class, 'index']);
             Route::get('/{id}', [UserController::class, 'show']);
@@ -139,6 +140,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
     });
+
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);

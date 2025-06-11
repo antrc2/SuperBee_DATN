@@ -13,7 +13,7 @@ const AccountListPage = () => {
   useEffect(() => {
     const fetchAccounts = async () => {
       try {
-        const res = await api.get("/accounts");
+        const res = await api.get("/admin/accounts");
         // Nếu API trả về { data: [...] }
         const list = res.data?.data?.user ?? res.data ?? [];
         const listRole = res.data?.data?.roles ?? res.data ?? [];
@@ -34,9 +34,9 @@ const AccountListPage = () => {
   const handleToggleStatus = async (id, status) => {
     try {
       if (status === 1) {
-        await api.delete(`/accounts/${id}`);
+        await api.delete(`/admin/accounts/${id}`);
       } else {
-        await api.patch(`/accounts/${id}`);
+        await api.patch(`/admin/accounts/${id}`);
       }
       setAccounts((prev) =>
         prev.map((acc) =>

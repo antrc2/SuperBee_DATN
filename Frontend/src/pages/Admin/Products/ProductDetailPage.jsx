@@ -25,7 +25,7 @@ export default function ProductDetailPage() {
     const fetchProductDetails = async () => {
       setLoading(true);
       try {
-        const response = await api.get(`/products/${id}`);
+        const response = await api.get(`/admin/products/${id}`);
         const productData = response.data.data;
         if (Array.isArray(productData) && productData.length > 0) {
           // Lấy sản phẩm đầu tiên từ mảng data và chuẩn hóa game_attributes thành mảng nếu cần

@@ -122,7 +122,7 @@ class UserOrderController extends Controller
                     $promotion = $promotion->where("status",1);
                     $code = $promotion->where('start_date', '<=', now())->where('end_date', '>=', now())->first();
                     if ($code){ // Vẫn còn hạn sử dụng
-                        $check = Order::where("user_id",$user_id)->where("promo_code",$code)->all(); // Đếm số lần sử dụng promo code
+                        $check = Order::where("user_id",$user_id)->orWhere('user_id', -1)->where("promo_code",$code)->all(); // Đếm số lần sử dụng promo code
                         if ($check && $code->per_user_limit > count($check)){ //  Tồn tại, quá số lần sử dụng
                             return response()->json([
                                 "status"=>False,
@@ -190,7 +190,11 @@ class UserOrderController extends Controller
             } else {
                 // Không nhập mã giảm giá
             }
-            
+
+            // Tính tiền
+
+            // Tính aff
+
 
         } catch (\Throwable $th) {
             // throw $th;

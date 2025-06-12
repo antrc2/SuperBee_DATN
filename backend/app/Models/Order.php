@@ -33,4 +33,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderItem::class);
     }
+    public function promotion()
+    {
+        // belongsTo: khóa ngoại promo_code trong orders, tham chiếu đến cột code ở bảng promotions
+        return $this->belongsTo(Promotion::class, 'promo_code', 'code');
+    }
 }

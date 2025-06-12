@@ -26,7 +26,7 @@ class CheckApiKey
             }
     
             // 2. Nếu không có JWT hoặc JWT không hợp lệ, tiếp tục kiểm tra API Key
-            $apiKey = $request->header('X_API_KEY'); // Sử dụng X-API-KEY cho API Key để phân biệt rõ ràng
+            $apiKey = $request->header('X-API-KEY'); // Sử dụng X-API-KEY cho API Key để phân biệt rõ ràng
     
             if (!empty($apiKey)) {
                 $apiKeyRecord = Web::where('api_key', $apiKey)->first();

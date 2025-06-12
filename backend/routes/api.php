@@ -11,6 +11,7 @@ use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,7 +46,7 @@ Route::middleware('authenticate')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
     });
-    Route::prefix("/categories")->group(function(){
+    Route::prefix("/categories")->group(function () {
         Route::get("/", [UserCategoryController::class, 'index']);
         Route::get("/{id}", [UserCategoryController::class, 'show']);
     });
@@ -64,37 +65,42 @@ Route::middleware('authenticate')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
     });
-//   đã đăng nhập 
-Route::middleware(['jwt'])->group(function () {
-    // đăng xuất
-    Route::post("/logout", [AuthController::class, 'logout']);
-    // info
-    Route::prefix('/user')->group(function () {
-        Route::get('/profile', [UserProfileController::class, 'show']);
-        Route::post('/profile-update', [UserProfileController::class, 'update']);
-        Route::post('/change-password', [UserProfileController::class, 'changePassword']);
-    });
+    //   đã đăng nhập 
+    Route::middleware(['jwt'])->group(function () {
+        // đăng xuất
+        Route::post("/logout", [AuthController::class, 'logout']);
+        // info
+        Route::prefix('/user')->group(function () {
+            Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::post('/profile-update', [UserProfileController::class, 'update']);
+            Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+        });
         // Dữ liệu gửi vào đây nhé 
-    // {
-    //     "telco": "VIETTEL",
-    //     "amount": 10000,
-    //     "serial": "2161199621343",
-    //     "code": "369404179833759"
-    // }
-    Route::prefix("/donate")->group(function () {
-        Route::prefix("/card")->group(function () {
-            Route::post("/", [CardController::class, 'store']);
+        // {
+        //     "telco": "VIETTEL",
+        //     "amount": 10000,
+        //     "serial": "2161199621343",
+        //     "code": "369404179833759"
+        // }
+        Route::prefix("/donate")->group(function () {
+            Route::prefix("/card")->group(function () {
+                Route::post("/", [CardController::class, 'store']);
+            });
+        });
+        Route::prefix('/donate_promotions')->group(function () {
+            Route::get("/", [AdminDonatePromotionController::class, 'index']);
+        });
+        Route::prefix("/cart")->group(function () {
+            Route::get("/", [UserCartController::class, 'index']);
+            Route::post("/", [UserCartController::class, 'store']);
+            Route::delete("/{id}", [UserCartController::class, 'destroy']);
+        });
+        Route::prefix('/orders')->group(function(){
+            Route::get('/',[UserOrderController::class,'index']);
+            Route::get("/{id}",[UserOrderController::class,'show']);
+            Route::post("/", [UserOrderController::class,'store']);
         });
     });
-    Route::prefix('/donate_promotions')->group(function () {
-        Route::get("/", [AdminDonatePromotionController::class, 'index']);
-    });
-     Route::prefix("/cart")->group(function () {
-        Route::get("/", [UserCartController::class, 'index']);
-        Route::post("/", [UserCartController::class, 'store']);
-        Route::delete("/{id}", [UserCartController::class, 'destroy']);
-    });
-});
 });
 
 
@@ -126,20 +132,19 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
-    });
+        });
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
             Route::post('/', [AdminProductController::class, 'store']);
-            
-            Route::post("/{id}/deny", [AdminProductController::class,'deny']); // Từ chối sản phẩm
-            Route::post("/{id}/accept", [AdminProductController::class,'accept']); // Chấp nhận sản phẩm 
-            Route::post("/{id}/restore", [AdminProductController::class,'restore']); // Sau khi hủy bán, tôi muốn bán lại
-            Route::post("/{id}/cancel",[AdminProductController::class,'cancel']); // Người bán hủy bán
+
+            Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
+            Route::post("/{id}/accept", [AdminProductController::class, 'accept']); // Chấp nhận sản phẩm 
+            Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
+            Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")
         });
-
     });
     // {
     //     "category_id": 1,
@@ -169,5 +174,3 @@ Route::middleware(['jwt'])->group(function () {
 
 
 });
-
-

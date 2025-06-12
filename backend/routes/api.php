@@ -1,17 +1,21 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserOrderController;
+use App\Http\Controllers\User\UserBannerController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +58,9 @@ Route::middleware('authenticate')->group(function () {
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
     });
+    Route::prefix('/banners')->group(function () {
+        Route::get("/", [UserBannerController::class, 'index']);
+    });
     Route::prefix("/domain")->group(function () {
         Route::get("/", [AuthController::class, "domain"]);
     });
@@ -74,7 +81,14 @@ Route::middleware('authenticate')->group(function () {
             Route::get('/profile', [UserProfileController::class, 'show']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+
+            
+
         });
+            Route::prefix('/discountcode')->group(function () {
+                Route::get('/', [DiscountCodeController::class, 'index']);
+                Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
+            });
         // Dữ liệu gửi vào đây nhé 
         // {
         //     "telco": "VIETTEL",
@@ -94,11 +108,13 @@ Route::middleware('authenticate')->group(function () {
             Route::get("/", [UserCartController::class, 'index']);
             Route::post("/", [UserCartController::class, 'store']);
             Route::delete("/{id}", [UserCartController::class, 'destroy']);
+
         });
         Route::prefix('/orders')->group(function(){
             Route::get('/',[UserOrderController::class,'index']);
             Route::get("/{id}",[UserOrderController::class,'show']);
             Route::post("/", [UserOrderController::class,'store']);
+
         });
     });
 });
@@ -115,7 +131,14 @@ Route::middleware(['jwt'])->group(function () {
                 'message' => "no message"
             ]);
         });
-
+        Route::prefix('/discountcode')->group(function () {
+            Route::get('/', [AdminDiscountCodeController::class, 'index']);
+            Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+            Route::post('/', [AdminDiscountCodeController::class, 'store']);
+            Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+            Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+            Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+        });
         Route::prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/', [CategoryController::class, 'store']);
@@ -145,6 +168,16 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")
         });
+
+
+        Route::prefix('/banners')->group(function () {
+            Route::get('/', [AdminBannerController::class, 'index']);
+            Route::get('/{id}', [AdminBannerController::class, 'show']);
+            Route::post('/', [AdminBannerController::class, 'store']);
+            Route::put('/{id}', [AdminBannerController::class, 'update']);
+            Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
+        });
+
     });
     // {
     //     "category_id": 1,

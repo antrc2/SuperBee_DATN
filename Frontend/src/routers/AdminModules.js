@@ -10,6 +10,11 @@ import {
   EditDonatePromotionPage,
   AccountListPage,
   ShowAccountPage,
+  ShowDiscountCodePage,
+  BannersListPage,
+  BannerDetailPage,
+  CreateBanners,
+  EditBanner,
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
@@ -43,6 +48,14 @@ export const adminModules = [
     allowedRoles: ["admin"],
   },
   {
+    name: "discountcode",
+    list: DiscountCodePage,
+    create: CreateDiscountCodePage,
+    edit: EditDiscountCodePage,
+    show: ShowDiscountCodePage,
+    allowedRoles: ["admin"],
+  },
+  {
     name: "categories",
     list: CategoryPage,
     create: CreateCategoryPage,
@@ -70,10 +83,11 @@ export const adminModules = [
     allowedRoles: ["admin"],
   },
   {
-    name: "calendar",
-    list: Calendar,
-    create: CreateDonatePromotionPage,
-    edit: EditDonatePromotionPage,
+    name: "banners",
+    list: BannersListPage,
+    show: BannerDetailPage,
+    create: CreateBanners,
+    edit: EditBanner,
     allowedRoles: ["admin"],
   },
   {

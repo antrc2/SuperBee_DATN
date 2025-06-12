@@ -104,7 +104,7 @@ Route::middleware('authenticate')->group(function () {
         Route::prefix('/donate_promotions')->group(function () {
             Route::get("/", [AdminDonatePromotionController::class, 'index']);
         });
-        Route::prefix("/cart")->group(function () {
+        Route::prefix("/carts")->group(function () {
             Route::get("/", [UserCartController::class, 'index']);
             Route::post("/", [UserCartController::class, 'store']);
             Route::delete("/{id}", [UserCartController::class, 'destroy']);

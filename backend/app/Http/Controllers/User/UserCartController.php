@@ -19,17 +19,18 @@ class UserCartController extends Controller
             $webId = request()->web_id;
 
             $cart = Cart::with([
-                'cartDetails.products.product'
+                'Items.product'
             ])
                 ->where('user_id', $userId)
                 ->where('web_id', $webId)
                 ->first();
 
             if (!$cart) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Giỏ hàng trống'
-                ], 404);
+                $cart = Cart::create([
+                    'user_id' => $userId,
+                    'web_id' => $webId
+                ]);
+                $cart->setRelation('cartItems', collect()); 
             }
 
             return response()->json([
@@ -47,70 +48,69 @@ class UserCartController extends Controller
 
 
     public function store(Request $request)
-    {
-        try {
-            $request->validate([
-                'product_id' => 'required|exists:products,id'
-            ]);
+{
+    try {
+        $request->validate([
+            'product_id' => 'required|exists:products,id'
+        ]);
 
-            $userId = $request->user_id;
-            $webId = $request->web_id;
+        $userId = $request->user_id;
+        $webId = $request->web_id;
 
+        $product = Product::where([
+            ['id', $request->product_id],
+            ['web_id', $webId],
+            ['status', 1]
+        ])->first();
 
-            // Lấy sản phẩm từ DB
-            $product = Product::where([
-                ['id', $request->product_id],
-                ['web_id', $webId],
-                ['status', 1]
-            ])->first();
-
-            if (!$product) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'
-                ], 404);
-            }
-
-            DB::beginTransaction();
-
-            // Tìm hoặc tạo cart
-            $cart = Cart::firstOrCreate([
-                'user_id' => $userId,
-                'web_id' => $webId
-            ]);
-
-            // Kiểm tra sản phẩm đã có trong giỏ chưa
-            $existingItem = $cart->cartItems()
-                ->where('product_id', $product->id)
-                ->first();
-
-            if ($existingItem) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Sản phẩm đã có trong giỏ hàng của bạn.'
-                ], 400);
-            }
-
-            // Thêm vào giỏ hàng
-            $cartItem = $cart->cartItems()->create([
-                'product_id' => $product->id
-            ]);
-
-            DB::commit();
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Đã thêm sản phẩm vào giỏ hàng',
-                'data' => $cartItem
-            ], 201);
-        } catch (\Throwable $e) {
-            DB::rollBack();
+        if (!$product) {
             return response()->json([
                 'status' => false,
-                'message' => 'đã xảy ra lỗi',
-            ], 500);
+                'message' => 'Sản phẩm không tồn tại hoặc đã ngừng kinh doanh.'
+            ], 404);
         }
+
+        DB::beginTransaction();
+
+        $cart = Cart::firstOrCreate([
+            'user_id' => $userId,
+            'web_id' => $webId
+        ]);
+
+        // Kiểm tra trùng sản phẩm 
+        $existingItem = $cart->items()
+            ->where('product_id', $product->id)
+            ->first();
+
+        if ($existingItem) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Sản phẩm đã có trong giỏ hàng của bạn.'
+            ], 400);
+        }
+
+        // Thêm sản phẩm vào giỏ
+        $cartItem = $cart->items()->create([
+            'product_id' => $product->id
+        ]);
+
+        DB::commit();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Đã thêm sản phẩm vào giỏ hàng',
+            'data' => $cartItem
+        ], 201);
+    } catch (\Throwable $e) {
+        DB::rollBack();
+        return response()->json([
+            'status' => false,
+            'message' => 'Đã xảy ra lỗi',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
 
 

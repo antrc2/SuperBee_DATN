@@ -9,7 +9,7 @@ const Sidebar = () => {
     { path: "/admin/account", label: "Quản lý tài khoản" },
     { path: "/admin/categories", label: "Quản lý danh mục" },
     { path: "/admin/products", label: "Quản lý sản phẩm" },
-    { path: "/admin/discountcode", label: "Quản lý mã giảm giá" },
+    { path: "/admin/discount-codes", label: "Quản lý mã giảm giá" },
     { path: "/admin/donate-promotions", label: "Quản lý khuyến mãi nạp thẻ" },
     { path: "/admin/categories", label: "Quản lý danh mục" },
     { path: "/admin/products", label: "Quản lý sản phẩm" },

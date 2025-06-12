@@ -2,23 +2,25 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Review extends Model
 {
-    protected $fillable = ['web_id', 'message', 'star', 'user_id'];
+    use HasFactory;
 
-    protected $casts = [
-        'star' => 'integer',
+    protected $fillable = [
+        'user_id',
+        'web_id',
+        'star',
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function web(): BelongsTo
+    public function web()
     {
         return $this->belongsTo(Web::class);
     }

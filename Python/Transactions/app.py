@@ -6,7 +6,7 @@ import requests
 import json
 from dotenv import load_dotenv
 import os
-
+import threading
 # Load biến môi trường từ file .env
 load_dotenv()
 
@@ -14,8 +14,8 @@ load_dotenv()
 accountNo = os.getenv("ACCOUNT_NO")
 password = os.getenv("PASSWORD")
 url = os.getenv("CALLBACK_URL")
+token = os.getenv("TOKEN")
 headers = {
-    "Authorization": "Bearer Sqrtfl0@t01bfkskvqfayl0AnChimTo18cm",
     "Content-Type": "application/json"
 }
 
@@ -26,15 +26,16 @@ def readFile():
 def writeFile(data):
     with open("data.txt","w") as f:
         for i in range(0,len(data["transactionHistoryList"])):
-            if (data["transactionHistoryList"][i]["debitAmount"] == "0"):
-                f.write(data["transactionHistoryList"][i]["refNo"])
-                if i != len(data["transactionHistoryList"]) -1:
-                    f.write("\n")
+            # if (data["transactionHistoryList"][i]["debitAmount"] == "0"):
+            f.write(data["transactionHistoryList"][i]["refNo"])
+            if i != len(data["transactionHistoryList"]) -1:
+                f.write("\n")
 def callback(data, url):
     try:
         # Gửi yêu cầu POST với dữ liệu JSON
         response = requests.post(url, json=data,headers=headers)
         # Kiểm tra nếu yêu cầu thành công (mã trạng thái 200)
+        # print(response.text)
         if response.status_code == 200:
             return response.json()
         else:
@@ -45,7 +46,7 @@ def callback(data, url):
 def run(mb):
    
     daynow = datetime.datetime.now()
-    lasttime = daynow - datetime.timedelta(days=10) # maximum
+    lasttime = daynow - datetime.timedelta(days=2) # maximum
     data = mb.getTransactionAccountHistory(from_date=lasttime, to_date=daynow)
     # print(data)
     # Lấy lsgd
@@ -55,21 +56,32 @@ def run(mb):
         json.dump(data, json_file,indent=4)
     # Đưa ID lịch sử giao dịch vào biến
         for i in range(0,len(data["transactionHistoryList"])):
-            if (data["transactionHistoryList"][i]["debitAmount"] == "0"):
-                lastestData.append(data["transactionHistoryList"][i]["refNo"])
+            # if (data["transactionHistoryList"][i]["debitAmount"] == "0"):
+            lastestData.append(data["transactionHistoryList"][i]["refNo"])
 
     currentData = readFile()
     writeFile(data)
     differentData = list(set(lastestData) - set(currentData))
     if (len(differentData)>0):
+
+        def worker(payload, url):
+            result = callback(payload, url)
+            print(result)
+
+        # Tạo và khởi động thread
+        threads = []
         for i in range(0,len(data["transactionHistoryList"])):
             for j in differentData:
                 if (j==data["transactionHistoryList"][i]["refNo"]):
-                    print(data["transactionHistoryList"][i])
                     payload = data['transactionHistoryList'][i]
-                    result = callback(payload, url=url)
-                    print(type(result))
-                    print(result)
+                    payload['token'] = token
+
+                    t = threading.Thread(target=worker, args=(payload, url))
+                    threads.append(t)
+                    t.start()
+                    # result = callback(payload, url=url)
+        for t in threads:
+            t.join()            
         differentData = []
 def test(mb):
     while True:

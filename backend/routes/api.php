@@ -1,217 +1,196 @@
 <?php
 
-
-use App\Http\Controllers\DonatePromotionController;
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\UserController;
-
-use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\AWSController;
+use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminDonatePromotionController;
+use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\User\UserCategoryController;
+use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\AdminDiscountCodeController;
+use App\Http\Controllers\Callback\BankController;
+use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\DiscountCodeController;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CartController;
-use App\Http\Controllers\OrderController;
-use Illuminate\Http\Request;
+use App\Http\Controllers\User\UserCartController;
+use App\Http\Controllers\User\UserProductController;
+use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\UserBannerController;
+use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
 
+
+
+// Xác thực trang web
+Route::post("/domain/active", [AuthController::class, "active"]);
+// cấp lại token
+Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
+// xác minh tài khoản
+Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+// quên mật khẩu
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+// cài lại mật khẩu
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::prefix("/callback")->group(function () {
-    Route::post("/card");
-    Route::post("/bank");
+
+    Route::post("/card", [CardController::class, 'callback']);
+
+
+
+    // Route::post("/bank2", [BankController::class,'callback2']);
+    Route::post("/bank/donate", [BankController::class, 'donate']);
+    Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });
-// use App\Http\Controllers\ImageUploadController;
 
-Route::post('/upload-image', [AWSController::class, 'upload']);
-Route::post("/domain/active", [HomeController::class, "active"]);
-
-
-Route::post("/domain/active", [HomeController::class, "active"]);
-Route::middleware(['authenticate'])->group(function () {
-
-
+// Những router client chưa và đã đăng nhập
+Route::middleware('authenticate')->group(function () {
+    // chưa đăng nhập
+    Route::prefix('/home')->group(function () {
+        Route::get("/", [HomeController::class, 'index']);
+    });
+    Route::prefix("/categories")->group(function () {
+        Route::get("/", [UserCategoryController::class, 'index']);
+        Route::get("/{id}", [UserCategoryController::class, 'show']);
+    });
+    Route::prefix('/products')->group(function () {
+        Route::get("/{slug}", [UserProductController::class, 'index']);
+        Route::get("/acc/{id}", [UserProductController::class, 'show']);
+    });
+    Route::prefix('/banners')->group(function () {
+        Route::get("/", [UserBannerController::class, 'index']);
+    });
+    Route::prefix("/domain")->group(function () {
+        Route::get("/", [AuthController::class, "domain"]);
+    });
     Route::prefix("/accounts")->group(function () {
         Route::post("/login", [AuthController::class, 'login']);
         Route::post("/register", [AuthController::class, 'register']);
     });
-    // Categories
-    Route::prefix('/categories')->group(function () {
-        Route::get("/", [CategoryController::class, 'index']);
-        Route::get("/{id}", [CategoryController::class, 'show']);
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [AdminDonatePromotionController::class, 'index']);
+        Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
     });
-
-    Route::prefix('/products')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-    });
-    Route::prefix('/news')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-    });
-    Route::prefix('/reviews')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-    });
-
-    Route::prefix('/donate_promotions')->group(function () {
-        Route::get("/", [DonatePromotionController::class, 'index']);
-        Route::get("/{id}", [DonatePromotionController::class, 'show']);
-    });
-    Route::prefix('/bank_histories')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-    });
-    Route::prefix('/card_histories')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-    });
-    Route::prefix("/domain")->group(function () {
-        Route::get("/", [HomeController::class, "domain"]);
-    });
-});
-Route::middleware(['jwt'])->group(function () {
-
-    Route::get('/refreshToken', [AuthController::class, 'refreshToken']);
-
-    Route::get('/me', [AuthController::class, 'me']);
-    Route::get('/logout', [AuthController::class, 'logout']);
-    Route::prefix('/reviews')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix('/card_histories')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix('/bank_histories')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    // Categories
-    Route::prefix('/categories')->group(function () {
-        Route::get("/", [CategoryController::class, 'index']);
-        Route::get("/{id}", [CategoryController::class, 'show']);
-        Route::post("/", [CategoryController::class, 'store']);
-        Route::put("/{id}", [CategoryController::class, 'update']);
-        Route::patch("/{id}", [CategoryController::class, 'updatePatch']);
-        Route::delete("/{id}", [CategoryController::class, 'destroy']);
-    });
-    Route::prefix('/news')->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix('/products')->group(function () {
-        // Route::get('/', [ProductController::class, 'index']);
-        Route::get('/', [ProductController::class, 'publicList']); // Công khai
-        Route::get('/list/partner', [ProductController::class, 'partnerList']);
-        Route::get('/list/reseller', [ProductController::class, 'resellerList']);
-        Route::get('/list/admin', [ProductController::class, 'adminList']);
-        Route::get('/{id}', [ProductController::class, 'show']);
-        Route::post('/', [ProductController::class, 'store']);
-        Route::put('/{id}', [ProductController::class, 'update']);
-        Route::post('/{id}/destroy', [ProductController::class, 'destroy']);
-        Route::post('/{id}/cancel', [ProductController::class, 'cancel']);
-        Route::post('/{id}/approve', [ProductController::class, 'approve']);
-        Route::post('/{id}/reject', [ProductController::class, 'reject']);
-    });
-    Route::prefix("/webs")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-
-    Route::prefix("/accounts")->group(function () {
-
-        Route::get("/", [UserController::class, 'index']);
-        Route::post("/", [AuthController::class, 'register']); // Tạo mới
-        Route::get("/{id}", [UserController::class, 'show']); // Chi tiết   
-        Route::put("/{id}", [UserController::class, 'update']); // cập nhật toàn bộ
-        Route::patch("/{id}", [UserController::class, 'restore']); // cập nhật 1 phần 
-        Route::delete("/{id}", [UserController::class, 'destroy']); // xóa mềm 
-
-    });
-    Route::prefix("/cart")->group(function () {
-        Route::get("/", [CartController::class, 'index']);
-        Route::post("/", [CartController::class, 'store']);
-        Route::delete("/{id}", [CartController::class, 'destroy']);
-    });
-    Route::prefix("/order")->group(function () {
-        Route::get("/", [OrderController::class, "index"]);
-        Route::get("/{id}", [OrderController::class, "OrderDetail"]);
-        Route::post("/", [OrderController::class, "Order"]);
-    });
-
-    Route::prefix("/notifications")->group(function () {
-
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix("/chats")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-    Route::prefix("/tickets")->group(function () {
-        Route::get("/");
-        Route::get("/{id}");
-        Route::post("/");
-        Route::put("/{id}");
-        Route::patch("/{id}");
-        Route::delete("/{id}");
-    });
-
-
-
-
-    Route::prefix("/discount_codes")->group(function () {
-        Route::get("/", [DiscountCodeController::class, 'index']);
-        Route::get("/{id}", [DiscountCodeController::class, 'show']);
-        Route::post("/", [DiscountCodeController::class, 'store']);
-        Route::put("/{id}", [DiscountCodeController::class, 'update']);
-        Route::patch("/{id}", [DiscountCodeController::class, 'partialUpdate']);
-        Route::delete("/{id}", [DiscountCodeController::class, 'destroy']);
-
-        Route::prefix("/donate_promotions")->group(function () {
-            Route::get("/", [DonatePromotionController::class, 'index']);
-            Route::get("/{id}", [DonatePromotionController::class, 'show']);
-            Route::post("/", [DonatePromotionController::class, 'store']);
-            Route::put("/{id}", [DonatePromotionController::class, 'update']);
-            Route::patch("/{id}", [DonatePromotionController::class, 'undo']);
-            Route::delete("/{id}", [DonatePromotionController::class, 'destroy']);
+    //   đã đăng nhập 
+    Route::middleware(['jwt'])->group(function () {
+        // đăng xuất
+        Route::post("/logout", [AuthController::class, 'logout']);
+        // info
+        Route::prefix('/user')->group(function () {
+            Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::post('/profile-update', [UserProfileController::class, 'update']);
+            Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+            Route::prefix('/discountcode')->group(function () {
+                Route::get('/', [DiscountCodeController::class, 'index']);
+                Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
+            });
+        });
+        // Dữ liệu gửi vào đây nhé 
+        // {
+        //     "telco": "VIETTEL",
+        //     "amount": 10000,
+        //     "serial": "2161199621343",
+        //     "code": "369404179833759"
+        // }
+        Route::prefix("/donate")->group(function () {
+            Route::prefix("/card")->group(function () {
+                Route::post("/", [CardController::class, 'store']);
+            });
+        });
+        Route::prefix('/donate_promotions')->group(function () {
+            Route::get("/", [AdminDonatePromotionController::class, 'index']);
+        });
+        Route::prefix("/cart")->group(function () {
+            Route::get("/", [UserCartController::class, 'index']);
+            Route::post("/", [UserCartController::class, 'store']);
+            Route::delete("/{id}", [UserCartController::class, 'destroy']);
         });
     });
+});
+
+
+
+// admin
+Route::middleware(['jwt'])->group(function () {
+    Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
+        Route::get('/', function () {
+            return response()->json([
+                "status" => false,
+                "data" => [],
+                'message' => "no message"
+            ]);
+        });
+        Route::prefix('/discountcode')->group(function () {
+            Route::get('/', [AdminDiscountCodeController::class, 'index']);
+            Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+            Route::post('/', [AdminDiscountCodeController::class, 'store']);
+            Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+            Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+            Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+        });
+        Route::prefix('categories')->group(function () {
+            Route::get('/', [CategoryController::class, 'index']);
+            Route::post('/', [CategoryController::class, 'store']);
+            Route::put('/{id}', [CategoryController::class, 'update']);
+            Route::delete('/{id}', [CategoryController::class, 'destroy']);
+            Route::get('/{id}', [CategoryController::class, 'show']);
+            // User Category
+
+
+        });
+        Route::prefix('/accounts')->group(function () {
+            Route::get('/', [UserController::class, 'index']);
+            Route::get('/{id}', [UserController::class, 'show']);
+            Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
+            Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
+            Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+        });
+        Route::prefix("/products")->group(function () {
+            Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/{id}", [AdminProductController::class, 'show']);
+            Route::post('/', [AdminProductController::class, 'store']);
+
+            Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
+            Route::post("/{id}/accept", [AdminProductController::class, 'accept']); // Chấp nhận sản phẩm 
+            Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
+            Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
+            Route::put('/{id}', [AdminProductController::class, 'update']);
+            // Route::post("/")
+        });
+
+        Route::prefix('/banners')->group(function () {
+            Route::get('/', [AdminBannerController::class, 'index']);
+            Route::get('/{id}', [AdminBannerController::class, 'show']);
+            Route::post('/', [AdminBannerController::class, 'store']);
+            Route::put('/{id}', [AdminBannerController::class, 'update']);
+            Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
+        });
+    });
+    // {
+    //     "category_id": 1,
+    //     "price": 123,
+    //     "sale": 123,
+    //     "username": "abc",
+    //     "password": "abc",
+    //     "images": [
+    //         {   
+    //             "alt_text": "abc",
+    //             "image_url": "abc"
+    //         },
+    //         {
+    //             "alt_text": "abc",
+    //             "image_url": "abc"
+    //         }
+    //     ],
+    //     "attributes": [
+    //         {
+    //             "attribute_key": "attribute_value"
+    //         },
+    //         {
+    //             "attribute_key": "attribute_value"
+    //         }
+    //     ]
+    // }
+
+
 });

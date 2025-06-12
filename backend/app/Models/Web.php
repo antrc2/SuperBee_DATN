@@ -2,85 +2,57 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Web extends Model
 {
-    protected $fillable = ['subdomain', 'user_id', 'status', 'api_key'];
+    use HasFactory;
 
-    protected $casts = [
-        'status' => 'integer',
+    protected $fillable = [
+        'subdomain',
+        'user_id',
+        'api_key',
+        'status',
     ];
 
-    // public function user(): BelongsTo
-    // {
-    //     return $this->belongsTo(User::class);
-    // }
-
-    public function bankHistories(): HasMany
+    public function users()
     {
-        return $this->hasMany(BankHistory::class);
+        return $this->hasMany(User::class);
     }
 
-    public function cardHistories(): HasMany
+    public function creator()
     {
-        return $this->hasMany(CardHistory::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function carts(): HasMany
-    {
-        return $this->hasMany(Cart::class);
-    }
-
-    public function chats(): HasMany
-    {
-        return $this->hasMany(Chat::class);
-    }
-
-    public function discountCodes(): HasMany
-    {
-        return $this->hasMany(DiscountCode::class);
-    }
-
-    public function donatePromotions(): HasMany
-    {
-        return $this->hasMany(DonatePromotion::class);
-    }
-
-    public function logs(): HasMany
-    {
-        return $this->hasMany(Log::class);
-    }
-
-    public function notifications(): HasMany
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    public function orders(): HasMany
-    {
-        return $this->hasMany(Order::class);
-    }
-
-    public function products(): HasMany
+    public function products()
     {
         return $this->hasMany(Product::class);
     }
 
-    public function productDetails(): HasMany
-    {
-        return $this->hasMany(ProductDetail::class);
-    }
-
-    public function reviews(): HasMany
+    public function reviews()
     {
         return $this->hasMany(Review::class);
     }
 
-    public function tickets(): HasMany
+    public function rechargeCards()
     {
-        return $this->hasMany(Ticket::class);
+        return $this->hasMany(RechargeCard::class);
+    }
+
+    public function rechargeBanks()
+    {
+        return $this->hasMany(RechargeBank::class);
+    }
+
+    public function donatePromotions()
+    {
+        return $this->hasMany(DonatePromotion::class);
+    }
+
+    public function banners()
+    {
+        return $this->hasMany(Banner::class);
     }
 }

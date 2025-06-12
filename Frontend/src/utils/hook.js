@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "./http";
 import queryString from "query-string";
+import { jwtDecode } from "jwt-decode";
 // Quản lý trạng thái bật/tắt
 // const [isOpen, toggleOpen] = useToggle(false);
 function useToggle(initialValue = false) {
@@ -38,7 +39,7 @@ function useFetchBase(url, method, options = {}) {
           url,
           method,
           signal: controller.signal,
-          ...options
+          ...options,
         });
         if (res.status >= 200 && res.status < 300) {
           setData(res.data);
@@ -234,7 +235,7 @@ function useUrlUtils() {
     search: location.search,
     hash: location.hash,
     state: location.state,
-    fullUrl: `${location.pathname}${location.search}${location.hash}`
+    fullUrl: `${location.pathname}${location.search}${location.hash}`,
   });
 
   /**
@@ -273,11 +274,14 @@ function useUrlUtils() {
     getCurrentUrlInfo,
     getQueryParams,
     updateQueryParams,
-    removeQueryParam
+    removeQueryParam,
   };
 }
-
-
+const viewImage = (url) => {
+  const urlBE = import.meta.env.VITE_BACKEND_URL;
+  const imageUrl = `${urlBE}${url}`;
+  return imageUrl;
+};
 // Ví dụ sử dụng trong một component
 // function MyComponent() {
 //   const {
@@ -313,9 +317,14 @@ function useUrlUtils() {
 //     </div>
 //   );
 // }
+const decodeData = (token) => {
+  const decoded = jwtDecode(token);
+  return decoded;
+};
 
 // export default MyComponent;
 export {
+  viewImage,
   useClickOutside,
   useDebounce,
   useLocalStorage,
@@ -331,5 +340,7 @@ export {
   usePut,
   useDelete,
   usePatch,
-  useUrlUtils
+  useUrlUtils,
+  decodeData,
+  useFetchBase,
 };

@@ -1,13 +1,8 @@
-// Breadcrumbs.jsx
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-export default function Breadcrumbs() {
-  const location = useLocation();
-  // tách các segment, bỏ các giá trị rỗng
-  const segments = location.pathname.split("/").filter(Boolean);
-
-  // helper để ghép lại đường dẫn tới segment hiện tại
-  const buildPath = (index) => "/" + segments.slice(0, index + 1).join("/");
+export default function Breadcrumbs({ category }) {
+  // We no longer need useLocation() or to parse URL segments directly if
+  // we're relying on the 'category' prop for names and slugs.
 
   return (
     <div>
@@ -15,30 +10,22 @@ export default function Breadcrumbs() {
         <ol
           style={{ listStyle: "none", display: "flex", padding: 0, margin: 0 }}
         >
-          {/* Luôn có “Trang chủ” ở đầu */}
+          {/* Always show "Trang chủ" */}
           <li>
             <Link to="/">Trang chủ</Link>
           </li>
 
-          {segments.map((seg, idx) => {
-            const path = buildPath(idx);
-            const isLast = idx === segments.length - 1;
-            // hiển thị dấu phân cách
-            return (
-              <li key={path} style={{ marginLeft: 8 }}>
-                <span style={{ margin: "0 8px" }}>{">"}</span>
-                {isLast ? (
-                  // segment cuối cùng thì không là link
-                  <Link to={path}>{decodeURIComponent(seg)}</Link>
-                ) : (
-                  <Link to={path}>{decodeURIComponent(seg)}</Link>
-                )}
-              </li>
-            );
-          })}
+          {/* Display the current category if it's available */}
+          {category && (
+            <li key={category.slug} style={{ marginLeft: 8 }}>
+              <span style={{ margin: "0 8px" }}>{">"}</span>
+              {/* This links to the category's slug. Adjust '/products' if your base path is different. */}
+              <Link to={`/mua-acc/${category.slug}`}>{category.name}</Link>
+            </li>
+          )}
         </ol>
       </nav>
-      <div className="text-2xl font-medium mt-2">Danh sách Shop Account</div>
+      <div className="text-2xl font-medium mt-2">{category?.name}</div>
     </div>
   );
 }

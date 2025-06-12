@@ -1,37 +1,36 @@
 import React from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import api from "../../utils/http";
-import { showAlert, showError } from "../../utils/notification";
+import GridShape from "@components/Admin/common/GridShape";
+import { Link, Outlet } from "react-router";
+import ThemeTogglerTwo from "@components/Admin/common/ThemeTogglerTwo";
 
 export default function AuthLayout() {
-  const navigate = useNavigate();
-
-  const handleLogout = async (e) => {
-    e.preventDefault();
-    try {
-      await api.get("/logout"); // Gọi API logout backend
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      showAlert("Đăng xuất thành công!", "Thông báo", "success");
-      navigate("/");
-    } catch (err) {
-      showError("Đăng xuất thất bại!");
-    }
-  };
-
   return (
-    <div>
-      <header>Header Login</header>
-      <div className="mt-4 text-center">
-        <a
-          href="#"
-          className="text-blue-500 hover:underline"
-          onClick={handleLogout}
-        >
-          Đăng xuất
-        </a>
+    <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0">
+      <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
+        <Outlet />
+        <div className="items-center hidden w-full h-full lg:w-1/2 bg-brand-950 dark:bg-white/5 lg:grid">
+          <div className="relative flex items-center justify-center z-1">
+            {/* <!-- ===== Common Grid Shape Start ===== --> */}
+            <GridShape />
+            <div className="flex flex-col items-center max-w-xs">
+              <Link to="/" className="block mb-4">
+                <img
+                  width={231}
+                  height={48}
+                  src="/images/logo/auth-logo.svg"
+                  alt="Logo"
+                />
+              </Link>
+              <p className="text-center text-gray-400 dark:text-white/60">
+                Free and Open-Source Tailwind CSS Admin Dashboard Template
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
+          <ThemeTogglerTwo />
+        </div>
       </div>
-      <Outlet />
     </div>
   );
 }

@@ -2,20 +2,21 @@
 <html>
 
 <head>
-    <meta charset="utf-8">
-    <title>Email từ Anh Hải</title>
+    <title>{{ $data['subject'] }}</title>
 </head>
 
 <body>
-    <h2>Xin chào, {{ $data['name'] }}!</h2>
-    <p>{{ $data['message'] }}</p>
+    <p>{{ $data['greeting'] }}</p>
+    <p>{!! nl2br(e($data['message'])) !!}</p> {{-- Use {!! !!} for HTML content if needed, and nl2br/e for line breaks/escaping --}}
+    <p>{{ $data['closing'] }}</p>
+    <p>{{ $data['app_name'] }}</p>
 
-    {{-- Hiển thị API key --}}
-    @if(!empty($data['apiKey']))
-    <p>API Key của bạn: <strong>{{ $data['apiKey'] }}</strong></p>
-    @endif
-
-    <p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
+</html>
+{{-- Hiển thị API key --}}
+@if(!empty($data['apiKey']))
+<p>API Key của bạn: <strong>{{ $data['apiKey'] }}</strong></p>
+@endif
+<p>Cảm ơn bạn đã sử dụng dịch vụ của chúng tôi.</p>
 </body>
 
 </html>

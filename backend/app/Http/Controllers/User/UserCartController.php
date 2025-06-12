@@ -16,20 +16,18 @@ class UserCartController extends Controller
     {
         try {
             $userId =  request()->user_id;
-            $webId = request()->web_id;
 
             $cart = Cart::with([
-                'cartDetails.products.product'
+                'items.product'
             ])
                 ->where('user_id', $userId)
-                ->where('web_id', $webId)
                 ->first();
 
             if (!$cart) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Giỏ hàng trống'
-                ], 404);
+                $cart = Cart::create([
+                    'user_id' => $userId,
+                ]);
+                $cart->setRelation('items', collect());
             }
 
             return response()->json([
@@ -49,18 +47,12 @@ class UserCartController extends Controller
     public function store(Request $request)
     {
         try {
-            $request->validate([
-                'product_id' => 'required|exists:products,id'
-            ]);
+
 
             $userId = $request->user_id;
-            $webId = $request->web_id;
 
-
-            // Lấy sản phẩm từ DB
             $product = Product::where([
                 ['id', $request->product_id],
-                ['web_id', $webId],
                 ['status', 1]
             ])->first();
 
@@ -73,14 +65,12 @@ class UserCartController extends Controller
 
             DB::beginTransaction();
 
-            // Tìm hoặc tạo cart
             $cart = Cart::firstOrCreate([
-                'user_id' => $userId,
-                'web_id' => $webId
+                'user_id' => $userId
             ]);
 
-            // Kiểm tra sản phẩm đã có trong giỏ chưa
-            $existingItem = $cart->cartItems()
+            // Kiểm tra trùng sản phẩm 
+            $existingItem = $cart->items()
                 ->where('product_id', $product->id)
                 ->first();
 
@@ -91,26 +81,35 @@ class UserCartController extends Controller
                 ], 400);
             }
 
-            // Thêm vào giỏ hàng
-            $cartItem = $cart->cartItems()->create([
+            // Thêm sản phẩm vào giỏ
+            $cartItem = $cart->items()->create([
                 'product_id' => $product->id
             ]);
+
+            $cart = Cart::with([
+                'items.product'
+            ])
+                ->where('user_id', $userId)
+                ->first();
+
 
             DB::commit();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Đã thêm sản phẩm vào giỏ hàng',
-                'data' => $cartItem
+                'data' => $cart
             ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();
             return response()->json([
                 'status' => false,
-                'message' => 'đã xảy ra lỗi',
+                'message' => 'Đã xảy ra lỗi',
+                // 'error' => $e->getMessage()
             ], 500);
         }
     }
+
 
 
 
@@ -118,11 +117,8 @@ class UserCartController extends Controller
     {
         try {
             $userId = $request->user_id;
-            $webId = $request->web_id;
-
             $cart = Cart::where([
                 ['user_id', $userId],
-                ['web_id', $webId]
             ])->first();
 
             if (!$cart) {
@@ -133,7 +129,7 @@ class UserCartController extends Controller
             }
 
             // Tìm sản phẩm trong giỏ để xoá (theo id sản phẩm truyền lên)
-            $cartItem = $cart->cartItems()->where('id', $id)->first();
+            $cartItem = $cart->items()->where('id', $id)->first();
 
             if (!$cartItem) {
                 return response()->json([
@@ -148,20 +144,33 @@ class UserCartController extends Controller
             $cartItem->delete();
 
             // Nếu sau khi xoá mà giỏ hàng rỗng thì xoá luôn giỏ
-            if ($cart->cartItems()->count() === 0) {
+            if ($cart->items()->count() === 0) {
                 $cart->delete();
             }
 
             DB::commit();
+            $cart = Cart::with([
+                'items.product'
+            ])
+                ->where('user_id', $userId)
+                ->first();
+
+            if (!$cart) {
+                $cart = Cart::create([
+                    'user_id' => $userId,
+                ]);
+                $cart->setRelation('items', collect());
+            }
 
             return response()->json([
                 'status' => true,
-                'message' => 'Đã xoá sản phẩm khỏi giỏ hàng'
+                'message' => 'Đã xoá sản phẩm khỏi giỏ hàng',
+                'data' => $cart
             ], 200);
         } catch (\Throwable $e) {
             return response()->json([
                 'status' => false,
-                'message' => 'Đã xảy ra lỗi: ' . $e->getMessage()
+                'message' => 'Đã xảy ra lỗi: '
             ], 500);
         }
     }

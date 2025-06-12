@@ -80,10 +80,14 @@ class BankController extends Controller
             ], 200);
             
         } catch (\Throwable $th) {
-            // return response()->json(['error' => 'Internal Server Error'], 500);
             return response()->json([
-                "error"=>$th->getMessage()
-            ]);
+                "status"=>false,
+                "message"=>"Đã có lỗi xảy ra"
+            ],500);
+            // return response()->json(['error' => 'Internal Server Error'], 500);
+            // return response()->json([
+            //     "error"=>$th->getMessage()
+            // ]);
         }
     }
 

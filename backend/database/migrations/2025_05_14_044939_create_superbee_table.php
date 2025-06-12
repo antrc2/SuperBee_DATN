@@ -249,8 +249,8 @@ return new class extends Migration
             $table->decimal('discount_value', 15, 0); // Giá trị giảm giá
             $table->integer('min_discount_amount')->nullable();
             $table->integer('max_discount_amount')->nullable();
-            $table->date('start_date'); // Ngày bắt đầu
-            $table->date('end_date'); // Ngày kết thúc
+            $table->timestamp('start_date'); // Ngày bắt đầu
+            $table->timestamp('end_date'); // Ngày kết thúc
             $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
             $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
             $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng

@@ -90,10 +90,14 @@ class CardController extends Controller
             ]);
             return;
         } catch (\Throwable $th) {
-            //throw $th;
             return response()->json([
-                "hehe" => $th->getMessage()
-            ]);
+                "status"=>False,
+                'message'=>"Đã có lỗi xảy ra"
+            ],500);
+            //throw $th;
+            // return response()->json([
+            //     "hehe" => $th->getMessage()
+            // ]);
             // return;
         }
     }
@@ -186,7 +190,7 @@ class CardController extends Controller
             return response()->json([
                 'status' => False,
                 'message' => 'Đã có lỗi xảy ra',
-                "response" => $th->getMessage()
+                // "response" => $th->getMessage()
             ], 500);
         }
     }

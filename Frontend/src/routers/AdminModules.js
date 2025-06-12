@@ -10,11 +10,8 @@ import {
   EditDonatePromotionPage,
   AccountListPage,
   ShowAccountPage,
-  ShowDiscountCodePage,
-  BannersListPage,
-  BannerDetailPage,
-  CreateBanners,
-  EditBanner,
+  ShowDiscountCodePage
+
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
@@ -83,11 +80,10 @@ export const adminModules = [
     allowedRoles: ["admin"],
   },
   {
-    name: "banners",
-    list: BannersListPage,
-    show: BannerDetailPage,
-    create: CreateBanners,
-    edit: EditBanner,
+    name: "calendar",
+    list: Calendar,
+    create: CreateDonatePromotionPage,
+    edit: EditDonatePromotionPage,
     allowedRoles: ["admin"],
   },
   {

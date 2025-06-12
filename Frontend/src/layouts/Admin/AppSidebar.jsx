@@ -48,8 +48,8 @@ const navItems = [
   },
   {
     icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/admin/calendar",
+    name: "Banners",
+    path: "/admin/banners",
   },
   {
     icon: <UserCircleIcon />,

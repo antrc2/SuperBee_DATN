@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Auth\AuthController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\UserBannerController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -54,6 +56,9 @@ Route::middleware('authenticate')->group(function () {
     Route::prefix('/products')->group(function () {
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
+    });
+    Route::prefix('/banners')->group(function () {
+        Route::get("/", [UserBannerController::class, 'index']);
     });
     Route::prefix("/domain")->group(function () {
         Route::get("/", [AuthController::class, "domain"]);
@@ -151,6 +156,14 @@ Route::middleware(['jwt'])->group(function () {
             Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")
+        });
+
+        Route::prefix('/banners')->group(function () {
+            Route::get('/', [AdminBannerController::class, 'index']);
+            Route::get('/{id}', [AdminBannerController::class, 'show']);
+            Route::post('/', [AdminBannerController::class, 'store']);
+            Route::put('/{id}', [AdminBannerController::class, 'update']);
+            Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
         });
     });
     // {

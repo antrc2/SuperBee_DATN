@@ -1,135 +1,228 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// @components/Admin/Product/CreateFormProducts.jsx
+import React, { useState, useEffect } from "react";
+import { getCategories } from "@pages/Admin/Products/product.service.js"; // Điều chỉnh đường dẫn
 
-export default function CategoryForm({ initialData, onSave }) {
-  const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("active");
-  const [createdBy, setCreatedBy] = useState("");
-  const [updatedBy, setUpdatedBy] = useState("");
+// Component này nhận vào:
+// - initialData: Dữ liệu ban đầu để điền form (dùng cho chức năng Edit)
+// - onSubmit: Hàm sẽ được gọi khi form được gửi đi
+// - isEditing: Cờ boolean để biết đây là form sửa hay tạo mới
+// - isLoading: Cờ boolean để vô hiệu hóa nút submit khi đang xử lý
+export default function CreateFormProducts({
+  initialData,
+  onSubmit,
+  isEditing = false,
+  isLoading = false,
+}) {
+  const [formData, setFormData] = useState({
+    category_id: "",
+    sku: "",
+    price: 0,
+    sale: 0,
+    status: 1,
+    username: "", // from product_credentials
+    password: "", // from product_credentials
+    // Thêm các trường khác ở đây nếu cần
+    // Ví dụ: attributes, images
+  });
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
+    // Lấy danh sách danh mục khi component được mount
+    getCategories()
+      .then((res) => setCategories(res.data.data))
+      .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    // Nếu có initialData (chế độ edit), điền dữ liệu vào form
     if (initialData) {
-      setName(initialData.name || "");
-      setDescription(initialData.description || "");
-      setStatus(initialData.status || "active");
-      setCreatedBy(initialData.created_by || "");
-      setUpdatedBy(initialData.updated_by || "");
-    } else {
-      setName("");
-      setDescription("");
-      setStatus("active");
-      setCreatedBy("");
-      setUpdatedBy("");
+      setFormData({
+        category_id: initialData.category_id || "",
+        sku: initialData.sku || "",
+        price: initialData.price || 0,
+        sale: initialData.sale || 0,
+        status: initialData.status !== undefined ? initialData.status : 1,
+        username: initialData.credentials?.username || "",
+        password: "", // Không bao giờ điền mật khẩu cũ vào form
+      });
     }
   }, [initialData]);
 
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
-      name,
-      description,
-      status,
-      created_by: createdBy,
-      updated_by: updatedBy,
-    });
-    navigate("/admin/categories");
+    onSubmit(formData);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-semibold mb-4">
-        {initialData ? `Sửa danh mục #${initialData.id}` : "Thêm danh mục mới"}
-      </h2>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Tên danh mục</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Mô tả</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-1 font-medium">Trạng thái</label>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value="active">Hoạt động</option>
-          <option value="inactive">Không hoạt động</option>
-        </select>
-      </div>
-
-      {initialData && (
-        <div className="grid grid-cols-2 gap-4 mb-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Cột trái */}
+        <div className="space-y-6">
           <div>
-            <label className="block mb-1 font-medium">Ngày tạo</label>
+            <label
+              htmlFor="sku"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              SKU
+            </label>
             <input
               type="text"
-              value={initialData.created_at}
-              readOnly
-              className="w-full border rounded px-3 py-2 bg-gray-100"
+              name="sku"
+              id="sku"
+              value={formData.sku}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <div>
-            <label className="block mb-1 font-medium">Ngày sửa</label>
+            <label
+              htmlFor="category_id"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Danh mục
+            </label>
+            <select
+              name="category_id"
+              id="category_id"
+              value={formData.category_id}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">-- Chọn danh mục --</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label
+              htmlFor="price"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Giá gốc
+            </label>
             <input
-              type="text"
-              value={initialData.updated_at}
-              readOnly
-              className="w-full border rounded px-3 py-2 bg-gray-100"
+              type="number"
+              name="price"
+              id="price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="sale"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Giá khuyến mãi (nếu có)
+            </label>
+            <input
+              type="number"
+              name="sale"
+              id="sale"
+              value={formData.sale}
+              onChange={handleChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
-      )}
 
-      <div className="grid grid-cols-2 gap-4 mb-6">
-        <div>
-          <label className="block mb-1 font-medium">Người tạo</label>
-          <input
-            type="text"
-            value={createdBy}
-            onChange={(e) => setCreatedBy(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="block mb-1 font-medium">Người sửa</label>
-          <input
-            type="text"
-            value={updatedBy}
-            onChange={(e) => setUpdatedBy(e.target.value)}
-            className="w-full border rounded px-3 py-2"
-          />
+        {/* Cột phải */}
+        <div className="space-y-6">
+          <div>
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Tài khoản đăng nhập
+            </label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              value={formData.username}
+              onChange={handleChange}
+              required
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Mật khẩu {isEditing && "(Bỏ trống nếu không muốn thay đổi)"}
+            </label>
+            <input
+              type="password"
+              name="password"
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+              required={!isEditing}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trạng thái
+            </label>
+            <div className="flex items-center gap-4">
+              <label>
+                <input
+                  type="radio"
+                  name="status"
+                  value="1"
+                  checked={formData.status == 1}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Hoạt động
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="status"
+                  value="0"
+                  checked={formData.status == 0}
+                  onChange={handleChange}
+                  className="mr-2"
+                />
+                Ẩn
+              </label>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-end space-x-2">
+      {/* Phần thuộc tính và hình ảnh sẽ phức tạp hơn, có thể làm component riêng */}
+      {/* ... */}
+
+      <div className="pt-6 border-t border-gray-200 flex justify-end">
         <button
-          type="button"
-          onClick={() => navigate("/admin/categories")}
-          className="px-4 py-2 border rounded hover:bg-gray-100"
+          type="submit"
+          disabled={isLoading}
+          className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
         >
-          Hủy
-        </button>
-        <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-          Lưu
+          {isLoading
+            ? "Đang lưu..."
+            : isEditing
+            ? "Cập Nhật Sản Phẩm"
+            : "Tạo Sản Phẩm"}
         </button>
       </div>
     </form>

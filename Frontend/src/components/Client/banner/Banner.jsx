@@ -1,15 +1,8 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import api from "@utils/http";
 
-const images = [
-  "https://i.pinimg.com/736x/21/04/a3/2104a3d27d9c39bde1003ec90291b3e6.jpg",
-  "https://i.pinimg.com/736x/5d/8f/39/5d8f3975dd3917a094e1431406bb7577.jpg",
-  "https://i.pinimg.com/736x/db/46/9b/db469bcb85f4206345654fc692768c07.jpg",
-  "https://i.pinimg.com/736x/dc/fe/85/dcfe854d3101c3da73db65ee7844dcca.jpg"
-];
-
-// 3D Effects Configuration
 const effects3D = [
   {
     name: "cube",
@@ -17,29 +10,29 @@ const effects3D = [
       rotateY: direction * 90,
       z: -500,
       opacity: 0.5,
-      transformPerspective: 1000
+      transformPerspective: 1000,
     }),
     animate: { rotateY: 0, z: 0, opacity: 1, transformPerspective: 1000 },
     exit: (direction) => ({
       rotateY: direction * -90,
       z: -500,
       opacity: 0.5,
-      transformPerspective: 1000
-    })
+      transformPerspective: 1000,
+    }),
   },
   {
     name: "flip",
     initial: (direction) => ({
       rotateX: direction * 90,
       opacity: 0,
-      transformPerspective: 1000
+      transformPerspective: 1000,
     }),
     animate: { rotateX: 0, opacity: 1, transformPerspective: 1000 },
     exit: (direction) => ({
       rotateX: direction * -90,
       opacity: 0,
-      transformPerspective: 1000
-    })
+      transformPerspective: 1000,
+    }),
   },
   {
     name: "carousel",
@@ -49,7 +42,7 @@ const effects3D = [
       z: -500,
       opacity: 0,
       scale: 0.8,
-      transformPerspective: 1500
+      transformPerspective: 1500,
     }),
     animate: {
       rotateY: 0,
@@ -57,7 +50,7 @@ const effects3D = [
       z: 0,
       opacity: 1,
       scale: 1,
-      transformPerspective: 1500
+      transformPerspective: 1500,
     },
     exit: (direction) => ({
       rotateY: direction * -45,
@@ -65,8 +58,8 @@ const effects3D = [
       z: -500,
       opacity: 0,
       scale: 0.8,
-      transformPerspective: 1500
-    })
+      transformPerspective: 1500,
+    }),
   },
   {
     name: "fold",
@@ -76,14 +69,14 @@ const effects3D = [
       opacity: 0,
       z: -100,
       rotateY: direction * 30,
-      transformPerspective: 1000
+      transformPerspective: 1000,
     }),
     animate: {
       scaleX: 1,
       opacity: 1,
       z: 0,
       rotateY: 0,
-      transformPerspective: 1000
+      transformPerspective: 1000,
     },
     exit: (direction) => ({
       originX: direction > 0 ? 1 : 0,
@@ -91,8 +84,8 @@ const effects3D = [
       opacity: 0,
       z: -100,
       rotateY: direction * -30,
-      transformPerspective: 1000
-    })
+      transformPerspective: 1000,
+    }),
   },
   {
     name: "prism",
@@ -102,7 +95,7 @@ const effects3D = [
       rotateZ: direction * 60,
       scale: 0,
       opacity: 0,
-      transformPerspective: 1200
+      transformPerspective: 1200,
     }),
     animate: {
       rotateX: 0,
@@ -110,7 +103,7 @@ const effects3D = [
       rotateZ: 0,
       scale: 1,
       opacity: 1,
-      transformPerspective: 1200
+      transformPerspective: 1200,
     },
     exit: (direction) => ({
       rotateX: direction * -60,
@@ -118,59 +111,77 @@ const effects3D = [
       rotateZ: direction * -60,
       scale: 0,
       opacity: 0,
-      transformPerspective: 1200
-    })
-  }
+      transformPerspective: 1200,
+    }),
+  },
 ];
 
 const Banner3D = () => {
+  const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [effectIndex, setEffectIndex] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Cycle through effects
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const res = await api.get("/banners");
+        const urls = res.data.data.map((item) => item.image_url);
+        setImages(urls);
+      } catch (err) {
+        setError("Không thể tải banner");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBanners();
+  }, []);
+
   const nextEffect = useCallback(() => {
     setEffectIndex((prev) => (prev + 1) % effects3D.length);
   }, []);
 
-  // Handlers for slides
   const nextSlide = useCallback(() => {
     setDirection(1);
     setCurrentIndex((prev) => {
-      const idx = (prev + 1) % images.length;
-      if (idx === 0) nextEffect();
-      return idx;
+      const next = (prev + 1) % images.length;
+      if (next === 0) nextEffect();
+      return next;
     });
-  }, [nextEffect]);
+  }, [images.length, nextEffect]);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrentIndex((prev) => {
-      const idx = (prev - 1 + images.length) % images.length;
-      if (idx === images.length - 1) nextEffect();
-      return idx;
+      const next = (prev - 1 + images.length) % images.length;
+      if (next === images.length - 1) nextEffect();
+      return next;
     });
-  }, [nextEffect]);
+  }, [images.length, nextEffect]);
 
-  // Auto-play effect
   useEffect(() => {
     if (!isAutoPlaying) return;
     const interval = setInterval(nextSlide, 5000);
     return () => clearInterval(interval);
   }, [isAutoPlaying, nextSlide]);
 
-  // Pause auto-play on interaction
   const handleInteraction = () => {
     setIsAutoPlaying(false);
     const timeout = setTimeout(() => setIsAutoPlaying(true), 10000);
     return () => clearTimeout(timeout);
   };
 
+  if (loading) return <p className="text-center text-white">Đang tải...</p>;
+  if (error) return <p className="text-center text-red-500">{error}</p>;
+  if (!images.length) return <p className="text-center text-white">Không có banner</p>;
+
   const currentEffect = effects3D[effectIndex];
 
   return (
-    <div className="relative w-full max-w-5xl ">
+    <div className="relative w-full max-w-5xl mx-auto">
       <div
         className="relative h-[400px] w-full overflow-hidden rounded-lg shadow-xl bg-gradient-to-br from-gray-900 to-gray-800"
         style={{ perspective: 1500 }}
@@ -186,44 +197,34 @@ const Banner3D = () => {
             className="absolute inset-0 origin-center"
             style={{
               transformStyle: "preserve-3d",
-              backfaceVisibility: "hidden"
+              backfaceVisibility: "hidden",
             }}
           >
-            <div className="relative w-full h-full">
-              <img
-                src={images[currentIndex]}
-                alt={`Banner slide ${currentIndex + 1}`}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/30 flex flex-col justify-between p-8">
-                <motion.div
-                  initial={{ y: -50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                  className="text-white"
-                >
-                  <h2 className="text-3xl font-bold tracking-tight">
-                    SuperBee
-                  </h2>
-                  <div className="mt-2 flex items-center">
-                    {/* <span className="inline-block h-2 w-2 rounded-full bg-green-400 mr-2"></span>
-                    <span className="text-sm opacity-80">
-                      {/* Slide {currentIndex + 1}/{images.length} */}
-                    {/* </span> */}
-                  </div>
-                </motion.div>
-                <motion.div
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.5, duration: 0.8 }}
-                  className="text-white"
-                >
-                  <p className="text-lg font-medium">Trải nghiệm mua hàng</p>
-                  <p className="text-sm opacity-80 mt-1">
-                    mua hàng ngon, bổ, rẻ tại SuperBee
-                  </p>
-                </motion.div>
-              </div>
+            <img
+              src={`${import.meta.env.VITE_BACKEND_IMG}${images[currentIndex]}`}
+              alt={`Banner ${currentIndex + 1}`}
+              className="object-cover w-full h-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex flex-col justify-between p-8">
+              <motion.div
+                initial={{ y: -50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3, duration: 0.8 }}
+                className="text-white"
+              >
+                <h2 className="text-3xl font-bold tracking-tight">SuperBee</h2>
+              </motion.div>
+              <motion.div
+                initial={{ y: 50, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+                className="text-white"
+              >
+                <p className="text-lg font-medium">Trải nghiệm mua hàng</p>
+                <p className="text-sm opacity-80 mt-1">
+                  mua hàng ngon, bổ, rẻ tại SuperBee
+                </p>
+              </motion.div>
             </div>
           </motion.div>
         </AnimatePresence>
@@ -234,8 +235,7 @@ const Banner3D = () => {
             prevSlide();
             handleInteraction();
           }}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 z-10"
-          aria-label="Previous slide"
+          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 z-10"
         >
           <ChevronLeft className="h-6 w-6" />
         </button>
@@ -244,8 +244,7 @@ const Banner3D = () => {
             nextSlide();
             handleInteraction();
           }}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 backdrop-blur-md hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 z-10"
-          aria-label="Next slide"
+          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 z-10"
         >
           <ChevronRight className="h-6 w-6" />
         </button>
@@ -279,7 +278,6 @@ const Banner3D = () => {
                     ? "bg-white scale-125"
                     : "bg-white/40 group-hover:bg-white/70"
                 }`}
-                aria-label={`Go to slide ${idx + 1}`}
               />
             </button>
           ))}

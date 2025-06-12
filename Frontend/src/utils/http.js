@@ -1,41 +1,37 @@
 import axios from "axios";
 import { refreshToken } from "./refreshToken.js";
 import { getApiKey } from "./hook.js";
-import { runAfter3Seconds } from "./time.js";
+// import { runAfter3Seconds } from "./time.js";
 
 const defaultConfig = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
-  timeout: 10_000
+  timeout: 10_000,
 };
 
 const api = axios.create(defaultConfig);
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
+  const token = sessionStorage.getItem("access_token");
   if (!token) {
     const apiKey = getApiKey();
-
     if (!apiKey) {
       // Ném lỗi sẽ được catch ở tầng gọi API
-      const reload = () => {
-
-        window.location.reload();
-
-      };
-      runAfter3Seconds(reload, 100);
+      // const reload = () => {
+      //   window.location.reload();
+      // };
+      // runAfter3Seconds(reload, 100);
+      return Promise.reject(new axios.Cancel("NO_API_KEY_AVAILABLE"));
       // throw new axios.Cancel("NO_API_KEY");
     }
-    config.headers.Authorization = `Bearer ${apiKey}`;
+    config.headers.X_API_KEY = `${apiKey}`;
     return config;
   }
 
   config.headers.Authorization = `Bearer ${token}`;
   return config;
-}
-
-);
+});
 
 let isRefreshing = false;
 let queue = [];
@@ -49,10 +45,12 @@ api.interceptors.response.use(
       if (!originalReq._retry) {
         originalReq._retry = true;
         if (!isRefreshing) {
+          // localStorage.removeItem("")
+          sessionStorage.removeItem("access_token");
           isRefreshing = true;
           return refreshToken()
             .then((newToken) => {
-              localStorage.setItem("accessToken", newToken);
+              sessionStorage.setItem("access_token", newToken);
               isRefreshing = false;
               queue.forEach((cb) => cb(newToken));
               queue = [];
@@ -60,6 +58,7 @@ api.interceptors.response.use(
               return api(originalReq);
             })
             .catch((err) => {
+              console.log("🚀 ~ err:", err);
               queue = [];
               window.location.href = "/login";
               return Promise.reject(err);

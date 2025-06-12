@@ -2,35 +2,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Order extends Model
 {
-    protected $fillable = ['user_id', 'web_id', 'total_price', 'discount_code_id'];
+    use HasFactory;
 
-    protected $casts = [
-        'total_price' => 'integer',
+    protected $fillable = [
+        'user_id',
+        'order_code', // Often auto-generated
+        'total_amount',
+        'wallet_transaction_id', // This might be set after order creation/payment
+        'status',
+        'promo_code',
+        'discount_amount',
     ];
 
-    public function user(): BelongsTo
+    public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function web(): BelongsTo
+    public function walletTransaction()
     {
-        return $this->belongsTo(Web::class);
+        return $this->belongsTo(WalletTransaction::class);
     }
 
-    public function discountCode(): BelongsTo
+    public function items()
     {
-        return $this->belongsTo(DiscountCode::class);
-    }
-
-    public function orderDetails(): HasMany
-    {
-        return $this->hasMany(OrderDetail::class);
+        return $this->hasMany(OrderItem::class);
     }
 }

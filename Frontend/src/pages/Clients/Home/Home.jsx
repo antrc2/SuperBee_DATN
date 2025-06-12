@@ -1,80 +1,48 @@
-import { Alert } from "antd";
-// import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
-import Header from "../../../components/Client/layout/Header";
-import Banner3D from "../../../components/Client/banner/Banner";
 import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
-import RechargeCard from "../RechargeCard/RechargeCard";
+import api from "../../../utils/http";
 export default function Home() {
-  // const [isLoading, setIsLoading] = useState(true);
-
-  // useEffect(() => {
-  //   // Giả sử load dữ liệu từ API
-  //   setTimeout(() => {
-  //     setIsLoading(false); // Khi dữ liệu đã load xong
-  //   }, 2000); // Ví dụ: chờ 5 giây
-  // }, []);
-  const sampleData = [
-    {
-      name: "Nick Liên Quân Trắng Thông Tin",
-      image: "/images/lq1.png",
-      count: "18.546"
-    },
-    {
-      name: "NICK LIÊN QUÂN REG",
-      image: "/images/lq2.png",
-      count: "18.592"
-    },
-    {
-      name: "Nick Liên Quân Có Thông Tin",
-      image: "/images/lq3.png",
-      count: "18.659"
-    },
-    {
-      name: "Nick Trải Nghiệm Skin Tự Chọn",
-      image: "/images/lq4.png",
-      count: "18.659"
-    },
-    {
-      name: "Acc Liên Quân Tự Chọn Flash Sale",
-      image: "/images/lq5.png",
-      count: "18.659"
-    },
-    {
-      name: "Nick Extra Không Hiện",
-      image: "/images/lq6.png",
-      count: "18.000"
-    },
-    {
-      name: "Nick Liên Quân Có Thông Tin",
-      image: "/images/lq3.png",
-      count: "18.659"
+  const [isLoading, setIsLoading] = useState(false);
+  const [categories, setCategories] = useState([]);
+  const getData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get("/home");
+      setCategories(res.data?.data?.categories);
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
     }
-  ];
+  };
+  useEffect(() => {
+    getData();
+  }, []);
+  if (isLoading) return <LoadingDomain />;
 
   return (
     <div>
-      {/* {isLoading && <LoadingDomain />} */}
       <div className="mt-4">
         <BannerAndCart />
       </div>
       <div>
-        <ListCategoryCha />
+        <ListCategoryCha categories={categories} />
       </div>
       {/* LQ */}
-      <div>
+      <div className="mt-8">
         <ListCategoryCon
-          items={sampleData}
+          items={categories.filter((e) => e.id == 18)}
           count={5}
           title="KHO NICK LIÊN QUÂN"
         />
       </div>
-      {/* FF */}
-      <div>
+      {/* {/* FF */}
+      <div className="mt-8">
         <ListCategoryCon
-          items={sampleData}
+          items={categories.filter((e) => e.id == 7)}
           count={8}
           title="KHO NICK FREE FIRE"
         />

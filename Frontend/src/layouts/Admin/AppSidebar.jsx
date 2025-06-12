@@ -15,7 +15,6 @@ import {
   TableIcon,
   UserCircleIcon,
   UserIcon,
-  DiscountCodeIcon
 } from "@assets/icons";
 import { useSidebar } from "@contexts/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -30,11 +29,6 @@ const navItems = [
     icon: <UserIcon />,
     name: "Users",
     path: "/admin/users",
-  },
-  {
-    icon: <DiscountCodeIcon />,
-    name: "discountcode",
-   path: "/admin/discountcode"
   },
   {
     icon: <UserIcon />,

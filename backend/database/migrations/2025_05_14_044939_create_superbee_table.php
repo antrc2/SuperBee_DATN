@@ -234,7 +234,7 @@ return new class extends Migration
             $table->string('bank_account_number', 50); // Số tài khoản nhận
             $table->string('bank_name', 100); // Tên ngân hàng nhận
             // $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
-            $table->string("withdraw_code", 16)->unique();
+            $table->string("withdraw_code",16)->unique();
             $table->text('note')->nullable(); // Ghi chú thêm
             $table->integer('status')->default(0); // Trạng thái (0: pending, 1: completed, 2: rejected)
             $table->timestamps();

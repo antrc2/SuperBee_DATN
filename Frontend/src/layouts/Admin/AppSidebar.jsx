@@ -30,11 +30,6 @@ const navItems = [
     name: "Users",
     path: "/admin/users",
   },
-   {
-    icon: <UserIcon />,
-    name: "discountcode",
-   path: "/admin/discountcode"
-  },
   {
     icon: <UserIcon />,
     name: "Categories",

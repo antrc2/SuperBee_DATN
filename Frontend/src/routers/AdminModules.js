@@ -10,7 +10,6 @@ import {
   EditDonatePromotionPage,
   AccountListPage,
   ShowAccountPage,
-  ShowDiscountCodePage
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
@@ -41,14 +40,6 @@ export const adminModules = [
     list: UserProfiles,
     create: CreateDonatePromotionPage,
     edit: EditDonatePromotionPage,
-    allowedRoles: ["admin"],
-  },
-  {
-    name: "discountcode",
-    list: DiscountCodePage,
-    create: CreateDiscountCodePage,
-    edit: EditDiscountCodePage,
-    show: ShowDiscountCodePage,
     allowedRoles: ["admin"],
   },
   {

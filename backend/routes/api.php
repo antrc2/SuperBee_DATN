@@ -55,8 +55,8 @@ Route::middleware('authenticate')->group(function () {
         Route::get("/{id}", [UserCategoryController::class, 'show']);
     });
     Route::prefix('/products')->group(function () {
-        Route::get("/", [UserProductController::class, 'index']);
-        Route::get("/{id}", [UserProductController::class, 'show']);
+        Route::get("/{slug}", [UserProductController::class, 'index']);
+        Route::get("/acc/{id}", [UserProductController::class, 'show']);
     });
     Route::prefix("/domain")->group(function () {
         Route::get("/", [AuthController::class, "domain"]);

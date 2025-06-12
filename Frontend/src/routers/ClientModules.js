@@ -43,7 +43,7 @@ export const clientModules = [
   },
   // Trang chi tiết sản phẩm
   {
-    path: "/acc/:id",
+    path: "/acc/:slug",
     view: ProductDetail,
   },
   // Trang lịch sử đã xem

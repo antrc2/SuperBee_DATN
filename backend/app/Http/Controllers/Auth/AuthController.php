@@ -108,6 +108,7 @@ class AuthController extends Controller
             'name' => $user->username,
             'user_id' => $user->id,
             'web_id' => $user->web_id,
+            'avatar' => $user->avatar_url, 
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
             'money' => $wallet->balance ?? "0"
         ];

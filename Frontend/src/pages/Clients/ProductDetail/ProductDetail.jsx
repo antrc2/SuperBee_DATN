@@ -4,9 +4,6 @@ import Breadcrumbs from "../../../utils/Breadcrumbs";
 import { Link, useParams } from "react-router-dom";
 import api from "@utils/http";
 
-// !!! QUAN TRỌNG: Hãy thay thế URL này bằng domain chứa ảnh của bạn
-const IMAGE_BASE_URL = "https://your-api-domain.com";
-
 export default function ProductDetail() {
   const { slug } = useParams();
   const [isLoading, setIsLoading] = useState(false);

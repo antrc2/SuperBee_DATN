@@ -8,7 +8,7 @@ export default function Profile() {
     username: "hikariuisu", // Will be fetched from API or default
     email: "", // Will be fetched from API
     phone: "", // Will be fetched from API
-    avatar: "https://via.placeholder.com/150" // Default or fetched from API
+    avatar: "https://via.placeholder.com/150", // Default or fetched from API
   });
   const [editData, setEditData] = useState({}); // Stores data being edited
   const [avatarFile, setAvatarFile] = useState(null); // To hold the selected avatar file
@@ -18,17 +18,17 @@ export default function Profile() {
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
-      const { username, email, phone, avatar } = response.data; // Assuming your API returns these fields
+      const { username, email, phone, avatar } = response.data;
       setUserData({
         username,
         email: email || "",
         phone: phone || "",
-        avatar: avatar || "https://via.placeholder.com/150" // Fallback default avatar
+        avatar: avatar || "https://via.placeholder.com/150",
       });
       setEditData({
         email: email || "",
         phone: phone || "",
-        avatar: avatar || "https://via.placeholder.com/150"
+        avatar: avatar || "https://via.placeholder.com/150",
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -57,8 +57,8 @@ export default function Profile() {
       await api.post("/user/profile-update", formData, {
         // Using POST for FormData, Laravel can handle PUT/PATCH with FormData
         headers: {
-          "Content-Type": "multipart/form-data"
-        }
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       // After successful update, fetch fresh data to ensure consistency,
@@ -106,7 +106,7 @@ export default function Profile() {
     const { name, value } = e.target;
     setEditData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -117,7 +117,7 @@ export default function Profile() {
       // Create a temporary URL for preview
       setEditData((prevData) => ({
         ...prevData,
-        avatar: URL.createObjectURL(file)
+        avatar: URL.createObjectURL(file),
       }));
     }
   };

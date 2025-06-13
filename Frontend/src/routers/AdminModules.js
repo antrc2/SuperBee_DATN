@@ -35,8 +35,10 @@ import Blank from "@pages/Admin/Blank";
 import {
   CreateProducts,
   EditProducts,
+  ListOrderPage,
   ProductDetailPage,
   ProductsListPage,
+  ShowOrderPage,
 } from "../pages";
 
 export const adminModules = [
@@ -88,6 +90,12 @@ export const adminModules = [
     show: BannerDetailPage,
     create: CreateBanners,
     edit: EditBanner,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "orders",
+    list: ListOrderPage,
+    show: ShowOrderPage,
     allowedRoles: ["admin"],
   },
   {

@@ -131,7 +131,7 @@ export default function Footer() {
                     <span className="font-semibold">Zalo Support</span>
                   </div>
                   <p className="text-green-400 font-bold text-xl ml-9">
-                    0365818471
+                    0987654321
                   </p>
                   <p className="text-gray-400 text-sm ml-9">
                     Bấm vào đây để chat
@@ -144,7 +144,7 @@ export default function Footer() {
                     <Facebook className="w-6 h-6 text-blue-400" />
                     <span className="font-semibold">Facebook Admin</span>
                   </div>
-                  <p className="text-blue-400 ml-9">Hà Đức Mạnh SHOPTI</p>
+                  <p className="text-blue-400 ml-9">SuperBee</p>
                 </div>
 
                 {/* Address */}
@@ -154,18 +154,18 @@ export default function Footer() {
                     <span className="font-semibold">Địa chỉ</span>
                   </div>
                   <p className="text-gray-300 text-sm ml-9 leading-relaxed">
-                    105A ngõ 12 Phan Văn Trường
+                    Số 1, Trịnh Văn Bô, Nam Từ Liêm,
                     <br />
-                    Cầu Giấy, Hà Nội
+                     Hà Nội
                   </p>
                 </div>
 
                 <div className="ml-9 pt-4">
                   <a
-                    href="https://www.facebook.com/adshopti"
+                    href="https://www.facebook.com/beeit"
                     className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
                   >
-                    facebook.com/adshopti
+                    facebook.com/superbee
                   </a>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-6 flex-wrap">
               <p className="text-gray-400">
-                © 2025 ShopTi.com - All rights reserved
+                © 2025 superbee.com - All rights reserved
               </p>
               <div className="flex items-center gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (

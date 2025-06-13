@@ -116,6 +116,10 @@ Route::middleware('authenticate')->group(function () {
         Route::prefix('/orders')->group(function(){
             Route::get('/',[UserOrderController::class,'index']);
             Route::get("/{id}",[UserOrderController::class,'show']);
+
+            // Dữ liệu gửi lên: product_id: [] - Mảng các id sản phẩm ở trong cart
+            // promotion_code: mã giảm giá, có thể null, hoặc không gửi lên cũng đc
+
             Route::post("/", [UserOrderController::class,'store']);
 
         });

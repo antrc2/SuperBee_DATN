@@ -37,6 +37,7 @@ class UserProfileController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'avatar' => $user->avatar_url,
+            'donate_code'=> $user->donate_code,
         ]);
     }
     public function history(Request $request) // Không cần tham số Request nếu chỉ dùng Auth::user()

@@ -11,7 +11,6 @@ export default function ListProducts() {
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState({});
-  console.log("🚀 ~ ListProducts ~ products:", products);
   const getData = async () => {
     try {
       setIsLoading(true);
@@ -39,6 +38,11 @@ export default function ListProducts() {
         {products?.map((product, index) => (
           <Product key={index} product={product} />
         ))}
+        {products.length === 0 && (
+          <div className="col-span-1 sm:col-span-2 md:col-span-3 lg:col-span-4 text-center p-10">
+            Không có sản phẩm nào trong danh mục này.
+          </div>
+        )}
       </div>
     </>
   );

@@ -69,7 +69,14 @@ class UserOrderController extends Controller
         try {
             $user_id = $request->user_id;
             $product_id = $request->product_id;
+            $cart = Cart::with('items')->where("user_id",$user_id)->first();
 
+            if ($cart == null){
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Bạn không có sản phẩm nào trong giỏ hàng"
+                ]);
+            }
             $validator = Validator::make($request->all(), [
                 'product_id' => 'required|array|min:1',
             ]);
@@ -85,6 +92,12 @@ class UserOrderController extends Controller
             $unit_price = [];
 
             foreach ($product_id as $item){
+                if (CartItem::where('product_id',$item)->first() == null) {
+                    return response()->json([
+                        "status"=>False,
+                        "message"=>"Một sản phẩm không tồn tại"
+                    ]);
+                }
                 $query = Product::where("id",$item);
                 $product = $query->first();
                 if (!$product){
@@ -119,7 +132,6 @@ class UserOrderController extends Controller
                     }
                 }
             }
-
             $promotion = Promotion::where("code",$request->promotion_code);
             $discount_amount = 0;
             $discount_value = 0;
@@ -240,18 +252,27 @@ class UserOrderController extends Controller
             $affiliate = Affiliate::where('user_id',$user_id)->first();
             $affiliated_by = $affiliate->affiliated_by;
             DB::beginTransaction();
-            
+            $wallet_transaction = WalletTransaction::create([
+                "wallet_id"=>$wallet->id,
+                "type"=>"purchase",
+                "related_id"=>null,
+                "related_type"=>"App\Models\Order",
+                "status"=>1,
+                "amount"=> $total_price_after_discount
+            ]);
 
             $order = Order::create([
                 "user_id"=>$user_id,
                 "order_code"=>"ORDER-".$this->generateCode(16),
                 "total_amount"=>$total_price,
-                "wallet_transaction_id"=>null,
+                "wallet_transaction_id"=>$wallet_transaction->id,
                 "status"=>1,
                 "promo_code"=>$promotion_code,
                 "discount_amount"=>$discount_amount
             ]);
-
+            // return response()->json([
+            //     "hehe"=>$order
+            // ]);
             for ($i=0 ; $i<count($product_id) ; $i++){
                 OrderItem::create([
                     "order_id"=>$order->id,
@@ -265,16 +286,12 @@ class UserOrderController extends Controller
                 Cart::where("id",$cart->id)->delete();
             }
 
-            $wallet_transaction = WalletTransaction::create([
-                "wallet_id"=>$wallet->id,
-                "type"=>"purchase",
-                "related_id"=>$order->id,
-                "related_type"=>"App\Models\Order",
-                "status"=>1
+            WalletTransaction::where("id",$wallet_transaction->id)->update([
+                'related_id'=>$order->id
             ]);
-            Order::where("id",$order->id)->update([
-                "wallet_transaction_id"=>$wallet_transaction->id
-            ]);
+            // Order::where("id",$order->id)->update([
+            //     "wallet_transaction_id"=>$wallet_transaction->id
+            // ]);
             $wallet->balance -= $total_price_after_discount;
             $wallet->save();
 
@@ -289,23 +306,19 @@ class UserOrderController extends Controller
                     "order_id"=>$order->id,
                 ]);
             }
-            $current_order = Order::with(["items.product",'walletTransaction'])->get();
-            
+            $current_order = Order::with(["items.product",'walletTransaction'])->where('id',$order->id)->get();
+
+            DB::commit();
             return response()->json([
                 "status"=>True,
                 "message"=>"Mua hàng thành công",
                 "data"=>$current_order
             ]);
-
-            DB::commit();
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
                 "status" => false,
-                "message" => "Đã có lỗi xảy ra",
-                "error" => $th->getMessage(),
-                "file" => $th->getFile(),
-                "line" => $th->getLine(),
+                "message" => "Đã có lỗi xảy ra"
             ], 500);
         }
     }

@@ -5,6 +5,8 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateHistory;
+use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
@@ -256,7 +258,13 @@ class UserOrderController extends Controller
                     "product_id"=>$product_id[$i],
                     "unit_price"=>$unit_price[$i]
                 ]);
+                CartItem::where('product_id',$product_id[$i])->delete();
             }
+            $cart = Cart::where("user_id",$user_id)->with('items')->first();
+            if (count($cart->items) == 0) {
+                Cart::where("id",$cart->id)->delete();
+            }
+
             $wallet_transaction = WalletTransaction::create([
                 "wallet_id"=>$wallet->id,
                 "type"=>"purchase",

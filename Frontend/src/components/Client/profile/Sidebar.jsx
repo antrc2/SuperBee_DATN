@@ -1,19 +1,21 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-
+import { useAuth } from "@contexts/AuthContext.jsx";
 export default function Sidebar() {
+  const { user } = useAuth();
+  console.log("🚀 ~ Sidebar ~ user:", user);
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full items-center">
       <div className="p-4 border-b border-gray-200">
         <img
-          src="https://via.placeholder.com/40"
+          src={user?.avatar}
           alt="Avatar"
           className="w-10 h-10 rounded-full mb-2 mx-auto"
         />
-        <p className="text-sm text-gray-600 text-center">hikariuisu</p>
-        <p className="text-sm text-gray-600">Số dư: 0đ</p>
-        <p className="text-sm text-gray-600">Số dư Acoin: 0 Acoin</p>
-        <p className="text-sm text-gray-600">ID: 2049356</p>
+        <p className="text-sm text-gray-600 text-center">
+          UserName {user?.name ?? "không xác định"}
+        </p>
+        <p className="text-sm text-gray-600">Số dư: {user?.money}đ</p>
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <h2 className="text-lg font-semibold mb-2">Menu Tài Khoản</h2>
@@ -21,6 +23,7 @@ export default function Sidebar() {
           <li>
             <NavLink
               to="/info"
+              end
               className={({ isActive }) =>
                 ` flex items-center p-2 rounded-lg ${
                   isActive
@@ -108,7 +111,7 @@ export default function Sidebar() {
             </li>
             <li>
               <NavLink
-                to="/top-up-atm"
+                to="/info/orders"
                 className={({ isActive }) =>
                   ` flex items-center p-2 rounded-lg ${
                     isActive
@@ -131,7 +134,7 @@ export default function Sidebar() {
                     d="M3 10h18M7 15h1m4 0h3m-5 0v-5m5 5v-5m1 15l-1-1m0 0l-1 1m1-1h3m-3 0h8m0-15v12a7 7 0 01-7 7h-4a7 7 0 01-7-7V3"
                   />
                 </svg>
-                Nạp thẻ ATM
+                Lich sử Đơn hàng
               </NavLink>
             </li>
           </ul>

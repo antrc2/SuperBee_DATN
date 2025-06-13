@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\DiscountCodeController;
@@ -79,6 +80,8 @@ Route::middleware('authenticate')->group(function () {
         // info
         Route::prefix('/user')->group(function () {
             Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::get('/history-trans', [UserProfileController::class, 'history']);
+            Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
 
@@ -171,6 +174,11 @@ Route::middleware(['jwt'])->group(function () {
             Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
             // Route::post("/")
+        });
+        Route::prefix("/orders")->group(function () {
+            Route::get("/", [OrderController::class, 'index']);
+            Route::get("/{id}", [OrderController::class, 'show']);
+          
         });
 
 

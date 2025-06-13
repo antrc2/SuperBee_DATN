@@ -17,6 +17,7 @@ import {
   UserIcon,
   DiscountCodeIcon,
 
+
 } from "@assets/icons";
 import { useSidebar } from "@contexts/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -25,7 +26,7 @@ const navItems = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/admin", pro: false }],
+    subItems: [{ name: "Ecommerce", path: "/admin", pro: false }]
   },
   {
     icon: <UserIcon />,
@@ -38,16 +39,17 @@ const navItems = [
     name: "discountcode",
     path: "/admin/discountcode",
 
+
   },
   {
     icon: <UserIcon />,
     name: "Categories",
-    path: "/admin/categories",
+    path: "/admin/categories"
   },
   {
     icon: <CalenderIcon />,
     name: "Calendar",
-    path: "/admin/calendar",
+    path: "/admin/calendar"
   },
   {
     icon: <UserIcon />,
@@ -67,34 +69,29 @@ const navItems = [
   {
     icon: <UserCircleIcon />,
     name: "User Profile",
-    path: "/admin/profile",
+    path: "/admin/profile"
   },
   {
     name: "Forms",
     icon: <ListIcon />,
     subItems: [
-      { name: "Form Elements", path: "/admin/form-elements", pro: false },
-    ],
+      { name: "Form Elements", path: "/admin/form-elements", pro: false }
+    ]
   },
   {
     name: "Tables",
     icon: <TableIcon />,
     subItems: [
-      { name: "Basic Tables", path: "/admin/basic-tables", pro: false },
-    ],
+      { name: "Basic Tables", path: "/admin/basic-tables", pro: false }
+    ]
   },
   {
     name: "Pages",
     icon: <PageIcon />,
     subItems: [
       { name: "Blank Page", path: "/admin/blank", pro: false },
-      { name: "404 Error", path: "/admin/error-404", pro: false },
-    ],
-  },
-   {
-    icon: <BoxCubeIcon />,
-    name: "Cart",
-    path: "/admin/cart",
+      { name: "404 Error", path: "/admin/error-404", pro: false }
+    ]
   }
 ];
 
@@ -104,8 +101,8 @@ const othersItems = [
     name: "Charts",
     subItems: [
       { name: "Line Chart", path: "/admin/line-chart", pro: false },
-      { name: "Bar Chart", path: "/admin/bar-chart", pro: false },
-    ],
+      { name: "Bar Chart", path: "/admin/bar-chart", pro: false }
+    ]
   },
   {
     icon: <BoxCubeIcon />,
@@ -116,17 +113,17 @@ const othersItems = [
       { name: "Badge", path: "/admin/badge", pro: false },
       { name: "Buttons", path: "/admin/buttons", pro: false },
       { name: "Images", path: "/admin/images", pro: false },
-      { name: "Videos", path: "/admin/videos", pro: false },
-    ],
+      { name: "Videos", path: "/admin/videos", pro: false }
+    ]
   },
   {
     icon: <PlugInIcon />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/admin/signin", pro: false },
-      { name: "Sign Up", path: "/admin/signup", pro: false },
-    ],
-  },
+      { name: "Sign Up", path: "/admin/signup", pro: false }
+    ]
+  }
 ];
 
 const AppSidebar = () => {
@@ -153,7 +150,7 @@ const AppSidebar = () => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
                 type: menuType,
-                index,
+                index
               });
               submenuMatched = true;
             }
@@ -173,7 +170,7 @@ const AppSidebar = () => {
       if (subMenuRefs.current[key]) {
         setSubMenuHeight((prevHeights) => ({
           ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+          [key]: subMenuRefs.current[key]?.scrollHeight || 0
         }));
       }
     }
@@ -265,7 +262,7 @@ const AppSidebar = () => {
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px",
+                    : "0px"
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">

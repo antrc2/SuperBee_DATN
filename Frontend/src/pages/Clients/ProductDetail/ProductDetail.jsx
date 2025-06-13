@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import Breadcrumbs from "../../../utils/Breadcrumbs";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "@utils/http";
 
 // !!! QUAN TRỌNG: Hãy thay thế URL này bằng domain chứa ảnh của bạn
@@ -122,9 +122,11 @@ export default function ProductDetail() {
 
         {/* Các nút bấm */}
         <div className="flex flex-col gap-2 pt-4">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-lg">
-            Mua Ngay
-          </button>
+          <Link to={`/cart`} className="w-full">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-lg">
+              Mua Ngay
+            </button>
+          </Link>
           <button className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-lg text-lg">
             Thêm vào giỏ hàng
           </button>

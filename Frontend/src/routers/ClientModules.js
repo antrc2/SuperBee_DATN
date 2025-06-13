@@ -11,7 +11,12 @@ import {
   CartPage,
   Pay,
 } from "@pages";
-import { EmailVerification, ForgotPassword, ResetPassword } from "../pages";
+import {
+  EmailVerification,
+  ForgotPassword,
+  HistoryOrder,
+  ResetPassword,
+} from "../pages";
 import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
 
 export const clientModules = [
@@ -95,6 +100,11 @@ export const profileModule = [
   {
     path: "/info/transactions",
     view: TransactionHistoryPage,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/orders",
+    view: HistoryOrder,
     requiresAuth: true,
   },
 ];

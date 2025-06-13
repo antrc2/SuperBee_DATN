@@ -7,7 +7,7 @@ const defaultConfig = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
-  timeout: 10_000
+  timeout: 10_000,
 };
 
 const api = axios.create(defaultConfig);
@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
       return Promise.reject(new axios.Cancel("NO_API_KEY_AVAILABLE"));
       // throw new axios.Cancel("NO_API_KEY");
     }
-    config.headers.Authorization = `Bearer ${apiKey}`;
+    config.headers['X-API-KEY'] = apiKey;
     return config;
   }
 

@@ -74,7 +74,7 @@ const ShowAccountPage = () => {
   useEffect(() => {
     const fetchAccount = async () => {
       try {
-        const res = await api.get(`/accounts/${id}`);
+        const res = await api.get(`/admin/accounts/${id}`);
         // Đảm bảo lấy đúng dữ liệu 'user' từ cấu trúc phản hồi API của bạn
         setAccount(res.data?.data?.user || res.data);
       } catch (err) {

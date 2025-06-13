@@ -16,8 +16,6 @@ class BankController extends Controller
 {   
     public function donate(Request $request){
         try {
-            // $authHeader = $request->header('Authorization');
-            // var_dump($authHeader);
             if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
                 return response()->json([
                     "status"=>false,
@@ -82,10 +80,14 @@ class BankController extends Controller
             ], 200);
             
         } catch (\Throwable $th) {
-            // return response()->json(['error' => 'Internal Server Error'], 500);
             return response()->json([
-                "error"=>$th->getMessage()
-            ]);
+                "status"=>false,
+                "message"=>"Đã có lỗi xảy ra"
+            ],500);
+            // return response()->json(['error' => 'Internal Server Error'], 500);
+            // return response()->json([
+            //     "error"=>$th->getMessage()
+            // ]);
         }
     }
 

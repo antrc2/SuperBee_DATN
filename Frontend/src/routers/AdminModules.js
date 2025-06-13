@@ -14,6 +14,11 @@ import {
   CartCreate,
   CartEdit,
   CartShow,
+  ShowDiscountCodePage,
+  BannersListPage,
+  BannerDetailPage,
+  CreateBanners,
+  EditBanner,
 } from "@pages";
 
 import SignIn from "@pages/Admin/AuthPages/SignIn";
@@ -31,6 +36,14 @@ import Calendar from "@pages/Admin/Calendar";
 import BasicTables from "@pages/Admin/Tables/BasicTables";
 import FormElements from "@pages/Admin/Forms/FormElements";
 import Blank from "@pages/Admin/Blank";
+import {
+  CreateProducts,
+  EditProducts,
+  ListOrderPage,
+  ProductDetailPage,
+  ProductsListPage,
+  ShowOrderPage,
+} from "../pages";
 
 export const adminModules = [
   {
@@ -38,6 +51,14 @@ export const adminModules = [
     list: UserProfiles,
     create: CreateDonatePromotionPage,
     edit: EditDonatePromotionPage,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "discountcode",
+    list: DiscountCodePage,
+    create: CreateDiscountCodePage,
+    edit: EditDiscountCodePage,
+    show: ShowDiscountCodePage,
     allowedRoles: ["admin"],
   },
   {
@@ -51,7 +72,7 @@ export const adminModules = [
     name: "categories",
     list: CategoryPage,
     create: CreateCategoryPage,
-    edit: EditCategoryPage
+    edit: EditCategoryPage,
   },
   {
     name: "users",
@@ -60,10 +81,25 @@ export const adminModules = [
     allowedRoles: ["admin"],
   },
   {
-    name: "calendar",
-    list: Calendar,
-    create: CreateDonatePromotionPage,
-    edit: EditDonatePromotionPage,
+    name: "products",
+    list: ProductsListPage,
+    show: ProductDetailPage,
+    create: CreateProducts,
+    edit: EditProducts,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "banners",
+    list: BannersListPage,
+    show: BannerDetailPage,
+    create: CreateBanners,
+    edit: EditBanner,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "orders",
+    list: ListOrderPage,
+    show: ShowOrderPage,
     allowedRoles: ["admin"],
   },
   {

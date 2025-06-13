@@ -14,7 +14,7 @@ export default function EditCategoryPage() {
   const handleSave = async (data) => {
     try {
       data.append("_method", "PUT");
-      const response = await api.post(`/categories/${id}`, data, {
+      const response = await api.post(`/admin/categories/${id}`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

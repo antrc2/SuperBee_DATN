@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Order;
 use App\Models\User; // Keep this import
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +37,42 @@ class UserProfileController extends Controller
             'email' => $user->email,
             'phone' => $user->phone,
             'avatar' => $user->avatar_url,
+            'donate_code'=> $user->donate_code,
         ]);
+    }
+    public function history(Request $request) // Không cần tham số Request nếu chỉ dùng Auth::user()
+    {
+        $user = User::with(['wallet.transactions','wallet.transactions.withdraw','wallet.transactions.rechargeBank',"wallet.transactions.rechargeCard",'wallet.transactions.order'])->where('id', '=', $request->user_id)->where('web_id', '=', $request->web_id)->first();
+
+        if (!$user) {
+            // Trường hợp này thực tế không nên xảy ra nếu middleware hoạt động đúng
+            // Nhưng tốt nhất vẫn nên kiểm tra phòng hờ
+            return response()->json([
+                'message' => 'Unauthorized or User not found.',
+                'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'
+            ], 401);
+        }
+
+        return response()->json([
+            $user
+        ]);
+    }
+    public function order(Request $request) // Không cần tham số Request nếu chỉ dùng Auth::user()
+    {
+        $order = Order::with(["items"])->where('user_id', '=', $request->user_id)->get();
+
+        if (!$order) {
+            // Trường hợp này thực tế không nên xảy ra nếu middleware hoạt động đúng
+            // Nhưng tốt nhất vẫn nên kiểm tra phòng hờ
+            return response()->json([
+                'message' => 'Unauthorized or User not found.',
+                'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'
+            ], 401);
+        }
+
+        return response()->json(
+            $order
+        );
     }
 
     public function update(Request $request) // <-- Giữ nguyên Request $request

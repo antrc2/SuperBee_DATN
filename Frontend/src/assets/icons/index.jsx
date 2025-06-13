@@ -52,7 +52,7 @@ import ChatIcon from "./chat.svg?react";
 import MoreDotIcon from "./moredot.svg?react";
 import AlertHexaIcon from "./alert-hexa.svg?react";
 import ErrorHexaIcon from "./info-hexa.svg?react";
-
+import DiscountCodeIcon from "./discount-code.svg?react";
 export {
   ErrorHexaIcon,
   AlertHexaIcon,
@@ -107,5 +107,6 @@ export {
   MailIcon,
   HorizontaLDots,
   ChevronUpIcon,
-  ChatIcon
+  ChatIcon,
+  DiscountCodeIcon
 };

@@ -21,7 +21,7 @@ import {
   Info,
   Lock,
   LogOut,
-  History as HistoryIcon
+  History as HistoryIcon,
 } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import SuperBeeLogo from "./SuperBeeLogo";
@@ -55,7 +55,7 @@ export default function Header() {
     { name: "ACC BLOX FRUITS GIÁ RẺ", icon: DollarSign, href: "#" },
     { name: "ACC FREE FIRE GIÁ RẺ", icon: Gamepad2, href: "#" },
     { name: "ACC FF BUFF GIÁ RẺ", icon: Sparkles, href: "#" },
-    { name: "ACC VALORANT", icon: Shield, href: "#" }
+    { name: "ACC VALORANT", icon: Shield, href: "#" },
   ];
 
   const notifications = [
@@ -64,14 +64,14 @@ export default function Header() {
       avatarUrl: "https://placehold.co/40x40/E2E8F0/4A5568?text=SB",
       message:
         "Chào mừng hè, Shop đang có chương trình vòng quay nhận miễn phí quân huy và kim cương.",
-      timestamp: "12:23 24-07-2024"
+      timestamp: "12:23 24-07-2024",
     },
     {
       id: 2,
       avatarUrl: "https://placehold.co/40x40/E2E8F0/4A5568?text=SB",
       message: "Lỗ cái bồ",
-      timestamp: "21:19 25-04-2024"
-    }
+      timestamp: "21:19 25-04-2024",
+    },
   ];
 
   const cartItems = [
@@ -80,29 +80,29 @@ export default function Header() {
       name: "Acc Liên Quân VIP",
       price: "500.000đ",
       imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=LQ",
-      href: "#"
+      href: "#",
     },
     {
       id: 2,
       name: "Blox Fruits Max Level",
       price: "350.000đ",
       imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=BF",
-      href: "#"
+      href: "#",
     },
     {
       id: 3,
       name: "Skin Free Fire Hiếm",
       price: "1.200.000đ",
       imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=FF",
-      href: "#"
-    }
+      href: "#",
+    },
   ];
 
   const navLinks = [
     { name: "Trang chủ", href: "/", icon: Home },
     { name: "Mua Acc", href: "/mua-acc", icon: Gamepad2, id: "nav-mua-acc" },
     { name: "Dịch vụ", href: "/services", icon: Briefcase, id: "nav-dich-vu" },
-    { name: "Tin Tức", href: "/news", icon: Newspaper, id: "nav-tin-tuc" }
+    { name: "Tin Tức", href: "/news", icon: Newspaper, id: "nav-tin-tuc" },
   ];
 
   // Universal toggle function for desktop dropdowns and mobile overlays
@@ -309,7 +309,6 @@ export default function Header() {
               <CreditCard size={18} />
               <span className="hidden lg:inline">Nạp Tiền</span>
             </Link>
-
             <div className="relative">
               <button
                 onClick={() => toggleDropdown("notification")}
@@ -329,7 +328,6 @@ export default function Header() {
                 onClose={() => setIsNotificationOpen(false)}
               />
             </div>
-
             <div className="relative">
               <button
                 onClick={() => toggleDropdown("cart")}

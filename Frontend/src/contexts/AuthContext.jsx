@@ -51,7 +51,11 @@ export function AuthProvider({ children }) {
       sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken(); // Sử dụng hàm đã tách
       if (decoded) {
-        setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
+        setUser({
+          name: decoded.name,
+          money: decoded.money,
+          avatar: decoded.avatar,
+        }); // Cập nhật trạng thái user
         navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
       } else {
         // Nếu token không giải mã được sau khi nhận từ API

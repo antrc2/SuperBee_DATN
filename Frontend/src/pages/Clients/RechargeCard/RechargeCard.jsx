@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   ChevronDown,
   CreditCard,
@@ -8,47 +8,59 @@ import {
   CheckCircle,
   Clock,
   Copy,
-  Download
+  Download,
 } from "lucide-react";
+import api from "@utils/http";
 
-// Dữ liệu giả lập
 const cardTypes = [
   {
-    id: "viettel",
+    id: "VIETTEL",
     name: "Viettel",
     fee: 20,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Viettel&font=roboto"
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Viettel&font=roboto",
   },
   {
-    id: "mobifone",
+    id: "MOBIFONE",
     name: "Mobifone",
     fee: 20,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Mobifone&font=roboto"
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Mobifone&font=roboto",
   },
   {
-    id: "vinaphone",
+    id: "VINAPHONE",
     name: "Vinaphone",
     fee: 21,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Vinaphone&font=roboto"
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Vinaphone&font=roboto",
   },
   {
-    id: "vietnamobile",
-    name: "Vietnamobile",
-    fee: 25,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=VNMobi&font=roboto"
+    id: "GATE",
+    name: "Gate",
+    fee: 18,
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Gate&font=roboto",
   },
   {
-    id: "zing",
+    id: "ZING",
     name: "Zing",
     fee: 18,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Zing&font=roboto"
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Zing&font=roboto",
   },
   {
-    id: "garena",
+    id: "GARENA",
     name: "Garena",
     fee: 18,
-    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Garena&font=roboto"
-  }
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Garena&font=roboto",
+  },
+  {
+    id: "VCOIN",
+    name: "Vcoin",
+    fee: 18,
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=Vcoin&font=roboto",
+  },
+  {
+    id: "VNMOBI",
+    name: "VNMobi",
+    fee: 25,
+    logo: "https://placehold.co/100x40/E2E8F0/4A5568?text=VNMobi&font=roboto",
+  },
 ];
 
 const cardDenominations = [
@@ -60,69 +72,18 @@ const cardDenominations = [
   { value: 200000, label: "200,000đ" },
   { value: 300000, label: "300,000đ" },
   { value: 500000, label: "500,000đ" },
-  { value: 1000000, label: "1,000,000đ" }
+  { value: 1000000, label: "1,000,000đ" },
 ];
 
-const bankInfo = {
-  bankName: "Ngân hàng TMCP Ngoại Thương Việt Nam (Vietcombank)",
-  accountNumber: "0123456789012",
-  accountHolder: "CONG TY TNHH SUPERBEE",
-  branch: "Chi nhánh TP. Hồ Chí Minh",
-  transferContentPrefix: "NAPTIEN SB", // User should add their username
-  qrCodeUrl: "https://placehold.co/200x200/E2E8F0/4A5568?text=Vietcombank+QR"
-};
-
-const initialRechargeHistory = [
-  {
-    id: "rh1",
-    date: "30/05/2025 10:30",
-    type: "Thẻ Viettel",
-    code: "VT123456789",
-    amount: 100000,
-    received: 80000,
-    status: "Thành công"
-  },
-  {
-    id: "rh2",
-    date: "29/05/2025 15:45",
-    type: "Chuyển khoản VCB",
-    code: "FT250529123",
-    amount: 500000,
-    received: 500000,
-    status: "Thành công"
-  },
-  {
-    id: "rh3",
-    date: "28/05/2025 09:12",
-    type: "Thẻ Zing",
-    code: "ZING987654",
-    amount: 50000,
-    received: 0,
-    status: "Thất bại - Sai mã thẻ"
-  },
-  {
-    id: "rh4",
-    date: "27/05/2025 18:00",
-    type: "Thẻ Mobifone",
-    code: "MB6543210",
-    amount: 200000,
-    received: 160000,
-    status: "Đang xử lý"
-  }
-];
-
-// Hàm định dạng tiền tệ
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
-    currency: "VND"
+    currency: "VND",
   }).format(amount);
 };
 
 export default function RechargeCard() {
-  const [activeTab, setActiveTab] = useState("card"); // 'card' or 'bank'
-
-  // Card recharge state
+  const [activeTab, setActiveTab] = useState("card");
   const [selectedCardType, setSelectedCardType] = useState(cardTypes[0].id);
   const [serial, setSerial] = useState("");
   const [pin, setPin] = useState("");
@@ -130,13 +91,34 @@ export default function RechargeCard() {
     cardDenominations[0].value
   );
   const [cardFormErrors, setCardFormErrors] = useState({});
-  const [cardSubmissionStatus, setCardSubmissionStatus] = useState(null); // { type: 'success'/'error', message: '' }
-
-  // History state
-  const [rechargeHistory, setRechargeHistory] = useState(
-    initialRechargeHistory
-  );
+  const [cardSubmissionStatus, setCardSubmissionStatus] = useState(null);
+  const [rechargeHistory, setRechargeHistory] = useState([]);
   const [showCopiedMessage, setShowCopiedMessage] = useState("");
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await api.get("/user/profile");
+        setUser(response.data); 
+      } catch (error) {
+        console.error("Lỗi khi lấy thông tin người dùng:", error);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
+
+  const bankInfo = user
+    ? {
+        bankName: "Ngân hàng Quân đội (MB Bank)",
+        accountNumber: "0838411897",
+        accountHolder: "NGUYỄN NGỌC AN",
+        branch: "Chi nhánh Hà Nội",
+        transferContentPrefix: `${user.donate_code} NAPTIEN`,
+        qrCodeUrl: `https://img.vietqr.io/image/MB-0838411897-qr_only.png?addInfo=${user.donate_code}`,
+      }
+    : null;
 
   const handleCardTypeChange = (e) => {
     setSelectedCardType(e.target.value);
@@ -158,64 +140,94 @@ export default function RechargeCard() {
     else if (!/^[a-zA-Z0-9]{8,20}$/.test(pin.trim()))
       errors.pin = "Mã PIN không hợp lệ (8-20 ký tự, chữ và số).";
     if (!selectedDenomination) errors.denomination = "Vui lòng chọn mệnh giá.";
-
-    setCardFormErrors(errors);
-    return Object.keys(errors).length === 0;
+    return errors;
   };
 
-  const handleCardSubmit = (e) => {
+  const handleCardSubmit = async (e) => {
     e.preventDefault();
     setCardSubmissionStatus(null);
-    if (validateCardForm()) {
-      // Simulate API call
-      console.log("Submitting card:", {
-        selectedCardType,
-        serial,
-        pin,
-        selectedDenomination
-      });
+    const errors = validateCardForm();
+    setCardFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
+    try {
       setCardSubmissionStatus({
         type: "loading",
-        message: "Đang xử lý yêu cầu nạp thẻ..."
+        message: "Đang xử lý yêu cầu nạp thẻ...",
       });
-      setTimeout(() => {
-        // Simulate success/failure
-        const isSuccess = Math.random() > 0.3; // 70% success rate
-        if (isSuccess) {
+
+      const requestData = {
+        telco: selectedCardType,
+        amount: selectedDenomination,
+        serial: serial.trim(),
+        code: pin.trim(),
+      };
+
+      console.log("Sending request data:", requestData);
+
+      const response = await api.post("/donate/card", requestData);
+
+      console.log("Backend response:", response.data);
+
+      const { status, message, data } = response.data;
+
+      if (status && data?.status === 99) {
+        setCardSubmissionStatus({
+          type: "loading",
+          message: "Đang xử lý thẻ cào, vui lòng đợi trong giây lát.",
+        });
+
+        let receivedAmount = selectedDenomination * (1 - currentCardFee / 100);
+
+        const newHistoryEntry = {
+          id: `rh${Date.now()}`,
+          date: new Date().toLocaleString("vi-VN"),
+          type: `Thẻ ${cardTypes.find((c) => c.id === selectedCardType).name}`,
+          code: serial.slice(0, 4) + "********" + serial.slice(-4),
+          amount: selectedDenomination,
+          received: receivedAmount,
+          status: "Đang xử lý",
+          requestId: data.request_id || null,
+        };
+
+        setRechargeHistory((prev) => [newHistoryEntry, ...prev]);
+
+        setSerial("");
+        setPin("");
+
+        setTimeout(() => {
           setCardSubmissionStatus({
             type: "success",
-            message: `Nạp thẻ ${
-              cardTypes.find((c) => c.id === selectedCardType).name
-            } mệnh giá ${formatCurrency(
-              selectedDenomination
-            )} thành công! Số tiền thực nhận (sau chiết khấu) sẽ được cập nhật vào tài khoản.`
+            message: "Thẻ đã được gửi xử lý thành công!",
           });
-          // Add to history (example)
-          const newHistoryEntry = {
-            id: `rh${rechargeHistory.length + 1}`,
-            date: new Date().toLocaleString("vi-VN"),
-            type: `Thẻ ${
-              cardTypes.find((c) => c.id === selectedCardType).name
-            }`,
-            code: serial.slice(0, 4) + "********" + serial.slice(-4),
-            amount: selectedDenomination,
-            received:
-              selectedDenomination *
-              (1 - cardTypes.find((c) => c.id === selectedCardType).fee / 100),
-            status: "Thành công"
-          };
-          setRechargeHistory((prev) => [newHistoryEntry, ...prev]);
-          // Reset form
-          setSerial("");
-          setPin("");
-        } else {
-          setCardSubmissionStatus({
-            type: "error",
-            message:
-              "Nạp thẻ thất bại. Vui lòng kiểm tra lại thông tin thẻ hoặc thử lại sau."
-          });
-        }
-      }, 2000);
+        }, 2000);
+      } else {
+        setCardSubmissionStatus({
+          type: "error",
+          message:
+            message === "Dữ liệu thẻ không đúng"
+              ? "Dữ liệu thẻ không đúng, vui lòng kiểm tra số seri và mã thẻ."
+              : message || "Nạp thẻ thất bại. Vui lòng thử lại.",
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error.response?.data);
+
+      let errorMessage = "Đã có lỗi xảy ra, vui lòng thử lại.";
+      if (error.response?.data?.message === "INPUT_DATA_INCORRECT") {
+        errorMessage =
+          "Dữ liệu thẻ không đúng, vui lòng kiểm tra số seri và mã thẻ.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        const firstError = Object.values(error.response.data.errors)[0];
+        errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+      }
+
+      setCardSubmissionStatus({
+        type: "error",
+        message: errorMessage,
+      });
     }
   };
 
@@ -232,28 +244,13 @@ export default function RechargeCard() {
       })
       .catch((err) => {
         console.error("Không thể sao chép:", err);
-        // Fallback for older browsers or if navigator.clipboard is not available (e.g. in http)
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-          document.execCommand("copy");
-          setShowCopiedMessage(fieldName);
-          setTimeout(() => setShowCopiedMessage(""), 1500);
-        } catch (err) {
-          console.error("Lỗi sao chép fallback:", err);
-          alert("Không thể sao chép tự động. Vui lòng sao chép thủ công.");
-        }
-        document.body.removeChild(textArea);
+        alert("Không thể sao chép tự động. Vui lòng sao chép thủ công.");
       });
   };
 
   const getStatusClass = (status) => {
     if (status === "Thành công") return "bg-green-100 text-green-700";
-    if (status === "Thất bại" || status.includes("Thất bại"))
-      return "bg-red-100 text-red-700";
+    if (status.includes("Thất bại")) return "bg-red-100 text-red-700";
     if (status === "Đang xử lý") return "bg-yellow-100 text-yellow-700";
     return "bg-gray-100 text-gray-700";
   };
@@ -261,7 +258,7 @@ export default function RechargeCard() {
   const getStatusIcon = (status) => {
     if (status === "Thành công")
       return <CheckCircle size={16} className="mr-1 text-green-500" />;
-    if (status === "Thất bại" || status.includes("Thất bại"))
+    if (status.includes("Thất bại"))
       return <AlertCircle size={16} className="mr-1 text-red-500" />;
     if (status === "Đang xử lý")
       return <Clock size={16} className="mr-1 text-yellow-500" />;
@@ -275,7 +272,6 @@ export default function RechargeCard() {
           Nạp Tiền Vào Tài Khoản
         </h1>
 
-        {/* Tabs */}
         <div className="mb-8 flex justify-center border-b border-gray-300">
           <button
             onClick={() => setActiveTab("card")}
@@ -301,7 +297,6 @@ export default function RechargeCard() {
           </button>
         </div>
 
-        {/* Content Area */}
         {activeTab === "card" && (
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold text-gray-700 mb-6">
@@ -310,13 +305,13 @@ export default function RechargeCard() {
             <form onSubmit={handleCardSubmit} className="space-y-6">
               <div>
                 <label
-                  htmlFor="cardType"
+                  htmlFor="telco"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Loại thẻ
                 </label>
                 <select
-                  id="cardType"
+                  id="telco"
                   value={selectedCardType}
                   onChange={handleCardTypeChange}
                   className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
@@ -367,14 +362,14 @@ export default function RechargeCard() {
 
               <div>
                 <label
-                  htmlFor="pin"
+                  htmlFor="code"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Mã PIN
                 </label>
                 <input
                   type="text"
-                  id="pin"
+                  id="code"
                   value={pin}
                   onChange={(e) => {
                     setPin(e.target.value);
@@ -394,13 +389,13 @@ export default function RechargeCard() {
 
               <div>
                 <label
-                  htmlFor="denomination"
+                  htmlFor="amount"
                   className="block text-sm font-medium text-gray-700 mb-1"
                 >
                   Mệnh giá thẻ
                 </label>
                 <select
-                  id="denomination"
+                  id="amount"
                   value={selectedDenomination}
                   onChange={handleDenominationChange}
                   className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
@@ -427,17 +422,6 @@ export default function RechargeCard() {
                   <strong>Lưu ý:</strong> Vui lòng chọn đúng mệnh giá thẻ. Nếu
                   chọn sai mệnh giá, bạn có thể bị mất thẻ hoặc nhận được số
                   tiền không chính xác.
-                </p>
-                <p className="mt-2">
-                  Chiết khấu hiện tại cho thẻ{" "}
-                  {cardTypes.find((c) => c.id === selectedCardType)?.name}:{" "}
-                  <strong className="text-red-600">{currentCardFee}%</strong>
-                </p>
-                <p>
-                  Số tiền thực nhận:{" "}
-                  <strong className="text-green-600">
-                    {formatCurrency(amountReceived)}
-                  </strong>
                 </p>
               </div>
 
@@ -478,115 +462,75 @@ export default function RechargeCard() {
           </div>
         )}
 
-        {activeTab === "bank" && (
+        {activeTab === "bank"  && bankInfo && (
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold text-gray-700 mb-2">
-              Thông tin chuyển khoản ngân hàng
-            </h2>
-            <p className="text-sm text-gray-600 mb-6">
-              Vui lòng chuyển khoản chính xác nội dung để được cộng tiền tự
-              động. Hỗ trợ 24/7.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-              <div className="space-y-3 text-sm">
-                <div className="p-3 bg-gray-50 rounded-md border">
-                  <p className="text-gray-500">Ngân hàng:</p>
-                  <p className="font-semibold text-gray-800 text-base">
-                    {bankInfo.bankName}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-md border relative">
-                  <p className="text-gray-500">Số tài khoản:</p>
-                  <p className="font-semibold text-gray-800 text-base">
-                    {bankInfo.accountNumber}
-                  </p>
+            <div className="flex flex-col items-center">
+              <img
+                src={bankInfo.qrCodeUrl}
+                alt="Bank QR Code"
+                className="w-48 h-48 sm:w-56 sm:h-56 object-contain border rounded-lg p-2 bg-white shadow-sm"
+              />
+              <p className="text-sm text-gray-600 mt-2">
+                Quét mã QR để chuyển khoản nhanh
+              </p>
+              <a
+                href={bankInfo.qrCodeUrl}
+                download="Ma_QR_SuperBee.png"
+                className="mt-3 inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+              >
+                <Download size={16} className="mr-1" /> Tải mã QR
+              </a>
+              <div className="mt-6 w-full max-w-md text-sm text-gray-700">
+                <p className="mb-2">
+                  <strong>Ngân hàng:</strong> {bankInfo.bankName}
+                </p>
+                <p className="mb-2 flex items-center">
+                  <strong>Số tài khoản:</strong> {bankInfo.accountNumber}
                   <button
                     onClick={() =>
                       copyToClipboard(bankInfo.accountNumber, "accountNumber")
                     }
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2 text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 transition-colors"
+                    className="ml-2 text-blue-600 hover:text-blue-700"
                   >
-                    {showCopiedMessage === "accountNumber" ? (
-                      <CheckCircle size={18} />
-                    ) : (
-                      <Copy size={18} />
-                    )}
+                    <Copy size={16} />
                   </button>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-md border">
-                  <p className="text-gray-500">Chủ tài khoản:</p>
-                  <p className="font-semibold text-gray-800 text-base">
-                    {bankInfo.accountHolder}
-                  </p>
-                </div>
-                <div className="p-3 bg-gray-50 rounded-md border relative">
-                  <p className="text-gray-500">
-                    Nội dung chuyển khoản (ví dụ):
-                  </p>
-                  <p className="font-semibold text-red-600 text-base">
-                    {bankInfo.transferContentPrefix} TAIKHOANCUAEM
-                  </p>
+                  {showCopiedMessage === "accountNumber" && (
+                    <span className="ml-2 text-green-600 text-xs">
+                      Đã sao chép!
+                    </span>
+                  )}
+                </p>
+                <p className="mb-2">
+                  <strong>Chủ tài khoản:</strong> {bankInfo.accountHolder}
+                </p>
+                <p className="mb-2">
+                  <strong>Chi nhánh:</strong> {bankInfo.branch}
+                </p>
+                <p className="mb-2 flex items-center">
+                  <strong>Nội dung chuyển khoản:</strong>{" "}
+                  {bankInfo.transferContentPrefix}
                   <button
                     onClick={() =>
                       copyToClipboard(
-                        `${bankInfo.transferContentPrefix} TAIKHOANCUAEM`,
+                        bankInfo.transferContentPrefix,
                         "transferContent"
                       )
                     }
-                    className="absolute top-1/2 right-3 transform -translate-y-1/2 text-blue-500 hover:text-blue-700 p-1 rounded-full hover:bg-blue-100 transition-colors"
+                    className="ml-2 text-blue-600 hover:text-blue-700"
                   >
-                    {showCopiedMessage === "transferContent" ? (
-                      <CheckCircle size={18} />
-                    ) : (
-                      <Copy size={18} />
-                    )}
+                    <Copy size={16} />
                   </button>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Lưu ý: Thay "TAIKHOANCUAEM" bằng tên đăng nhập hoặc ID tài
-                    khoản của bạn trên website.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-col items-center">
-                <img
-                  src={bankInfo.qrCodeUrl}
-                  alt="Bank QR Code"
-                  className="w-48 h-48 sm:w-56 sm:h-56 object-contain border rounded-lg p-2 bg-white shadow-sm"
-                />
-                <p className="text-sm text-gray-600 mt-2">
-                  Quét mã QR để chuyển khoản nhanh
+                  {showCopiedMessage === "transferContent" && (
+                    <span className="ml-2 text-green-600 text-xs">
+                      Đã sao chép!
+                    </span>
+                  )}
                 </p>
-                <a
-                  href={bankInfo.qrCodeUrl}
-                  download="Ma_QR_SuperBee.png"
-                  className="mt-3 inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
-                >
-                  <Download size={16} className="mr-1" /> Tải mã QR
-                </a>
               </div>
-            </div>
-            <div className="mt-8 bg-blue-50 border-l-4 border-blue-500 p-4 rounded-md text-sm text-blue-700">
-              <h4 className="font-semibold mb-1">Quan trọng:</h4>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  Chuyển khoản 24/7, tiền vào tài khoản sau 1-5 phút nếu đúng
-                  nội dung.
-                </li>
-                <li>
-                  Nếu sau 15 phút chưa nhận được tiền, vui lòng liên hệ hỗ trợ
-                  kèm theo biên lai chuyển khoản.
-                </li>
-                <li>
-                  Chúng tôi không chịu trách nhiệm nếu bạn chuyển sai thông tin
-                  hoặc sai nội dung.
-                </li>
-              </ul>
             </div>
           </div>
         )}
 
-        {/* Lịch sử nạp tiền */}
         <div className="mt-12">
           <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
             <History size={24} className="mr-3 text-blue-600" /> Lịch Sử Nạp

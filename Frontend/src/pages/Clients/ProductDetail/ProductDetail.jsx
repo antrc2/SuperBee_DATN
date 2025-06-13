@@ -1,98 +1,140 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
+import LoadingDomain from "@components/Loading/LoadingDomain";
+import Breadcrumbs from "../../../utils/Breadcrumbs";
+import { Link, useParams } from "react-router-dom";
+import api from "@utils/http";
 
 export default function ProductDetail() {
-  const accountData = {
-    id: "UEU1385814",
-    name: "Nick Liên Quân Reg",
-    rank: "Đồng",
-    registration: "Trắng Thông Tin",
-    champions: 5,
-    skins: 5,
-    originalPrice: 150000,
-    discountedPrice: 100000,
-    momoPrice: 90000,
-    discountPercent: 33,
-    mainImage: "/images/main.jpg",
-    thumbnails: [
-      "/images/thumb1.jpg",
-      "/images/thumb2.jpg",
-      "/images/thumb3.jpg"
-    ],
-    description: "Rẻ vô đối, giá tốt nhất thị trường"
+  const { slug } = useParams();
+  const [isLoading, setIsLoading] = useState(false);
+  // Đổi tên state thành 'product' (số ít) để rõ nghĩa hơn
+  const [product, setProduct] = useState(null);
+  const [category, setCategory] = useState({});
+
+  // State để quản lý ảnh chính đang được hiển thị
+  const [mainImg, setMainImg] = useState("");
+
+  const getData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get(`/products/acc/${slug}`);
+      const productData = res.data?.data[0];
+      if (productData) {
+        setProduct(productData);
+        setCategory(productData.category || {});
+      }
+      setIsLoading(false);
+    } catch (error) {
+      setIsLoading(false);
+      console.log(error);
+    }
   };
 
-  const [mainImg, setMainImg] = useState(accountData.mainImage);
+  useEffect(() => {
+    getData();
+  }, [slug]); // Thêm slug vào dependency array để component re-fetch khi slug thay đổi
+
+  // Effect này sẽ chạy khi 'product' đã có dữ liệu
+  // để set ảnh đầu tiên làm ảnh chính
+  useEffect(() => {
+    if (product && product.images && product.images.length > 0) {
+      setMainImg(
+        `${import.meta.env.VITE_BACKEND_IMG}${product.images[0].image_url}`
+      );
+    }
+  }, [product]);
+
+  if (isLoading) return <LoadingDomain />;
+
+  // Nếu không có sản phẩm, hiển thị thông báo
+  if (!product) {
+    return (
+      <div className="text-center p-10">Không tìm thấy thông tin sản phẩm.</div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row gap-6 p-6 bg-white rounded-2xl shadow-lg max-w-6xl mx-auto">
-      {/* Image Section */}
-      <div className="flex flex-col items-center">
-        <img
-          src={mainImg}
-          alt="Main Preview"
-          className="w-80 h-60 object-cover rounded-lg"
-        />
-        <div className="flex gap-2 mt-4">
-          {accountData.thumbnails.map((thumb, index) => (
-            <img
-              key={index}
-              src={thumb}
-              alt={`Thumb ${index + 1}`}
-              className="w-16 h-16 object-cover rounded cursor-pointer border hover:border-blue-500"
-              onClick={() => setMainImg(thumb)}
-            />
-          ))}
+      {/* --- Phần hiển thị ảnh --- */}
+      <div className="flex flex-col items-center md:w-1/3">
+        {/* Ảnh chính */}
+        <div className="mb-4 w-full">
+          <img
+            src={mainImg}
+            alt="Main Preview"
+            className="w-full h-auto object-contain rounded-lg border"
+            style={{ maxHeight: "400px" }} // Giới hạn chiều cao ảnh chính
+          />
+        </div>
+        {/* Danh sách ảnh nhỏ (thumbnails) */}
+        <div className="flex flex-wrap justify-center gap-2">
+          {product.images &&
+            product.images.map((image) => (
+              <img
+                key={image.id}
+                src={`${import.meta.env.VITE_BACKEND_IMG}${image.image_url}`}
+                alt={`Thumbnail ${image.id}`}
+                className={`w-16 h-16 object-cover rounded cursor-pointer border-2 hover:border-blue-500 ${
+                  mainImg ===
+                  `${import.meta.env.VITE_BACKEND_IMG}}${image.image_url}`
+                    ? "border-blue-500"
+                    : "border-transparent"
+                }`}
+                onClick={() =>
+                  setMainImg(
+                    `${import.meta.env.VITE_BACKEND_IMG}${image.image_url}`
+                  )
+                }
+              />
+            ))}
         </div>
       </div>
 
-      {/* Info Section */}
-      <div className="flex-1 space-y-4">
-        <h2 className="text-2xl font-bold uppercase">{accountData.name}</h2>
-        <p className="text-gray-500">Mã số: #{accountData.id}</p>
+      {/* --- Phần thông tin sản phẩm --- */}
+      <div className="flex-1 space-y-4 md:w-2/3">
+        <h2 className="text-2xl font-bold uppercase">
+          {product.category?.name || "Tên sản phẩm"}
+        </h2>
+        <p className="text-gray-500">Mã số: #{product.sku}</p>
 
+        {/* Các thuộc tính game */}
         <div className="bg-gray-100 p-4 rounded-lg space-y-2">
-          <p>
-            Mức Rank: <span className="font-medium">{accountData.rank}</span>
-          </p>
-          <p>
-            Đăng Ký:{" "}
-            <span className="font-medium">{accountData.registration}</span>
-          </p>
-          <p>
-            Số Tướng:{" "}
-            <span className="font-medium">{accountData.champions}</span>
-          </p>
-          <p>
-            Số Skin: <span className="font-medium">{accountData.skins}</span>
-          </p>
+          {product.game_attributes &&
+            product.game_attributes.map((attr) => (
+              <p key={attr.attribute_key}>
+                {attr.attribute_key}:{" "}
+                <span className="font-medium">{attr.attribute_value}</span>
+              </p>
+            ))}
         </div>
 
+        {/* Giá tiền */}
         <div className="text-pink-500 text-3xl font-bold">
-          {accountData.discountedPrice.toLocaleString()}đ
-          <span className="text-blue-500 text-sm ml-2">
-            -{accountData.discountPercent}%
-          </span>
+          {product.price.toLocaleString("vi-VN")}đ
         </div>
-        <p className="text-sm text-gray-400 line-through">
-          {accountData.originalPrice.toLocaleString()}đ
-        </p>
-        <p className="text-sm text-gray-600">{accountData.description}</p>
+        {/* Nếu có giá gốc, bạn có thể thêm vào đây */}
+        {/* <p className="text-sm text-gray-400 line-through">
+           {product.original_price.toLocaleString('vi-VN')}đ
+         </p> */}
 
-        <div className="flex flex-col gap-2">
-          <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg">
-            Mua Ngay
-          </button>
-          <button className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 rounded-lg">
-            Mua Bằng ATM, Momo <br />
-            <span className="text-sm">
-              {accountData.momoPrice.toLocaleString()}đ
-            </span>
+        {/* Các nút bấm */}
+        <div className="flex flex-col gap-2 pt-4">
+          <Link to={`/cart`} className="w-full">
+            <button className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg text-lg">
+              Mua Ngay
+            </button>
+          </Link>
+          <button className="bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 rounded-lg text-lg">
+            Thêm vào giỏ hàng
           </button>
         </div>
 
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Chi tiết dịch vụ</h3>
-          <p className="text-sm text-gray-600">Xem</p>
+        <div className="mt-4 border-t pt-4">
+          <h3 className="text-lg font-semibold">Chi tiết</h3>
+          <p className="text-sm text-gray-600">
+            {/* Nếu có mô tả sản phẩm, hiển thị ở đây */}
+            {product.description || "Sản phẩm chất lượng, đảm bảo uy tín."}
+          </p>
         </div>
       </div>
     </div>

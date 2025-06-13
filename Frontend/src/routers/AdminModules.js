@@ -10,15 +10,19 @@ import {
   EditDonatePromotionPage,
   AccountListPage,
   ShowAccountPage,
+  CartList,
+  CartCreate,
+  CartEdit,
+  CartShow,
   ShowDiscountCodePage,
   BannersListPage,
   BannerDetailPage,
   CreateBanners,
   EditBanner,
 } from "@pages";
+
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
-
 import UserProfiles from "@pages/Admin/UserProfiles";
 import Videos from "@pages/Admin/UiElements/Videos";
 import Images from "@pages/Admin/UiElements/Images";
@@ -189,4 +193,12 @@ export const adminModules = [
     edit: EditDonatePromotionPage,
     allowedRoles: ["admin"],
   },
+  {
+    name: "Cart",
+    list: CartList,
+    create: CartCreate,
+    edit: CartEdit,
+    show: CartShow,
+    allowedRoles: ["admin"],
+  }
 ];

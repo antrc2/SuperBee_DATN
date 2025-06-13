@@ -89,17 +89,17 @@ Route::middleware(['jwt'])->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
     });
 
-});
+     Route::prefix("/cart")->group(function () {
+        Route::get("/", [UserCartController::class, 'index']);
+        Route::post("/", [UserCartController::class, 'store']);
+        Route::delete("/{id}", [UserCartController::class, 'destroy']);
+    });
 });
 
 
 
 // admin
 Route::middleware(['jwt'])->group(function () {
-    Route::get('/user', function (Request $request) {
-        return $request->user()->getRoleNames(); // Debug để xem vai trò user ở đây
-    });
-
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
         Route::get('/', function () {
             return response()->json([

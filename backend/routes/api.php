@@ -131,13 +131,6 @@ Route::middleware('authenticate')->group(function () {
 // admin
 Route::middleware(['jwt'])->group(function () {
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
-        Route::get('/', function () {
-            return response()->json([
-                "status" => false,
-                "data" => [],
-                'message' => "no message"
-            ]);
-        });
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [AdminDiscountCodeController::class, 'index']);
             Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
@@ -152,9 +145,6 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [CategoryController::class, 'update']);
             Route::delete('/{id}', [CategoryController::class, 'destroy']);
             Route::get('/{id}', [CategoryController::class, 'show']);
-            // User Category
-
-
         });
         Route::prefix('/accounts')->group(function () {
             Route::get('/', [UserController::class, 'index']);
@@ -173,15 +163,12 @@ Route::middleware(['jwt'])->group(function () {
             Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
             Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
-            // Route::post("/")
         });
         Route::prefix("/orders")->group(function () {
             Route::get("/", [OrderController::class, 'index']);
             Route::get("/{id}", [OrderController::class, 'show']);
           
         });
-
-
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);
             Route::get('/{id}', [AdminBannerController::class, 'show']);
@@ -191,31 +178,4 @@ Route::middleware(['jwt'])->group(function () {
         });
 
     });
-    // {
-    //     "category_id": 1,
-    //     "price": 123,
-    //     "sale": 123,
-    //     "username": "abc",
-    //     "password": "abc",
-    //     "images": [
-    //         {   
-    //             "alt_text": "abc",
-    //             "image_url": "abc"
-    //         },
-    //         {
-    //             "alt_text": "abc",
-    //             "image_url": "abc"
-    //         }
-    //     ],
-    //     "attributes": [
-    //         {
-    //             "attribute_key": "attribute_value"
-    //         },
-    //         {
-    //             "attribute_key": "attribute_value"
-    //         }
-    //     ]
-    // }
-
-
 });

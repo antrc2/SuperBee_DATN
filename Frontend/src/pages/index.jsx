@@ -80,7 +80,7 @@ export {
   ProductDetail,
   EmailVerification,
   ShowDiscountCodePage,
-    BannerDetailPage,
+  BannerDetailPage,
   BannersListPage,
   CreateBanners,
   EditBanner,

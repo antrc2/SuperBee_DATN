@@ -94,11 +94,16 @@ class UserCartController extends Controller
 
 
             DB::commit();
+            $response = [];
+
+            foreach ($cart->items as $item){
+                $response[] = $item->product;
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Đã thêm sản phẩm vào giỏ hàng',
-                'data' => $cart
+                'data' => $response
             ], 201);
         } catch (\Throwable $e) {
             DB::rollBack();

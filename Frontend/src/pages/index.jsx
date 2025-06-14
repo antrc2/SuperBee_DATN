@@ -11,10 +11,6 @@ import EditDiscountCodePage from "./Admin/DiscountCode/EditDiscountCodePage";
 import CreateDonatePromotionPage from "./Admin/DonatePromotion/CreateDonatePromotionPage";
 import DonatePromotionPage from "./Admin/DonatePromotion/DonatePromotionPage";
 import EditDonatePromotionPage from "./Admin/DonatePromotion/EditDonatePromotionPage";
-// import CartList from "./Admin/Cart/CartList";
-// import CartCreate from "./Admin/Cart/CartCreate";
-// import CartEdit from "./Admin/Cart/CartEdit";
-// import CartShow from "./Admin/Cart/CartShow";
 import BannersListPage from "../pages/Admin/Banners/BannersListPage";
 import BannerDetailPage from "../pages/Admin/Banners/BannerDetailPage";
 import CreateBanners from "../pages/Admin/Banners/CreateBanners";
@@ -89,10 +85,6 @@ export {
   CartPage,
   ProductDetail,
   EmailVerification,
-  // CartList,
-  // CartCreate,
-  // CartEdit,
-  // CartShow,
   ShowDiscountCodePage,
   BannerDetailPage,
   BannersListPage,

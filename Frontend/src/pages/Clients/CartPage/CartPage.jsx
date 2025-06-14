@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+// src/pages/CartPage.jsx
+import React, { useState, useMemo } from "react";
 import {
   ChevronLeft,
   Trash2,
@@ -6,7 +7,8 @@ import {
   CreditCard,
   ShieldCheck,
 } from "lucide-react";
-import api from "@utils/http";
+import { useCart } from "@contexts/CartContexts"; // Đảm bảo đường dẫn đúng
+import { Link } from "react-router-dom";
 
 // Hàm định dạng tiền tệ an toàn
 const formatCurrency = (amount) => {
@@ -19,92 +21,67 @@ const formatCurrency = (amount) => {
 };
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({});
-  const [loading, setLoading] = useState(true);
-
-  const fetchCart = async () => {
-    try {
-      const res = await api.get("/carts");
-      const rawItems = res.data?.data?.items ?? [];
-
-      // Chuẩn hóa dữ liệu từ API
-      const items = rawItems.map((item) => ({
-        id: item.id,
-        name: item.product?.name ?? "Không có tên",
-        description: item.product?.description ?? "",
-        imageUrl: item.product?.image_url ?? "",
-        price: Number(item.product?.price ?? 0),
-        quantity: 1, // Giả sử BE của bạn chưa có quantity thì default về 1
-      }));
-
-      setCartItems(items);
-
-      // Mặc định tất cả sản phẩm được chọn
-      const defaultSelected = items.reduce((acc, item) => {
-        acc[item.id] = true;
-        return acc;
-      }, {});
-      setSelectedItems(defaultSelected);
-    } catch (err) {
-      console.error("Lỗi lấy giỏ hàng:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCart();
-  }, []);
-
+  console.log("🚀 ~ CartPage ~ selectedItems:", selectedItems);
+  // Lấy các hàm và state cần thiết từ context
+  const { cartItems, removeItem } = useCart();
   const handleSelectItem = (itemId) => {
     setSelectedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
-
   const handleSelectAll = (e) => {
     const isChecked = e.target.checked;
     const newSelectedItems = {};
-    cartItems.forEach((item) => {
-      newSelectedItems[item.id] = isChecked;
-    });
+    if (isChecked) {
+      cartItems.forEach((item) => {
+        newSelectedItems[item.id] = true;
+      });
+    }
     setSelectedItems(newSelectedItems);
   };
 
-  const handleRemoveItem = async (itemId) => {
-    try {
-      // Gọi API xoá giỏ hàng bên BE
-      await api.delete(`/carts/${itemId}`);
-
-      // Sau khi xoá thành công thì load lại giỏ hàng từ BE
-      fetchCart();
-    } catch (err) {
-      console.error("Lỗi xoá sản phẩm:", err);
-      alert("Xoá sản phẩm thất bại. Vui lòng thử lại!");
+  // Hàm xử lý xóa sản phẩm
+  const handleRemoveItem = (itemId, itemName) => {
+    if (
+      window.confirm(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`)
+    ) {
+      removeItem(itemId);
     }
   };
 
-  const isAllSelected =
-    cartItems.length > 0 && cartItems.every((item) => selectedItems[item.id]);
+  // Sử dụng useMemo để tối ưu hóa việc tính toán, chỉ chạy lại khi dependency thay đổi
+  const {
+    itemsToCheckout,
+    totalSelectedCount,
+    subtotalPrice,
+    totalPrice,
+    isAllSelected,
+  } = useMemo(() => {
+    const itemsToCheckout = cartItems.filter((item) => selectedItems[item.id]);
+    const totalSelectedCount = itemsToCheckout.length;
 
-  const itemsToCheckout = cartItems.filter((item) => selectedItems[item.id]);
-  const totalSelectedCount = itemsToCheckout.length;
-  const subtotalPrice = itemsToCheckout.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
-  const shippingFee = 0;
-  const totalPrice = subtotalPrice + shippingFee;
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Đang tải giỏ hàng...</p>
-      </div>
+    // SỬA LỖI: Tính tổng tiền dựa trên item.product.price, không có quantity
+    const subtotalPrice = itemsToCheckout.reduce(
+      (sum, item) => sum + Number(item.product.price),
+      0
     );
-  }
 
-  if (cartItems.length === 0) {
+    const shippingFee = 0; // Giả sử phí giao dịch là 0
+    const totalPrice = subtotalPrice + shippingFee;
+
+    const isAllSelected =
+      cartItems.length > 0 && cartItems.every((item) => selectedItems[item.id]);
+
+    return {
+      itemsToCheckout,
+      totalSelectedCount,
+      subtotalPrice,
+      totalPrice,
+      isAllSelected,
+    };
+  }, [cartItems, selectedItems]);
+
+  // Giao diện khi giỏ hàng trống
+  if (!cartItems || cartItems.length === 0) {
     return (
       <div className="bg-gray-100 min-h-screen py-8 px-4">
         <div className="max-w-4xl mx-auto text-center">
@@ -127,6 +104,7 @@ export default function CartPage() {
     );
   }
 
+  // Giao diện chính của giỏ hàng
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
       <div className="mb-6 flex justify-between items-center">
@@ -141,7 +119,7 @@ export default function CartPage() {
       <div className="lg:flex gap-8">
         {/* Danh sách sản phẩm */}
         <div className="lg:w-2/3 bg-white rounded-lg shadow-md p-4">
-          <div className="flex items-center mb-4">
+          <div className="flex items-center mb-4 border-b pb-4">
             <input
               type="checkbox"
               checked={isAllSelected}
@@ -164,8 +142,11 @@ export default function CartPage() {
                   className="h-5 w-5 mr-3"
                 />
                 <img
-                  src={item.imageUrl}
-                  alt={item.name}
+                  src={`${import.meta.env.VITE_BACKEND_IMG}${
+                    item?.product?.images[0]?.image_url
+                  }`}
+                  // SỬA LỖI: Lấy tên sản phẩm từ item.product.category.name
+                  alt={item?.product?.category?.name || "Sản phẩm"}
                   className="w-20 h-20 object-cover rounded mr-4 border"
                   onError={(e) => {
                     e.target.onerror = null;
@@ -174,17 +155,26 @@ export default function CartPage() {
                   }}
                 />
                 <div>
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-gray-500">{item.description}</p>
+                  {/* SỬA LỖI: Lấy tên sản phẩm từ item.product.category.name */}
+                  <h3 className="font-semibold">
+                    {item?.product?.category?.name}
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Mã sản phẩm: {item?.product?.sku}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-semibold text-red-600">
-                  {formatCurrency(item.price)}
+                  {formatCurrency(item?.product?.price)}
                 </span>
                 <button
-                  onClick={() => handleRemoveItem(item.id)}
+                  // Kích hoạt hàm xóa sản phẩm
+                  onClick={() =>
+                    handleRemoveItem(item.id, item?.product?.category?.name)
+                  }
                   className="text-gray-500 hover:text-red-600"
+                  aria-label={`Xóa ${item?.product?.category?.name}`}
                 >
                   <Trash2 size={20} />
                 </button>
@@ -194,7 +184,7 @@ export default function CartPage() {
         </div>
 
         {/* Tóm tắt đơn hàng */}
-        <div className="lg:w-1/3 bg-white rounded-lg shadow-md p-6 h-fit sticky top-24">
+        <div className="lg:w-1/3 bg-white rounded-lg shadow-md p-6 h-fit sticky top-24 mt-8 lg:mt-0">
           <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
           <div className="space-y-3 mb-6">
             <div className="flex justify-between">
@@ -218,13 +208,15 @@ export default function CartPage() {
               </span>
             </div>
           </div>
-          <button
-            disabled={totalSelectedCount === 0}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg"
-          >
-            <CreditCard className="inline mr-2" /> Thanh toán (
-            {totalSelectedCount})
-          </button>
+          <Link to={"/pay"}>
+            <button
+              disabled={totalSelectedCount === 0}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              <CreditCard className="inline mr-2" /> Thanh toán (
+              {totalSelectedCount})
+            </button>
+          </Link>
           <div className="mt-6 text-xs text-gray-500 text-center">
             <p className="flex items-center justify-center">
               <ShieldCheck size={14} className="mr-1 text-green-500" />

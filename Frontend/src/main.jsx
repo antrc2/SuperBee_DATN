@@ -5,14 +5,20 @@ import App from "./App.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
+import { CartProvider } from "./contexts/CartContexts.jsx";
+import { HomeProvider } from "./contexts/HomeContext.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <HomeProvider>
+          <AuthProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </AuthProvider>
+        </HomeProvider>
       </ThemeProvider>
     </BrowserRouter>
   </StrictMode>

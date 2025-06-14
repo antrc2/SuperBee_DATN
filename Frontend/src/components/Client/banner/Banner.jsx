@@ -115,30 +115,36 @@ const effects3D = [
     }),
   },
 ];
+const images = [
+  "https://i.pinimg.com/736x/21/04/a3/2104a3d27d9c39bde1003ec90291b3e6.jpg",
+  "https://i.pinimg.com/736x/5d/8f/39/5d8f3975dd3917a094e1431406bb7577.jpg",
+  "https://i.pinimg.com/736x/db/46/9b/db469bcb85f4206345654fc692768c07.jpg",
+  "https://i.pinimg.com/736x/dc/fe/85/dcfe854d3101c3da73db65ee7844dcca.jpg",
+];
 
 const Banner3D = () => {
-  const [images, setImages] = useState([]);
+  // const [images, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [effectIndex, setEffectIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchBanners = async () => {
-      try {
-        const res = await api.get("/banners");
-        const urls = res.data.data.map((item) => item.image_url);
-        setImages(urls);
-      } catch (err) {
-        setError("Không thể tải banner");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchBanners();
-  }, []);
+  // useEffect(() => {
+  //   const fetchBanners = async () => {
+  //     try {
+  //       const res = await api.get("/banners");
+  //       const urls = res.data.data.map((item) => item.image_url);
+  //       setImages(urls);
+  //     } catch (err) {
+  //       setError("Không thể tải banner");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  //   fetchBanners();
+  // }, []);
 
   const nextEffect = useCallback(() => {
     setEffectIndex((prev) => (prev + 1) % effects3D.length);
@@ -174,9 +180,9 @@ const Banner3D = () => {
     return () => clearTimeout(timeout);
   };
 
-  if (loading) return <p className="text-center text-white">Đang tải...</p>;
-  if (error) return <p className="text-center text-red-500">{error}</p>;
-  if (!images.length) return <p className="text-center text-white">Không có banner</p>;
+  // if (loading) return <p className="text-center text-white">Đang tải...</p>;
+  // if (error) return <p className="text-center text-red-500">{error}</p>;
+  // if (!images.length) return <p className="text-center text-white">Không có banner</p>;
 
   const currentEffect = effects3D[effectIndex];
 

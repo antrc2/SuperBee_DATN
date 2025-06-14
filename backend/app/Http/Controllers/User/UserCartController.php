@@ -18,7 +18,7 @@ class UserCartController extends Controller
             $userId =  request()->user_id;
 
             $cart = Cart::with([
-                'items.product'
+                'items.product','items.product','items.product.category', 'items.product.images'
             ])
                 ->where('user_id', $userId)
                 ->first();
@@ -47,10 +47,7 @@ class UserCartController extends Controller
     public function store(Request $request)
     {
         try {
-
-
             $userId = $request->user_id;
-
             $product = Product::where([
                 ['id', $request->product_id],
                 ['status', 1]

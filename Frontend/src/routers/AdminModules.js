@@ -10,18 +10,11 @@ import {
   EditDonatePromotionPage,
   AccountListPage,
   ShowAccountPage,
-<<<<<<< HEAD
-  CartList,
-  CartCreate,
-  CartEdit,
-  CartShow,
   ShowDiscountCodePage,
   BannersListPage,
   BannerDetailPage,
   CreateBanners,
   EditBanner,
-=======
->>>>>>> parent of a48ba5f (Quản lý giỏ hàng)
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";

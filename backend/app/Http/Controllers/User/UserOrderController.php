@@ -305,6 +305,18 @@ class UserOrderController extends Controller
                     "commission_amount"=>$aff_recieved,
                     "order_id"=>$order->id,
                 ]);
+                $wallet_aff = Wallet::where("user_id",$affiliated_by)->get();
+                $wallet_aff->balance  += $aff_recieved;
+                $wallet_aff->save();
+
+                WalletTransaction::create([
+                    "wallet_id"=>$wallet_aff->id,
+                    'type'=>"commission",
+                    "amount"=>$aff_recieved,
+                    "related_id"=>$wallet_aff->id,
+                    "related_type"=>"App\Models\AffiliateHistory",
+                    "status"=>1
+                ]);
             }
             $current_order = Order::with(["items.product",'walletTransaction'])->where('id',$order->id)->get();
 

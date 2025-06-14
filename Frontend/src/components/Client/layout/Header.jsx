@@ -29,6 +29,7 @@ import CategoryDropdown from "./CategoryDropdown";
 import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
+import { useCart } from "../../../contexts/CartContexts";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -38,6 +39,8 @@ export default function Header() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { user } = useAuth(); // Get user from AuthContext
+  const { cartItems } = useCart();
+
   const isLogin = user != null; // Determine login status
 
   // State for mobile overlays
@@ -48,6 +51,10 @@ export default function Header() {
   const mobileMenuRef = useRef(null);
   const mobileOverlayRef = useRef(null);
 
+  const categoryMenuRef = useRef(null);
+  const notificationMenuRef = useRef(null);
+  const cartMenuRef = useRef(null);
+  const userMenuRef = useRef(null);
   // Mock data (keeping as is)
   const categories = [
     { name: "THU ACC THANH LÝ ALL", icon: ShoppingBag, href: "#" },
@@ -71,30 +78,6 @@ export default function Header() {
       avatarUrl: "https://placehold.co/40x40/E2E8F0/4A5568?text=SB",
       message: "Lỗ cái bồ",
       timestamp: "21:19 25-04-2024",
-    },
-  ];
-
-  const cartItems = [
-    {
-      id: 1,
-      name: "Acc Liên Quân VIP",
-      price: "500.000đ",
-      imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=LQ",
-      href: "#",
-    },
-    {
-      id: 2,
-      name: "Blox Fruits Max Level",
-      price: "350.000đ",
-      imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=BF",
-      href: "#",
-    },
-    {
-      id: 3,
-      name: "Skin Free Fire Hiếm",
-      price: "1.200.000đ",
-      imageUrl: "https://placehold.co/60x60/E2E8F0/4A5568?text=FF",
-      href: "#",
     },
   ];
 
@@ -163,7 +146,33 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Logic for mobile main menu (hamburger)
+      // Đóng dropdown Danh mục nếu click ra ngoài
+      if (
+        categoryMenuRef.current &&
+        !categoryMenuRef.current.contains(event.target)
+      ) {
+        setIsCategoryOpen(false);
+      }
+
+      // Đóng dropdown Thông báo nếu click ra ngoài
+      if (
+        notificationMenuRef.current &&
+        !notificationMenuRef.current.contains(event.target)
+      ) {
+        setIsNotificationOpen(false);
+      }
+
+      // Đóng dropdown Giỏ hàng nếu click ra ngoài
+      if (cartMenuRef.current && !cartMenuRef.current.contains(event.target)) {
+        setIsCartOpen(false);
+      }
+
+      // Đóng dropdown User nếu click ra ngoài
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+
+      // Logic cho mobile main menu (hamburger) - giữ nguyên
       if (
         mobileMenuRef.current &&
         !mobileMenuRef.current.contains(event.target) &&
@@ -172,16 +181,16 @@ export default function Header() {
         setIsMobileMenuOpen(false);
       }
 
-      // Logic for mobile overlays (backdrop click)
+      // Logic cho mobile overlays (backdrop click) - giữ nguyên
       if (
         mobileOverlayRef.current &&
         !mobileOverlayRef.current.contains(event.target) &&
-        event.target.closest(".mobile-overlay-trigger") === null // Don't close if click originated from trigger
+        event.target.closest(".mobile-overlay-trigger") === null
       ) {
         setMobileOverlayType(null);
       }
 
-      // Collapse search if click is outside search container and it's expanded
+      // Logic thu gọn thanh tìm kiếm - giữ nguyên
       if (
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target) &&
@@ -193,7 +202,6 @@ export default function Header() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isSearchExpanded]);
-
   useEffect(() => {
     if (isSearchExpanded && searchInputRef.current) {
       searchInputRef.current.focus();
@@ -235,7 +243,7 @@ export default function Header() {
           >
             {!isSearchExpanded && (
               <nav className="flex items-center gap-1 lg:gap-2">
-                <div className="relative">
+                <div ref={categoryMenuRef} className="relative">
                   <button
                     onClick={() => toggleDropdown("category")}
                     className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
@@ -309,7 +317,7 @@ export default function Header() {
               <CreditCard size={18} />
               <span className="hidden lg:inline">Nạp Tiền</span>
             </Link>
-            <div className="relative">
+            <div ref={notificationMenuRef} className="relative">
               <button
                 onClick={() => toggleDropdown("notification")}
                 className="relative rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors mobile-overlay-trigger"
@@ -328,7 +336,7 @@ export default function Header() {
                 onClose={() => setIsNotificationOpen(false)}
               />
             </div>
-            <div className="relative">
+            <div ref={cartMenuRef} className="relative">
               <button
                 onClick={() => toggleDropdown("cart")}
                 className="relative rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors mobile-overlay-trigger"
@@ -349,7 +357,7 @@ export default function Header() {
             </div>
 
             {isLogin ? (
-              <div className="relative">
+              <div ref={userMenuRef} className="relative">
                 <button
                   onClick={() => toggleDropdown("user")}
                   className="flex items-center gap-2 rounded-full p-1 text-gray-600 hover:bg-gray-100 transition-colors mobile-overlay-trigger"

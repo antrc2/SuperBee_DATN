@@ -13,6 +13,7 @@ class UserController extends Controller
     //
     public function index(Request $request)
     {
+        
         $user = User::with(['roles', 'wallet'])->get();
         $roles = Role::all();
         return response()->json([

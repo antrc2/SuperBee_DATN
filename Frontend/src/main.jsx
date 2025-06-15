@@ -6,23 +6,20 @@ import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { CartProvider } from "./contexts/CartContexts.jsx";
-import { HomeProvider } from "./contexts/HomeContext.jsx";
 import { NotificationProvider } from "./contexts/NotificationProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
-  // <StrictMode>
-  <BrowserRouter>
-    <ThemeProvider>
-      <NotificationProvider>
-        <HomeProvider>
+  <StrictMode>
+    <BrowserRouter>
+      <ThemeProvider>
+        <NotificationProvider>
           <AuthProvider>
             <CartProvider>
               <App />
             </CartProvider>
           </AuthProvider>
-        </HomeProvider>
-      </NotificationProvider>
-    </ThemeProvider>
-  </BrowserRouter>
-  // </StrictMode>
+        </NotificationProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  </StrictMode>
 );

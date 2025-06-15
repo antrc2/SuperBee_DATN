@@ -115,22 +115,22 @@ const effects3D = [
     }),
   },
 ];
-const images = [
+const banner = [
   "https://i.pinimg.com/736x/21/04/a3/2104a3d27d9c39bde1003ec90291b3e6.jpg",
   "https://i.pinimg.com/736x/5d/8f/39/5d8f3975dd3917a094e1431406bb7577.jpg",
   "https://i.pinimg.com/736x/db/46/9b/db469bcb85f4206345654fc692768c07.jpg",
   "https://i.pinimg.com/736x/dc/fe/85/dcfe854d3101c3da73db65ee7844dcca.jpg",
 ];
 
-const Banner3D = () => {
-  // const [images, setImages] = useState([]);
+const Banner3D = ({ banner }) => {
+  // const [banner, setImages] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
   const [effectIndex, setEffectIndex] = useState(0);
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState(null);
-
+  console.log("🚀 ~ Banner3D ~ banner:", banner[currentIndex]);
   // useEffect(() => {
   //   const fetchBanners = async () => {
   //     try {
@@ -153,20 +153,20 @@ const Banner3D = () => {
   const nextSlide = useCallback(() => {
     setDirection(1);
     setCurrentIndex((prev) => {
-      const next = (prev + 1) % images.length;
+      const next = (prev + 1) % banner.length;
       if (next === 0) nextEffect();
       return next;
     });
-  }, [images.length, nextEffect]);
+  }, [banner.length, nextEffect]);
 
   const prevSlide = useCallback(() => {
     setDirection(-1);
     setCurrentIndex((prev) => {
-      const next = (prev - 1 + images.length) % images.length;
-      if (next === images.length - 1) nextEffect();
+      const next = (prev - 1 + banner.length) % banner.length;
+      if (next === banner.length - 1) nextEffect();
       return next;
     });
-  }, [images.length, nextEffect]);
+  }, [banner.length, nextEffect]);
 
   useEffect(() => {
     if (!isAutoPlaying) return;
@@ -182,7 +182,7 @@ const Banner3D = () => {
 
   // if (loading) return <p className="text-center text-white">Đang tải...</p>;
   // if (error) return <p className="text-center text-red-500">{error}</p>;
-  // if (!images.length) return <p className="text-center text-white">Không có banner</p>;
+  // if (!banner.length) return <p className="text-center text-white">Không có banner</p>;
 
   const currentEffect = effects3D[effectIndex];
 
@@ -207,7 +207,8 @@ const Banner3D = () => {
             }}
           >
             <img
-              src={`${import.meta.env.VITE_BACKEND_IMG}${images[currentIndex]}`}
+              // src={`${import.meta.env.VITE_BACKEND_IMG}${banner[currentIndex]}`}
+              src={`${banner[currentIndex]?.image_url}`}
               alt={`Banner ${currentIndex + 1}`}
               className="object-cover w-full h-full"
             />
@@ -268,7 +269,7 @@ const Banner3D = () => {
 
         {/* Dots Indicator */}
         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex space-x-3 z-10">
-          {images.map((_, idx) => (
+          {banner.map((_, idx) => (
             <button
               key={idx}
               onClick={() => {

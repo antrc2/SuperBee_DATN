@@ -24,6 +24,7 @@ export const clientModules = [
     // Trang chủ
     path: "/",
     view: Home,
+    requiresAuth: false,
   },
   {
     // Bạn không có quyền truy cập
@@ -40,21 +41,25 @@ export const clientModules = [
   {
     path: "/mua-acc",
     view: ShopAccount,
+    requiresAuth: false,
   },
   // Trang chi tiết của một category con gồm list sản phẩm
   {
     path: "/mua-acc/:slug",
     view: ListProducts,
+    requiresAuth: false,
   },
   // Trang chi tiết sản phẩm
   {
     path: "/acc/:slug",
     view: ProductDetail,
+    requiresAuth: false,
   },
   // Trang lịch sử đã xem
   {
     path: "/viewed",
     view: HistoryProducts,
+    requiresAuth: false,
   },
   // trang giỏ hàng
   {

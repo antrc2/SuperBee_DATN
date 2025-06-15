@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Cart;
+use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,12 +17,7 @@ class UserCartController extends Controller
     {
         try {
             $userId =  request()->user_id;
-
-            $cart = Cart::with([
-                'items.product','items.product','items.product.category', 'items.product.images'
-            ])
-                ->where('user_id', $userId)
-                ->first();
+            $cart = Cart::where('user_id', $userId)->first();
 
             if (!$cart) {
                 $cart = Cart::create([
@@ -29,11 +25,13 @@ class UserCartController extends Controller
                 ]);
                 $cart->setRelation('items', collect());
             }
-
+            $products = CartItem::with(['product','product.images','product.category'])
+                ->where('cart_id', $cart->id)
+                ->get();
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy giỏ hàng thành công',
-                'data' => $cart
+                'data' => $products
             ], 200);
         } catch (\Throwable $e) {
             return response()->json([
@@ -93,7 +91,7 @@ class UserCartController extends Controller
             DB::commit();
             $response = [];
 
-            foreach ($cart->items as $item){
+            foreach ($cart->items as $item) {
                 $response[] = $item->product;
             }
 

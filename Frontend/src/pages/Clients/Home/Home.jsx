@@ -4,6 +4,7 @@ import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
 import api from "../../../utils/http";
+import { useNotification } from "../../../contexts/NotificationProvider";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState([]);
@@ -18,6 +19,16 @@ export default function Home() {
       console.log(error);
     }
   };
+  const { pop, conFim } = useNotification();
+  const hendelC = async () => {
+    const ok = await conFim("Bạn có chắc không?");
+    if (ok) {
+      pop("Thực hiện thành công!", "s");
+    } else {
+      pop("Thực hiện thành công!", "e");
+      pop("Thực hiện thành công!", "i");
+    }
+  };
   useEffect(() => {
     getData();
   }, []);
@@ -25,7 +36,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mt-4">
+      <div onClick={hendelC} className="mt-4">
         <BannerAndCart />
       </div>
       <div>

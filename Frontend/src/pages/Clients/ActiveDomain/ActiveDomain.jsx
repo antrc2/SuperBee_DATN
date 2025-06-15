@@ -1,6 +1,5 @@
 import React from "react";
 import api from "../../../utils/http";
-import { showError, showNotification } from "../../../utils/notification";
 
 export default function ActiveDomain() {
   const postData = async (data) => {
@@ -8,13 +7,14 @@ export default function ActiveDomain() {
       const res = await api.post("/domain/active", { ...data });
       console.log(res?.data?.status);
       if (res.data?.status == true) {
-        showNotification("info", "Kích Hoạt Thành Công");
+        alert("kich hoat thanh cong");
         window.location.reload();
       }
     } catch (error) {
       // console.log(error?.response?.data?.status);
       if (error?.response?.data?.status == false) {
-        showError(error?.response?.data?.message || "Không xác định");
+        // showError(error?.response?.data?.message || "Không xác định");
+        alert(error?.response?.data?.message || "Không xác định");
       }
     }
   };
@@ -31,7 +31,7 @@ export default function ActiveDomain() {
         display: "flex",
         height: "100vh",
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
       }}
     >
       <form onSubmit={handleSubmit} style={{ textAlign: "center" }}>

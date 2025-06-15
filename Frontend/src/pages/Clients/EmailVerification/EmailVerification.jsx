@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "@utils/http"; // Đảm bảo đường dẫn này đúng
-import { showNotification } from "../../../utils/notification"; // Đảm bảo đường dẫn này đúng
+
 import { getDecodedToken } from "../../../utils/tokenUtils"; // Đảm bảo đường dẫn này đúng
 import { useAuth } from "../../../contexts/AuthContext"; // Đảm bảo đường dẫn này đúng
 
@@ -50,7 +50,7 @@ const EmailVerification = () => {
         );
       }
 
-      showNotification("info", response?.data?.message, 3000);
+      alert(response?.data?.message);
       const accessToken = response.data.access_token;
 
       // Lưu access_token vào sessionStorage
@@ -98,7 +98,7 @@ const EmailVerification = () => {
         border: "1px solid #ccc",
         borderRadius: "8px",
         textAlign: "center",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+        boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
       }}
     >
       <h2>Xác minh Email</h2>
@@ -122,7 +122,7 @@ const EmailVerification = () => {
             border: "none",
             borderRadius: "5px",
             cursor: isLoading ? "not-allowed" : "pointer",
-            marginTop: "20px"
+            marginTop: "20px",
           }}
         >
           {isLoading ? "Đang xử lý..." : "Xác minh Tài khoản"}

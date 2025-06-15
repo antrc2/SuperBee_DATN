@@ -47,10 +47,10 @@ export default function CartDropdown({
       </div>
       <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
         {cartItems.length > 0 ? (
-          cartItems.map((item) => (
+          cartItems.map((item, index) => (
             <Link
               to={`/acc/${item?.product?.sku}`}
-              key={item.id}
+              key={index}
               className="flex gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
               onClick={onClose} // Close dropdown on item click
             >

@@ -13,6 +13,7 @@ const CartContext = createContext();
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([]);
+  console.log("🚀 ~ CartProvider ~ cartItems:", cartItems);
   const { user } = useAuth();
   const navigator = useNavigate();
   // Sử dụng useCallback để tránh tạo lại hàm getCart mỗi lần render
@@ -20,7 +21,7 @@ export function CartProvider({ children }) {
     try {
       if (!user) return;
       const res = await api.get("/carts");
-      setCartItems(res.data?.data?.items || []);
+      setCartItems(res.data.data || []);
     } catch (error) {
       console.error("Lỗi khi lấy giỏ hàng:", error);
       // Nếu có lỗi (ví dụ: token hết hạn), set giỏ hàng về rỗng
@@ -61,7 +62,9 @@ export function CartProvider({ children }) {
     try {
       const res = await api.post("/carts", payload);
       if (res.data.status) {
-        setCartItems((prevItems) => [...prevItems, product]);
+        const dataNew = { product: { ...product } };
+        setCartItems((prevItems) => [...prevItems, dataNew]);
+
         alert("✅ Đã thêm sản phẩm vào giỏ hàng!");
       } else {
         alert(res.data.message);
@@ -87,6 +90,7 @@ export function CartProvider({ children }) {
     try {
       const res = await api.post("/carts", payload);
       if (res.data.status) {
+        await getCart();
         navigator("/cart");
       } else {
         alert(res.data.message);

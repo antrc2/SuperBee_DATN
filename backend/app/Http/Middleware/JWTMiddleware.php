@@ -57,10 +57,11 @@ class JWTMiddleware
                 ], 401);
             }
             Auth::guard(name: 'api')->setUser($user); 
+            $roles = $user->getRoleNames();
             $request->merge([
                 'web_id' => $decoded->web_id,
                 'user_id' => $decoded->user_id,
-                'jwt_payload' => (array) $decoded // Optionally, add the whole payload
+                'role'=> $roles[0],
             ]);
         } catch (ExpiredException $e) {
             return response()->json([

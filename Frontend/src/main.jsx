@@ -7,11 +7,13 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { CartProvider } from "./contexts/CartContexts.jsx";
 import { HomeProvider } from "./contexts/HomeContext.jsx";
+import { NotificationProvider } from "./contexts/NotificationProvider.jsx";
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <BrowserRouter>
-      <ThemeProvider>
+  // <StrictMode>
+  <BrowserRouter>
+    <ThemeProvider>
+      <NotificationProvider>
         <HomeProvider>
           <AuthProvider>
             <CartProvider>
@@ -19,7 +21,8 @@ createRoot(document.getElementById("root")).render(
             </CartProvider>
           </AuthProvider>
         </HomeProvider>
-      </ThemeProvider>
-    </BrowserRouter>
-  </StrictMode>
+      </NotificationProvider>
+    </ThemeProvider>
+  </BrowserRouter>
+  // </StrictMode>
 );

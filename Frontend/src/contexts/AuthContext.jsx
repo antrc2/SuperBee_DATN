@@ -11,7 +11,6 @@ import { useDomainCheck } from "@utils/useDomainCheck.js"; // Đảm bảo đư�
 import api from "../utils/http";
 import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
-import { showNotification } from "../utils/notification";
 
 const AuthContext = createContext();
 
@@ -94,8 +93,8 @@ export function AuthProvider({ children }) {
       if (res?.data?.status == false) {
         throw new Error("Không nhận được access_token từ server.");
       }
-      // alert(res?.data?.message);
-      showNotification("info", res?.data?.message, 5000);
+      alert(res?.data?.message);
+
       navigate("/");
       // const accessToken = res.data.access_token;
       // sessionStorage.setItem("access_token", accessToken);

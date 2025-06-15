@@ -22,7 +22,9 @@ export default defineConfig({
       // eslint-disable-next-line no-undef
       "@routers": resolve(__dirname, "src/routers"),
       // eslint-disable-next-line no-undef
-      "@utils": resolve(__dirname, "src/utils")
-    }
-  }
+      "@utils": resolve(__dirname, "src/utils"),
+      // eslint-disable-next-line no-undef
+      "@sections": resolve(__dirname, "src/sections"),
+    },
+  },
 });

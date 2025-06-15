@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import LoadingDomain from "@components/Loading/LoadingDomain";
-import { Link, useParams, useNavigate } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import api from "@utils/http";
 import { useCart } from "../../../contexts/CartContexts";
 
@@ -11,7 +11,7 @@ export default function ProductDetail() {
   const [isLoading, setIsLoading] = useState(true);
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState({});
-  const [mainImg, setMainImg] = useState("");
+  const [mainImg, setMainImg] = useState("NO_IMAGE");
   const [isAdding, setIsAdding] = useState(false); // loading khi thêm vào giỏ
 
   const getData = async () => {
@@ -59,7 +59,7 @@ export default function ProductDetail() {
       <div className="flex flex-col items-center md:w-1/3">
         <div className="mb-4 w-full">
           <img
-            src={mainImg}
+            src={`${mainImg}`}
             alt="Main Preview"
             className="w-full h-auto object-contain rounded-lg border"
             style={{ maxHeight: "400px" }}

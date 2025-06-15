@@ -1,5 +1,5 @@
 // src/pages/CartPage.jsx
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   ChevronLeft,
   Trash2,
@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 import { useCart } from "@contexts/CartContexts"; // Đảm bảo đường dẫn đúng
 import { Link } from "react-router-dom";
-
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
+import { useNotification } from "../../../contexts/NotificationProvider";
 // Hàm định dạng tiền tệ an toàn
 const formatCurrency = (amount) => {
   const numberAmount = Number(amount);
@@ -22,9 +23,11 @@ const formatCurrency = (amount) => {
 
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState({});
-  console.log("🚀 ~ CartPage ~ selectedItems:", selectedItems);
-  // Lấy các hàm và state cần thiết từ context
-  const { cartItems, removeItem } = useCart();
+  const { conFim } = useNotification();
+  const { removeItem, fetchCartItems, cartItems, loadingCart } = useCart();
+  useEffect(() => {
+    fetchCartItems();
+  }, [fetchCartItems]);
   const handleSelectItem = (itemId) => {
     setSelectedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
@@ -40,9 +43,9 @@ export default function CartPage() {
   };
 
   // Hàm xử lý xóa sản phẩm
-  const handleRemoveItem = (itemId, itemName) => {
+  const handleRemoveItem = async (itemId, itemName) => {
     if (
-      window.confirm(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`)
+      await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`)
     ) {
       removeItem(itemId);
     }
@@ -79,7 +82,7 @@ export default function CartPage() {
       isAllSelected,
     };
   }, [cartItems, selectedItems]);
-
+  if (loadingCart) return <LoadingDomain />;
   // Giao diện khi giỏ hàng trống
   if (!cartItems || cartItems.length === 0) {
     return (

@@ -19,18 +19,38 @@ class CheckApiKey
 {
         public function handle(Request $request, Closure $next): Response
         {
+          
             // 1. Ưu tiên kiểm tra JWT (Access Token) trước
             $authHeader = $request->header('Authorization');
+             
             if ($authHeader && preg_match('/Bearer\s(\S+)/', $authHeader, $matches)) {
+                $jwt = $matches[1];
+                $secretKey = env('JWT_SECRET_KEY');
+                if (!$secretKey) {
+                    return response()->json([
+                        'message' => 'JWT secret key not configured.',
+                        'errorCode' => 'JWT_SECRET_NOT_SET'
+                    ], 500); // Internal Server Error
+                }
+                $decoded = JWT::decode($jwt, new Key($secretKey, 'HS256'));
+                // Check for essential claims in the token payload
+                if (!isset($decoded->web_id)) {
+                    return response()->json([
+                        'message' => 'Web ID not found in token payload.',
+                        'errorCode' => 'PAYLOAD_MISSING_WEB_ID'
+                    ], 401);
+                }
+                $request->merge([
+                    'web_id' => $decoded->web_id,
+                ]);
                 return $next($request);
             }
-    
+           
             // 2. Nếu không có JWT hoặc JWT không hợp lệ, tiếp tục kiểm tra API Key
             $apiKey = $request->header('X-API-KEY'); // Sử dụng X-API-KEY cho API Key để phân biệt rõ ràng
-    
             if (!empty($apiKey)) {
                 $apiKeyRecord = Web::where('api_key', $apiKey)->first();
-    
+             
                 if (!$apiKeyRecord) {
                     return response()->json(['error' => 'Invalid API Key', 'code' => 'NO_API_KEY'], 401);
                 }
@@ -44,7 +64,7 @@ class CheckApiKey
                     }
                     return response()->json(["error" => "WEB_NOT_ACTIVE", "code" => "NO_ACTIVE"], 404);
                 }
-    
+  
                 // Gắn web_id vào request
                 $request->merge(['web_id' => $apiKeyRecord->id]);
                 // Tùy chọn: gắn thêm thông tin khác của web nếu cần

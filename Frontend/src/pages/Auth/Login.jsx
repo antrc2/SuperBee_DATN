@@ -20,17 +20,14 @@ export default function LoginForm() {
     clearErrors,
     trigger,
     watch,
-    setError: setFormError // Đổi tên để tránh xung đột với error từ useAuth
+    setError: setFormError, // Đổi tên để tránh xung đột với error từ useAuth
   } = useForm();
 
   const username = watch("username");
   const password = watch("password");
 
   const onSubmit = async (data) => {
-    clearErrors(); // Xóa tất cả lỗi từ react-hook-form
-    // setFormError cũng cần được reset cho lỗi "general" nếu có
-    // setFormError("general", { type: "manual", message: "" }); // Reset lỗi chung
-
+    clearErrors();
     try {
       const result = await login(data); // Gọi hàm login từ AuthContext
 
@@ -52,7 +49,7 @@ export default function LoginForm() {
       setFormError("general", {
         type: "manual",
         message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại."
+          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
       });
     }
   };
@@ -119,9 +116,9 @@ export default function LoginForm() {
                     required: "Username is required",
                     minLength: {
                       value: 3,
-                      message: "Username must be at least 3 characters"
+                      message: "Username must be at least 3 characters",
                     },
-                    onChange: () => trigger("username")
+                    onChange: () => trigger("username"),
                   })}
                 />
                 {errors.username && (
@@ -149,9 +146,9 @@ export default function LoginForm() {
                       required: "Password is required",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters"
+                        message: "Password must be at least 6 characters",
                       },
-                      onChange: () => trigger("password")
+                      onChange: () => trigger("password"),
                     })}
                   />
                   <span

@@ -4,7 +4,7 @@ import { Navigate } from "react-router-dom";
 import { HomeLayout, ProfileLayout } from "@layouts";
 import { clientModules, profileModule } from "./ClientModules";
 import { Home, Profile } from "@pages";
-import ProtectedRoute from "@components/common/ProtectedRoute"; // Import component bảo vệ
+import ProtectedRouteClient from "../components/common/ProtectClient";
 
 export const clientRoutes = [
   {
@@ -21,12 +21,10 @@ export const clientRoutes = [
         const View = e.view;
         // Kiểm tra xem route có được đánh dấu 'requiresAuth' hay không
         const elementToRender = e.requiresAuth ? (
-          // Nếu có, bọc View trong ProtectedRoute
-          <ProtectedRoute>
+          <ProtectedRouteClient>
             <View />
-          </ProtectedRoute>
+          </ProtectedRouteClient>
         ) : (
-          // Nếu không, giữ nguyên
           <View />
         );
 
@@ -48,9 +46,9 @@ export const profileRoutes = [
     // Bọc cả layout chung bằng ProtectedRoute
     // Bất kỳ ai muốn vào /info/* đều phải đăng nhập trước
     element: (
-      <ProtectedRoute>
+      <ProtectedRouteClient>
         <ProfileLayout />
-      </ProtectedRoute>
+      </ProtectedRouteClient>
     ),
     children: [
       {

@@ -46,7 +46,7 @@ Route::prefix("/callback")->group(function () {
 });
 
 // Những router client chưa và đã đăng nhập
-Route::middleware('authenticate')->group(function () {
+Route::middleware('auth')->group(function () {
     // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);

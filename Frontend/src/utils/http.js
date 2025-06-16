@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
       return Promise.reject(new axios.Cancel("NO_API_KEY_AVAILABLE"));
       // throw new axios.Cancel("NO_API_KEY");
     }
-    config.headers['X-API-KEY'] = apiKey;
+    config.headers["X-API-KEY"] = apiKey;
     return config;
   }
 

@@ -19,6 +19,14 @@ use Illuminate\Support\Facades\Validator;
 
 class UserOrderController extends Controller
 {
+    private function total_used_promotion_code($promotion_code, $user_id = 0)
+    {
+        $query = Order::where("promo_code", $promotion_code);
+        if ($user_id !== 0) {
+            $query->where("user_id", $user_id);
+        }
+        return count($query->get());
+    }
     private function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -29,122 +37,314 @@ class UserOrderController extends Controller
         }
         return $code;
     }
-    public function index(Request $request){
+    public function index(Request $request)
+    {
         try {
             $user_id = $request->user_id;
-            $orders = Order::with(['items.product.category','items.product.images','promotion'])->where('user_id',$user_id)->get();
+            $orders = Order::with(['items.product.category', 'items.product.images', 'promotion'])->where('user_id', $user_id)->get();
             return response()->json([
-                'status'=>True,
-                "message"=>"Lấy danh sách đơn hàng thành công",
-                "data"=>$orders
+                'status' => True,
+                "message" => "Lấy danh sách đơn hàng thành công",
+                "data" => $orders
             ]);
         } catch (\Throwable $th) {
             return response()->json([
-                "status"=>False,
-                "message"=>"Đã có lỗi xảy ra",
-                'data'=>[]
+                "status" => False,
+                "message" => "Đã có lỗi xảy ra",
+                'data' => []
             ]);
-
         }
     }
-    public function show(Request $request,$id){
+    public function show(Request $request, $id)
+    {
         try {
             $user_id = $request->user_id;
-            $order = Order::with(['items.product.category','items.product.gameAttributes','items.product.credentials','items.product.images'])->where('user_id',$user_id)->where('id',$id)->first();
+            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images'])->where('user_id', $user_id)->where('id', $id)->first();
             return response()->json([
-                "status"=>True,
-                "message"=>"Lấy đơn hàng thành công",
-                'data'=>$order
+                "status" => True,
+                "message" => "Lấy đơn hàng thành công",
+                'data' => $order
             ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
-                "status"=>False,
-                "message"=>"Đã xảy ra lỗi",
-                "data"=>[]
+                "status" => False,
+                "message" => "Đã xảy ra lỗi",
+                "data" => []
             ], 500);
         }
     }
 
-    public function checkout(Request $request){
+    private function get_cart_and_total_price($user_id)
+    {
         try {
-            $validator = Validator::make($request->all(), [
-                'product_id' => 'required|array|min:1',
-                ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Dữ liệu không hợp lệ',
-                ], 422);
-            }
-            $user_id = $request->user_id;
-            $product_id = $request->product_id;
-            $cart = Cart::where("user_id",$user_id)->first();
-            DB::beginTransaction();
-            if ($cart == null){
-                return response()->json([
-                    "status"=>False,
-                    "message"=>"Không tìm thấy giỏ hàng",
-                    
-                ], 404);
+            $cart = Cart::where("user_id", $user_id)->with('items')->with('items.product.gameAttributes')->with('items.product.images')->first();
+            if ($cart == null) {
+                return [
+                    "status" => False,
+                    "message" => "Không tìm thấy giỏ hàng",
+                    "carts" => [],
+                    "total_price" => 0,
+                    "status_code" => 404
+                ];
             } else {
-                $order_code = "";
-                do {
-                    $order_code = $this->generateCode(16);
-                } while (Order::where("order_code",$order_code)->first() == null);
-                $wallet = Wallet::where("usser_id",$user_id)->first();
-                $wallet_transaction = WalletTransaction::create([
-                    "wallet_id"=>$wallet->id,
-                    "type"=>"purchase",
-                    "amount"=>0,
-                    "status"=>0
-                ]);
-                $order = Order::create([
-                    "user_id"=>$user_id,
-                    "order_code"=>$order_code,
-                    "wallet_transaction_id"=>$wallet_transaction->id,
-                    "total_amount"=>0,
-                    
-                ]);
-                foreach ($product_id as $item){
-                    $cart_item = CartItem::where("cart_id",$cart->id)->where("product_id",$item)->with('product')->where('status',0)->first();
-                    if ($cart_item == null) {
-                        DB::rollBack();
-                        return response()->json([
-                            "status"=>False,
-                            "message"=>"Một sản phẩm không tồn tại"
-                        ], 404);
-                    } else {
+                $total_price = 0;
+                $cart_items = CartItem::where("cart_id", $cart->id)->with('product')->where('status', 1)->get();
+                foreach ($cart_items as $cart_item) {
+                    if ($cart_item->product->status == 1) {
                         $price = $cart_item->product->sale ?? $cart_item->product->price;
-                        $order_item = OrderItem::create([
-                            "order_id"=>$order->id,
-                            "product_id"=>$item,
-                            "unit_price"=>$price
-                        ]);
-
-                        WalletTransaction::where("id",$wallet_transaction->id)->update([
-                            "related_id"=>$order->id,
-                            "related_type"=>"App\Models\Order"
-                        ]);
-                        $cart_item->status = 1;
-                        $cart_item->save();
+                        $total_price += $price;
+                        $cart_item->unit_price = $price;
+                    } else {
+                        return [
+                            "status" => False,
+                            "message" => "Một sản phẩm không tồn tại",
+                            "carts" => [],
+                            "total_price" => 0,
+                            "status_code" => 404
+                        ];
                     }
                 }
-                DB::commit();
+                return [
+                    "status" => True,
+                    "message" => "Lấy giỏ hàng và tổng giá thành công",
+                    "carts" => $cart_items,
+                    "total_price" => $total_price,
+                    "status_code" => 200
+                ];
             }
-            return response()->json([
-                "status"=>False,
-                "message"=>"Thành công"
-            ],200);
         } catch (\Throwable $th) {
-            DB::rollBack();
-            return response()->json([
-                "status"=>False,
-                "message"=>"Đã xảy ra lỗi",
-                "error"=>$th->getMessage(),
-                "line"=>$th->getLine()
-            ],500);
+            // return ;
+            return [
+                "status" => False,
+                "message" => "Đã có lỗi xảy ra",
+                "carts" => [],
+                "total_price" => 0,
+                "status_code" => 500,
+            ];
+        }
+    }
+
+
+    private function check_promotion_from_cart($user_id, $promotion_code)
+    {
+        try {
+            $cart = $this->get_cart_and_total_price($user_id);
+            $total_price = $cart['total_price'];
+
+            if (!$cart['status']) {
+                return [
+                    "status" => false,
+                    "message" => "Giỏ hàng không hợp lệ",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            // Kiểm tra có nhập mã giảm giá hay không
+            if ($promotion_code == null) {
+                return [
+                    "status" => false,
+                    "message" => "Vui lòng nhập mã giảm giá",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            $promotion = Promotion::where("code", $promotion_code)->first();
+
+            if ($promotion == null) {
+                return [
+                    "status" => false,
+                    "message" => "Mã giảm giá {$promotion_code} không tồn tại",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 404
+                ];
+            }
+
+            if ($promotion->status != 1) {
+                return [
+                    "status" => false,
+                    "message" => "Mã giảm giá {$promotion_code} không tồn tại",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 404
+                ];
+            }
+
+            if ($promotion->start_date > now()) {
+                return [
+                    "status" => false,
+                    'message' => "Chưa đến hạn sử dụng mã giảm giá {$promotion_code}",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            if ($promotion->end_date < now()) {
+                return [
+                    "status" => false,
+                    'message' => "Đã quá hạn sử dụng mã giảm giá {$promotion_code}",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            $total_used_user = $this->total_used_promotion_code($promotion_code, $user_id);
+            if ($promotion->user_id != -1 && $promotion->user_id !== $user_id) {
+                return [
+                    "status" => false,
+                    "message" => "Mã giảm giá {$promotion_code} không tồn tại",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 404
+                ];
+            }
+            if ($total_used_user >= $promotion->per_user_limit) {
+                return [
+                    'status' => false,
+                    "message" => "Bạn đã hết số lần sử dụng mã giảm giá {$promotion_code}",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            if ($total_used_user >= $promotion->usage_limit) {
+                return [
+                    "status" => false,
+                    "message" => "Mã giảm giá {$promotion_code} đã hết số lần sử dụng",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 400
+                ];
+            }
+
+            $discount_value = $promotion->discount_value / 100;
+            $discount_amount = 0;
+
+            // Xử lý điều kiện min, max
+            if ($promotion->min_discount_amount != null && $promotion->max_discount_amount != null) {
+                if ($total_price < $promotion->min_discount_amount) {
+                    return [
+                        "status" => false,
+                        "message" => "Số tiền chưa đạt đến mức được giảm giá",
+                        "promotion_code" => $promotion_code,
+                        "discount_amount" => 0,
+                        "discount_value" => 0,
+                        "total_price_after_discount" => $total_price,
+                        "status_code" => 400
+                    ];
+                } elseif ($total_price >= $promotion->min_discount_amount && $total_price <= $promotion->max_discount_amount) {
+                    $discount_amount = $total_price * $discount_value;
+                } elseif ($total_price > $promotion->max_discount_amount) {
+                    $discount_amount = $promotion->max_discount_amount * $discount_value;
+                }
+            } elseif ($promotion->min_discount_amount == null && $promotion->max_discount_amount == null) {
+                $discount_amount = $total_price * $discount_value;
+            } elseif ($promotion->min_discount_amount == null && $promotion->max_discount_amount != null) {
+                if ($total_price > $promotion->max_discount_amount) {
+                    $discount_amount = $promotion->max_discount_amount * $discount_value;
+                } else {
+                    $discount_amount = $total_price * $discount_value;
+                }
+            } elseif ($promotion->min_discount_amount != null && $promotion->max_discount_amount == null) {
+                if ($total_price < $promotion->min_discount_amount) {
+                    return [
+                        "status" => false,
+                        "message" => "Số tiền chưa đạt đến mức được giảm giá",
+                        "promotion_code" => $promotion_code,
+                        "discount_amount" => 0,
+                        "discount_value" => 0,
+                        "total_price_after_discount" => $total_price,
+                        "status_code" => 400
+                    ];
+                } else {
+                    $discount_amount = $total_price * $discount_value;
+                }
+            } else {
+                return [
+                    "status" => false,
+                    "message" => "Đã có lỗi xảy ra",
+                    "promotion_code" => $promotion_code,
+                    "discount_amount" => 0,
+                    "discount_value" => 0,
+                    "total_price_after_discount" => $total_price,
+                    "status_code" => 500
+                ];
+            }
+
+            return [
+                "status" => true,
+                'message' => "Áp dụng mã giảm giá {$promotion_code} thành công",
+                "promotion_code" => $promotion_code,
+                "discount_amount" => $discount_amount,
+                "discount_value" => $discount_value,
+                "total_price_after_discount" => $total_price - $discount_amount,
+                "status_code" => 200,
+            ];
+        } catch (\Throwable $th) {
+            // Lưu ý: nếu lỗi, không biết promotion_code, discount_value... => để default
+            return [
+                "status" => false,
+                "message" => "Đã xảy ra lỗi hệ thống",
+                "promotion_code" => $promotion_code,
+                "discount_amount" => 0,
+                "discount_value" => 0,
+                "total_price_after_discount" => 0,
+                "status_code" => 500
+            ];
+        }
+    }
+
+
+    public function check_promotion(Request $request)
+    {
+        try {
+            return response()->json($this->check_promotion_from_cart($request->user_id, $request->promotion_code));
+        } catch (\Throwable $th) {
+            return [
+                "status" => false,
+                "message" => "Đã xảy ra lỗi hệ thống",
+                "promotion_code" => $request->promotion_code,
+                "discount_amount" => 0,
+                "discount_value" => 0,
+                "total_price_after_discount" => 0,
+                "status_code" => 500
+            ];
+        }
+    }
+    public function checkout(Request $request)
+    {
+        try {
+            // $this->total_used_promotion_code();
+            // $this->get_cart_and_total_price();
+            // $this->check_promotion();
+            // return response()->json($this->get_cart_and_total_price($request->user_id));
+        } catch (\Throwable $th) {
             //throw $th;
         }
     }

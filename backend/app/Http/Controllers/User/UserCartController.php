@@ -8,6 +8,7 @@ use App\Models\CartItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use PhpParser\Node\Stmt\TryCatch;
 
 class UserCartController extends Controller
@@ -25,7 +26,7 @@ class UserCartController extends Controller
                 ]);
                 $cart->setRelation('items', collect());
             }
-            $products = CartItem::with(['product','product.images','product.category'])
+            $products = CartItem::with(['product', 'product.images', 'product.category'])
                 ->where('cart_id', $cart->id)
                 ->get();
             return response()->json([
@@ -41,6 +42,94 @@ class UserCartController extends Controller
         }
     }
 
+
+    public function save(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'product_id' => 'required|array|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                ], 422);
+            }
+            $user_id = $request->user_id;
+            $product_id = $request->product_id;
+            $cart = Cart::where("user_id", $user_id)->first();
+            DB::beginTransaction();
+            if ($cart == null) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Không tìm thấy giỏ hàng",
+
+                ], 404);
+            } else {
+                CartItem::where('cart_id', $cart->id)->update([
+                    'status' => 0
+                ]);
+                // $order_code = "";
+                // do {
+                //     $order_code = $this->generateCode(16);
+                // } while (Order::where("order_code", $order_code)->exists());
+                // $wallet = Wallet::where("user_id",$user_id)->first();
+                // $wallet_transaction = WalletTransaction::create([
+                //     "wallet_id"=>$wallet->id,
+                //     "type"=>"purchase",
+                //     "amount"=>0,
+                //     "status"=>0
+                // ]);
+                // $order = Order::create([
+                //     "user_id"=>$user_id,
+                //     "order_code"=>$order_code,
+                //     "wallet_transaction_id"=>$wallet_transaction->id,
+                //     "total_amount"=>0,
+
+                // ]);
+                foreach ($product_id as $item) {
+                    $cart_item = CartItem::where("cart_id", $cart->id)->where("product_id", $item)->with('product')->first();
+                    if ($cart_item == null) {
+                        DB::rollBack();
+                        return response()->json([
+                            "status" => False,
+                            "message" => "Một sản phẩm không tồn tại"
+                        ], 404);
+                    } else {
+                        // $price = $cart_item->product->sale ?? $cart_item->product->price;
+                        // $order_item = OrderItem::create([
+                        //     "order_id"=>$order->id,
+                        //     "product_id"=>$item,
+                        //     "unit_price"=>$price
+                        // ]);
+
+                        // WalletTransaction::where("id",$wallet_transaction->id)->update([
+                        //     "related_id"=>$order->id,
+                        //     "related_type"=>"App\Models\Order"
+                        // ]);
+                        $cart_item->status = 1;
+                        $cart_item->save();
+                    }
+                }
+                DB::commit();
+            }
+
+            return response()->json([
+                "status" => True,
+                "message" => "Thành công"
+            ], 200);
+        } catch (\Throwable $th) {
+            // DB::rollBack();
+            return response()->json([
+                "status" => False,
+                "message" => "Đã xảy ra lỗi",
+                "error" => $th->getMessage(),
+                "line" => $th->getLine()
+            ], 500);
+            //throw $th;
+        }
+    }
 
     public function store(Request $request)
     {

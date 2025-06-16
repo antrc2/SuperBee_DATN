@@ -110,13 +110,24 @@ Route::middleware('auth')->group(function () {
         Route::prefix("/carts")->group(function () {
             Route::get("/", [UserCartController::class, 'index']);
             Route::post("/", [UserCartController::class, 'store']);
+            Route::post("/save",[UserCartController::class,'save']);
             Route::delete("/{id}", [UserCartController::class, 'destroy']);
 
         });
         Route::prefix('/orders')->group(function(){
             Route::get('/',[UserOrderController::class,'index']);
+            Route::get("/checkout", [UserOrderController::class,'checkout']);
             Route::get("/{id}",[UserOrderController::class,'show']);
-            Route::post("/checkout",[UserOrderController::class,'checkout']);
+            
+            // promotion_code
+            Route::post("/check", [UserOrderController::class,'check_promotion']);
+
+            // promotion_code
+            Route::post("/purchase", [UserOrderController::class,'purchase']);
+
+
+
+            // Route::post("/checkout",[UserOrderController::class,'checkout']);
             // Dữ liệu gửi lên: product_id: [] - Mảng các id sản phẩm ở trong cart
             // promotion_code: mã giảm giá, có thể null, hoặc không gửi lên cũng đc
             // Route::post("/purchase",[UserOrderController::class,'purchase']);

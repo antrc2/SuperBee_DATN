@@ -65,21 +65,12 @@ class UserOrderController extends Controller
             ], 500);
         }
     }
-    public function store(Request $request){
-        try {
-            $user_id = $request->user_id;
-            $product_id = $request->product_id;
-            $cart = Cart::with('items')->where("user_id",$user_id)->first();
 
-            if ($cart == null){
-                return response()->json([
-                    "status"=>False,
-                    "message"=>"Bạn không có sản phẩm nào trong giỏ hàng"
-                ]);
-            }
+    public function checkout(Request $request){
+        try {
             $validator = Validator::make($request->all(), [
                 'product_id' => 'required|array|min:1',
-            ]);
+                ]);
 
             if ($validator->fails()) {
                 return response()->json([
@@ -87,251 +78,345 @@ class UserOrderController extends Controller
                     'message' => 'Dữ liệu không hợp lệ',
                 ], 422);
             }
-
-            $total_price = 0;
-            $unit_price = [];
-
-            foreach ($product_id as $item){
-                if (CartItem::where('product_id',$item)->first() == null) {
-                    return response()->json([
-                        "status"=>False,
-                        "message"=>"Một sản phẩm không tồn tại"
-                    ]);
-                }
-                $query = Product::where("id",$item);
-                $product = $query->first();
-                if (!$product){
-                    return response()->json([
-                        "status"=>False,
-                        "message"=>"Một sản phẩm không tồn tại",
-                    ],404);
-                } else { // Tìm thấy, check status;
-                    if ($product->status == 1){
-                        if ($product->sale == NULL){
-                            $total_price += $product->price;
-                            $unit_price[] = $product->price;
-                        } else {
-                            $total_price += $product->sale;
-                            $unit_price[] = $product->sale;
-                        }
-                    } elseif ($product->status == 4){
-                        return response()->json([
-                            "status"=>False,
-                            "message"=>"Sản phẩm {$product->sku} đã được bán"
-                        ]);
-                    } elseif ($product->status == 3) {
-                        return response()->json([
-                            "status"=>False,
-                            "message"=>"Sản phẩm {$product->sku} đã bị hủy bán"
-                        ]);
-                    } else {
-                        return response()->json([
-                            "status"=>False,
-                            "message"=>"Sản phẩm {$product->sku} không thể bán"
-                        ]);
-                    }
-                }
-            }
-            $promotion = Promotion::where("code",$request->promotion_code);
-            $discount_amount = 0;
-            $discount_value = 0;
-            // Kiểm tra xem có nhập hay không
-            if (isset($request->promotion_code) && $request->promotion_code != NULL){ // Có nhập
-                $promotion_code = $promotion->first()->code;
-                if ($promotion->where("status",1)->first()){ // Đang kích hoạt
-                    $promotion = $promotion->where("status",1);
-                    $code = $promotion->where('start_date', '<=', now())->where('end_date', '>=', now())->first();
-                    if ($code){ // Vẫn còn hạn sử dụng
-                        $check = Order::where("user_id",$user_id)->where("promo_code",$code->code)->get(); // Đếm số lần sử dụng promo code
-                        // Ktra xem có bị giới hạn trên 1  người không
-                        if ($code->per_user_limit == -1) {
-                            $can_use_discount_code = True;
-                        } else {
-                            if ($code->per_user_limit > count($check)){
-                                $can_use_discount_code = True;
-
-                            } else {
-                                $can_use_discount_code = False;
-                                return response()->json([
-                                    "status"=>False,
-                                    'message'=>"Bạn đã hết số lần sử dụng mã giảm giá {$code->code}"
-                                ]);
-                            }
-                        }
-                        // var_dump($can_use_discount_code);
-
-                        // Kiểm tra xem có bị giới hạn ở trên tất cả người dùng không
-                        if ($can_use_discount_code) {
-                            if ($code->usage_limit == -1) {
-                                $can_use_discount_code = True;
-                            } else {
-                                $codes = Order::where("promo_code",$code->code)->get();
-                                if ($code->usage_limit <= count($codes)){
-                                    $can_use_discount_code = False;
-                                    return response()->json([
-                                        "status"=>False,
-                                        "message"=>"Mã giảm giá {$code->code} đã đạt đến giới hạn số lần sử dụng"
-                                    ]);
-                                } else {
-                                    $can_use_discount_code = True;
-                                }
-                            }
-                        }
-
-                        if ($can_use_discount_code){
-                            $discount_value = $code->discount_value / 100;
-                            if ($code->min_discount_amount != NULL && $code->max_discount_amount != NULL) {
-                                if ($total_price < $code->min_discount_amount){
-                                    return response()->json([
-                                        "status"=>False,
-                                        'message'=>"Số tiền chưa đạt đến mức được giảm giá",
-                                    ]);
-                                } elseif ($total_price >= $code->min_discount_amount && $total_price < $code->max_discount_amount){
-                                    $discount_amount  = $total_price * $discount_value;
-                                } elseif ($total_price >= $code->max_discount_amount){
-                                    $discount_amount = $code->max_discount_amount * $discount_value;
-                                } else {
-                                    return response()->json([
-                                        'status'=>False,
-                                        "message"=>"Đã xảy ra lỗi"
-                                    ],500);
-                                }
-                            } elseif ($code->min_discount_amount == NULL && $code->max_discount_amount == NULL){
-                                $discount_amount =  $total_price * $discount_value;
-                            } elseif ($code->min_discount_amount == NULL && $code->max_discount_amount != NULL){
-                                if ($total_price >= $code->max_discount_amount){
-                                    $discount_amount = $code->max_discount_amount * $discount_value; 
-                                } else {
-                                    $discount_amount = $total_price * $discount_value;
-                                }
-                            } else if ($code->min_discount_amount != NULL && $code->max_discount_amount == NULL){
-                                if ($total_price < $code->min_discount_amount){
-                                    return response()->json([
-                                        "status"=>False,
-                                        'message'=>"Số tiền chưa đạt đến mức được giảm giá",
-                                    ]);
-                                } else {
-                                    $discount_amount = $total_price * $discount_value;
-                                }
-                            } else {
-                                return response()->json([
-                                    "status"=>False,
-                                    "message"=>"Đã có lỗi xảy ra"
-                                ], 500);
-                            }
-                        }
-
-                    } else {
-                        return response()->json([
-                            "status"=>False,
-                            'message'=>"Mã giảm giá đã hết hạn"
-                        ]);
-                    }
-                } else {
-                    return response()->json([
-                        "status"=>False,
-                        "message"=>"Không tìm thấy mã giảm giá"
-                    ]);
-                }
-            } else {
-                // Không nhập mã giảm giá
-                $promotion_code = NULL;
-            }
-
-            // Tính tiền
-            $total_price_after_discount = $total_price - $discount_amount;
-            $wallet = Wallet::where("user_id",$user_id)->first();
-
-            if ($wallet->balance - $total_price_after_discount  < 0){
+            $user_id = $request->user_id;
+            $product_id = $request->product_id;
+            $cart = Cart::where("user_id",$user_id)->first();
+            DB::beginTransaction();
+            if ($cart == null){
                 return response()->json([
                     "status"=>False,
-                    "message"=>"Bạn không đủ số tiền để mua"
-                ]);
-            }
-            // Tính aff
-            $affiliate = Affiliate::where('user_id',$user_id)->first();
-            $affiliated_by = $affiliate->affiliated_by;
-            DB::beginTransaction();
-            $wallet_transaction = WalletTransaction::create([
-                "wallet_id"=>$wallet->id,
-                "type"=>"purchase",
-                "related_id"=>null,
-                "related_type"=>"App\Models\Order",
-                "status"=>1,
-                "amount"=> $total_price_after_discount
-            ]);
-
-            $order = Order::create([
-                "user_id"=>$user_id,
-                "order_code"=>"ORDER-".$this->generateCode(16),
-                "total_amount"=>$total_price,
-                "wallet_transaction_id"=>$wallet_transaction->id,
-                "status"=>1,
-                "promo_code"=>$promotion_code,
-                "discount_amount"=>$discount_amount
-            ]);
-            // return response()->json([
-            //     "hehe"=>$order
-            // ]);
-            for ($i=0 ; $i<count($product_id) ; $i++){
-                OrderItem::create([
-                    "order_id"=>$order->id,
-                    "product_id"=>$product_id[$i],
-                    "unit_price"=>$unit_price[$i]
-                ]);
-                CartItem::where('product_id',$product_id[$i])->delete();
-            }
-            $cart = Cart::where("user_id",$user_id)->with('items')->first();
-            if (count($cart->items) == 0) {
-                Cart::where("id",$cart->id)->delete();
-            }
-
-            WalletTransaction::where("id",$wallet_transaction->id)->update([
-                'related_id'=>$order->id
-            ]);
-            // Order::where("id",$order->id)->update([
-            //     "wallet_transaction_id"=>$wallet_transaction->id
-            // ]);
-            $wallet->balance -= $total_price_after_discount;
-            $wallet->save();
-
-
-            if ($affiliated_by == null) {
-                $aff_recieved = 0;
+                    "message"=>"Không tìm thấy giỏ hàng",
+                    
+                ], 404);
             } else {
-                $aff_recieved = $total_price_after_discount * 5 / 100;
-                AffiliateHistory::create([
-                    "affiliate_id"=>$affiliate->id,
-                    "commission_amount"=>$aff_recieved,
-                    "order_id"=>$order->id,
+                $order_code = "";
+                do {
+                    $order_code = $this->generateCode(16);
+                } while (Order::where("order_code",$order_code)->first() == null);
+                $wallet = Wallet::where("usser_id",$user_id)->first();
+                $wallet_transaction = WalletTransaction::create([
+                    "wallet_id"=>$wallet->id,
+                    "type"=>"purchase",
+                    "amount"=>0,
+                    "status"=>0
                 ]);
-                $wallet_aff = Wallet::where("user_id",$affiliated_by)->get();
-                $wallet_aff->balance  += $aff_recieved;
-                $wallet_aff->save();
+                $order = Order::create([
+                    "user_id"=>$user_id,
+                    "order_code"=>$order_code,
+                    "wallet_transaction_id"=>$wallet_transaction->id,
+                    "total_amount"=>0,
+                    
+                ]);
+                foreach ($product_id as $item){
+                    $cart_item = CartItem::where("cart_id",$cart->id)->where("product_id",$item)->with('product')->where('status',0)->first();
+                    if ($cart_item == null) {
+                        DB::rollBack();
+                        return response()->json([
+                            "status"=>False,
+                            "message"=>"Một sản phẩm không tồn tại"
+                        ], 404);
+                    } else {
+                        $price = $cart_item->product->sale ?? $cart_item->product->price;
+                        $order_item = OrderItem::create([
+                            "order_id"=>$order->id,
+                            "product_id"=>$item,
+                            "unit_price"=>$price
+                        ]);
 
-                WalletTransaction::create([
-                    "wallet_id"=>$wallet_aff->id,
-                    'type'=>"commission",
-                    "amount"=>$aff_recieved,
-                    "related_id"=>$wallet_aff->id,
-                    "related_type"=>"App\Models\AffiliateHistory",
-                    "status"=>1
-                ]);
+                        WalletTransaction::where("id",$wallet_transaction->id)->update([
+                            "related_id"=>$order->id,
+                            "related_type"=>"App\Models\Order"
+                        ]);
+                        $cart_item->status = 1;
+                        $cart_item->save();
+                    }
+                }
+                DB::commit();
             }
-            $current_order = Order::with(["items.product",'walletTransaction'])->where('id',$order->id)->get();
-
-            DB::commit();
             return response()->json([
-                "status"=>True,
-                "message"=>"Mua hàng thành công",
-                "data"=>$current_order
-            ]);
+                "status"=>False,
+                "message"=>"Thành công"
+            ],200);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
-                "status" => false,
-                "message" => "Đã có lỗi xảy ra"
-            ], 500);
+                "status"=>False,
+                "message"=>"Đã xảy ra lỗi",
+                "error"=>$th->getMessage(),
+                "line"=>$th->getLine()
+            ],500);
+            //throw $th;
         }
     }
+
+
+    // public function store(Request $request){
+    //     try {
+    //         $user_id = $request->user_id;
+    //         $product_id = $request->product_id;
+    //         $cart = Cart::with('items')->where("user_id",$user_id)->first();
+
+    //         if ($cart == null){
+    //             return response()->json([
+    //                 "status"=>False,
+    //                 "message"=>"Bạn không có sản phẩm nào trong giỏ hàng"
+    //             ]);
+    //         }
+    //         $validator = Validator::make($request->all(), [
+    //             'product_id' => 'required|array|min:1',
+    //         ]);
+
+    //         if ($validator->fails()) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Dữ liệu không hợp lệ',
+    //             ], 422);
+    //         }
+
+    //         $total_price = 0;
+    //         $unit_price = [];
+
+    //         foreach ($product_id as $item){
+    //             if (CartItem::where('product_id',$item)->first() == null) {
+    //                 return response()->json([
+    //                     "status"=>False,
+    //                     "message"=>"Một sản phẩm không tồn tại"
+    //                 ]);
+    //             }
+    //             $query = Product::where("id",$item);
+    //             $product = $query->first();
+    //             if (!$product){
+    //                 return response()->json([
+    //                     "status"=>False,
+    //                     "message"=>"Một sản phẩm không tồn tại",
+    //                 ],404);
+    //             } else { // Tìm thấy, check status;
+    //                 if ($product->status == 1){
+    //                     if ($product->sale == NULL){
+    //                         $total_price += $product->price;
+    //                         $unit_price[] = $product->price;
+    //                     } else {
+    //                         $total_price += $product->sale;
+    //                         $unit_price[] = $product->sale;
+    //                     }
+    //                 } elseif ($product->status == 4){
+    //                     return response()->json([
+    //                         "status"=>False,
+    //                         "message"=>"Sản phẩm {$product->sku} đã được bán"
+    //                     ]);
+    //                 } elseif ($product->status == 3) {
+    //                     return response()->json([
+    //                         "status"=>False,
+    //                         "message"=>"Sản phẩm {$product->sku} đã bị hủy bán"
+    //                     ]);
+    //                 } else {
+    //                     return response()->json([
+    //                         "status"=>False,
+    //                         "message"=>"Sản phẩm {$product->sku} không thể bán"
+    //                     ]);
+    //                 }
+    //             }
+    //         }
+    //         $promotion = Promotion::where("code",$request->promotion_code);
+    //         $discount_amount = 0;
+    //         $discount_value = 0;
+    //         // Kiểm tra xem có nhập hay không
+    //         if (isset($request->promotion_code) && $request->promotion_code != NULL){ // Có nhập
+    //             $promotion_code = $promotion->first()->code;
+    //             if ($promotion->where("status",1)->first()){ // Đang kích hoạt
+    //                 $promotion = $promotion->where("status",1);
+    //                 $code = $promotion->where('start_date', '<=', now())->where('end_date', '>=', now())->first();
+    //                 if ($code){ // Vẫn còn hạn sử dụng
+    //                     $check = Order::where("user_id",$user_id)->where("promo_code",$code->code)->get(); // Đếm số lần sử dụng promo code
+    //                     // Ktra xem có bị giới hạn trên 1  người không
+    //                     if ($code->per_user_limit == -1) {
+    //                         $can_use_discount_code = True;
+    //                     } else {
+    //                         if ($code->per_user_limit > count($check)){
+    //                             $can_use_discount_code = True;
+
+    //                         } else {
+    //                             $can_use_discount_code = False;
+    //                             return response()->json([
+    //                                 "status"=>False,
+    //                                 'message'=>"Bạn đã hết số lần sử dụng mã giảm giá {$code->code}"
+    //                             ]);
+    //                         }
+    //                     }
+    //                     // var_dump($can_use_discount_code);
+
+    //                     // Kiểm tra xem có bị giới hạn ở trên tất cả người dùng không
+    //                     if ($can_use_discount_code) {
+    //                         if ($code->usage_limit == -1) {
+    //                             $can_use_discount_code = True;
+    //                         } else {
+    //                             $codes = Order::where("promo_code",$code->code)->get();
+    //                             if ($code->usage_limit <= count($codes)){
+    //                                 $can_use_discount_code = False;
+    //                                 return response()->json([
+    //                                     "status"=>False,
+    //                                     "message"=>"Mã giảm giá {$code->code} đã đạt đến giới hạn số lần sử dụng"
+    //                                 ]);
+    //                             } else {
+    //                                 $can_use_discount_code = True;
+    //                             }
+    //                         }
+    //                     }
+
+    //                     if ($can_use_discount_code){
+    //                         $discount_value = $code->discount_value / 100;
+    //                         if ($code->min_discount_amount != NULL && $code->max_discount_amount != NULL) {
+    //                             if ($total_price < $code->min_discount_amount){
+    //                                 return response()->json([
+    //                                     "status"=>False,
+    //                                     'message'=>"Số tiền chưa đạt đến mức được giảm giá",
+    //                                 ]);
+    //                             } elseif ($total_price >= $code->min_discount_amount && $total_price < $code->max_discount_amount){
+    //                                 $discount_amount  = $total_price * $discount_value;
+    //                             } elseif ($total_price >= $code->max_discount_amount){
+    //                                 $discount_amount = $code->max_discount_amount * $discount_value;
+    //                             } else {
+    //                                 return response()->json([
+    //                                     'status'=>False,
+    //                                     "message"=>"Đã xảy ra lỗi"
+    //                                 ],500);
+    //                             }
+    //                         } elseif ($code->min_discount_amount == NULL && $code->max_discount_amount == NULL){
+    //                             $discount_amount =  $total_price * $discount_value;
+    //                         } elseif ($code->min_discount_amount == NULL && $code->max_discount_amount != NULL){
+    //                             if ($total_price >= $code->max_discount_amount){
+    //                                 $discount_amount = $code->max_discount_amount * $discount_value; 
+    //                             } else {
+    //                                 $discount_amount = $total_price * $discount_value;
+    //                             }
+    //                         } else if ($code->min_discount_amount != NULL && $code->max_discount_amount == NULL){
+    //                             if ($total_price < $code->min_discount_amount){
+    //                                 return response()->json([
+    //                                     "status"=>False,
+    //                                     'message'=>"Số tiền chưa đạt đến mức được giảm giá",
+    //                                 ]);
+    //                             } else {
+    //                                 $discount_amount = $total_price * $discount_value;
+    //                             }
+    //                         } else {
+    //                             return response()->json([
+    //                                 "status"=>False,
+    //                                 "message"=>"Đã có lỗi xảy ra"
+    //                             ], 500);
+    //                         }
+    //                     }
+
+    //                 } else {
+    //                     return response()->json([
+    //                         "status"=>False,
+    //                         'message'=>"Mã giảm giá đã hết hạn"
+    //                     ]);
+    //                 }
+    //             } else {
+    //                 return response()->json([
+    //                     "status"=>False,
+    //                     "message"=>"Không tìm thấy mã giảm giá"
+    //                 ]);
+    //             }
+    //         } else {
+    //             // Không nhập mã giảm giá
+    //             $promotion_code = NULL;
+    //         }
+
+    //         // Tính tiền
+    //         $total_price_after_discount = $total_price - $discount_amount;
+    //         $wallet = Wallet::where("user_id",$user_id)->first();
+
+    //         if ($wallet->balance - $total_price_after_discount  < 0){
+    //             return response()->json([
+    //                 "status"=>False,
+    //                 "message"=>"Bạn không đủ số tiền để mua"
+    //             ]);
+    //         }
+    //         // Tính aff
+    //         $affiliate = Affiliate::where('user_id',$user_id)->first();
+    //         $affiliated_by = $affiliate->affiliated_by;
+    //         DB::beginTransaction();
+    //         $wallet_transaction = WalletTransaction::create([
+    //             "wallet_id"=>$wallet->id,
+    //             "type"=>"purchase",
+    //             "related_id"=>null,
+    //             "related_type"=>"App\Models\Order",
+    //             "status"=>1,
+    //             "amount"=> $total_price_after_discount
+    //         ]);
+
+    //         $order = Order::create([
+    //             "user_id"=>$user_id,
+    //             "order_code"=>"ORDER-".$this->generateCode(16),
+    //             "total_amount"=>$total_price,
+    //             "wallet_transaction_id"=>$wallet_transaction->id,
+    //             "status"=>1,
+    //             "promo_code"=>$promotion_code,
+    //             "discount_amount"=>$discount_amount
+    //         ]);
+    //         // return response()->json([
+    //         //     "hehe"=>$order
+    //         // ]);
+    //         for ($i=0 ; $i<count($product_id) ; $i++){
+    //             OrderItem::create([
+    //                 "order_id"=>$order->id,
+    //                 "product_id"=>$product_id[$i],
+    //                 "unit_price"=>$unit_price[$i]
+    //             ]);
+    //             CartItem::where('product_id',$product_id[$i])->delete();
+    //         }
+    //         $cart = Cart::where("user_id",$user_id)->with('items')->first();
+    //         if (count($cart->items) == 0) {
+    //             Cart::where("id",$cart->id)->delete();
+    //         }
+
+    //         WalletTransaction::where("id",$wallet_transaction->id)->update([
+    //             'related_id'=>$order->id
+    //         ]);
+    //         // Order::where("id",$order->id)->update([
+    //         //     "wallet_transaction_id"=>$wallet_transaction->id
+    //         // ]);
+    //         $wallet->balance -= $total_price_after_discount;
+    //         $wallet->save();
+
+
+    //         if ($affiliated_by == null) {
+    //             $aff_recieved = 0;
+    //         } else {
+    //             $aff_recieved = $total_price_after_discount * 5 / 100;
+    //             AffiliateHistory::create([
+    //                 "affiliate_id"=>$affiliate->id,
+    //                 "commission_amount"=>$aff_recieved,
+    //                 "order_id"=>$order->id,
+    //             ]);
+    //             $wallet_aff = Wallet::where("user_id",$affiliated_by)->get();
+    //             $wallet_aff->balance  += $aff_recieved;
+    //             $wallet_aff->save();
+
+    //             WalletTransaction::create([
+    //                 "wallet_id"=>$wallet_aff->id,
+    //                 'type'=>"commission",
+    //                 "amount"=>$aff_recieved,
+    //                 "related_id"=>$wallet_aff->id,
+    //                 "related_type"=>"App\Models\AffiliateHistory",
+    //                 "status"=>1
+    //             ]);
+    //         }
+    //         $current_order = Order::with(["items.product",'walletTransaction'])->where('id',$order->id)->get();
+
+    //         DB::commit();
+    //         return response()->json([
+    //             "status"=>True,
+    //             "message"=>"Mua hàng thành công",
+    //             "data"=>$current_order
+    //         ]);
+    //     } catch (\Throwable $th) {
+    //         DB::rollBack();
+    //         return response()->json([
+    //             "status" => false,
+    //             "message" => "Đã có lỗi xảy ra"
+    //         ], 500);
+    //     }
+    // }
 }

@@ -88,10 +88,10 @@ Route::middleware('authenticate')->group(function () {
             
 
         });
-            Route::prefix('/discountcode')->group(function () {
-                Route::get('/', [DiscountCodeController::class, 'index']);
-                Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
-            });
+        Route::prefix('/discountcode')->group(function () {
+            Route::get('/', [DiscountCodeController::class, 'index']);
+            Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
+        });
         // Dữ liệu gửi vào đây nhé 
         // {
         //     "telco": "VIETTEL",
@@ -116,11 +116,12 @@ Route::middleware('authenticate')->group(function () {
         Route::prefix('/orders')->group(function(){
             Route::get('/',[UserOrderController::class,'index']);
             Route::get("/{id}",[UserOrderController::class,'show']);
-
+            Route::post("/checkout",[UserOrderController::class,'checkout']);
             // Dữ liệu gửi lên: product_id: [] - Mảng các id sản phẩm ở trong cart
             // promotion_code: mã giảm giá, có thể null, hoặc không gửi lên cũng đc
+            // Route::post("/purchase",[UserOrderController::class,'purchase']);
+            // Route::post("/", [UserOrderController::class,'store']);
 
-            Route::post("/", [UserOrderController::class,'store']);
 
         });
     });

@@ -11,6 +11,12 @@ import EditDiscountCodePage from "./Admin/DiscountCode/EditDiscountCodePage";
 import CreateDonatePromotionPage from "./Admin/DonatePromotion/CreateDonatePromotionPage";
 import DonatePromotionPage from "./Admin/DonatePromotion/DonatePromotionPage";
 import EditDonatePromotionPage from "./Admin/DonatePromotion/EditDonatePromotionPage";
+import BannersListPage from "../pages/Admin/Banners/BannersListPage";
+import BannerDetailPage from "../pages/Admin/Banners/BannerDetailPage";
+import CreateBanners from "../pages/Admin/Banners/CreateBanners";
+import EditBanner from "../pages/Admin/Banners/EditBanner";
+import BannersPageLayout from "../pages/Admin/Banners/BannersPageLayout";
+import ListOrderPage from "./Admin/Orders/ListOrderPage";
 // AUTH
 import Login from "./Auth/Login";
 import Register from "./Auth/Register";
@@ -38,7 +44,13 @@ import ProductsListPage from "./Admin/Products/ProductsListPage";
 import EditProducts from "./Admin/Products/EditProducts";
 import CreateProducts from "./Admin/Products/CreateProducts";
 import ProductDetailPage from "./Admin/Products/ProductDetailPage";
+import HistoryOrder from "./Clients/Profile/HistoryOrder";
+import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
+
 export {
+  ListOrderPage,
+  ShowOrderPage,
+  HistoryOrder,
   ProductDetailPage,
   CreateProducts,
   EditProducts,
@@ -73,5 +85,10 @@ export {
   CartPage,
   ProductDetail,
   EmailVerification,
-  ShowDiscountCodePage
+  ShowDiscountCodePage,
+  BannerDetailPage,
+  BannersListPage,
+  CreateBanners,
+  EditBanner,
+  BannersPageLayout,
 };

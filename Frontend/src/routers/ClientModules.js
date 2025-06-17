@@ -11,7 +11,12 @@ import {
   CartPage,
   Pay,
 } from "@pages";
-import { EmailVerification, ForgotPassword, ResetPassword } from "../pages";
+import {
+  EmailVerification,
+  ForgotPassword,
+  HistoryOrder,
+  ResetPassword,
+} from "../pages";
 import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
 
 export const clientModules = [
@@ -19,6 +24,7 @@ export const clientModules = [
     // Trang chủ
     path: "/",
     view: Home,
+    requiresAuth: false,
   },
   {
     // Bạn không có quyền truy cập
@@ -35,21 +41,25 @@ export const clientModules = [
   {
     path: "/mua-acc",
     view: ShopAccount,
+    requiresAuth: false,
   },
   // Trang chi tiết của một category con gồm list sản phẩm
   {
     path: "/mua-acc/:slug",
     view: ListProducts,
+    requiresAuth: false,
   },
   // Trang chi tiết sản phẩm
   {
     path: "/acc/:slug",
     view: ProductDetail,
+    requiresAuth: false,
   },
   // Trang lịch sử đã xem
   {
     path: "/viewed",
     view: HistoryProducts,
+    requiresAuth: false,
   },
   // trang giỏ hàng
   {
@@ -95,6 +105,11 @@ export const profileModule = [
   {
     path: "/info/transactions",
     view: TransactionHistoryPage,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/orders",
+    view: HistoryOrder,
     requiresAuth: true,
   },
 ];

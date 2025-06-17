@@ -1,13 +1,13 @@
 import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 export default function CartDropdown({
   cartItems,
   isOpen,
   onClose,
-  isMobile = false
+  isMobile = false,
 }) {
   const dropdownRef = useRef(null);
-
   useEffect(() => {
     if (!isMobile) {
       const handleClickOutside = (event) => {
@@ -47,16 +47,18 @@ export default function CartDropdown({
       </div>
       <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
         {cartItems.length > 0 ? (
-          cartItems.map((item) => (
-            <a
-              href={item.href}
-              key={item.id}
+          cartItems.map((item, index) => (
+            <Link
+              to={`/acc/${item?.product?.sku}`}
+              key={index}
               className="flex gap-3 p-3 border-b border-gray-100 hover:bg-gray-50 transition-colors"
               onClick={onClose} // Close dropdown on item click
             >
               <img
-                src={item.imageUrl}
-                alt={item.name}
+                src={`${import.meta.env.VITE_BACKEND_IMG}${
+                  item?.product?.images[0]?.image_url
+                }`}
+                alt={item?.name}
                 className="h-16 w-16 rounded object-cover"
                 onError={(e) => {
                   e.target.onerror = null;
@@ -65,12 +67,14 @@ export default function CartDropdown({
                 }}
               />
               <div className="flex-grow">
-                <p className="text-sm font-medium text-gray-800">{item.name}</p>
+                <p className="text-sm font-medium text-gray-800">
+                  {item?.product?.category?.name}
+                </p>
                 <p className="text-sm text-red-600 font-semibold">
-                  {item.price}
+                  {item?.product?.price}đ
                 </p>
               </div>
-            </a>
+            </Link>
           ))
         ) : (
           <p className="p-4 text-sm text-gray-500 text-center">

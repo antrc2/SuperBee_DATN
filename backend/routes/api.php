@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Auth\AuthController;
@@ -7,12 +8,15 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
-use App\Http\Controllers\DiscountCodeController;
+use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
+use App\Http\Controllers\User\UserOrderController;
+use App\Http\Controllers\User\UserBannerController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -42,7 +46,7 @@ Route::prefix("/callback")->group(function () {
 });
 
 // Những router client chưa và đã đăng nhập
-Route::middleware('authenticate')->group(function () {
+Route::middleware('auth')->group(function () {
     // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
@@ -54,6 +58,9 @@ Route::middleware('authenticate')->group(function () {
     Route::prefix('/products')->group(function () {
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
+    });
+    Route::prefix('/banners')->group(function () {
+        Route::get("/", [UserBannerController::class, 'index']);
     });
     Route::prefix("/domain")->group(function () {
         Route::get("/", [AuthController::class, "domain"]);
@@ -73,12 +80,14 @@ Route::middleware('authenticate')->group(function () {
         // info
         Route::prefix('/user')->group(function () {
             Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::get('/history-trans', [UserProfileController::class, 'history']);
+            Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
-            Route::prefix('/discountcode')->group(function () {
-                Route::get('/', [DiscountCodeController::class, 'index']);
-                Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
-            });
+        });
+        Route::prefix('/discountcode')->group(function () {
+            Route::get('/', [DiscountCodeController::class, 'index']);
+            Route::get('/{id}', [DiscountCodeController::class, 'show']); // Sửa thành {id}
         });
         // Dữ liệu gửi vào đây nhé 
         // {
@@ -95,10 +104,32 @@ Route::middleware('authenticate')->group(function () {
         Route::prefix('/donate_promotions')->group(function () {
             Route::get("/", [AdminDonatePromotionController::class, 'index']);
         });
-        Route::prefix("/cart")->group(function () {
+        Route::prefix("/carts")->group(function () {
             Route::get("/", [UserCartController::class, 'index']);
             Route::post("/", [UserCartController::class, 'store']);
+            Route::post("/save", [UserCartController::class, 'save']);
             Route::delete("/{id}", [UserCartController::class, 'destroy']);
+        });
+        Route::prefix('/orders')->group(function () {
+            Route::get('/', [UserOrderController::class, 'index']);
+            Route::get("/checkout", [UserOrderController::class, 'checkout']);
+            Route::get("/{id}", [UserOrderController::class, 'show']);
+
+            // promotion_code
+            Route::post("/check", [UserOrderController::class, 'check_promotion']);
+
+            // promotion_code
+            Route::post("/purchase", [UserOrderController::class, 'purchase']);
+
+
+
+            // Route::post("/checkout",[UserOrderController::class,'checkout']);
+            // Dữ liệu gửi lên: product_id: [] - Mảng các id sản phẩm ở trong cart
+            // promotion_code: mã giảm giá, có thể null, hoặc không gửi lên cũng đc
+            // Route::post("/purchase",[UserOrderController::class,'purchase']);
+            // Route::post("/", [UserOrderController::class,'store']);
+
+
         });
     });
 });
@@ -108,12 +139,13 @@ Route::middleware('authenticate')->group(function () {
 // admin
 Route::middleware(['jwt'])->group(function () {
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
-        Route::get('/', function () {
-            return response()->json([
-                "status" => false,
-                "data" => [],
-                'message' => "no message"
-            ]);
+        Route::prefix('/discountcode')->group(function () {
+            Route::get('/', [AdminDiscountCodeController::class, 'index']);
+            Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+            Route::post('/', [AdminDiscountCodeController::class, 'store']);
+            Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+            Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+            Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
         });
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [AdminDiscountCodeController::class, 'index']);
@@ -129,9 +161,6 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [CategoryController::class, 'update']);
             Route::delete('/{id}', [CategoryController::class, 'destroy']);
             Route::get('/{id}', [CategoryController::class, 'show']);
-            // User Category
-
-
         });
         Route::prefix('/accounts')->group(function () {
             Route::get('/', [UserController::class, 'index']);
@@ -150,34 +179,17 @@ Route::middleware(['jwt'])->group(function () {
             Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
             Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
-            // Route::post("/")
+        });
+        Route::prefix("/orders")->group(function () {
+            Route::get("/", [OrderController::class, 'index']);
+            Route::get("/{id}", [OrderController::class, 'show']);
+        });
+        Route::prefix('/banners')->group(function () {
+            Route::get('/', [AdminBannerController::class, 'index']);
+            Route::get('/{id}', [AdminBannerController::class, 'show']);
+            Route::post('/', [AdminBannerController::class, 'store']);
+            Route::put('/{id}', [AdminBannerController::class, 'update']);
+            Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
         });
     });
-    // {
-    //     "category_id": 1,
-    //     "price": 123,
-    //     "sale": 123,
-    //     "username": "abc",
-    //     "password": "abc",
-    //     "images": [
-    //         {   
-    //             "alt_text": "abc",
-    //             "image_url": "abc"
-    //         },
-    //         {
-    //             "alt_text": "abc",
-    //             "image_url": "abc"
-    //         }
-    //     ],
-    //     "attributes": [
-    //         {
-    //             "attribute_key": "attribute_value"
-    //         },
-    //         {
-    //             "attribute_key": "attribute_value"
-    //         }
-    //     ]
-    // }
-
-
 });

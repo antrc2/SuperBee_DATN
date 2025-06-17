@@ -131,6 +131,7 @@ return new class extends Migration
         Schema::create('cart_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('cart_id'); // Thuộc giỏ hàng nào
+            $table->integer('status')->default(0); // Người dùng muốn mua sản phẩm nào. 0: Chưa muốn. 1: Đang muốn mua
             $table->unsignedBigInteger('product_id'); // Sản phẩm trong giỏ
             $table->timestamps();
         });
@@ -140,11 +141,11 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');               // Ai đặt hàng
             $table->string('order_code', 50)->unique();          // Mã đơn hàng duy nhất
-            $table->decimal('total_amount', 15, 0);              // Tổng tiền (sau khi trừ khuyến mãi, nếu có)
+            $table->decimal('total_amount', 15, 0)->nullable();              // Tổng tiền (sau khi trừ khuyến mãi, nếu có)
             // $table->integer('total_amount');
             $table->unsignedBigInteger('wallet_transaction_id'); // ID giao dịch ví (nếu có)
             // $table->string('payment_method', 50)->nullable();    // Phương thức thanh toán (ví, bank, card, ...)
-            $table->integer('status')->default(1);               // Trạng thái đơn: 0 = pending, 1 = completed, 2 = cancelled
+            $table->integer('status')->default(0);               // Trạng thái đơn: 0 = pending, 1 = completed, 2 = cancelled
             // $table->unsignedBigInteger('promotion_id')->nullable();
             // // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
             $table->string('promo_code', 50)->nullable();        // Lưu mã khuyến mãi (nếu có)
@@ -243,14 +244,15 @@ return new class extends Migration
         // Bảng promotions (Mã khuyến mãi cho sản phẩm)
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
+            $table->integer("user_id")->default(-1);
             $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
             $table->text('description')->nullable(); // Mô tả khuyến mãi
             // $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
             $table->decimal('discount_value', 15, 0); // Giá trị giảm giá
             $table->integer('min_discount_amount')->nullable();
             $table->integer('max_discount_amount')->nullable();
-            $table->date('start_date'); // Ngày bắt đầu
-            $table->date('end_date'); // Ngày kết thúc
+            $table->timestamp('start_date'); // Ngày bắt đầu
+            $table->timestamp('end_date'); // Ngày kết thúc
             $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
             $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
             $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng

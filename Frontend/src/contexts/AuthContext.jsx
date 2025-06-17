@@ -6,37 +6,33 @@ import React, {
   useState,
   useCallback,
 } from "react";
-import { useApiKeyManager } from "@utils/useApiKeyManager.js"; // Đảm bảo đường dẫn đúng
-import { useDomainCheck } from "@utils/useDomainCheck.js"; // Đảm bảo đường dẫn đúng
+import { useApiKeyManager } from "@utils/useApiKeyManager.js";
+import { useDomainCheck } from "@utils/useDomainCheck.js";
 import api from "../utils/http";
 import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
-import { showNotification } from "../utils/notification";
-
+import { useNotification } from "./NotificationProvider";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  // `user` sẽ được khởi tạo từ localStorage
+  const { pop } = useNotification();
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
       ? {
           name: decoded.name,
-          money: decoded.money /* other user data from token */,
+          money: decoded.money,
         }
       : sessionStorage.getItem("access_token");
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const navigate = useNavigate(); // Đổi tên `navigator` thành `Maps` cho chuẩn React Router
+  const navigate = useNavigate();
 
   // Hàm login
   const login = async (credentials) => {
     setLoading(true);
-    setError(null); // Xóa lỗi cũ
-    // Không cần setUser(null) ở đây, vì nếu login thành công sẽ set lại
-    // Nếu thất bại thì error sẽ được set và user vẫn là null (nếu trước đó là null)
-
+    setError(null);
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
@@ -46,38 +42,42 @@ export function AuthProvider({ children }) {
       if (!res?.data?.access_token) {
         throw new Error("Không nhận được access_token từ server.");
       }
-
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
-      const decoded = getDecodedToken(); // Sử dụng hàm đã tách
+      const decoded = getDecodedToken();
       if (decoded) {
-        setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
-        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+        setUser({
+          name: decoded.name,
+          money: decoded.money,
+          avatar: decoded.avatar,
+        });
+        setLoading(false);
+        const locationOld = localStorage.getItem("location");
+        if (locationOld) {
+          const locationNew = locationOld;
+          localStorage.removeItem("location");
+          navigate(`${locationNew}`);
+        } else {
+          navigate("/");
+        }
       } else {
-        // Nếu token không giải mã được sau khi nhận từ API
         throw new Error("Không thể giải mã token từ phản hồi server.");
       }
-
       return { success: true, data: res.data };
     } catch (err) {
+      setLoading(false);
       console.error("Login error from AuthContext:", err);
-      // Kiểm tra nếu lỗi từ server phản hồi
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
       setError({ message: errorMessage, code: err.response?.status || 500 });
       return { success: false, message: errorMessage };
-    } finally {
-      setLoading(false);
     }
   };
   const register = async (credentials) => {
     setLoading(true);
-    setError(null); // Xóa lỗi cũ
-    // Không cần setUser(null) ở đây, vì nếu login thành công sẽ set lại
-    // Nếu thất bại thì error sẽ được set và user vẫn là null (nếu trước đó là null)
-
+    setError(null);
     try {
       const res = await api.post("/accounts/register", {
         email: credentials.email,
@@ -85,26 +85,11 @@ export function AuthProvider({ children }) {
         aff: credentials.aff,
         password: credentials.password,
       });
-      // console.log("🚀 ~ register ~ res:", res);
-
       if (res?.data?.status == false) {
         throw new Error("Không nhận được access_token từ server.");
       }
-      // alert(res?.data?.message);
-      showNotification("info", res?.data?.message, 5000);
-      navigate("/");
-      // const accessToken = res.data.access_token;
-      // sessionStorage.setItem("access_token", accessToken);
-
-      // const decoded = getDecodedToken(); // Sử dụng hàm đã tách
-      // if (decoded) {
-      //   setUser({ name: decoded.name, money: decoded.money }); // Cập nhật trạng thái user
-      //   navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
-      // } else {
-      //   // Nếu token không giải mã được sau khi nhận từ API
-      //   throw new Error("Không thể giải mã token từ phản hồi server.");
-      // }
-
+      pop("Đăng Ký thành công", "s");
+      navigate("/auth/login");
       return { success: true, data: res.data };
     } catch (err) {
       console.error("Login error from AuthContext:", err);
@@ -129,17 +114,14 @@ export function AuthProvider({ children }) {
       setUser(null);
       sessionStorage.removeItem("access_token");
       setError(null);
-      navigate("/"); // Điều hướng về trang đăng nhập
+      navigate("/");
     } catch (err) {
       console.error("Login error from AuthContext:", err);
-      // Kiểm tra nếu lỗi từ server phản hồi
     } finally {
       setLoading(false);
     }
-  }, [navigate]); // Thêm navigate vào dependencies nếu bạn đang dùng nó bên trong useCallback
+  }, [navigate]);
 
-  // --- Các logic về API key và domain check vẫn giữ nguyên ---
-  // 1. Quản lý API key
   const {
     apiKey,
     status: keyStatus,
@@ -148,7 +130,6 @@ export function AuthProvider({ children }) {
     clearKey,
   } = useApiKeyManager();
 
-  // 2. Khi đã có apiKey (keyStatus === "ready"), qua bước check domain
   const {
     domainStatus,
     errorMessage: domainError,
@@ -220,11 +201,12 @@ export function AuthProvider({ children }) {
   const retryDomain = useCallback(() => {
     retryCheck();
   }, [retryCheck]);
-
+  const isLoggedIn = !!user;
   return (
     <AuthContext.Provider
       value={{
-        navigate, // Đổi tên từ navigator
+        navigate,
+        isLoggedIn,
         apiKey,
         authStatus,
         combinedError,

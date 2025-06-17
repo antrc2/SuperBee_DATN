@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGet } from "@utils/hook";
 import api from "@utils/http";
 import {
   Card,
@@ -30,13 +29,25 @@ const CategoryPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+  const [categoriesData, setCategoriesData] = useState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
 
-  const {
-    data: categoriesData,
-    loading,
-    error,
-    refetch,
-  } = useGet("/admin/categories");
+  const getCategory = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/admin/categories");
+      setLoading(false);
+      setCategoriesData(res?.data);
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+      console.error(error);
+    }
+  };
+  useEffect(() => {
+    getCategory();
+  }, []);
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => {
@@ -79,8 +90,6 @@ const CategoryPage = () => {
 
           categoriesData.data = updatedCategories;
         }
-
-        refetch();
       }
     } catch (error) {
       setDeleteError(

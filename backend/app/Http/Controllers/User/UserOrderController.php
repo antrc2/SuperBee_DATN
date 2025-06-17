@@ -462,7 +462,7 @@ class UserOrderController extends Controller
                     if (isset($request->promotion_code)){
                         $promotion_status = $this->check_promotion_from_cart($user_id,$request->promotion_code);
                         if ($promotion_status['status'] == True) {
-                            $total_price = $product_status['total_price_after_discount'];
+                            $total_price = $promotion_status['total_price_after_discount'];
                             $promotion_code = $promotion_status['promotion_code'];
                             $discount_amount = $promotion_status['discount_amount'];
                             $discount_value = $promotion_status['discount_value'];

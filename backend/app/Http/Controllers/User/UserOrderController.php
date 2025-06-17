@@ -326,7 +326,8 @@ class UserOrderController extends Controller
         try {
             return response()->json($this->check_promotion_from_cart($request->user_id, $request->promotion_code));
         } catch (\Throwable $th) {
-            return [
+            return response()->json(
+                [
                 "status" => false,
                 "message" => "Đã xảy ra lỗi hệ thống",
                 "promotion_code" => $request->promotion_code,
@@ -334,18 +335,50 @@ class UserOrderController extends Controller
                 "discount_value" => 0,
                 "total_price_after_discount" => 0,
                 "status_code" => 500
-            ];
+                ],500
+            );
         }
     }
     public function checkout(Request $request)
     {
         try {
-            // $this->total_used_promotion_code();
-            // $this->get_cart_and_total_price();
-            // $this->check_promotion();
-            // return response()->json($this->get_cart_and_total_price($request->user_id));
+
+            $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
+            $balance = Wallet::where('user_id',$request->user_id)->first();
+            if ($balance == null) {
+                $balance = 0;
+            }
+            $cart = $this->get_cart_and_total_price($request->user_id);
+            if ($cart['status'] == True){
+                $carts = $cart['carts'];
+                $total_price = $cart['total_price'];
+                return response()->json([
+                    "status"=>True,
+                    "message"=>"Thành công",
+                    "carts"=>$carts,
+                    "total_price"=>$total_price,
+                    "promotion_codes"=>$promotion_codes,
+                    "balance"=>$balance
+                ],200);
+            } else {
+                return response()->json([
+                    "status"=>$cart['status'],
+                    "message"=>$cart['message'],
+                    "carts"=>[],
+                    "total_price"=>0,
+                    "promotion_codes" =>[],
+                    "balance"=>0,
+                ],$cart['status_code']);
+            }
         } catch (\Throwable $th) {
-            //throw $th;
+            return response()->json([
+                "status"=>False,
+                "message"=>"Đã có lỗi xảy ra",
+                "carts"=>[],
+                "total_price"=>0,
+                "promotion_codes" =>[],
+                "balance"=>0
+            ],500);
         }
     }
 

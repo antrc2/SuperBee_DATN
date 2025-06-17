@@ -344,8 +344,8 @@ class UserOrderController extends Controller
         try {
 
             $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
-            $balance = Wallet::where('user_id',$request->user_id)->first();
-            if ($balance == null) {
+            $wallet = Wallet::where('user_id',$request->user_id)->first();
+            if ($wallet == null) {
                 $balance = 0;
             }
             $cart = $this->get_cart_and_total_price($request->user_id);
@@ -358,7 +358,7 @@ class UserOrderController extends Controller
                     "carts"=>$carts,
                     "total_price"=>$total_price,
                     "promotion_codes"=>$promotion_codes,
-                    "balance"=>$balance
+                    "balance"=>$wallet->balance
                 ],200);
             } else {
                 return response()->json([

@@ -382,6 +382,201 @@ class UserOrderController extends Controller
         }
     }
 
+    private function check_status_product($user_id){
+        try {
+            $result = $this->get_cart_and_total_price($user_id);
+            $carts = $result['carts'];
+            foreach ($carts as $cart){
+                $product = Product::where("id", $cart->product->id)->first();
+                if ($product == null) {
+                    return [
+                        "status" => false,
+                        "message" => "Không tìm thấy sản phẩm",
+                        "status_code" => 404
+                    ];
+                } elseif ($product->status == 3) {
+                    return [
+                        "status" => false,
+                        "message" => "Sản phẩm đã bị hủy bán",
+                        "status_code" => 410
+                    ];
+                } elseif ($product->status == 4) {
+                    return [
+                        "status" => false,
+                        "message" => "Sản phẩm đã bán cho người khác",
+                        "status_code" => 409
+                    ];
+                } elseif ($product->status == 2) {
+                    return [
+                        "status" => false,
+                        "message" => "Sản phẩm đang đợi duyệt",
+                        "status_code" => 202
+                    ];
+                } elseif ($product->status == 0) {
+                    return [
+                        "status" => false,
+                        "message" => "Sản phẩm bị từ chối bán",
+                        "status_code" => 403
+                    ];
+                } elseif ($product->status == 1) {
+                    return [
+                        "status" => true,
+                        "message" => "Thành công",
+                        "status_code" => 200
+                    ];
+                } else {
+                    // Các trạng thái khác nếu có, vẫn coi là thành công
+                    return [
+                        "status" => true,
+                        "message" => "Thành công",
+                        "status_code" => 200
+                    ];
+                }
+            }
+            // Nếu không có sản phẩm trong giỏ, tuỳ nhu cầu bạn có thể trả về khác
+            return [
+                "status" => true,
+                "message" => "Không có sản phẩm trong giỏ",
+                "status_code" => 200
+            ];
+        } catch (\Throwable $th) {
+            // Ghi log nếu cần: Log::error($th);
+            return [
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra",
+                "status_code" => 500
+            ];
+        }
+    }
+
+
+    public function purchase(Request $request){
+        try {
+            $user_id = $request->user_id;
+            
+            $product_status = $this->check_status_product($user_id);
+            if ($product_status['status'] == True) {
+                $cart_status = $this->get_cart_and_total_price($user_id);
+                if ($cart_status['status'] == True) {
+                    $wallet = Wallet::where('user_id',$user_id)->first();
+                    if (isset($request->promotion_code)){
+                        $promotion_status = $this->check_promotion_from_cart($user_id,$request->promotion_code);
+                        if ($promotion_status['status'] == True) {
+                            $total_price = $promotion_status['total_price_after_discount'];
+                            $promotion_code = $promotion_status['promotion_code'];
+                            $discount_amount = $promotion_status['discount_amount'];
+                            $discount_value = $promotion_status['discount_value'];
+                            
+                        } else {
+                            return response()->json([
+                                "status"=>False,
+                                "message"=>$promotion_status['message']
+                            ],$promotion_status['status_code']);
+                        }
+                    } else { // Không nhập mã giảm giá
+                            $total_price = $cart_status['total_price'];
+                            $promotion_code = null;
+                            $discount_amount = 0;
+                            $discount_value = 0;
+
+                    }
+                    if ($wallet == null) {
+                        return response()->json([
+                            "status"=>False,
+                            "message"=>"Tài khoản chưa được kích hoạt",
+                        ], 400);
+                    }
+
+                    if ($wallet->balance < $total_price){
+                        return response()->json([
+                            "status"=>False,
+                            'message'=>"Bạn không đủ số dư",
+                        ], 400);
+                    }
+                    $affiliate = Affiliate::where('user_id',$user_id)->first();
+                    DB::beginTransaction();
+
+                    $wallet->balance -= $total_price;
+                    $wallet->save();
+                    // var_dump($wallet->id);
+                    $wallet_transaction = WalletTransaction::create([
+                        "wallet_id"=>$wallet->id,
+                        "type"=>"purchase",
+                        "amount"=>$total_price,
+                        "related_id" => null,
+                        "related_type" => "App\Models\Order",
+                        "status"=>1,
+                    ]);
+
+                    $order = Order::create([
+                        "user_id"=>$user_id,
+                        "order_code"=> "ORDER-". $this->generateCode(16),
+                        "total_amount"=>$total_price,
+                        "wallet_transaction_id"=>$wallet_transaction->id,
+                        "status"=>1,
+                        "promo_code"=>$promotion_code,
+                        "discount_amount"=>$discount_amount,
+                        
+                    ]);
+
+                    foreach($cart_status['carts'] as $cart){
+                        OrderItem::create([
+                            "order_id"=>$order->id,
+                            "product_id"=>$cart->product_id,
+                            "unit_price"=>$cart->unit_price,
+                        ]);
+                    }
+
+                    if ($affiliate == null) {
+
+                    } else {
+                        $affiliated_by = $affiliate->affiliated_by;
+                        $affiliate_amount = $total_price * 5 / 100 ;
+                        $affiliate_history =  AffiliateHistory::create([
+                            "affiliate_id"=>$affiliate->id,
+                            "commission_amount"=>$affiliate_amount,
+                            "order_id"=>$order->id
+                        ]);
+
+                        $affiliated_by_wallet = Wallet::where('user_id',$affiliated_by)->first();
+                        WalletTransaction::create([
+                            "wallet_id"=>$affiliated_by_wallet->id,
+                            "type"=>"commission",
+                            "amount"=>$affiliate_amount,
+                            "related_id"=>$affiliate_history->id,
+                            "related_type"=>"App\Models\AffiliateHistory",
+                            "status"=>1
+                        ]);
+                    }
+                    DB::commit();
+                    return response()->json([
+                        "status"=>True,
+                        "message"=>"Mua hàng thành công",
+                        "order_id"=>$order->id
+                    ], 200);
+                    
+                } else {
+                    return response()->json([
+                        "status"=>False,
+                        "message"=>$cart_status['message'],
+                    ], $cart_status['status_code']);
+                }
+            } else {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>$product_status['message'],
+                ], $product_status['status_code']);
+            }
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return response()->json([
+                "status"=>False,
+                "message"=>"Đã xảy ra lỗi",
+                // "error"=>$th->getMessage(),
+                // "line"=>$th->getLine()
+            ],500);
+        }
+    }
 
     // public function store(Request $request){
     //     try {

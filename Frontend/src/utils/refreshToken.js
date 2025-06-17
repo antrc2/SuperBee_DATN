@@ -3,7 +3,6 @@ import api from "./http";
 const refreshToken = async () => {
   try {
     const res = await api.post("/refreshToken");
-    console.log("🚀 ~ refreshToken ~ res:", res);
     const accessToken = res.data?.access_token;
     if (!accessToken) {
       throw new Error("No access token returned");

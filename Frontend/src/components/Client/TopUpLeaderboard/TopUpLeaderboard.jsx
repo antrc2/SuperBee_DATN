@@ -1,14 +1,6 @@
 import { Star } from "lucide-react";
-const leaderboardData = [
-  { rank: 1, username: "****autrai", amount: "10.800.000" },
-  { rank: 2, username: "****79631370...", amount: "9.000.000" },
-  { rank: 3, username: "****htrd", amount: "4.440.000" },
-  { rank: 4, username: "****beo", amount: "3.850.000" },
-  { rank: 5, username: "****ang", amount: "3.520.000" },
-];
-
+import { Link } from "react-router-dom";
 export default function TopUpLeaderboard({ top }) {
-  console.log("🚀 ~ TopUpLeaderboard ~ top:", top);
   return (
     <div className="w-full max-w-sm rounded-lg border bg-white p-6 shadow-sm h-[400px]">
       <div className="mb-6 flex items-center gap-2">
@@ -41,9 +33,11 @@ export default function TopUpLeaderboard({ top }) {
         ))}
       </div>
 
-      <button className="mt-6 w-full rounded-md bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 transition-colors">
-        Nạp thẻ ngay
-      </button>
+      <Link to={"/recharge-atm"}>
+        <button className="mt-6 w-full rounded-md bg-blue-600 py-3 font-medium text-white hover:bg-blue-700 transition-colors">
+          Nạp thẻ ngay
+        </button>
+      </Link>
     </div>
   );
 }

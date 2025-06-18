@@ -1,25 +1,24 @@
-import { useState, useEffect } from "react";
-import { useForm } from
- "react-hook-form";
-import { Link, useLocation } from "react-router-dom"; // Import useLocation
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useLocation } from "react-router-dom";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@assets/icons";
 import { useAuth } from "@contexts/AuthContext.jsx";
-import LoadingDomain from "../../components/Loading/LoadingDomain"; // Assuming this path is correct
+import LoadingDomain from "../../components/Loading/LoadingDomain";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false); // For terms and conditions checkbox
 
-  const { register: authRegister, loading, error, user } = useAuth(); // Renamed register to authRegister to avoid conflict
-  const location = useLocation(); // Get current URL location
+  const { register: authRegister, loading, error: errorBE, user } = useAuth();
+  console.log("🚀 ~ SignUpForm ~ error:", errorBE?.message);
+  const location = useLocation();
 
   const {
-    register, // This is react-hook-form's register
+    register,
     handleSubmit,
     formState: { errors },
     clearErrors,
     trigger,
-    setError: setFormError // Renamed to avoid conflict with error from useAuth
+    setError: setFormError,
   } = useForm();
 
   // Function to extract 'aff' parameter from URL
@@ -29,29 +28,17 @@ export default function SignUpForm() {
   };
 
   const onSubmit = async (data) => {
-    clearErrors(); // Clear all errors from react-hook-form
-    // setFormError("general", { type: "manual", message: "" }); // Optionally reset general form error
-    const affiliateId = getAffiliateId(); // Get affiliate ID from URL
+    clearErrors();
+    const affiliateId = getAffiliateId();
     getAffiliateId();
     try {
-      const result = await authRegister({ ...data, aff: affiliateId }); // Call authRegister from AuthContext
-
-      if (!result.success) {
-        // AuthContext already sets the error, you can display it directly
-        // or set a specific form error if needed for individual fields
-        // setFormError("general", {
-        //   type: "manual",
-        //   message: result.message || "Đăng ký thất bại. Vui lòng thử lại."
-        // });
-      } else {
-        // AuthContext handles user setting and navigation on successful registration
-      }
+      await authRegister({ ...data, aff: affiliateId });
     } catch (err) {
       console.error("Register form submission error:", err);
       setFormError("general", {
         type: "manual",
         message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại."
+          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
       });
     }
   };
@@ -65,7 +52,7 @@ export default function SignUpForm() {
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
           <ChevronLeftIcon className="size-5" />
           Back to dashboard
@@ -74,21 +61,13 @@ export default function SignUpForm() {
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+            <h1 className="mb-2 font-semibold text-white text-title-sm dark:text-white/90 sm:text-title-md">
               Sign Up
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-50 dark:text-gray-400">
               Enter your email and password to sign up!
             </p>
           </div>
-
-          {/* Display General Registration Error (using error from useAuth) */}
-          {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
-              <p>{error.message}</p>
-            </div>
-          )}
-
           {/* Display User Data on Success (using user from useAuth) - This will likely be handled by a redirect */}
           {user && (
             <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">
@@ -108,7 +87,7 @@ export default function SignUpForm() {
               <div className="sm:col-span-1">
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   User Name<span className="text-error-500">*</span>
                 </label>
@@ -121,14 +100,19 @@ export default function SignUpForm() {
                     required: "Username is required",
                     minLength: {
                       value: 3,
-                      message: "Username must be at least 3 characters"
+                      message: "Username must be at least 3 characters",
                     },
-                    onChange: () => trigger("username")
+                    onChange: () => trigger("username"),
                   })}
                 />
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
+                  </p>
+                )}
+                {errorBE?.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message["username"]}
                   </p>
                 )}
               </div>
@@ -137,7 +121,7 @@ export default function SignUpForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   Email<span className="text-error-500">*</span>
                 </label>
@@ -150,14 +134,19 @@ export default function SignUpForm() {
                     required: "Email is required",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                      message: "Invalid email address"
+                      message: "Invalid email address",
                     },
-                    onChange: () => trigger("email")
+                    onChange: () => trigger("email"),
                   })}
                 />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.email.message}
+                  </p>
+                )}{" "}
+                {errorBE?.message && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message["email"]}
                   </p>
                 )}
               </div>
@@ -166,7 +155,7 @@ export default function SignUpForm() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   Password<span className="text-error-500">*</span>
                 </label>
@@ -180,9 +169,9 @@ export default function SignUpForm() {
                       required: "Password is required",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters"
+                        message: "Password must be at least 6 characters",
                       },
-                      onChange: () => trigger("password")
+                      onChange: () => trigger("password"),
                     })}
                   />
                   <span
@@ -203,32 +192,6 @@ export default function SignUpForm() {
                 )}
               </div>
 
-              {/* Terms and Conditions Checkbox */}
-              {/* <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  className="w-5 h-5"
-                  checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
-                  {...register("termsAccepted", {
-                    required: "You must accept the terms and conditions"
-                  })}
-                />
-                {/* <label
-                  htmlFor="terms"
-                  className="inline-block font-normal text-gray-500 dark:text-gray-400"
-                >
-                  By creating an account means you agree to the{" "}
-                  <span className="text-gray-800 dark:text-white/90">
-                    Terms and Conditions,
-                  </span>{" "}
-                  and our{" "}
-                  <span className="text-gray-800 dark:text-white">
-                    Privacy Policy
-                  </span>
-                </label> */}
-              {/* </div> */}
               {errors.termsAccepted && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.termsAccepted.message}
@@ -275,7 +238,7 @@ export default function SignUpForm() {
           </form>
 
           <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+            <p className="text-sm font-normal text-center text-gray-50 dark:text-gray-400 sm:text-start">
               Already have an account?{" "}
               <Link
                 to="/auth/login"

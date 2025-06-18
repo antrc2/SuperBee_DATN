@@ -15,7 +15,7 @@ import { useNotification } from "./NotificationProvider";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const { pop } = useNotification();
+  const { pop, showAlert } = useNotification();
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
@@ -37,14 +37,34 @@ export function AuthProvider({ children }) {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
         password: credentials.password,
+        web_id: credentials.web_id, // Make sure web_id is passed
       });
 
-      if (!res?.data?.access_token) {
-        throw new Error("Không nhận được access_token từ server.");
+      // Server returns status: false for business logic errors (e.g., account not active, locked)
+      if (!res?.data?.status) {
+        setLoading(false);
+        return {
+          success: false,
+          message: res.data.message || "Đăng nhập thất bại.",
+          errors: res.data.errors || null,
+          code: res.data.code || null, // Pass the custom code from the server
+        };
       }
+
+      if (!res?.data?.access_token) {
+        setLoading(false);
+        return {
+          success: false,
+          message: "Không nhận được access_token từ server.",
+          errors: null,
+          code: null,
+        };
+      }
+
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken();
+
       if (decoded) {
         setUser({
           name: decoded.name,
@@ -52,27 +72,43 @@ export function AuthProvider({ children }) {
           avatar: decoded.avatar,
         });
         setLoading(false);
+
         const locationOld = localStorage.getItem("location");
         if (locationOld) {
           const locationNew = locationOld;
           localStorage.removeItem("location");
           navigate(`${locationNew}`);
         } else {
-          navigate("/");
+          pop("Đăng nhập thành công", "s"); // This notification might be handled in LoginForm
+          navigate("/"); // Navigate to home after successful login if no previous location
         }
+        return { success: true, message: "Đăng nhập thành công." };
       } else {
-        throw new Error("Không thể giải mã token từ phản hồi server.");
+        sessionStorage.removeItem("access_token"); // Clear invalid token
+        setLoading(false);
+        return {
+          success: false,
+          message: "Không thể giải mã token từ phản hồi server.",
+          errors: null,
+          code: null,
+        };
       }
-      return { success: true, data: res.data };
     } catch (err) {
       setLoading(false);
-      console.error("Login error from AuthContext:", err);
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
-      setError({ message: errorMessage, code: err.response?.status || 500 });
-      return { success: false, message: errorMessage };
+      // Set a generic error for AuthContext's own state, if needed for other components
+      setError({ message: errorMessage });
+
+      // Return detailed error for LoginForm to handle
+      return {
+        success: false,
+        message: errorMessage,
+        errors: err.response?.data?.errors || null,
+        code: err.response?.data?.code || null,
+      };
     }
   };
   const register = async (credentials) => {
@@ -90,12 +126,14 @@ export function AuthProvider({ children }) {
       }
       pop("Đăng Ký thành công", "s");
       navigate("/auth/login");
+      await showAlert(
+        res?.data?.message || "vui lòng xem Email để kích hoạt tài khoản"
+      );
       return { success: true, data: res.data };
     } catch (err) {
-      console.error("Login error from AuthContext:", err);
-      // Kiểm tra nếu lỗi từ server phản hồi
+      // console.error("Login error from AuthContext:", err);
       const errorMessage =
-        err.response?.data?.message ||
+        err.response?.data?.errors ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
       setError({ message: errorMessage, code: err.response?.status || 500 });

@@ -1,6 +1,8 @@
 // @pages/Admin/Products/ProductsListPage.jsx
 import { Link } from "react-router-dom";
 import { FilePenLine, Eye, Lock, Key } from "lucide-react";
+
+// điều hướng sang các trang thêm trang sửa
 export default function ProductsListPage({ products, handleKey, handleLock }) {
   return (
     <div className="overflow-x-auto">

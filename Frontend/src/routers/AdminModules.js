@@ -15,6 +15,7 @@ import {
   BannerDetailPage,
   CreateBanners,
   EditBanner,
+  TrangDanhSachAccGame,
 } from "@pages";
 import SignIn from "@pages/Admin/AuthPages/SignIn";
 import SignUp from "@pages/Admin/AuthPages/SignUp";
@@ -37,10 +38,8 @@ import {
   EditProducts,
   ListOrderPage,
   ProductDetailPage,
-  ProductsListPage,
   ShowOrderPage,
 } from "../pages";
-
 export const adminModules = [
   {
     name: "profile",
@@ -78,7 +77,7 @@ export const adminModules = [
   },
   {
     name: "products",
-    list: ProductsListPage,
+    list: TrangDanhSachAccGame,
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,

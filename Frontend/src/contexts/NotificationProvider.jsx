@@ -48,7 +48,7 @@ export function NotificationProvider({ children }) {
       {children}
 
       {/* Toast Container */}
-      <div className="fixed top-8 left-1/2 transform -translate-x-1/2 space-y-2 z-50">
+      <div className="fixed bg-white z-9999 top-8 left-1/2 transform -translate-x-1/2 space-y-2 ">
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -70,7 +70,7 @@ export function NotificationProvider({ children }) {
 
       {/* Confirm Modal */}
       {confirmState && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-9999">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm text-center">
             <p className="mb-4">{confirmState.message}</p>
             <div className="flex justify-center space-x-4">

@@ -1,10 +1,7 @@
 // @pages/Admin/Products/EditProducts.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  getProductById,
-  updateProduct,
-} from "@pages/Admin/Products/product.service.js"; // Điều chỉnh đường dẫn
+
 import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; // Điều chỉnh đường dẫn
 import { LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";

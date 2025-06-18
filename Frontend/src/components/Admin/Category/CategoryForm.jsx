@@ -1,6 +1,6 @@
 // @components/Admin/Product/CreateFormProducts.jsx
 import React, { useState, useEffect } from "react";
-import { getCategories } from "@pages/Admin/Products/product.service.js"; // Điều chỉnh đường dẫn
+import api from "../../../utils/http";
 
 // Component này nhận vào:
 // - initialData: Dữ liệu ban đầu để điền form (dùng cho chức năng Edit)
@@ -26,13 +26,17 @@ export default function CreateFormProducts({
   });
   const [categories, setCategories] = useState([]);
 
+  const getCategories = async () => {
+    try {
+      const res = await api.get("/admin/categories");
+      setCategories(res?.data?.data);
+    } catch (error) {
+      console.log(error);
+    }
+  };
   useEffect(() => {
-    // Lấy danh sách danh mục khi component được mount
-    getCategories()
-      .then((res) => setCategories(res.data.data))
-      .catch(console.error);
+    getCategories();
   }, []);
-
   useEffect(() => {
     // Nếu có initialData (chế độ edit), điền dữ liệu vào form
     if (initialData) {

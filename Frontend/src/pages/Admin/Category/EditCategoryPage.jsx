@@ -24,6 +24,23 @@ export default function EditCategoryPage() {
     getCategory();
   }, [id]);
 
+  const [categoryData, setCategoriesData] = useState();
+  const [categoryLoading, setLoading] = useState(false);
+
+  const getCategories = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/categories/${id}`);
+      setCategoriesData(res?.data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getCategories();
+  }, []);
   const handleSave = async (data) => {
     try {
       data.append("_method", "PUT");

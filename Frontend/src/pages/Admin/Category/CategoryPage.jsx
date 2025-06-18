@@ -31,24 +31,23 @@ const CategoryPage = () => {
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const [categoriesData, setCategoriesData] = useState();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState();
 
-  const getCategory = async () => {
+  const getCategories = async () => {
     try {
       setLoading(true);
       const res = await api.get("/admin/categories");
-      setLoading(false);
       setCategoriesData(res?.data);
-    } catch (error) {
-      setError(error);
       setLoading(false);
-      console.error(error);
+    } catch (error) {
+      setLoading(false);
+      setError(error);
+      console.log(error);
     }
   };
   useEffect(() => {
-    getCategory();
+    getCategories();
   }, []);
-
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => {
       const newSet = new Set(prev);
@@ -90,6 +89,8 @@ const CategoryPage = () => {
 
           categoriesData.data = updatedCategories;
         }
+        getCategories();
+
       }
     } catch (error) {
       setDeleteError(

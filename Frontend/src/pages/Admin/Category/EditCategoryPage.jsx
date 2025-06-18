@@ -1,16 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useGet } from "@utils/hook";
 import api from "@utils/http";
 import CategoryForm from "@components/Admin/Category/CategoryForm";
 
 export default function EditCategoryPage() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const { data: categoryData, loading: categoryLoading } = useGet(
-    `/categories/${id}`
-  );
 
+  const [categoryData, setCategoriesData] = useState();
+  const [categoryLoading, setLoading] = useState(false);
+
+  const getCategories = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get(`/categories/${id}`);
+      setCategoriesData(res?.data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getCategories();
+  }, []);
   const handleSave = async (data) => {
     try {
       data.append("_method", "PUT");

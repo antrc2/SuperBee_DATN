@@ -9,6 +9,7 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\DiscountCodeController;
@@ -33,7 +34,7 @@ Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 // cài lại mật khẩu
 Route::post('/reset-password', [AuthController::class, 'resetPassword']);
-
+Route::post('/upload', [AWSController::class, 'upload']);
 Route::prefix("/callback")->group(function () {
 
     Route::post("/card", [CardController::class, 'callback']);

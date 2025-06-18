@@ -4,8 +4,10 @@ import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
 import api from "../../../utils/http";
+import { useNotification } from "../../../contexts/NotificationProvider";
 
 export default function Home() {
+  const { pop } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const getData = async () => {
@@ -20,6 +22,7 @@ export default function Home() {
         };
         setData({ ...d });
       }
+      pop("àhjaldf", "s");
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);

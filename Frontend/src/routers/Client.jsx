@@ -5,6 +5,7 @@ import { HomeLayout, ProfileLayout } from "@layouts";
 import { clientModules, profileModule } from "./ClientModules";
 import { Home, Profile } from "@pages";
 import ProtectedRouteClient from "../components/common/ProtectClient";
+import { NotFound } from "../pages";
 
 export const clientRoutes = [
   {
@@ -34,7 +35,7 @@ export const clientRoutes = [
         };
       }),
 
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ];
@@ -62,7 +63,7 @@ export const profileRoutes = [
           element: <View />,
         };
       }),
-      { path: "*", element: <Navigate to="/" replace /> },
+      { path: "*", element: <NotFound /> },
     ],
   },
 ];

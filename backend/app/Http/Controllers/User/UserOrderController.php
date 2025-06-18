@@ -525,6 +525,10 @@ class UserOrderController extends Controller
                             "product_id"=>$cart->product_id,
                             "unit_price"=>$cart->unit_price,
                         ]);
+                        Product::where('id',$cart->product_id)->update([
+                            "status"=>4
+                        ]);
+                        CartItem::where('product_id',$cart->product_id)->where('cart_id',$cart->cart_id)->delete();
                     }
 
                     if ($affiliate == null) {

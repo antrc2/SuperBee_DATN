@@ -90,6 +90,7 @@ const CategoryPage = () => {
           categoriesData.data = updatedCategories;
         }
         getCategories();
+
       }
     } catch (error) {
       setDeleteError(

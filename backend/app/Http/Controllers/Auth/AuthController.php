@@ -429,6 +429,14 @@ class AuthController extends Controller
             $user = User::where('username', $validatedData['username'])
                 ->where('web_id', $web->id)
                 ->first();
+
+                if (!$user) {
+                     return response()->json([
+                    'message' => 'Tài khoản không tồn tại',
+                    'status' => false,
+                    'code'=>"NO_ACCOUNT"
+                ], 404);
+                }
             if ($user->status === 0) {
                 return response()->json([
                     'message' => 'tài khoản bạn chưa kích hoạt',

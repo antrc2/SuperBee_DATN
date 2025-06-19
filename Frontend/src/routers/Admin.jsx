@@ -5,8 +5,8 @@ import { Navigate, Outlet, useLoaderData } from "react-router-dom";
 import { adminModules } from "@routers/adminModules";
 import AppLayout from "@layouts/Admin/AppLayout";
 import Home from "@pages/Admin/Dashboard/Home";
-import NotFound from "@pages/Admin/OtherPage/NotFound";
 import ProtectedRoute from "@components/common/ProtectedRoute";
+import { NotFound } from "../pages";
 const adminRoutes = [
   {
     path: "/admin",

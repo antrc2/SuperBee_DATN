@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@assets/icons";
+import { ChevronLeft, EyeOff, Eye } from "lucide-react"; // Updated import
 import { useAuth } from "@contexts/AuthContext.jsx";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 
@@ -16,10 +16,13 @@ export default function SignUpForm() {
     register,
     handleSubmit,
     formState: { errors },
-    clearErrors,
-    trigger,
+    clearErrors, // Keep clearErrors for specific field clearing on change
     setError: setFormError,
-  } = useForm();
+  } = useForm({
+    // By default, validation on submit. No need to explicitly set mode: "onSubmit" here
+    // unless you want to override a global default or a parent's useForm config.
+    // The default behavior for handleSubmit is to validate on submit.
+  });
 
   // Function to extract 'aff' parameter from URL
   const getAffiliateId = () => {
@@ -28,18 +31,35 @@ export default function SignUpForm() {
   };
 
   const onSubmit = async (data) => {
+    // This clearErrors() will clear ALL form errors right before submission attempt.
+    // This is useful if you had any manual errors set previously.
+    // However, react-hook-form will re-evaluate all fields on submit,
+    // so it's often not strictly necessary if you rely on RHF's internal validation.
+    // For server errors, you'll still set them manually.
     clearErrors();
+
     const affiliateId = getAffiliateId();
-    getAffiliateId();
+    // No need to call getAffiliateId() twice here
     try {
       await authRegister({ ...data, aff: affiliateId });
     } catch (err) {
       console.error("Register form submission error:", err);
-      setFormError("general", {
-        type: "manual",
-        message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
-      });
+      // Assuming errorBE.message contains server-side validation errors
+      // in an object format like { username: ["message"], email: ["message"] }
+      if (err.message && typeof err.message === "object") {
+        Object.entries(err.message).forEach(([field, messages]) => {
+          setFormError(field, {
+            type: "server",
+            message: messages[0],
+          });
+        });
+      } else {
+        setFormError("general", {
+          type: "manual",
+          message:
+            err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
+        });
+      }
     }
   };
 
@@ -54,7 +74,7 @@ export default function SignUpForm() {
           to="/"
           className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon className="size-5" />
+          <ChevronLeft className="size-5" /> {/* Updated icon */}
           Back to dashboard
         </Link>
       </div>
@@ -81,6 +101,22 @@ export default function SignUpForm() {
             </div>
           )}
 
+          {/* Display general backend errors */}
+          {errorBE && !errors.username && !errors.email && !errors.password && (
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
+              <p>
+                {errorBE.message && typeof errorBE.message === "string"
+                  ? errorBE.message
+                  : "Đã xảy ra lỗi khi đăng ký."}
+              </p>
+            </div>
+          )}
+          {errors.general && (
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
+              <p>{errors.general.message}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
               {/* Username Field */}
@@ -102,17 +138,20 @@ export default function SignUpForm() {
                       value: 3,
                       message: "Username must be at least 3 characters",
                     },
-                    onChange: () => trigger("username"),
                   })}
+                  // Clear errors for this field when user starts typing again
+                  onChange={() => clearErrors("username")}
                 />
+                {/* Display react-hook-form validation errors */}
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
                   </p>
                 )}
-                {errorBE?.message && (
+                {/* Display specific backend username error if any and no client error */}
+                {errorBE?.message?.username && !errors.username && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errorBE.message["username"]}
+                    {errorBE.message.username[0]}
                   </p>
                 )}
               </div>
@@ -136,17 +175,20 @@ export default function SignUpForm() {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
                       message: "Invalid email address",
                     },
-                    onChange: () => trigger("email"),
                   })}
+                  // Clear errors for this field when user starts typing again
+                  onChange={() => clearErrors("email")}
                 />
+                {/* Display react-hook-form validation errors */}
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.email.message}
                   </p>
                 )}{" "}
-                {errorBE?.message && (
+                {/* Display specific backend email error if any and no client error */}
+                {errorBE?.message?.email && !errors.email && (
                   <p className="mt-1 text-sm text-red-500">
-                    {errorBE.message["email"]}
+                    {errorBE.message.email[0]}
                   </p>
                 )}
               </div>
@@ -171,39 +213,48 @@ export default function SignUpForm() {
                         value: 6,
                         message: "Password must be at least 6 characters",
                       },
-                      onChange: () => trigger("password"),
                     })}
+                    // Clear errors for this field when user starts typing again
+                    onChange={() => clearErrors("password")}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
                     {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <Eye className="fill-gray-500 dark:fill-gray-400 size-5" />
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <EyeOff className="fill-gray-500 dark:fill-gray-400 size-5" />
                     )}
                   </span>
                 </div>
+                {/* Display react-hook-form validation errors */}
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.password.message}
                   </p>
                 )}
+                {/* Display specific backend password error if any and no client error */}
+                {errorBE?.message?.password && !errors.password && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message.password[0]}
+                  </p>
+                )}
               </div>
 
-              {errors.termsAccepted && (
+              {/* No termsAccepted field in original code, removed the error display for it */}
+              {/* {errors.termsAccepted && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.termsAccepted.message}
                 </p>
-              )}
+              )} */}
 
               {/* Submit Button */}
               <div>
                 <button
                   type="submit"
                   className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading} // Disable if loading or terms not accepted
+                  disabled={loading} // Disable if loading
                 >
                   {loading ? (
                     <span className="flex items-center">

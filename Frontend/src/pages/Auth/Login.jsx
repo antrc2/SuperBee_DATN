@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@assets/icons";
+import { ChevronLeft, EyeOff, Eye } from "lucide-react"; // Updated import
 import { useAuth } from "@contexts/AuthContext.jsx";
-import LoadingDomain from "../../components/Loading/LoadingDomain"; // Assuming this is used elsewhere if not directly in LoginForm
+import LoadingDomain from "../../components/Loading/LoadingDomain";
 import { useNotification } from "../../contexts/NotificationProvider";
 
 export default function LoginForm() {
-  const [passwordType, setPasswordType] = useState("password"); // "password" hoặc "text"
+  const [passwordType, setPasswordType] = useState("password");
   const { conFim, pop } = useNotification();
   const { login, loading, user, error } = useAuth();
 
@@ -72,6 +72,7 @@ export default function LoginForm() {
       pop(err.message || "Đã xảy ra lỗi không xác định.", "e");
     }
   };
+
   if (loading) return <LoadingDomain />;
 
   return (
@@ -81,7 +82,7 @@ export default function LoginForm() {
           to="/"
           className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon className="size-5" />
+          <ChevronLeft className="size-5" /> {/* Updated icon */}
           Back to dashboard
         </Link>
       </div>
@@ -134,7 +135,10 @@ export default function LoginForm() {
                       message: "Username must be at least 3 characters",
                     },
                   })}
-                  onChange={() => clearErrors("username")}
+                  onChange={(e) => {
+                    clearErrors("username");
+                    register("username").onChange(e); // Ensure react-hook-form's onChange is still called
+                  }}
                 />
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
@@ -164,7 +168,10 @@ export default function LoginForm() {
                         message: "Password must be at least 6 characters",
                       },
                     })}
-                    onChange={() => clearErrors("password")}
+                    onChange={(e) => {
+                      clearErrors("password");
+                      register("password").onChange(e); // Ensure react-hook-form's onChange is still called
+                    }}
                   />
                   <span
                     onClick={() =>
@@ -175,9 +182,9 @@ export default function LoginForm() {
                     className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
                     {passwordType === "password" ? (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <EyeOff className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
                     ) : (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <Eye className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
                     )}
                   </span>
                 </div>

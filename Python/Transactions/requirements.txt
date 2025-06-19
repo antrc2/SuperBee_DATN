@@ -1,4 +1,0 @@
-mbbank-lib
-requests
-image
-python-dotenv

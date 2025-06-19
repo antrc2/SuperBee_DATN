@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Tắt ưu tiên index file nếu có
+# DirectoryIndex disabled
+
+# Nếu URL là /backend hoặc /backend/ thì nội bộ lấy file public/index.php/api
+RewriteRule ^$ public/index.php/api [L,QSA]
+
+# Nếu URL là /backend/something hoặc /backend/something/ thì nội bộ lấy public/index.php/api/something
+RewriteRule ^([^/]+)/?$ public/index.php/api/$1 [L,QSA]

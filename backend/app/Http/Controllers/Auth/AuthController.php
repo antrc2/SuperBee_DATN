@@ -13,11 +13,14 @@ use App\Models\RefreshToken;
 use Firebase\JWT\JWT;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log; // Added for logging
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Redis;
+use Throwable;
 
 class AuthController extends Controller
 {
@@ -147,11 +150,32 @@ class AuthController extends Controller
     {
         try {
             $validatedData = $request->validate([
-                'username' => ['required', 'string', 'unique:users,username,NULL,id,web_id,' . $request->web_id],
-                'password' => 'required|string|min:6',
-                'email' => ['required', 'email', 'unique:users,email,NULL,id,web_id,' . $request->web_id],
+                'username' => [
+                    'required',
+                    'string',
+                    'unique:users,username,NULL,id,web_id,' . $request->web_id
+                ],
+                'password' => 'required|string|min:6', 
+                'email' => [
+                    'required',
+                    'email',
+                    'unique:users,email,NULL,id,web_id,' . $request->web_id 
+                ],
                 'web_id' => 'required|exists:webs,id',
                 'aff' => 'nullable|exists:users,id',
+            ], [
+                'username.required' => 'Tên đăng nhập không được để trống.',
+                'username.string' => 'Tên đăng nhập phải là chuỗi ký tự.',
+                'username.unique' => 'Tên đăng nhập đã tồn tại trên trang web này.', 
+                'password.required' => 'Mật khẩu không được để trống.',
+                'password.string' => 'Mật khẩu phải là chuỗi ký tự.',
+                'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.', 
+                'email.required' => 'Email không được để trống.',
+                'email.email' => 'Email không đúng định dạng.',
+                'email.unique' => 'Email đã tồn tại trên trang web này.',
+                'web_id.required' => 'Không xác định được trang web.',
+                'web_id.exists' => 'ID trang web không hợp lệ.',
+                'aff.exists' => 'Mã giới thiệu không hợp lệ.',
             ]);
 
             // Check if user with this email already exists on this web_id
@@ -213,60 +237,116 @@ class AuthController extends Controller
 
     public function verifyEmail(Request $request)
     {
+        // 1. Validate request
         $request->validate([
             'token' => 'required|string',
         ]);
 
-        $user = User::where('email_verification_token', $request->token)
-            ->where('email_verification_expires_at', '>', now())
-            ->first();
-        if (!$user) {
-            return response()->json(['message' => 'Mã kích hoạt không hợp lệ hoặc đã hết hạn.'], 400);
+        try {
+            // Sử dụng transaction để đảm bảo tất cả các thao tác đều thành công hoặc không có gì xảy ra
+            DB::beginTransaction();
+
+            // 2. Tìm người dùng dựa trên token và kiểm tra thời gian hết hạn
+            $user = User::where('email_verification_token', $request->token)
+                ->where('email_verification_expires_at', '>', now())
+                ->first();
+
+            // 3. Xử lý nếu token không hợp lệ hoặc đã hết hạn
+            if (!$user) {
+                DB::rollBack(); // Hoàn tác nếu không tìm thấy người dùng
+                return response()->json(['message' => 'Mã kích hoạt không hợp lệ hoặc đã hết hạn.'], 400);
+            }
+
+            // 4. Cập nhật trạng thái người dùng và xóa token
+            $user->email_verified_at = now();
+            $user->email_verification_token = null;
+            $user->email_verification_expires_at = null;
+            $user->status = 1; // Kích hoạt tài khoản
+            $user->save();
+
+            // 5. Tạo ví cho người dùng nếu chưa có (nên kiểm tra để tránh trùng lặp)
+            // Thêm kiểm tra để tránh tạo nhiều ví nếu hàm này được gọi nhiều lần không mong muốn
+            if (!$user->wallet) { // Giả sử user có relationship 'wallet'
+                Wallet::create([
+                    'user_id' => $user->id,
+                    "balance" => 0,
+                    "currency" => "VND"
+                ]);
+            }
+
+            // 6. Tạo Access Token và Refresh Token
+            // Đảm bảo các hàm generateAccessToken và generateRefreshToken đã được định nghĩa
+            $accessToken = $this->generateAccessToken($user, $request);
+            $refreshToken = $this->generateRefreshToken($user, $request);
+
+            // 7. Xóa Refresh Token cũ và tạo mới
+            // Sử dụng config() thay vì env() trực tiếp trong code
+            $refreshTokenTTLSeconds = (int)config('jwt.refresh_token_ttl', 60 * 60 * 24 * 30); // Giả sử cấu hình JWT_REFRESH_TOKEN_TTL nằm trong config/jwt.php
+
+            RefreshToken::where('user_id', $user->id)->delete();
+            RefreshToken::create([
+                'user_id' => $user->id,
+                'refresh_token' => $refreshToken,
+                'expires_at' => Carbon::now()->addSeconds($refreshTokenTTLSeconds),
+                'revoked' => false,
+            ]);
+
+            // 8. Thiết lập cookie cho Refresh Token
+            $cookieExpirationMinutes = $refreshTokenTTLSeconds / 60; // Chuyển đổi giây sang phút
+
+            $cookie = cookie(
+                'refresh_token',
+                $refreshToken,
+                $cookieExpirationMinutes,
+                '/',
+                null, // Domain: null để tự động lấy domain hiện tại
+                config('app.env') === 'production', // Secure: true nếu là production
+                true, // HttpOnly
+                false, // Raw
+                'Lax' // SameSite: 'Lax' hoặc 'None' tùy thuộc vào yêu cầu của bạn, 'none' cần secure=true
+            );
+
+            DB::commit(); // Xác nhận tất cả các thay đổi vào cơ sở dữ liệu
+
+            // 9. Trả về phản hồi thành công
+            return response()->json([
+                "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
+                'access_token' => $accessToken,
+                'status' => true
+            ], 200)->withCookie($cookie);
+
+        } catch (Throwable $e) {
+            DB::rollBack(); // Hoàn tác tất cả các thay đổi nếu có lỗi
+            // Log lỗi để dễ dàng gỡ lỗi
+            // Trả về phản hồi lỗi chung cho người dùng
+            return response()->json(['message' => 'Đã có lỗi xảy ra trong quá trình xác thực email. Vui lòng thử lại sau.'], 500);
         }
-
-        $user->email_verified_at = now();
-        $user->email_verification_token = null; // Xóa token sau khi dùng
-        $user->email_verification_expires_at = null; // Xóa thời gian hết hạn
-        $user->status = 1; // Kích hoạt tài khoản
-        $user->save();
-        // // Create wallet
-        Wallet::create([
-            'user_id' => $user->id,
-            "balance" => 0,
-            "currency" => "VND"
-        ]);
-
-        $accessToken = $this->generateAccessToken($user, $request);
-        $refreshToken = $this->generateRefreshToken($user, $request);
-
-        // Delete any existing refresh tokens for this user before creating a new one
-        RefreshToken::where('user_id', $user->id)->delete();
-        RefreshToken::create([
-            'user_id' => $user->id,
-            'refresh_token' => $refreshToken,
-            'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
-            'revoked' => false,
-        ]);
-
-        $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60; // Convert seconds to minutes
-
-        $cookie = cookie(
-            'refresh_token',
-            $refreshToken,
-            $cookieExpirationMinutes,
-            '/',
-            null,
-            true, // Secure: true in production, false otherwise
-            true, // HttpOnly
-            false, // Raw
-            'none' // SameSite
-        );
-
-        return response()->json([
-            "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
-            'access_token' => $accessToken,
-            'status' => true
-        ], 200)->withCookie($cookie);
+    }
+    public function sendVerifyEmail(Request $request){
+        try {
+            $request->validate([
+                'email' => [
+                    'required',
+                    'email',
+                    'exists:users,email,web_id,' . $request->web_id
+                ],
+            ]);
+            $user = User::where('email',$request->email)->where('web_id',$request->web_id)->first();
+            if (!$user) {
+                return response()->json(['message' => 'Tài khoản của bạn không tồn tại'], 404);
+            }
+            if($user->status == 1){
+                return response()->json(['message' => 'Tài khoản của bạn đã được kích hoạt'], 200);  
+            }
+            $tokenEmail = Str::random(60);
+            $user->email_verification_token = $tokenEmail;
+            $user->email_verification_expires_at =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
+            $user->save();
+            Mail::to($user->email)->queue(new VerifyEmail($tokenEmail, $user->username));
+            return response()->json(['message' => 'Vui lòng kiểm tra email để kích hoạt tài khoản'], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Không thể gửi email kích hoạt tài khoản lúc này. Vui lòng thử lại sau.'], 500);
+        }
     }
 
     /**
@@ -276,10 +356,9 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $user = User::where('email', $request->email)->first();
+        $user = User::where('email', $request->email)->where('web_id',$request->web_id)->first();
 
         if (!$user) {
-            // Trả về thông báo chung để tránh tiết lộ email nào tồn tại
             return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
         }
 
@@ -337,7 +416,13 @@ class AuthController extends Controller
                 'username' => 'required|string',
                 'password' => 'required|string',
                 'web_id' => 'required|exists:webs,id',
+            ], [
+                'username.required' => 'Tên đăng nhập không được để trống.',
+                'password.required' => 'Mật khẩu không được để trống.',
+                'web_id.required' => 'Không xác định được trang web.',
+                'web_id.exists' => 'Web ID không hợp lệ.',
             ]);
+            
 
             $web = Web::findOrFail($validatedData['web_id']);
 
@@ -347,19 +432,20 @@ class AuthController extends Controller
             if ($user->status === 0) {
                 return response()->json([
                     'message' => 'tài khoản bạn chưa kích hoạt',
-                    'status' => false
-                ], 401);
+                    'status' => false,
+                    'code'=>"NO_ACTIVE"
+                ], 200);
             }
             if ($user->status === 3) {
                 return response()->json([
                     'message' => 'tài khoản bạn bị khóa',
-                    'status' => false
-                ], 401);
+                    'status' => false, 'code'=>"Key"
+                ], 200);
             }
 
             if (!$user || !Hash::check($validatedData['password'], $user->password)) {
                 return response()->json([
-                    'message' => 'Invalid credentials.',
+                    'message' => 'username hoặc mật khẩu không đúng',
                     'status' => false
                 ], 401);
             }
@@ -390,8 +476,9 @@ class AuthController extends Controller
             );
 
             return response()->json([
-                "message" => "Login successful",
+                "message" => "Đăng nhập thành công",
                 'access_token' => $accessToken,
+                'status' => true,
             ])->withCookie($cookie);
         } catch (ValidationException $e) {
             return response()->json([

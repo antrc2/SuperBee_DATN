@@ -26,14 +26,7 @@ use Illuminate\Support\Facades\Route;
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
-// cấp lại token
-Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
-// xác minh tài khoản
-Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
-// quên mật khẩu
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-// cài lại mật khẩu
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+
 Route::post('/upload', [AWSController::class, 'upload']);
 Route::prefix("/callback")->group(function () {
 
@@ -48,6 +41,16 @@ Route::prefix("/callback")->group(function () {
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
+    // cấp lại token
+    Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
+    // xác minh tài khoản
+    Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+    // quên mật khẩu
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    // cài lại mật khẩu
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    // gửi lại email kích hoạt tài khoản
+    Route::post('/sendActiveAccount', [AuthController::class, 'sendVerifyEmail']);
     // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
@@ -85,9 +88,6 @@ Route::middleware('auth')->group(function () {
             Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
-
-            
-
         });
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [DiscountCodeController::class, 'index']);
@@ -111,20 +111,19 @@ Route::middleware('auth')->group(function () {
         Route::prefix("/carts")->group(function () {
             Route::get("/", [UserCartController::class, 'index']);
             Route::post("/", [UserCartController::class, 'store']);
-            Route::post("/save",[UserCartController::class,'save']);
+            Route::post("/save", [UserCartController::class, 'save']);
             Route::delete("/{id}", [UserCartController::class, 'destroy']);
-
         });
-        Route::prefix('/orders')->group(function(){
-            Route::get('/',[UserOrderController::class,'index']);
-            Route::get("/checkout", [UserOrderController::class,'checkout']);
-            Route::get("/{id}",[UserOrderController::class,'show']);
-            
-            // promotion_code
-            Route::post("/check", [UserOrderController::class,'check_promotion']);
+        Route::prefix('/orders')->group(function () {
+            Route::get('/', [UserOrderController::class, 'index']);
+            Route::get("/checkout", [UserOrderController::class, 'checkout']);
+            Route::get("/{id}", [UserOrderController::class, 'show']);
 
             // promotion_code
-            Route::post("/purchase", [UserOrderController::class,'purchase']);
+            Route::post("/check", [UserOrderController::class, 'check_promotion']);
+
+            // promotion_code
+            Route::post("/purchase", [UserOrderController::class, 'purchase']);
 
 
 
@@ -180,7 +179,6 @@ Route::middleware(['jwt'])->group(function () {
         Route::prefix("/orders")->group(function () {
             Route::get("/", [OrderController::class, 'index']);
             Route::get("/{id}", [OrderController::class, 'show']);
-          
         });
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);
@@ -189,6 +187,5 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminBannerController::class, 'update']);
             Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
         });
-
     });
 });

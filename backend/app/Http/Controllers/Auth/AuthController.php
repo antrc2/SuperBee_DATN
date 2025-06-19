@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\ResetPassword;
 use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
+use App\Models\Business_setting;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Web;
@@ -72,6 +73,7 @@ class AuthController extends Controller
             "status" => true
         ], 200);
     }
+
 
     /**
      * Encodes a JWT token with the given payload, expiration time, and type.
@@ -422,84 +424,125 @@ class AuthController extends Controller
                 'web_id.required' => 'Không xác định được trang web.',
                 'web_id.exists' => 'Web ID không hợp lệ.',
             ]);
-            
-
+    
             $web = Web::findOrFail($validatedData['web_id']);
-
+    
+            // Find user by username and web_id
             $user = User::where('username', $validatedData['username'])
                 ->where('web_id', $web->id)
                 ->first();
-
-                if (!$user) {
-                     return response()->json([
-                    'message' => 'Tài khoản không tồn tại',
-                    'status' => false,
-                    'code'=>"NO_ACCOUNT"
-                ], 404);
-                }
-            if ($user->status === 0) {
+    
+            // Check if user exists
+            if (!$user) {
                 return response()->json([
-                    'message' => 'tài khoản bạn chưa kích hoạt',
+                    'message' => 'Tên đăng nhập hoặc mật khẩu không đúng.',
                     'status' => false,
-                    'code'=>"NO_ACTIVE"
+                    'code' => 'INVALID_CREDENTIALS'
+                ], 200); // Use 200 for business logic errors
+            }
+    
+            // Check password
+            if (!Hash::check($validatedData['password'], $user->password)) {
+                return response()->json([
+                    'message' => 'Tên đăng nhập hoặc mật khẩu không đúng.',
+                    'status' => false,
+                    'code' => 'INVALID_CREDENTIALS'
                 ], 200);
             }
-            if ($user->status === 3) {
-                return response()->json([
-                    'message' => 'tài khoản bạn bị khóa',
-                    'status' => false, 'code'=>"Key"
-                ], 200);
+    
+            // Check account status
+            switch ($user->status) {
+                case 0: // Inactive account
+                    return response()->json([
+                        'message' => 'Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?',
+                        'status' => false,
+                        'code' => 'NO_ACTIVE'
+                    ], 200);
+    
+                case 3: // Locked account
+                    return response()->json([
+                        'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+                        'status' => false,
+                        'code' => 'LOCKED_ACCOUNT'
+                    ], 200);
+    
+                case 1: // Active account - proceed with login
+                    break;
+    
+                default: // Any other status
+                    return response()->json([
+                        'message' => 'Trạng thái tài khoản không hợp lệ.',
+                        'status' => false,
+                        'code' => 'INVALID_STATUS'
+                    ], 200);
             }
-
-            if (!$user || !Hash::check($validatedData['password'], $user->password)) {
-                return response()->json([
-                    'message' => 'username hoặc mật khẩu không đúng',
-                    'status' => false
-                ], 401);
-            }
-
+    
+            // Generate tokens
             $accessToken = $this->generateAccessToken($user, $request);
             $refreshToken = $this->generateRefreshToken($user, $request);
-
+    
+            // Clear old refresh tokens for this user
             RefreshToken::where('user_id', $user->id)->delete();
+    
+            // Save new refresh token
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $refreshToken,
                 'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
-
+    
+            // Set refresh token cookie
             $cookieExpirationMinutes = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60;
-
             $cookie = cookie(
                 'refresh_token',
                 $refreshToken,
                 $cookieExpirationMinutes,
                 '/',
                 null,
-                true, // Secure: true in production, false otherwise
+                true, // Secure
                 true, // HttpOnly
                 false, // Raw
                 'none' // SameSite
             );
-
+    
+            // Update user's last login
+            $user->update([
+                'last_login_at' => Carbon::now(),
+                'last_login_ip' => $request->ip(),
+            ]);
+    
+            // Success response
             return response()->json([
-                "message" => "Đăng nhập thành công",
+                'message' => 'Đăng nhập thành công',
                 'access_token' => $accessToken,
                 'status' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'avatar' => $user->avatar,
+                    'money' => $user->money,
+                ]
             ])->withCookie($cookie);
+    
         } catch (ValidationException $e) {
             return response()->json([
-                'message' => 'Validation failed.',
+                'message' => 'Dữ liệu không hợp lệ.',
                 'status' => false,
-                'errors' => $e->errors()
+                'errors' => $e->errors(),
+                'code' => 'VALIDATION_ERROR'
             ], 422);
+    
         } catch (\Exception $e) {
-            Log::error("Login error: " . $e->getMessage() . " on line " . $e->getLine());
+            // Log the actual error for debugging
+            Log::error("Login error: " . $e->getMessage() . " on line " . $e->getLine() . " in file " . $e->getFile());
+            
             return response()->json([
-                'message' => 'An internal server error occurred.',
+                'message' => 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
                 'status' => false,
-                'error' => $e->getMessage()
+                'code' => 'INTERNAL_SERVER_ERROR'
             ], 500);
         }
     }

@@ -14,8 +14,12 @@ class Web extends Model
         'user_id',
         'api_key',
         'status',
+        'is_customized',
     ];
-
+    public function business_settings()
+    {
+        return $this->belongsTo(Business_setting::class);
+    }
     public function users()
     {
         return $this->hasMany(User::class);

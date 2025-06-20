@@ -7,7 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
 import { CartProvider } from "./contexts/CartContexts.jsx";
 import { NotificationProvider } from "./contexts/NotificationProvider.jsx";
-
+import "@styles/theme.css";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>

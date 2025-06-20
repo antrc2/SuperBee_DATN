@@ -55,7 +55,7 @@ export function CartProvider({ children }) {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
         localStorage.setItem("location", `acc/${product.sku}`);
-        return { success: false, message: "Not logged in" };
+        return navigator("/auth/login");
       }
       if (!product) return;
       const payload = { product_id: product.id };
@@ -111,7 +111,7 @@ export function CartProvider({ children }) {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
         localStorage.setItem("location", `acc/${product.sku}`);
-        return { success: false, message: "Not logged in" };
+        return navigator("/auth/login");
       }
       if (!product) return;
       const payload = { product_id: product.id };

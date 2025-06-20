@@ -69,6 +69,7 @@ export function AuthProvider({ children }) {
         const savedLocation = localStorage.getItem("location");
         if (savedLocation) {
           localStorage.removeItem("location");
+          console.log("🚀 ~ login ~ savedLocation:", savedLocation);
           navigate(savedLocation);
         } else {
           navigate("/");

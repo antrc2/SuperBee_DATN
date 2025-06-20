@@ -1,147 +1,151 @@
-import React from "react";
+"use client";
+
 import { NavLink } from "react-router-dom";
+import { User, Lock, Wallet, Package, LogOut, Coins } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext.jsx";
+
 export default function Sidebar() {
-  const { user } = useAuth();
-  console.log("🚀 ~ Sidebar ~ user:", user);
+  const { user, logout } = useAuth();
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount || 0);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full items-center">
-      <div className="p-4 border-b border-gray-200">
-        <img
-          src={user?.avatar}
-          alt="Avatar"
-          className="w-10 h-10 rounded-full mb-2 mx-auto"
-        />
-        <p className="text-sm text-gray-600 text-center">
-          UserName {user?.name ?? "không xác định"}
-        </p>
-        <p className="text-sm text-gray-600">Số dư: {user?.money}đ</p>
+    <aside
+      className="w-64 flex flex-col h-full border-r shadow-lg"
+      style={{
+        background: "var(--color-dark-surface)",
+        borderColor: "var(--color-dark-border)",
+      }}
+    >
+      {/* User Profile Section */}
+      <div
+        className="p-6 border-b"
+        style={{ borderColor: "var(--color-dark-border)" }}
+      >
+        <div className="flex items-end justify-start gap-2">
+          <div className="relative mb-4">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-blue-500/30 shadow-lg">
+              <img
+                src={user?.avatar}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-slate-800"></div>
+          </div>
+
+          <div className="text-center">
+            <p className="text-slate-400 text-sm mb-3">
+              {user?.name || "username"}
+            </p>
+          </div>
+        </div>
       </div>
+      {/* Balance Card */}
+      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 border border-blue-500/30">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <Coins className="h-4 w-4 text-yellow-400" />
+          <span className="text-slate-300 text-xs font-medium">Số dư</span>
+        </div>
+        <p className="text-white font-bold text-lg text-center">
+          {formatCurrency(user?.money)}
+        </p>
+      </div>
+
+      {/* Navigation Menu */}
       <div className="flex-1 overflow-y-auto p-4">
-        <h2 className="text-lg font-semibold mb-2">Menu Tài Khoản</h2>
-        <ul className="space-y-1">
-          <li>
+        {/* Account Menu */}
+        <div className="mb-6">
+          <h3 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3 px-2">
+            Tài Khoản
+          </h3>
+          <nav className="space-y-1">
             <NavLink
               to="/info"
               end
               className={({ isActive }) =>
-                ` flex items-center p-2 rounded-lg ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-100 text-blue-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
                 }`
               }
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zm0 9a4 4 0 11-8 0 4 4 0 018 0z"
-                />
-              </svg>
-              Thông tin tài khoản
+              <User className="h-5 w-5" />
+              <span className="font-medium">Thông tin tài khoản</span>
             </NavLink>
-          </li>
-          <li>
+
             <NavLink
               to="/info/change-password"
               className={({ isActive }) =>
-                ` flex items-center p-2 rounded-lg ${
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                   isActive
-                    ? "bg-blue-100 text-blue-600"
-                    : "text-gray-600 hover:bg-gray-100"
+                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
                 }`
               }
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-              Đổi mật khẩu
+              <Lock className="h-5 w-5" />
+              <span className="font-medium">Đổi mật khẩu</span>
             </NavLink>
-          </li>
-        </ul>
-        <div className="mt-4">
-          <h2 className="text-lg font-semibold mb-2">Menu Giao Dịch</h2>
-          <ul className="space-y-1">
-            <li>
-              <NavLink
-                to="/info/transactions"
-                className={({ isActive }) =>
-                  ` flex items-center p-2 rounded-lg ${
-                    isActive
-                      ? "bg-blue-100 text-blue-600"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`
-                }
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                Lịch sử giao dịch
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/info/orders"
-                className={({ isActive }) =>
-                  ` flex items-center p-2 rounded-lg ${
-                    isActive
-                      ? "bg-blue-100 text-blue-600"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`
-                }
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h3m-5 0v-5m5 5v-5m1 15l-1-1m0 0l-1 1m1-1h3m-3 0h8m0-15v12a7 7 0 01-7 7h-4a7 7 0 01-7-7V3"
-                  />
-                </svg>
-                Lich sử Đơn hàng
-              </NavLink>
-            </li>
-          </ul>
+          </nav>
+        </div>
+
+        {/* Transaction Menu */}
+        <div>
+          <h3 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3 px-2">
+            Giao Dịch
+          </h3>
+          <nav className="space-y-1">
+            <NavLink
+              to="/info/transactions"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                }`
+              }
+            >
+              <Wallet className="h-5 w-5" />
+              <span className="font-medium">Lịch sử giao dịch</span>
+            </NavLink>
+
+            <NavLink
+              to="/info/orders"
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
+                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+                }`
+              }
+            >
+              <Package className="h-5 w-5" />
+              <span className="font-medium">Lịch sử đơn hàng</span>
+            </NavLink>
+          </nav>
         </div>
       </div>
-      <div className="p-4">
-        <button className="bg-red-500 text-white px-4 py-2 rounded-lg w-full">
+
+      {/* Logout Button */}
+      <div
+        className="p-4 border-t"
+        style={{ borderColor: "var(--color-dark-border)" }}
+      >
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center justify-center gap-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/50 px-4 py-3 rounded-lg font-medium transition-all duration-200"
+        >
+          <LogOut className="h-5 w-5" />
           Đăng xuất
         </button>
       </div>

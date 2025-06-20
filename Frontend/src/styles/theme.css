@@ -60,7 +60,7 @@
   --gradient-header: linear-gradient(
     135deg,
     #1e293b 0%,
-    #7c3aed 50%,
+    #2a3345 50%,
     #1e293b 100%
   );
   --gradient-button: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
@@ -106,4 +106,31 @@
 
 .glow-neon-purple {
   box-shadow: 0 0 20px var(--color-neon-purple);
+}
+
+.font-gaming {
+  font-family: var(--font-gaming);
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+.font-primary {
+  font-family: var(--font-primary);
+}
+
+/* Custom animations */
+@keyframes glow {
+  0%,
+  100% {
+    box-shadow: 0 0 5px var(--color-neon-blue);
+  }
+  50% {
+    box-shadow: 0 0 20px var(--color-neon-blue), 0 0 30px var(--color-neon-blue);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
 }

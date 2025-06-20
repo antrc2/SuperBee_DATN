@@ -24,10 +24,28 @@ const formatCurrency = (amount) => {
 export default function CartPage() {
   const [selectedItems, setSelectedItems] = useState({});
   const { conFim } = useNotification();
-  const { removeItem, fetchCartItems, cartItems, loadingCart } = useCart();
+  const {
+    removeItem,
+    fetchCartItems,
+    cartItems,
+    loadingCart,
+    handleUpdateSave,
+  } = useCart();
+  console.log("🚀 ~ CartPage ~ cartItems:", cartItems);
   useEffect(() => {
     fetchCartItems();
   }, [fetchCartItems]);
+  useEffect(() => {
+    if (cartItems && cartItems.length > 0) {
+      const selected = {};
+      cartItems.forEach((item) => {
+        if (item.status === 1) {
+          selected[item.id] = true;
+        }
+      });
+      setSelectedItems(selected);
+    }
+  }, [cartItems]);
   const handleSelectItem = (itemId) => {
     setSelectedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
   };
@@ -47,7 +65,7 @@ export default function CartPage() {
     if (
       await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`)
     ) {
-      removeItem(itemId);
+      await removeItem(itemId);
     }
   };
 
@@ -61,16 +79,12 @@ export default function CartPage() {
   } = useMemo(() => {
     const itemsToCheckout = cartItems.filter((item) => selectedItems[item.id]);
     const totalSelectedCount = itemsToCheckout.length;
-
-    // SỬA LỖI: Tính tổng tiền dựa trên item.product.price, không có quantity
     const subtotalPrice = itemsToCheckout.reduce(
       (sum, item) => sum + Number(item.product.price),
       0
     );
-
-    const shippingFee = 0; // Giả sử phí giao dịch là 0
+    const shippingFee = 0;
     const totalPrice = subtotalPrice + shippingFee;
-
     const isAllSelected =
       cartItems.length > 0 && cartItems.every((item) => selectedItems[item.id]);
 
@@ -83,7 +97,10 @@ export default function CartPage() {
     };
   }, [cartItems, selectedItems]);
   if (loadingCart) return <LoadingDomain />;
-  // Giao diện khi giỏ hàng trống
+
+  const handlePay = async () => {
+    handleUpdateSave(selectedItems);
+  };
   if (!cartItems || cartItems.length === 0) {
     return (
       <div className="bg-gray-100 min-h-screen py-8 px-4">
@@ -106,8 +123,6 @@ export default function CartPage() {
       </div>
     );
   }
-
-  // Giao diện chính của giỏ hàng
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
       <div className="mb-6 flex justify-between items-center">
@@ -211,15 +226,16 @@ export default function CartPage() {
               </span>
             </div>
           </div>
-          <Link to={"/pay"}>
-            <button
-              disabled={totalSelectedCount === 0}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              <CreditCard className="inline mr-2" /> Thanh toán (
-              {totalSelectedCount})
-            </button>
-          </Link>
+
+          <button
+            onClick={handlePay}
+            disabled={totalSelectedCount === 0}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed"
+          >
+            <CreditCard className="inline mr-2" /> Thanh toán (
+            {totalSelectedCount})
+          </button>
+
           <div className="mt-6 text-xs text-gray-500 text-center">
             <p className="flex items-center justify-center">
               <ShieldCheck size={14} className="mr-1 text-green-500" />

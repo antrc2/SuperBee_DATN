@@ -16,22 +16,22 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const { pop, showAlert, conFim } = useNotification();
+
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
       ? {
           name: decoded.name,
           money: decoded.money,
+          avatar: decoded?.avatar,
         }
       : sessionStorage.getItem("access_token");
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
   const login = async (credentials) => {
     setLoading(true);
-
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
@@ -64,10 +64,7 @@ export function AuthProvider({ children }) {
           money: decoded.money,
           avatar: decoded.avatar,
         });
-
-        // Show success message
         pop("Đăng nhập thành công", "s");
-
         // Handle navigation
         const savedLocation = localStorage.getItem("location");
         if (savedLocation) {
@@ -97,10 +94,8 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Handle different types of login errors
   const handleLoginError = async (errorData) => {
     const { message, code } = errorData;
-
     switch (code) {
       case "NO_ACTIVE": {
         const shouldActivate = await conFim(
@@ -173,13 +168,14 @@ export function AuthProvider({ children }) {
       setUser(null);
       sessionStorage.removeItem("access_token");
       setError(null);
+      pop("Đăng xuất thành công", "s");
       navigate("/");
     } catch (err) {
       console.error("Login error from AuthContext:", err);
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, pop]);
 
   const {
     apiKey,
@@ -204,7 +200,11 @@ export function AuthProvider({ children }) {
     // trong logic AuthContext, đảm bảo user luôn được cập nhật đúng đắn
     const decoded = getDecodedToken();
     if (decoded) {
-      setUser({ name: decoded.name, money: decoded.money });
+      setUser({
+        name: decoded.name,
+        money: decoded.money,
+        avatar: decoded?.avatar,
+      });
     } else {
       setUser(null); // Đảm bảo user là null nếu token không hợp lệ/hết hạn
     }

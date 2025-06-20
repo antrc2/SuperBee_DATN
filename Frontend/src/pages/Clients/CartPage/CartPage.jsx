@@ -31,7 +31,7 @@ export default function CartPage() {
     loadingCart,
     handleUpdateSave,
   } = useCart();
-  console.log("🚀 ~ CartPage ~ cartItems:", cartItems);
+  //console.log("🚀 ~ CartPage ~ cartItems:", cartItems);
   useEffect(() => {
     fetchCartItems();
   }, [fetchCartItems]);

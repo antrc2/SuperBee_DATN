@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import api from "../../../utils/http";
 import { Sparkles } from "lucide-react";
 import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNavigate } from "react-router-dom";
 
 export default function ActiveDomain() {
+  const navigator = useNavigate();
   const [loading, setLoading] = useState(false);
   const { showAlert } = useNotification();
   const postData = async (data) => {
@@ -13,7 +15,7 @@ export default function ActiveDomain() {
       console.log(res?.data?.status);
       if (res.data?.status === true) {
         await showAlert("Kích hoạt thành công! Trang sẽ tải lại.");
-        window.location.reload();
+        navigator("/activeWeb");
       } else {
         alert(res.data?.message || "Có lỗi xảy ra khi kích hoạt.");
       }

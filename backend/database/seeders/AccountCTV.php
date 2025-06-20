@@ -37,13 +37,15 @@ class AccountCTV extends Seeder
             'subdomain' => '' . Str::random(5),
             'user_id' => null,
             'api_key' => Str::random(16),
-            'status' => 1
+            'status' => 1,
+            'is_customized' => true,
         ]);
         $web2 = Web::create([
             'subdomain' => '' . Str::random(5),
             'user_id' => null,
             'api_key' => Str::random(16),
-            'status' => 1
+            'status' => 1,
+            'is_customized' => false,
         ]);
         $user1 = User::create([
             'username' => 'userHai',
@@ -99,25 +101,24 @@ class AccountCTV extends Seeder
         $web1->save();
         $web2->save();
         Wallet::create([
-            "user_id"=>$user1->id,
-            "balance"=>"0",
-            "currency"=>"VND"
+            "user_id" => $user1->id,
+            "balance" => "0",
+            "currency" => "VND"
         ]);
         Wallet::create([
-            "user_id"=>$user2->id,
-            "balance"=>"0",
-            "currency"=>"VND"
+            "user_id" => $user2->id,
+            "balance" => "0",
+            "currency" => "VND"
         ]);
         Wallet::create([
-            "user_id"=>$user3->id,
-            "balance"=>"0",
-            "currency"=>"VND"
+            "user_id" => $user3->id,
+            "balance" => "0",
+            "currency" => "VND"
         ]);
         Wallet::create([
-            "user_id"=>$admin->id,
-            "balance"=>"0",
-            "currency"=>"VND"
+            "user_id" => $admin->id,
+            "balance" => "0",
+            "currency" => "VND"
         ]);
-
     }
 }

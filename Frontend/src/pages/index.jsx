@@ -47,7 +47,9 @@ import EmailVerification from "./Clients/EmailVerification/EmailVerification";
 import ResetPassword from "./Clients/ResetPassword/ResetPassword";
 import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
 import ActiveAcc from "./Clients/ResetPassword/ActiveAcc";
+import ActivateWebPage from "./Clients/ActiveDomain/ActivateWebPage";
 export {
+  ActivateWebPage,
   ActiveAcc,
   ProductDetailPage,
   AccountListPage,

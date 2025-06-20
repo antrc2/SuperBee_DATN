@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from "react";
+"use client";
+
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   ChevronDown,
@@ -6,22 +8,18 @@ import {
   Bell,
   ShoppingCart,
   User,
-  Menu as MenuIcon,
+  MenuIcon,
   X,
   Home,
   CreditCard,
   Gamepad2,
   Sparkles,
   Newspaper,
-  ShoppingBag,
   Flame,
-  DollarSign,
   Shield,
   Briefcase,
-  Info,
-  Lock,
-  LogOut,
-  History as HistoryIcon,
+  Zap,
+  Star,
 } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import SuperBeeLogo from "./SuperBeeLogo";
@@ -30,431 +28,549 @@ import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContexts";
+import "@styles/theme.css";
 
 export default function Header() {
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const { user } = useAuth(); // Get user from AuthContext
+  // State management
+  const [dropdownStates, setDropdownStates] = useState({
+    category: false,
+    notification: false,
+    user: false,
+    cart: false,
+    mobileMenu: false,
+    searchExpanded: false,
+  });
+
+  const [mobileOverlayType, setMobileOverlayType] = useState(null);
+
+  const { user } = useAuth();
   const { cartItems } = useCart();
+  const isLogin = user != null;
 
-  const isLogin = user != null; // Determine login status
-
-  // State for mobile overlays
-  const [mobileOverlayType, setMobileOverlayType] = useState(null); // 'notifications', 'cart', 'profile'
-
+  // Refs
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const mobileOverlayRef = useRef(null);
-
   const categoryMenuRef = useRef(null);
   const notificationMenuRef = useRef(null);
   const cartMenuRef = useRef(null);
   const userMenuRef = useRef(null);
-  // Mock data (keeping as is)
+
+  // Enhanced categories with color variables
   const categories = [
-    { name: "THU ACC THANH LÝ ALL", icon: ShoppingBag, href: "#" },
-    { name: "ACC LIÊN QUÂN SALE", icon: Flame, href: "#" },
-    { name: "ACC BLOX FRUITS GIÁ RẺ", icon: DollarSign, href: "#" },
-    { name: "ACC FREE FIRE GIÁ RẺ", icon: Gamepad2, href: "#" },
-    { name: "ACC FF BUFF GIÁ RẺ", icon: Sparkles, href: "#" },
-    { name: "ACC VALORANT", icon: Shield, href: "#" },
+    {
+      name: "🔥 ACC HOT SALE",
+      icon: Flame,
+      href: "#",
+      gradient: "from-red-500 to-orange-500",
+    },
+    {
+      name: "⚡ LIÊN QUÂN VIP",
+      icon: Zap,
+      href: "#",
+      gradient: "from-yellow-400 to-orange-500",
+    },
+    {
+      name: "💎 BLOX FRUITS RARE",
+      icon: Sparkles,
+      href: "#",
+      gradient: "from-blue-500 to-purple-500",
+    },
+    {
+      name: "🎮 FREE FIRE PRO",
+      icon: Gamepad2,
+      href: "#",
+      gradient: "from-green-400 to-blue-500",
+    },
+    {
+      name: "🌟 VALORANT ELITE",
+      icon: Star,
+      href: "#",
+      gradient: "from-purple-500 to-pink-500",
+    },
+    {
+      name: "🛡️ ACC PREMIUM",
+      icon: Shield,
+      href: "#",
+      gradient: "from-indigo-500 to-purple-600",
+    },
   ];
 
   const notifications = [
     {
       id: 1,
-      avatarUrl: "https://placehold.co/40x40/E2E8F0/4A5568?text=SB",
+      avatarUrl: "https://placehold.co/40x40/667eea/ffffff?text=🎮",
       message:
-        "Chào mừng hè, Shop đang có chương trình vòng quay nhận miễn phí quân huy và kim cương.",
-      timestamp: "12:23 24-07-2024",
+        "🎉 MEGA SALE! Giảm giá 50% tất cả acc Liên Quân Mobile. Cơ hội vàng không thể bỏ lỡ!",
+      timestamp: "2 phút trước",
+      type: "promotion",
     },
     {
       id: 2,
-      avatarUrl: "https://placehold.co/40x40/E2E8F0/4A5568?text=SB",
-      message: "Lỗ cái bồ",
-      timestamp: "21:19 25-04-2024",
+      avatarUrl: "https://placehold.co/40x40/f093fb/ffffff?text=⚡",
+      message: "⚡ Vừa cập nhật 100+ acc Free Fire rank Heroic giá siêu rẻ!",
+      timestamp: "15 phút trước",
+      type: "update",
     },
   ];
 
   const navLinks = [
-    { name: "Trang chủ", href: "/", icon: Home },
-    { name: "Mua Acc", href: "/mua-acc", icon: Gamepad2, id: "nav-mua-acc" },
-    { name: "Dịch vụ", href: "/services", icon: Briefcase, id: "nav-dich-vu" },
-    { name: "Tin Tức", href: "/news", icon: Newspaper, id: "nav-tin-tuc" },
+    { name: " Trang chủ", href: "/", icon: Home },
+    { name: " Mua Acc", href: "/mua-acc", icon: Gamepad2 },
+    { name: " Dịch vụ", href: "/services", icon: Briefcase },
+    { name: " Tin Tức", href: "/news", icon: Newspaper },
   ];
 
-  // Universal toggle function for desktop dropdowns and mobile overlays
-  const toggleDropdown = (type) => {
-    const isMobile = window.innerWidth < 768; // md breakpoint
+  // Fixed toggle function with proper state management
+  const toggleDropdown = useCallback((type, forceClose = false) => {
+    const isMobile = window.innerWidth < 768;
 
+    // Close all dropdowns first
+    setDropdownStates((prev) => ({
+      ...prev,
+      category: false,
+      notification: false,
+      user: false,
+      cart: false,
+      searchExpanded: false,
+    }));
+
+    setMobileOverlayType(null);
+
+    // If forceClose is true, just close everything
+    if (forceClose) return;
+
+    // Then open the requested dropdown
+    setTimeout(() => {
+      switch (type) {
+        case "category":
+          setDropdownStates((prev) => ({ ...prev, category: true }));
+          break;
+        case "notification":
+          if (isMobile) {
+            setMobileOverlayType("notifications");
+          } else {
+            setDropdownStates((prev) => ({ ...prev, notification: true }));
+          }
+          break;
+        case "user":
+          if (isMobile) {
+            setMobileOverlayType("profile");
+          } else {
+            setDropdownStates((prev) => ({ ...prev, user: true }));
+          }
+          break;
+        case "cart":
+          if (isMobile) {
+            setMobileOverlayType("cart");
+          } else {
+            setDropdownStates((prev) => ({ ...prev, cart: true }));
+          }
+          break;
+        case "mobileMain":
+          setDropdownStates((prev) => ({
+            ...prev,
+            mobileMenu: !prev.mobileMenu,
+          }));
+          break;
+        case "search":
+          setDropdownStates((prev) => ({ ...prev, searchExpanded: true }));
+          break;
+        default:
+          break;
+      }
+    }, 10);
+  }, []);
+
+  // Close dropdown function
+  const closeDropdown = useCallback((type) => {
     switch (type) {
       case "category":
-        setIsCategoryOpen((prev) => !prev);
+        setDropdownStates((prev) => ({ ...prev, category: false }));
         break;
       case "notification":
-        if (isMobile) {
-          setMobileOverlayType((prev) =>
-            prev === "notifications" ? null : "notifications"
-          );
-          setIsNotificationOpen(false); // Ensure desktop dropdown is closed
-        } else {
-          setIsNotificationOpen((prev) => !prev);
-          setMobileOverlayType(null); // Ensure mobile overlay is closed
-        }
+        setDropdownStates((prev) => ({ ...prev, notification: false }));
         break;
       case "user":
-        if (isMobile) {
-          setMobileOverlayType((prev) =>
-            prev === "profile" ? null : "profile"
-          );
-          setIsUserMenuOpen(false); // Ensure desktop dropdown is closed
-        } else {
-          setIsUserMenuOpen((prev) => !prev);
-          setMobileOverlayType(null); // Ensure mobile overlay is closed
-        }
+        setDropdownStates((prev) => ({ ...prev, user: false }));
         break;
       case "cart":
-        if (isMobile) {
-          setMobileOverlayType((prev) => (prev === "cart" ? null : "cart"));
-          setIsCartOpen(false); // Ensure desktop dropdown is closed
-        } else {
-          setIsCartOpen((prev) => !prev);
-          setMobileOverlayType(null); // Ensure mobile overlay is closed
-        }
+        setDropdownStates((prev) => ({ ...prev, cart: false }));
         break;
-      case "mobileMain":
-        setIsMobileMenuOpen((prev) => !prev);
+      case "mobileOverlay":
+        setMobileOverlayType(null);
+        break;
+      case "search":
+        setDropdownStates((prev) => ({ ...prev, searchExpanded: false }));
         break;
       default:
         break;
     }
-  };
+  }, []);
 
-  // Close all specific dropdowns/overlays
-  const closeAllDropdowns = () => {
-    setIsCategoryOpen(false);
-    setIsNotificationOpen(false);
-    setIsUserMenuOpen(false);
-    setIsCartOpen(false);
-    setMobileOverlayType(null);
-  };
-
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Đóng dropdown Danh mục nếu click ra ngoài
+      // Category dropdown
       if (
         categoryMenuRef.current &&
         !categoryMenuRef.current.contains(event.target)
       ) {
-        setIsCategoryOpen(false);
+        closeDropdown("category");
       }
 
-      // Đóng dropdown Thông báo nếu click ra ngoài
+      // Notification dropdown
       if (
         notificationMenuRef.current &&
         !notificationMenuRef.current.contains(event.target)
       ) {
-        setIsNotificationOpen(false);
+        closeDropdown("notification");
       }
 
-      // Đóng dropdown Giỏ hàng nếu click ra ngoài
+      // Cart dropdown
       if (cartMenuRef.current && !cartMenuRef.current.contains(event.target)) {
-        setIsCartOpen(false);
+        closeDropdown("cart");
       }
 
-      // Đóng dropdown User nếu click ra ngoài
+      // User dropdown
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
+        closeDropdown("user");
       }
 
-      // Logic cho mobile main menu (hamburger) - giữ nguyên
+      // Mobile menu
       if (
         mobileMenuRef.current &&
         !mobileMenuRef.current.contains(event.target) &&
         !event.target.closest("#mobile-menu-button")
       ) {
-        setIsMobileMenuOpen(false);
+        setDropdownStates((prev) => ({ ...prev, mobileMenu: false }));
       }
 
-      // Logic cho mobile overlays (backdrop click) - giữ nguyên
+      // Mobile overlay
       if (
         mobileOverlayRef.current &&
         !mobileOverlayRef.current.contains(event.target) &&
-        event.target.closest(".mobile-overlay-trigger") === null
+        !event.target.closest(".mobile-overlay-trigger")
       ) {
         setMobileOverlayType(null);
       }
 
-      // Logic thu gọn thanh tìm kiếm - giữ nguyên
+      // Search
       if (
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target) &&
-        isSearchExpanded
+        dropdownStates.searchExpanded
       ) {
-        setIsSearchExpanded(false);
+        closeDropdown("search");
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSearchExpanded]);
+  }, [dropdownStates.searchExpanded, closeDropdown]);
+
+  // Focus search input when expanded
   useEffect(() => {
-    if (isSearchExpanded && searchInputRef.current) {
+    if (dropdownStates.searchExpanded && searchInputRef.current) {
       searchInputRef.current.focus();
     }
-  }, [isSearchExpanded]);
+  }, [dropdownStates.searchExpanded]);
 
   const handleMobileLinkClick = () => {
-    setIsMobileMenuOpen(false);
-    setMobileOverlayType(null); // Close any open mobile overlays
-  };
-
-  const handleSearchIconClick = () => {
-    setIsSearchExpanded(true);
+    setDropdownStates((prev) => ({ ...prev, mobileMenu: false }));
+    setMobileOverlayType(null);
   };
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-        <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Left Section: Logo & Mobile Menu Toggle */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <button
-              id="mobile-menu-button"
-              onClick={() => toggleDropdown("mobileMain")}
-              className="md:hidden rounded-md p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-              aria-label="Toggle mobile menu"
-            >
-              {isMobileMenuOpen ? <X size={24} /> : <MenuIcon size={24} />}
-            </button>
-            <a href="/" className="flex items-center">
-              <SuperBeeLogo />
-            </a>
-          </div>
+      <header className="sticky top-0 z-50 w-full bg-gradient-header shadow-2xl">
+        {/* Animated background pattern */}
+        <div className='absolute inset-0 bg-[url(&apos;data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fillRule="evenodd"%3E%3Cg fill="%23bf00ff" fillOpacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&apos;)] animate-pulse'></div>
 
-          {/* Center Section (Desktop): Navigation & Category Dropdown OR Expanded Search */}
-          <div
-            ref={searchContainerRef}
-            className="hidden md:flex flex-grow items-center justify-center relative"
-          >
-            {!isSearchExpanded && (
-              <nav className="flex items-center gap-1 lg:gap-2">
-                <div ref={categoryMenuRef} className="relative">
+        {/* TOP ROW - Logo, Search, Actions */}
+        <div className="relative border-b border-[var(--color-secondary-500)]/20">
+          <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            {/* Left: Logo & Mobile Menu */}
+            <div className="flex items-center gap-3">
+              <button
+                id="mobile-menu-button"
+                onClick={() => toggleDropdown("mobileMain")}
+                className="md:hidden rounded-lg p-2 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 backdrop-blur-sm"
+                aria-label="Toggle mobile menu"
+              >
+                {dropdownStates.mobileMenu ? (
+                  <X size={24} />
+                ) : (
+                  <MenuIcon size={24} />
+                )}
+              </button>
+              <a href="/" className="flex items-center">
+                <SuperBeeLogo />
+              </a>
+            </div>
+
+            {/* Center: Search Bar */}
+            <div
+              ref={searchContainerRef}
+              className="hidden md:flex flex-grow items-center justify-center max-w-2xl mx-8"
+            >
+              <div className="relative w-full group">
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="🔍 Tìm kiếm acc game, dịch vụ, tin tức..."
+                  className="w-full rounded-full border-2 border-[var(--color-secondary-500)]/30 bg-black/20 backdrop-blur-md py-3.5 pl-6 pr-14 text-sm text-white placeholder-white/60 shadow-lg outline-none transition-all duration-300 focus:border-[var(--color-neon-cyan)] focus:ring-2 focus:ring-[var(--color-neon-cyan)]/50 hover:border-[var(--color-secondary-400)]/50"
+                />
+                <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-button p-2.5 text-white hover:scale-105 transition-all duration-300 shadow-lg glow-neon-blue">
+                  <Search size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-2">
+              <Link
+                to="/recharge-atm"
+                className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-warning px-4 py-2.5 lg:px-5 lg:py-3 text-sm font-bold text-white shadow-lg hover:shadow-orange-400/25 transition-all duration-300 transform hover:scale-105"
+              >
+                <CreditCard size={18} />
+                <span className="hidden lg:inline"> Nạp Tiền</span>
+              </Link>
+
+              {/* Notification */}
+              <div ref={notificationMenuRef} className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dropdownStates.notification) {
+                      closeDropdown("notification");
+                    } else {
+                      toggleDropdown("notification");
+                    }
+                  }}
+                  className="relative rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mobile-overlay-trigger"
+                  aria-label="Notifications"
+                >
+                  <Bell size={22} />
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-danger text-xs text-white font-bold animate-pulse shadow-lg">
+                      {notifications.length}
+                    </span>
+                  )}
+                </button>
+                <NotificationDropdown
+                  notifications={notifications}
+                  isOpen={dropdownStates.notification}
+                  onClose={() => closeDropdown("notification")}
+                />
+              </div>
+
+              {/* Cart */}
+              <div ref={cartMenuRef} className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dropdownStates.cart) {
+                      closeDropdown("cart");
+                    } else {
+                      toggleDropdown("cart");
+                    }
+                  }}
+                  className="relative rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-primary-600)]/20 hover:to-[var(--color-neon-cyan)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-neon-cyan)]/50 mobile-overlay-trigger"
+                  aria-label="Cart"
+                >
+                  <ShoppingCart size={22} />
+                  {cartItems.length > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-success text-xs text-white font-bold animate-bounce shadow-lg">
+                      {cartItems.length}
+                    </span>
+                  )}
+                </button>
+                <CartDropdown
+                  cartItems={cartItems}
+                  isOpen={dropdownStates.cart}
+                  onClose={() => closeDropdown("cart")}
+                />
+              </div>
+
+              {/* User Menu */}
+              {isLogin ? (
+                <div ref={userMenuRef} className="relative">
                   <button
-                    onClick={() => toggleDropdown("category")}
-                    className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (dropdownStates.user) {
+                        closeDropdown("user");
+                      } else {
+                        toggleDropdown("user");
+                      }
+                    }}
+                    className="flex items-center gap-2 rounded-full p-1.5 text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mobile-overlay-trigger"
+                    aria-label="User menu"
                   >
-                    <MenuIcon size={18} className="text-blue-600" />
-                    <span>Danh mục</span>
+                    <div className="relative">
+                      <img
+                        src="https://placehold.co/36x36/667eea/ffffff?text=👤"
+                        alt="Avatar"
+                        className="h-8 w-8 rounded-full object-cover border-2 border-[var(--color-secondary-400)]/50"
+                      />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[var(--color-accent-green)] rounded-full border-2 border-[var(--color-dark-surface)]"></div>
+                    </div>
+                    <div className="hidden lg:block text-left">
+                      <p className="text-xs font-semibold text-white">
+                        {user?.name || "Gamer"}
+                      </p>
+                      <p className="text-xs text-neon-blue font-medium">
+                        💰 {user?.money || "0"}đ
+                      </p>
+                    </div>
                     <ChevronDown
                       size={16}
-                      className={`transition-transform duration-200 ${
-                        isCategoryOpen ? "rotate-180" : ""
+                      className={`hidden lg:block transition-transform duration-300 ${
+                        dropdownStates.user ? "rotate-180" : ""
                       }`}
                     />
                   </button>
-                  <CategoryDropdown
-                    categories={categories}
-                    isOpen={isCategoryOpen}
-                    onClose={() => setIsCategoryOpen(false)}
+                  <UserMenu
+                    user={user}
+                    isOpen={dropdownStates.user}
+                    onClose={() => closeDropdown("user")}
                   />
                 </div>
+              ) : (
+                <Link to="/auth/login" className="ml-2">
+                  <div className="rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50">
+                    <User size={22} />
+                  </div>
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* BOTTOM ROW - Navigation Menu */}
+        <div className="relative">
+          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+            <div className="flex h-14 items-center justify-between">
+              {/* Left: Category Dropdown */}
+              <div ref={categoryMenuRef} className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (dropdownStates.category) {
+                      closeDropdown("category");
+                    } else {
+                      toggleDropdown("category");
+                    }
+                  }}
+                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50"
+                >
+                  <MenuIcon size={18} className="text-neon-blue" />
+                  <span className="font-semibold"> Danh mục game</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-300 ${
+                      dropdownStates.category ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                <CategoryDropdown
+                  categories={categories}
+                  isOpen={dropdownStates.category}
+                  onClose={() => closeDropdown("category")}
+                />
+              </div>
+
+              {/* Center: Main Navigation */}
+              <nav className="hidden md:flex items-center gap-1 lg:gap-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     to={link.href}
-                    className="rounded-md px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
+                    className="relative rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:text-white transition-all duration-300 group overflow-hidden"
                   >
-                    {link.name}
+                    <div className="absolute inset-0 bg-gradient-button opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-lg"></div>
+                    <span className="relative flex items-center gap-2">
+                      <link.icon size={16} />
+                      {link.name}
+                    </span>
                   </Link>
                 ))}
               </nav>
-            )}
 
-            {/* Search Bar - Desktop */}
-            <div
-              className={`flex items-center justify-center transition-all duration-300 ease-in-out ${
-                isSearchExpanded ? "w-full max-w-lg" : "w-auto"
-              }`}
-            >
-              {isSearchExpanded ? (
-                <div className="relative w-full group">
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder="Tìm kiếm sản phẩm..."
-                    className="w-full rounded-full border border-gray-300 bg-gray-50 py-2.5 pl-5 pr-12 text-sm shadow-sm outline-none transition-all duration-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 group-hover:border-blue-400"
-                    onBlur={() => {
-                      /* Consider if onBlur is too aggressive, or manage state with a debounce */
-                    }}
-                  />
-                  <button className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-blue-600 p-2 text-white hover:bg-blue-700 transition-colors">
-                    <Search size={18} />
-                  </button>
+              {/* Right: Quick Actions */}
+              <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-1 text-xs text-white/60">
+                  <div className="w-2 h-2 bg-[var(--color-accent-green)] rounded-full animate-pulse"></div>
+                  <span>Online: 1,234</span>
                 </div>
-              ) : (
-                <button
-                  onClick={handleSearchIconClick}
-                  className="ml-4 p-2 rounded-full text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors"
-                  aria-label="Mở tìm kiếm"
-                >
-                  <Search size={20} />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Right Section: Actions */}
-          <div className="flex items-center gap-1 sm:gap-2">
-            <Link
-              to="/recharge-atm"
-              className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-400 to-orange-500 px-3 py-2 lg:px-4 lg:py-2.5 text-sm font-semibold text-white shadow-md hover:from-yellow-500 hover:to-orange-600 transition-all duration-300 transform hover:scale-105"
-            >
-              <CreditCard size={18} />
-              <span className="hidden lg:inline">Nạp Tiền</span>
-            </Link>
-            <div ref={notificationMenuRef} className="relative">
-              <button
-                onClick={() => toggleDropdown("notification")}
-                className="relative rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors mobile-overlay-trigger"
-                aria-label="Notifications"
-              >
-                <Bell size={22} />
-                {notifications.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                    {notifications.length}
-                  </span>
-                )}
-              </button>
-              <NotificationDropdown
-                notifications={notifications}
-                isOpen={isNotificationOpen}
-                onClose={() => setIsNotificationOpen(false)}
-              />
-            </div>
-            <div ref={cartMenuRef} className="relative">
-              <button
-                onClick={() => toggleDropdown("cart")}
-                className="relative rounded-full p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-800 transition-colors mobile-overlay-trigger"
-                aria-label="Cart"
-              >
-                <ShoppingCart size={22} />
-                {cartItems.length > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                    {cartItems.length}
-                  </span>
-                )}
-              </button>
-              <CartDropdown
-                cartItems={cartItems}
-                isOpen={isCartOpen}
-                onClose={() => setIsCartOpen(false)}
-              />
-            </div>
-
-            {isLogin ? (
-              <div ref={userMenuRef} className="relative">
-                <button
-                  onClick={() => toggleDropdown("user")}
-                  className="flex items-center gap-2 rounded-full p-1 text-gray-600 hover:bg-gray-100 transition-colors mobile-overlay-trigger"
-                  aria-label="User menu"
-                >
-                  <img
-                    src="https://placehold.co/36x36/E2E8F0/4A5568?text=U"
-                    alt="Avatar"
-                    className="h-8 w-8 rounded-full object-cover"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src =
-                        "https://placehold.co/36x36/E2E8F0/4A5568?text=Err";
-                    }}
-                  />
-                  <div className="hidden lg:block text-left">
-                    <p className="text-xs font-medium text-gray-800">
-                      {user?.name || "User"}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Số dư: {user?.money || "0"}đ
-                    </p>
-                  </div>
-                  <ChevronDown
-                    size={16}
-                    className={`hidden lg:block transition-transform duration-200 ${
-                      isUserMenuOpen ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
-                <UserMenu
-                  user={user}
-                  isOpen={isUserMenuOpen}
-                  onClose={() => setIsUserMenuOpen(false)}
-                />
+                <div className="h-4 w-px bg-white/20 mx-2"></div>
+                <div className="text-xs text-neon-blue font-medium">
+                  🔥 Hot Sale: -50%
+                </div>
               </div>
-            ) : (
-              <div className="ml-5">
-                <Link to="/auth/login">
-                  <User
-                    size={22}
-                    className="text-gray-600 hover:text-gray-800 transition-colors"
-                  />
-                </Link>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Mobile Main Menu (Hamburger) */}
-        {isMobileMenuOpen && (
+        {/* Mobile Search Bar */}
+        <div className="md:hidden border-t border-[var(--color-secondary-500)]/20 p-3">
+          <div className="relative w-full group">
+            <input
+              type="text"
+              placeholder="🔍 Tìm acc game..."
+              className="w-full rounded-full border-2 border-[var(--color-secondary-500)]/30 bg-black/20 backdrop-blur-md py-3 pl-6 pr-14 text-sm text-white placeholder-white/60 shadow-lg outline-none transition-all duration-300 focus:border-[var(--color-neon-cyan)] focus:ring-2 focus:ring-[var(--color-neon-cyan)]/50"
+            />
+            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-button p-2.5 text-white">
+              <Search size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Main Menu */}
+        {dropdownStates.mobileMenu && (
           <div
             ref={mobileMenuRef}
-            className="md:hidden absolute top-16 left-0 right-0 z-40 bg-white border-t shadow-lg max-h-[calc(100vh-4rem)] overflow-y-auto"
+            className="md:hidden absolute top-full left-0 right-0 z-40 bg-gradient-dark backdrop-blur-xl border-t border-[var(--color-secondary-500)]/20 shadow-2xl max-h-[calc(100vh-8rem)] overflow-y-auto"
           >
-            <div className="px-4 py-3 space-y-3">
-              <div className="relative w-full group mb-3">
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm sản phẩm..."
-                  className="w-full rounded-full border border-gray-300 bg-gray-50 py-2.5 pl-5 pr-12 text-sm shadow-sm outline-none transition-all duration-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 group-hover:border-blue-400"
-                />
-                <button className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full bg-blue-600 p-2 text-white hover:bg-blue-700 transition-colors">
-                  <Search size={18} />
-                </button>
-              </div>
+            <div className="px-4 py-4 space-y-4">
+              {/* Recharge Button */}
               <Link
                 to="/recharge-atm"
                 onClick={handleMobileLinkClick}
-                className="flex items-center justify-center gap-2 w-full rounded-md bg-gradient-to-r from-yellow-400 to-orange-500 px-4 py-3 text-sm font-semibold text-white shadow-md hover:from-yellow-500 hover:to-orange-600 transition-all duration-300"
+                className="flex items-center justify-center gap-3 w-full rounded-xl bg-gradient-warning px-4 py-4 text-sm font-bold text-white shadow-lg hover:shadow-orange-400/25 transition-all duration-300"
               >
-                <CreditCard size={18} />
+                <CreditCard size={20} />
                 Nạp Tiền Ngay
               </Link>
+
+              {/* Navigation Links */}
               {navLinks.map((link) => (
                 <Link
                   key={link.name}
                   to={link.href}
                   onClick={handleMobileLinkClick}
-                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                  className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50"
                 >
-                  <link.icon size={20} className="text-gray-500" />
+                  <link.icon size={22} className="text-neon-blue" />
                   {link.name}
                 </Link>
               ))}
-              <div className="border-t pt-3 mt-3">
-                <h3 className="px-3 text-sm font-semibold text-gray-500 uppercase mb-2">
-                  Danh mục sản phẩm
+
+              {/* Categories Section */}
+              <div className="border-t border-[var(--color-secondary-500)]/20 pt-4 mt-4">
+                <h3 className="px-4 text-sm font-bold text-neon-blue uppercase mb-3 tracking-wider">
+                  Danh mục hot
                 </h3>
                 {categories.map((category) => (
                   <Link
                     key={category.name}
                     to={category.href}
                     onClick={handleMobileLinkClick}
-                    className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-blue-600 transition-colors"
+                    className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mb-2"
                   >
-                    <category.icon size={20} className="text-gray-500" />
+                    <category.icon size={22} className="text-neon-purple" />
                     {category.name}
                   </Link>
                 ))}
@@ -463,32 +579,18 @@ export default function Header() {
           </div>
         )}
 
-        {/* Mobile Overlays for Notifications, Cart, Profile */}
+        {/* Mobile Overlays */}
         {mobileOverlayType && (
-          <div
-            className="md:hidden fixed inset-0 z-40 flex justify-end"
-            onClick={(e) => {
-              if (
-                mobileOverlayRef.current &&
-                !mobileOverlayRef.current.contains(e.target) &&
-                !e.target.closest(".mobile-overlay-trigger")
-              ) {
-                setMobileOverlayType(null);
-              }
-            }}
-          >
-            <div
-              className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ease-in-out"
-              aria-hidden="true"
-            ></div>
+          <div className="md:hidden fixed inset-0 z-40 flex justify-end">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ease-in-out"></div>
             <div
               ref={mobileOverlayRef}
-              className="relative z-50 bg-white w-4/5 max-w-sm h-full shadow-xl transform transition-transform duration-300 ease-in-out translate-x-0"
+              className="relative z-50 bg-gradient-dark backdrop-blur-xl w-4/5 max-w-sm h-full shadow-2xl transform transition-transform duration-300 ease-in-out translate-x-0 border-l border-[var(--color-secondary-500)]/20"
             >
               {mobileOverlayType === "notifications" && (
                 <NotificationDropdown
                   notifications={notifications}
-                  isOpen={true} // Always open when mobileOverlayType is 'notifications'
+                  isOpen={true}
                   onClose={() => setMobileOverlayType(null)}
                   isMobile={true}
                 />
@@ -496,7 +598,7 @@ export default function Header() {
               {mobileOverlayType === "cart" && (
                 <CartDropdown
                   cartItems={cartItems}
-                  isOpen={true} // Always open when mobileOverlayType is 'cart'
+                  isOpen={true}
                   onClose={() => setMobileOverlayType(null)}
                   isMobile={true}
                 />
@@ -504,7 +606,7 @@ export default function Header() {
               {mobileOverlayType === "profile" && (
                 <UserMenu
                   user={user}
-                  isOpen={true} // Always open when mobileOverlayType is 'profile'
+                  isOpen={true}
                   onClose={() => setMobileOverlayType(null)}
                   isMobile={true}
                 />

@@ -1,25 +1,22 @@
+// LoginForm.jsx - Chỉ xử lý UI và gọi AuthContext
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ChevronLeft, EyeOff, Eye } from "lucide-react"; // Updated import
+import { Link, Navigate } from "react-router-dom";
+import { ChevronLeft, EyeOff, Eye } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext.jsx";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
-import { useNotification } from "../../contexts/NotificationProvider";
 
 export default function LoginForm() {
   const [passwordType, setPasswordType] = useState("password");
-  const { conFim, pop } = useNotification();
-  const { login, loading, user, error } = useAuth();
+  const { login, loading, user } = useAuth();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
     clearErrors,
-    setError: setFormError,
-    resetField,
   } = useForm();
-  const navigate = useNavigate();
 
   // Redirect if already logged in
   if (user) {
@@ -27,49 +24,30 @@ export default function LoginForm() {
   }
 
   const onSubmit = async (data) => {
-    try {
-      const result = await login(data);
-      if (!result.success) {
-        // Handle specific field errors returned from the server (validation errors)
-        if (result.errors) {
-          Object.entries(result.errors).forEach(([field, messages]) => {
-            setFormError(field, {
-              type: "server",
-              message: messages[0],
-            });
-            if (field === "password") {
-              resetField("password");
-            }
-          });
-        }
+    // Clear any previous form errors
+    clearErrors();
 
-        // Handle custom error codes (like NO_ACTIVE, Key)
-        if (result.code === "NO_ACTIVE") {
-          const ok = await conFim(
-            result.message ||
-              "Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?"
-          );
-          if (ok) {
-            navigate("/activeAcc");
-          }
-        } else if (result.code === "Key") {
-          pop(result.message || "Tài khoản của bạn đã bị khóa.", "e"); // 'e' for error notification
-        } else {
-          // Fallback for other non-success cases (e.g., general login failure, invalid credentials)
-          pop(result.message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
-          resetField("password"); // Clear password for security
-        }
-        return; // Stop execution if login was not successful
-      }
-      pop(result.message || "Đăng nhập thành công", "s");
-    } catch (err) {
-      resetField("password");
-      setFormError("general", {
-        type: "manual",
-        message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
+    // Call login function from AuthContext
+    const result = await login(data);
+
+    // Handle validation errors from server if any
+    if (!result.success && result.validationErrors) {
+      Object.entries(result.validationErrors).forEach(([field, messages]) => {
+        setError(field, {
+          type: "server",
+          message: Array.isArray(messages) ? messages[0] : messages,
+        });
       });
-      pop(err.message || "Đã xảy ra lỗi không xác định.", "e");
+    }
+
+    // All other error handling (notifications, navigation) is done in AuthContext
+    // We only need to check if login was successful for any additional UI updates
+    if (result.success) {
+      // Login successful - AuthContext handles navigation and notifications
+      console.log("Login successful");
+    } else {
+      // Login failed - AuthContext handles error notifications
+      console.log("Login failed");
     }
   };
 
@@ -97,12 +75,12 @@ export default function LoginForm() {
               Enter your email and password to sign in!
             </p>
           </div>
-
+          {/* 
           {error && (
             <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
               <p>{error.message}</p>
             </div>
-          )}
+          )} */}
 
           {user && (
             <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">

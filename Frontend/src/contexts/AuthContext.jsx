@@ -15,7 +15,7 @@ import { useNotification } from "./NotificationProvider";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const { pop, showAlert } = useNotification();
+  const { pop, showAlert, conFim } = useNotification();
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
@@ -29,38 +29,31 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
-  // Hàm login
   const login = async (credentials) => {
     setLoading(true);
-    setError(null);
+
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
         password: credentials.password,
-        web_id: credentials.web_id, // Make sure web_id is passed
+        web_id: credentials.web_id,
       });
 
-      // Server returns status: false for business logic errors (e.g., account not active, locked)
+      // Handle unsuccessful response from server
       if (!res?.data?.status) {
+        await handleLoginError(res.data);
         setLoading(false);
-        return {
-          success: false,
-          message: res.data.message || "Đăng nhập thất bại.",
-          errors: res.data.errors || null,
-          code: res.data.code || null, // Pass the custom code from the server
-        };
+        return { success: false };
       }
 
+      // Handle missing access token
       if (!res?.data?.access_token) {
+        pop("Không nhận được access_token từ server.", "e");
         setLoading(false);
-        return {
-          success: false,
-          message: "Không nhận được access_token từ server.",
-          errors: null,
-          code: null,
-        };
+        return { success: false };
       }
 
+      // Success - process token and set user
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken();
@@ -71,27 +64,26 @@ export function AuthProvider({ children }) {
           money: decoded.money,
           avatar: decoded.avatar,
         });
-        setLoading(false);
 
-        const locationOld = localStorage.getItem("location");
-        if (locationOld) {
-          const locationNew = locationOld;
+        // Show success message
+        pop("Đăng nhập thành công", "s");
+
+        // Handle navigation
+        const savedLocation = localStorage.getItem("location");
+        if (savedLocation) {
           localStorage.removeItem("location");
-          navigate(`${locationNew}`);
+          navigate(savedLocation);
         } else {
-          pop("Đăng nhập thành công", "s"); // This notification might be handled in LoginForm
-          navigate("/"); // Navigate to home after successful login if no previous location
+          navigate("/");
         }
-        return { success: true, message: "Đăng nhập thành công." };
-      } else {
-        sessionStorage.removeItem("access_token"); // Clear invalid token
+
         setLoading(false);
-        return {
-          success: false,
-          message: "Không thể giải mã token từ phản hồi server.",
-          errors: null,
-          code: null,
-        };
+        return { success: true };
+      } else {
+        sessionStorage.removeItem("access_token");
+        pop("Không thể giải mã token từ phản hồi server.", "e");
+        setLoading(false);
+        return { success: false };
       }
     } catch (err) {
       setLoading(false);
@@ -99,18 +91,47 @@ export function AuthProvider({ children }) {
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
-      // Set a generic error for AuthContext's own state, if needed for other components
-      setError({ message: errorMessage });
 
-      // Return detailed error for LoginForm to handle
-      return {
-        success: false,
-        message: errorMessage,
-        errors: err.response?.data?.errors || null,
-        code: err.response?.data?.code || null,
-      };
+      pop(errorMessage, "e");
+      return { success: false };
     }
   };
+
+  // Handle different types of login errors
+  const handleLoginError = async (errorData) => {
+    const { message, code } = errorData;
+
+    switch (code) {
+      case "NO_ACTIVE": {
+        const shouldActivate = await conFim(
+          message ||
+            "Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?"
+        );
+        if (shouldActivate) {
+          navigate("/activeAcc");
+        }
+        break;
+      }
+
+      case "LOCKED_ACCOUNT":
+        pop(message || "Tài khoản của bạn đã bị khóa.", "e");
+        break;
+
+      case "INVALID_CREDENTIALS":
+        pop(message || "Tên đăng nhập hoặc mật khẩu không đúng.", "e");
+        break;
+
+      case "VALIDATION_ERROR":
+        // For validation errors, we'll return them to be handled by the form
+        // The form component can access these through the return value
+        break;
+
+      default:
+        pop(message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
+        break;
+    }
+  };
+
   const register = async (credentials) => {
     setLoading(true);
     setError(null);

@@ -25,6 +25,8 @@ export default defineConfig({
       "@utils": resolve(__dirname, "src/utils"),
       // eslint-disable-next-line no-undef
       "@sections": resolve(__dirname, "src/sections"),
+      // eslint-disable-next-line no-undef
+      "@styles": resolve(__dirname, "src/styles"),
     },
   },
 });

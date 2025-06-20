@@ -12,6 +12,7 @@ import {
   Pay,
 } from "@pages";
 import {
+  ActivateWebPage,
   ActiveAcc,
   EmailVerification,
   ForgotPassword,
@@ -90,6 +91,10 @@ export const clientModules = [
   {
     path: "/activeAcc",
     view: ActiveAcc,
+  },
+  {
+    path: "/activeWeb",
+    view: ActivateWebPage,
   },
 ];
 

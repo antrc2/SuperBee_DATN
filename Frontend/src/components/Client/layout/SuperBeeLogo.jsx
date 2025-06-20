@@ -1,32 +1,113 @@
 export default function SuperBeeLogo() {
   return (
-    <svg
-      width="150"
-      height="40"
-      viewBox="0 0 150 40"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-10 w-auto"
-    >
-      <path
-        d="M21.825 13.5C21.075 13.5 20.475 13.275 19.9875 12.7875C19.5 12.3 19.275 11.7 19.275 10.95C19.275 10.2 19.5 9.6 19.9875 9.1125C20.475 8.625 21.075 8.3875 21.825 8.3875C22.575 8.3875 23.175 8.625 23.6625 9.1125C24.15 9.6 24.3875 10.2 24.3875 10.95C24.3875 11.7 24.15 12.3 23.6625 12.7875C23.175 13.275 22.575 13.5 21.825 13.5ZM25.3875 20.725C25.3875 22.0625 25.05 23.2125 24.375 24.175C23.7 25.1375 22.8 25.8 21.675 26.1625L22.725 29.8375H20.25L19.3125 26.3375C18.6375 26.1625 18.075 25.875 17.625 25.475C17.175 25.075 16.875 24.5875 16.725 24.0125L13.65 20.45C13.05 21.4125 12.15 22.2 10.95 22.8125L12.1125 29.8375H9.525L7.2375 16.025H9.9375L10.9875 22.025C12.0375 21.35 12.8625 20.475 13.4625 19.4C14.0625 18.325 14.3625 17.1375 14.3625 15.8375V8.825H16.8375V15.65C16.8375 17.3 16.425 18.65 15.6 19.7L18.4125 22.8125C18.8625 22.1375 19.3125 21.625 19.7625 21.275C20.2125 20.925 20.6625 20.75 21.1125 20.75H25.3875V20.725Z"
-        fill="#FFC107"
-      />
-      <path
-        d="M19.275 10.95C19.275 11.7 19.5 12.3 19.9875 12.7875C20.475 13.275 21.075 13.5 21.825 13.5C22.575 13.5 23.175 13.275 23.6625 12.7875C24.15 12.3 24.3875 11.7 24.3875 10.95C24.3875 10.2 24.15 9.6 23.6625 9.1125C23.175 8.625 22.575 8.3875 21.825 8.3875C21.075 8.3875 20.475 8.625 19.9875 9.1125C19.5 9.6 19.275 10.2 19.275 10.95Z"
-        stroke="#4A5568"
-        strokeWidth="0.75"
-      />
-      <text
-        x="35"
-        y="27"
-        fontFamily="Inter, sans-serif"
-        fontSize="20"
-        fontWeight="bold"
-        fill="#1A202C"
-      >
-        SuperBee
-      </text>
-    </svg>
+    <div className="flex items-center gap-2 group">
+      <div className="relative">
+        <svg
+          width="40"
+          height="40"
+          viewBox="0 0 40 40"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-10 w-10 transition-all duration-300 group-hover:scale-110"
+        >
+          {/* Glow effect background */}
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <linearGradient
+              id="beeGradient"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#00f5ff" />
+              <stop offset="50%" stopColor="#bf00ff" />
+              <stop offset="100%" stopColor="#ff1493" />
+            </linearGradient>
+          </defs>
+
+          {/* Bee body with gradient */}
+          <ellipse
+            cx="20"
+            cy="25"
+            rx="8"
+            ry="12"
+            fill="url(#beeGradient)"
+            filter="url(#glow)"
+          />
+
+          {/* Wings */}
+          <ellipse
+            cx="15"
+            cy="18"
+            rx="6"
+            ry="4"
+            fill="rgba(255,255,255,0.8)"
+            opacity="0.9"
+          />
+          <ellipse
+            cx="25"
+            cy="18"
+            rx="6"
+            ry="4"
+            fill="rgba(255,255,255,0.8)"
+            opacity="0.9"
+          />
+
+          {/* Stripes */}
+          <rect
+            x="14"
+            y="20"
+            width="12"
+            height="2"
+            fill="#000"
+            opacity="0.3"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="24"
+            width="12"
+            height="2"
+            fill="#000"
+            opacity="0.3"
+            rx="1"
+          />
+          <rect
+            x="14"
+            y="28"
+            width="12"
+            height="2"
+            fill="#000"
+            opacity="0.3"
+            rx="1"
+          />
+
+          {/* Eyes */}
+          <circle cx="17" cy="15" r="2" fill="#fff" />
+          <circle cx="23" cy="15" r="2" fill="#fff" />
+          <circle cx="17" cy="15" r="1" fill="#000" />
+          <circle cx="23" cy="15" r="1" fill="#000" />
+        </svg>
+
+        {/* Animated glow ring */}
+        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-30 transition-opacity duration-300 animate-pulse blur-md"></div>
+      </div>
+
+      <div className="flex flex-col">
+        <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent font-gaming">
+          SuperBee
+        </span>
+        <span className="text-xs text-gray-400 font-medium tracking-wider">
+          GAMING STORE
+        </span>
+      </div>
+    </div>
   );
 }

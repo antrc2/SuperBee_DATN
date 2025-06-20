@@ -352,6 +352,16 @@ class UserOrderController extends Controller
             if ($cart['status'] == True){
                 $carts = $cart['carts'];
                 $total_price = $cart['total_price'];
+                $role = $request->role;
+                if ($role == 'user'){
+
+                } elseif ($role == 'partner'){
+                    $total_price = $total_price - $total_price * 10 / 100;
+                } elseif ($role == 'reseller'){
+                    $total_price = $total_price - $total_price * 20 / 100;
+                } elseif ($role == 'admin') {
+                    
+                }
                 return response()->json([
                     "status"=>True,
                     "message"=>"Thành công",
@@ -493,6 +503,18 @@ class UserOrderController extends Controller
                             'message'=>"Bạn không đủ số dư",
                         ], 400);
                     }
+
+                    $role = $request->role;
+                    if ($role == 'user'){
+
+                    } elseif ($role == 'partner'){
+                        $total_price = $total_price - $total_price * 10 / 100;
+                    } elseif ($role == 'reseller'){
+                        $total_price = $total_price - $total_price * 20 / 100;
+                    } elseif ($role == 'admin') {
+
+                    }
+
                     $affiliate = Affiliate::where('user_id',$user_id)->first();
                     DB::beginTransaction();
 

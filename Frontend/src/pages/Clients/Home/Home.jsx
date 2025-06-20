@@ -4,10 +4,8 @@ import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
 import api from "../../../utils/http";
-import { useNotification } from "../../../contexts/NotificationProvider";
 
 export default function Home() {
-  const { pop } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const getData = async () => {
@@ -22,7 +20,6 @@ export default function Home() {
         };
         setData({ ...d });
       }
-      pop("àhjaldf", "s");
       setIsLoading(false);
     } catch (error) {
       setIsLoading(false);
@@ -36,7 +33,7 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mt-4">
+      <div className="min-h-screen bg-slate-900 text-white">
         <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
       </div>
       <div>

@@ -411,7 +411,7 @@ export default function Header() {
                   >
                     <div className="relative">
                       <img
-                        src="https://placehold.co/36x36/667eea/ffffff?text=👤"
+                        src={user?.avatar}
                         alt="Avatar"
                         className="h-8 w-8 rounded-full object-cover border-2 border-[var(--color-secondary-400)]/50"
                       />

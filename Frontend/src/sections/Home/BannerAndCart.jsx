@@ -4,7 +4,7 @@ import Banner3D from "../../components/Client/banner/Banner";
 
 export default function BannerAndCart({ top, banner }) {
   return (
-    <div className="flex items-center max-w-7xl mx-auto">
+    <div className="flex gap-6 max-w-7xl mx-auto p-4">
       <div className="w-1/3">
         <TopUpLeaderboard top={top} />
       </div>

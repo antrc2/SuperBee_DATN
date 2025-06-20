@@ -37,25 +37,25 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
 
   const menuItems = [
     {
-      label: "👤 Thông tin tài khoản",
+      label: " Thông tin tài khoản",
       icon: Info,
       href: "/info",
       color: "text-blue-400",
     },
     {
-      label: "🔒 Đổi mật khẩu",
+      label: " Đổi mật khẩu",
       icon: Lock,
       href: "/info/change-password",
       color: "text-purple-400",
     },
     {
-      label: "📊 Lịch sử giao dịch",
+      label: " Lịch sử giao dịch",
       icon: HistoryIcon,
       href: "/info/transactions",
       color: "text-green-400",
     },
     {
-      label: "⚙️ Cài đặt",
+      label: "Cài đặt",
       icon: Settings,
       href: "/settings",
       color: "text-orange-400",
@@ -145,7 +145,7 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
               size={18}
               className="group-hover:scale-110 transition-transform duration-300"
             />
-            <span className="font-medium">🚪 Đăng xuất</span>
+            <span className="font-medium"> Đăng xuất</span>
           </button>
         </div>
       </div>

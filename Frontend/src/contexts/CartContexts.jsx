@@ -98,6 +98,7 @@ export function CartProvider({ children }) {
         setCartItems((prevItems) =>
           prevItems.filter((item) => item.id !== itemId)
         );
+        pop("Xóa sản phẩm thành công", "s");
       } catch (error) {
         console.error(`Lỗi khi xóa sản phẩm ${itemId}:`, error);
         pop("Xóa sản phẩm thất bại, vui lòng thử lại.", "e");
@@ -124,19 +125,38 @@ export function CartProvider({ children }) {
         if (res.data.status) {
           navigator("/cart");
         } else {
-          alert(res.data.message);
+          pop(res.data.message, "e");
         }
       } catch (err) {
-        // Bắt lỗi chính xác từ BE trả về
         if (err.response?.data?.message) {
-          alert(err.response.data.message);
+          pop(err.response.data.message, "e");
         } else {
-          alert("❌ Lỗi hệ thống, vui lòng thử lại sau.");
+          pop("❌ Lỗi hệ thống, vui lòng thử lại sau.", "e");
         }
       }
     },
-    [cartItems, isLoggedIn, pop]
+    [cartItems, isLoggedIn, navigator, pop]
   );
+  const handleUpdateSave = async (product_id) => {
+    setLoadingCart(true);
+    try {
+      const trueKeys = Object.keys(product_id).filter(
+        (key) => product_id[key] === true
+      );
+      const res = await api.post("/carts/save", {
+        cart_item_id: trueKeys,
+      });
+      if (res?.data?.status) {
+        navigator("/pay");
+      } else {
+        pop(res?.data?.message || "Lỗi", "e");
+      }
+      setLoadingCart(false);
+    } catch (error) {
+      setLoadingCart(false);
+      console.error(error);
+    }
+  };
 
   // Cung cấp cả state và các hàm để thao tác với state
   const value = {
@@ -147,6 +167,7 @@ export function CartProvider({ children }) {
     fetchCartItems,
     removeItem,
     handleAddToCart,
+    handleUpdateSave,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

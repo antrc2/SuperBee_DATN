@@ -9,7 +9,6 @@ import {
   CreditCard,
   HelpCircle,
 } from "lucide-react";
-import "@styles/theme.css";
 export default function Footer() {
   return (
     <footer className="bg-gradient-header text-white py-12 px-6">

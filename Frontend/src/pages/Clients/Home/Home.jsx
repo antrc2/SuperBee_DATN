@@ -32,8 +32,8 @@ export default function Home() {
   if (isLoading) return <LoadingDomain />;
 
   return (
-    <div>
-      <div className="min-h-screen bg-slate-900 text-white">
+    <div className="bg-gradient-header">
+      <div>
         <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
       </div>
       <div>

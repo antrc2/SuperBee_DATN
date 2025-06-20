@@ -28,8 +28,6 @@ import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContexts";
-import "@styles/theme.css";
-
 export default function Header() {
   // State management
   const [dropdownStates, setDropdownStates] = useState({

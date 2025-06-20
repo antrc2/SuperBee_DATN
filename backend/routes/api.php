@@ -189,3 +189,12 @@ Route::middleware(['jwt'])->group(function () {
         });
     });
 });
+
+Route::middleware(['jwt'])->group(function(){
+    Route::middleware(['role:partner'])->prefix('/partner')->group(function(){
+        Route::prefix("/orders")->group(function(){
+
+            Route::post("/purchase",[UserOrderController::class,'purchase']);
+        });
+    });
+});

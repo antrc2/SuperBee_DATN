@@ -409,6 +409,7 @@ class AdminProductController extends Controller
 
     public function accept(Request $request,$id){
         try {
+            $password = $request->password;
             if ($this->check_isset_product_by_id($id)){
                 $product = Product::where("id",$id)->where("status",2)->update([
                     "status"=>1
@@ -416,6 +417,9 @@ class AdminProductController extends Controller
 
 
                 if ($product) {
+                    ProductCredential::where("product_id",$id)->update([
+                        "password"=>$password
+                    ]);
                     return response()->json([
                         "status" => true,
                         "message" => "Chấp nhận bán sản phẩm thành công",

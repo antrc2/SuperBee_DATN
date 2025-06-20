@@ -1,31 +1,51 @@
 import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 export default function Breadcrumbs({ category }) {
-  // We no longer need useLocation() or to parse URL segments directly if
-  // we're relying on the 'category' prop for names and slugs.
-
   return (
-    <div>
-      <nav aria-label="breadcrumb">
-        <ol
-          style={{ listStyle: "none", display: "flex", padding: 0, margin: 0 }}
+    <div className="mb-6 ml-7">
+      <nav
+        aria-label="breadcrumb"
+        className="flex items-center flex-wrap text-sm text-gray-400"
+      >
+        {/* Trang chủ */}
+        <Link
+          to="/"
+          className="hover:text-purple-400 transition-colors duration-200"
         >
-          {/* Always show "Trang chủ" */}
-          <li>
-            <Link to="/">Trang chủ</Link>
-          </li>
+          Trang chủ
+        </Link>
 
-          {/* Display the current category if it's available */}
-          {category && (
-            <li key={category.slug} style={{ marginLeft: 8 }}>
-              <span style={{ margin: "0 8px" }}>{">"}</span>
-              {/* This links to the category's slug. Adjust '/products' if your base path is different. */}
-              <Link to={`/mua-acc/${category.slug}`}>{category.name}</Link>
-            </li>
-          )}
-        </ol>
+        <ChevronRight className="w-4 h-4 mx-1" />
+
+        {/* Mua ACC */}
+        <Link
+          to="/mua-acc"
+          className="hover:text-purple-400 transition-colors duration-200"
+        >
+          Mua ACC
+        </Link>
+
+        {category && (
+          <>
+            <ChevronRight className="w-4 h-4 mx-1" />
+
+            <Link
+              to={`/mua-acc/${category.slug}`}
+              className="hover:text-purple-400 transition-colors duration-200 font-medium text-gray-200"
+            >
+              {category.name}
+            </Link>
+          </>
+        )}
       </nav>
-      <div className="text-2xl font-medium mt-2">{category?.name}</div>
+
+      {/* Tiêu đề danh mục */}
+      {category && (
+        <h1 className="text-2xl md:text-3xl font-semibold text-white pt-6">
+          {category.name}
+        </h1>
+      )}
     </div>
   );
 }

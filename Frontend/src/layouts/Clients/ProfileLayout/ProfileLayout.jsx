@@ -5,7 +5,7 @@ import { Outlet } from "react-router-dom";
 
 export default function ProfileLayout() {
   return (
-    <div className="bg-slate-900">
+    <div className="bg-gradient-header0">
       <Header />
       <div className="min-h-screen flex max-w-7xl mx-auto mt-5 gap-5">
         <Sidebar />

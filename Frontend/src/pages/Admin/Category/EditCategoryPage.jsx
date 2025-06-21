@@ -1,33 +1,41 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import api from "@utils/http";
+import { useParams, useNavigate } from "react-router-dom";
 import CategoryForm from "@components/Admin/Category/CategoryForm";
+import { LoaderCircle } from "lucide-react";
+import api from "../../../utils/http";
 
 export default function EditCategoryPage() {
-  const navigate = useNavigate();
   const { id } = useParams();
-  const [categoryData, setCategoriesData] = useState();
-  const [categoryLoading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const [category, setCategory] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [error, setError] = useState(null);
 
-  const getCategory = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get(`/categories/${id}`);
-      setLoading(false);
-      setCategoriesData(res?.data);
-    } catch (error) {
-      setLoading(false);
-      console.error(error);
-    }
-  };
   useEffect(() => {
-    getCategory();
+    const fetchCategory = async () => {
+      setIsFetching(true);
+      try {
+        const response = await api.get(`/admin/categories/${id}`);
+        const categoryData = response.data.data;
+        setCategory(categoryData);
+      } catch (err) {
+        console.error(err);
+        setError("Không tìm thấy danh mục hoặc có lỗi xảy ra.");
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    fetchCategory();
   }, [id]);
 
-  const handleSave = async (data) => {
+  const handleUpdateSubmit = async (formData) => {
+    setIsLoading(true);
+    setError(null);
+
     try {
-      data.append("_method", "PUT");
-      const response = await api.post(`/admin/categories/${id}`, data, {
+      formData.append("_method", "put");
+      const response = await api.post(`/admin/categories/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -35,26 +43,44 @@ export default function EditCategoryPage() {
       if (response.status === 201 || response.status === 200) {
         navigate("/admin/categories");
       }
-      return response.data;
-    } catch (error) {
-      console.error(
-        "Error creating category:",
-        error.response?.data || error.message
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại."
       );
-      // Ném lỗi ra ngoài để `CategoryForm` có thể bắt và hiển thị
-      throw new Error(
-        error.response?.data?.message || "Failed to save category"
-      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  if (categoryLoading) {
+  if (isFetching) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="flex justify-center items-center h-64">
+        <LoaderCircle className="animate-spin text-blue-500" size={48} />
       </div>
     );
   }
 
-  return <CategoryForm initialData={categoryData?.data} onSave={handleSave} />;
+  return (
+    <div>
+      <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+        Chỉnh sửa danh mục: {category?.name}
+      </h2>
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+          {error}
+        </div>
+      )}
+      {category ? (
+        <CategoryForm
+          initialData={category}
+          onSubmit={handleUpdateSubmit}
+          isEditing={true}
+          isLoading={isLoading}
+        />
+      ) : (
+        <p>{error || "Không có dữ liệu để hiển thị."}</p>
+      )}
+    </div>
+  );
 }

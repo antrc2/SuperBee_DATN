@@ -22,6 +22,8 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
+import Image from "@components/Client/Image/Image.jsx"
+
 const CategoryPage = () => {
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState(null);
@@ -113,8 +115,8 @@ const CategoryPage = () => {
             {/* Image Column */}
             <div className="w-16 h-16 flex-shrink-0 mr-4">
               {category.image_url ? (
-                <img
-                  src={`${import.meta.env.VITE_BACKEND_IMG}${
+                <Image
+                  url={`${
                     category.image_url
                   }`}
                   alt={category.name}
@@ -176,7 +178,7 @@ const CategoryPage = () => {
               <div
                 className="text-sm text-gray-600 truncate"
                 title={category.created_by || "N/A"}
-              >
+              > 
                 {category.created_by || "N/A"}
               </div>
             </div>

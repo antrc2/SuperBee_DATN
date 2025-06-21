@@ -10,6 +10,7 @@ export default function CartDropdown({
   onClose,
   isMobile = false,
 }) {
+  console.log("🚀 ~ cartItems:", cartItems);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -94,12 +95,24 @@ export default function CartDropdown({
                   🎮 {item?.product?.category?.name}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
-                    {item?.product?.price}đ
-                  </p>
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">
-                    HOT
-                  </span>
+                  {item?.product?.sale ? (
+                    <>
+                      <p className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
+                        {item?.product?.sale}đ
+                      </p>
+                      <p className="text-sm font-bold text-gray-500 line-through">
+                        {item?.product?.price}đ
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
+                      {item?.product?.price}đ
+                    </p>
+                  )}
+                  {/* Bạn có thể bỏ comment dòng HOT nếu muốn hiển thị */}
+                  {/* <span className="px-2 py-0.5 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">
+    HOT
+  </span> */}
                 </div>
               </div>
             </Link>
@@ -122,13 +135,13 @@ export default function CartDropdown({
       {/* Footer */}
       {cartItems.length > 0 && (
         <div className="p-4 border-t border-purple-500/20">
-          <a
-            href="/cart"
+          <Link
+            to={`/cart`}
             className="block w-full text-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105"
             onClick={onClose}
           >
             🛒 Xem giỏ hàng ({cartItems.length})
-          </a>
+          </Link>
         </div>
       )}
     </div>

@@ -12,6 +12,7 @@ import { useCart } from "../../../contexts/CartContexts";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import { useNotification } from "../../../contexts/NotificationProvider";
 import Image from "../../../components/Client/Image/Image";
+import { Link } from "react-router-dom";
 
 // Hàm định dạng tiền tệ an toàn
 const formatCurrency = (amount) => {
@@ -23,15 +24,18 @@ const formatCurrency = (amount) => {
   }).format(numberAmount);
 };
 
-// Hàm tính giá cuối cùng của sản phẩm
+// --- LOGIC MỚI: Sửa lại hàm tính giá cuối cùng ---
+// Hàm này sẽ trả về giá sale nếu hợp lệ, nếu không thì trả về giá gốc.
 const calculateFinalPrice = (product) => {
   if (!product || !product.price) return 0;
   const originalPrice = Number(product.price);
-  const discountPercent = Number(product.sale) || 0;
+  const salePrice = Number(product.sale);
 
-  if (discountPercent > 0) {
-    return Math.round(originalPrice * (1 - discountPercent / 100));
+  // Nếu có giá sale hợp lệ (thấp hơn giá gốc), thì đó là giá cuối cùng
+  if (salePrice > 0 && salePrice < originalPrice) {
+    return salePrice;
   }
+  // Mặc định trả về giá gốc
   return originalPrice;
 };
 
@@ -85,6 +89,7 @@ export default function CartPage() {
     }
   };
 
+  // `useMemo` này sẽ tự động tính đúng vì `calculateFinalPrice` đã được sửa
   const { totalSelectedCount, subtotalPrice, totalPrice, isAllSelected } =
     useMemo(() => {
       const itemsToCheckout = cartItems.filter(
@@ -129,13 +134,13 @@ export default function CartPage() {
             <p className="mb-8 text-slate-300">
               Hãy khám phá thêm sản phẩm tuyệt vời của chúng tôi!
             </p>
-            <a
-              href="/"
+            <Link
+              to={`/`}
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
             >
               <ChevronLeft size={20} className="mr-2" />
               Tiếp tục mua sắm
-            </a>
+            </Link>
           </div>
         </div>
       </div>
@@ -150,13 +155,13 @@ export default function CartPage() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
             Giỏ hàng ({cartItems.length} sản phẩm)
           </h1>
-          <a
-            href="/"
+          <Link
+            to={`/`}
             className="inline-flex items-center font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent"
           >
             <ChevronLeft size={20} className="mr-1" />
             Tiếp tục mua sắm
-          </a>
+          </Link>
         </div>
 
         <div className="lg:flex gap-8">
@@ -203,104 +208,120 @@ export default function CartPage() {
 
               {/* Product List */}
               <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between p-4 rounded-xl bg-slate-700/30 border border-slate-600/30 hover:bg-slate-700/50 transition-all duration-200"
-                  >
-                    <div className="flex items-center flex-1">
-                      {/* Checkbox */}
-                      <label className="flex items-center cursor-pointer group mr-4">
-                        <div className="relative">
-                          <input
-                            type="checkbox"
-                            checked={!!selectedItems[item.id]}
-                            onChange={() => handleSelectItem(item.id)}
-                            className="sr-only"
+                {cartItems.map((item) => {
+                  const product = item.product;
+                  if (!product) return null;
+
+                  const originalPrice = Number(product.price);
+                  const salePrice = Number(product.sale);
+                  let discountPercent = 0;
+
+                  if (salePrice > 0 && salePrice < originalPrice) {
+                    const discountAmount = originalPrice - salePrice;
+                    discountPercent = Math.round(
+                      (discountAmount / originalPrice) * 100
+                    );
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-4 rounded-xl bg-slate-700/30 border border-slate-600/30 hover:bg-slate-700/50 transition-all duration-200"
+                    >
+                      <div className="flex items-center flex-1">
+                        {/* Checkbox */}
+                        <label className="flex items-center cursor-pointer group mr-4">
+                          <div className="relative">
+                            <input
+                              type="checkbox"
+                              checked={!!selectedItems[item.id]}
+                              onChange={() => handleSelectItem(item.id)}
+                              className="sr-only"
+                            />
+                            <div
+                              className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
+                                selectedItems[item.id]
+                                  ? "bg-blue-500 border-blue-500 flex items-center justify-center"
+                                  : "border-slate-500 group-hover:border-blue-400"
+                              }`}
+                            >
+                              {selectedItems[item.id] && (
+                                <svg
+                                  className="w-3 h-3 text-white flex items-center justify-center"
+                                  fill="currentColor"
+                                  viewBox="0 0 20 20"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              )}
+                            </div>
+                          </div>
+                        </label>
+
+                        {/* Product Image */}
+                        <div className="relative mr-4">
+                          <Image
+                            url={
+                              product?.images[0]?.image_url ||
+                              "/placeholder.svg?height=100&width=100"
+                            }
+                            alt={product?.category?.name || "Sản phẩm"}
+                            className="w-20 h-20 object-cover rounded-lg border-2 border-slate-600/50"
                           />
-                          <div
-                            className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                              selectedItems[item.id]
-                                ? "bg-blue-500 border-blue-500 flex items-center justify-center"
-                                : "border-slate-500 group-hover:border-blue-400"
-                            }`}
-                          >
-                            {selectedItems[item.id] && (
-                              <svg
-                                className="w-3 h-3 text-white  flex items-center justify-center"
-                                fill="currentColor"
-                                viewBox="0 0 20 20"
-                              >
-                                <path
-                                  fillRule="evenodd"
-                                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                                  clipRule="evenodd"
-                                />
-                              </svg>
-                            )}
-                          </div>
+                          {/* Hiển thị % đã tính toán */}
+                          {/* {discountPercent > 0 && (
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                              -{discountPercent}%
+                            </div>
+                          )} */}
                         </div>
-                      </label>
 
-                      {/* Product Image */}
-                      <div className="relative mr-4">
-                        <Image
-                          url={
-                            item?.product?.images[0]?.image_url ||
-                            "/placeholder.svg?height=100&width=100"
+                        {/* Product Info */}
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-white text-lg mb-1">
+                            {product?.category?.name}
+                          </h3>
+                          <p className="text-sm text-slate-400">
+                            Mã sản phẩm:{" "}
+                            <span className="text-blue-400 font-mono">
+                              {product?.sku}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Price and Actions */}
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <div className="text-xl font-bold text-red-400">
+                            {/* Hàm này giờ đã tính đúng giá cuối cùng */}
+                            {formatCurrency(calculateFinalPrice(product))}
+                          </div>
+                          {/* Hiển thị giá gốc khi có giảm giá */}
+                          {discountPercent > 0 && (
+                            <div className="text-sm text-slate-500 line-through">
+                              {formatCurrency(originalPrice)}
+                            </div>
+                          )}
+                        </div>
+
+                        <button
+                          onClick={() =>
+                            handleRemoveItem(item.id, product?.category?.name)
                           }
-                          alt={item?.product?.category?.name || "Sản phẩm"}
-                          className="w-20 h-20 object-cover rounded-lg border-2 border-slate-600/50"
-                        />
-                        {item.product && item.product.sale > 0 && (
-                          <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                            -{item.product.sale}%
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Product Info */}
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-white text-lg mb-1">
-                          {item?.product?.category?.name}
-                        </h3>
-                        <p className="text-sm text-slate-400">
-                          Mã sản phẩm:{" "}
-                          <span className="text-blue-400 font-mono">
-                            {item?.product?.sku}
-                          </span>
-                        </p>
+                          className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
+                          aria-label={`Xóa ${product?.category?.name}`}
+                        >
+                          <Trash2 size={20} />
+                        </button>
                       </div>
                     </div>
-
-                    {/* Price and Actions */}
-                    <div className="flex items-center gap-6">
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-red-400">
-                          {formatCurrency(calculateFinalPrice(item.product))}
-                        </div>
-                        {item.product && item.product.sale > 0 && (
-                          <div className="text-sm text-slate-500 line-through">
-                            {formatCurrency(item.product.price)}
-                          </div>
-                        )}
-                      </div>
-
-                      <button
-                        onClick={() =>
-                          handleRemoveItem(
-                            item.id,
-                            item?.product?.category?.name
-                          )
-                        }
-                        className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-200"
-                        aria-label={`Xóa ${item?.product?.category?.name}`}
-                      >
-                        <Trash2 size={20} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>

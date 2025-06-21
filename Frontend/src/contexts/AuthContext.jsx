@@ -186,8 +186,6 @@ export function AuthProvider({ children }) {
   const [combinedError, setCombinedError] = useState(null);
 
   useEffect(() => {
-    // Điều này sẽ kiểm tra lại token mỗi khi AuthProvider được render lại hoặc khi có sự thay đổi
-    // trong logic AuthContext, đảm bảo user luôn được cập nhật đúng đắn
     const decoded = getDecodedToken();
     if (decoded) {
       setUser({
@@ -196,7 +194,7 @@ export function AuthProvider({ children }) {
         avatar: decoded?.avatar,
       });
     } else {
-      setUser(null); // Đảm bảo user là null nếu token không hợp lệ/hết hạn
+      setUser(null); 
     }
 
     // Các logic về authStatus vẫn giữ nguyên

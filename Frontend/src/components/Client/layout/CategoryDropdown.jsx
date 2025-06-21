@@ -1,10 +1,12 @@
-"use client";
-
 import { useEffect, useRef } from "react";
+import { useHome } from "../../../contexts/HomeContext";
+import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
+import CategoryCha from "../Category/CategoryCha";
 
-export default function CategoryDropdown({ categories, isOpen, onClose }) {
+export default function CategoryDropdown({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
-
+  const { data } = useHome();
+  const categories = data?.categories ?? [];
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -32,34 +34,8 @@ export default function CategoryDropdown({ categories, isOpen, onClose }) {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {categories.map((category) => (
-          <a
-            key={category.name}
-            href={category.href}
-            className="group relative flex flex-col items-center gap-3 rounded-xl p-4 hover:bg-gradient-to-br hover:from-purple-600/20 hover:to-pink-600/20 transition-all duration-300 border border-white/10 hover:border-purple-400/50 backdrop-blur-sm overflow-hidden"
-            onClick={onClose}
-          >
-            {/* Background glow effect */}
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300 rounded-xl`}
-            ></div>
-
-            {/* Icon with glow */}
-            <div className="relative">
-              <category.icon className="h-12 w-12 text-white/80 group-hover:text-white transition-all duration-300 group-hover:scale-110" />
-              <div
-                className={`absolute inset-0 bg-gradient-to-br ${category.color} opacity-0 group-hover:opacity-30 blur-lg transition-opacity duration-300`}
-              ></div>
-            </div>
-
-            {/* Category name */}
-            <span className="relative text-center text-sm font-semibold text-white/90 group-hover:text-white transition-colors duration-300 leading-tight">
-              {category.name}
-            </span>
-
-            {/* Hover effect border */}
-            <div className="absolute inset-0 rounded-xl border-2 border-transparent group-hover:border-purple-400/30 transition-colors duration-300"></div>
-          </a>
+        {categories.map((e, i) => (
+          <CategoryCha item={e} key={i} onClose={onClose} />
         ))}
       </div>
 

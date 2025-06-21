@@ -48,13 +48,13 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     fetchCartItems();
-  }, [fetchCartItems]);
+  }, [fetchCartItems, user]);
 
   const handleAddToCart = useCallback(
     async (product) => {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
-        localStorage.setItem("location", `acc/${product.sku}`);
+        localStorage.setItem("location", `/acc/${product.sku}`);
         return navigator("/auth/login");
       }
       if (!product) return;
@@ -87,7 +87,7 @@ export function CartProvider({ children }) {
         setLoadingCart(false);
       }
     },
-    [cartItems, isLoggedIn, pop]
+    [cartItems, isLoggedIn, navigator, pop]
   );
   // Hàm xóa một sản phẩm khỏi giỏ hàng
   const removeItem = useCallback(
@@ -110,7 +110,7 @@ export function CartProvider({ children }) {
     async (product) => {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
-        localStorage.setItem("location", `acc/${product.sku}`);
+        localStorage.setItem("location", `/acc/${product.sku}`);
         return navigator("/auth/login");
       }
       if (!product) return;

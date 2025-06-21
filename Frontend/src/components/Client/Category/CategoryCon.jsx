@@ -23,7 +23,7 @@ export default function CategoryCon({ item, isFlashSale = false }) {
   const categoryColor = getCategoryColor(item?.name);
 
   return (
-    <Link to={`mua-acc/${item?.slug}`} className="block group">
+    <Link to={`/mua-acc/${item?.slug}`} className="block group">
       <div
         className={`
           relative aspect-square w-full

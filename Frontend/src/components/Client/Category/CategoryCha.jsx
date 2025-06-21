@@ -2,10 +2,10 @@ import { Sparkles, Star } from "lucide-react";
 import Image from "../Image/Image";
 import { Link } from "react-router-dom";
 
-export default function CategoryCha({ item }) {
+export default function CategoryCha({ item, onClose }) {
   return (
     <Link to={`mua-acc/${item?.slug}`}>
-      <div className="group relative w-full h-full ">
+      <div className="group relative w-full h-full " onClick={onClose}>
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-900/20 via-blue-900/20 to-pink-900/20 border border-purple-500/30 hover:border-pink-500/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25 h-32 flex flex-col">
           {/* Neon glow effect */}
           <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 opacity-0  transition-opacity duration-300" />

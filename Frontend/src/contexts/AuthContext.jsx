@@ -16,7 +16,6 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const { pop, showAlert, conFim } = useNotification();
-
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
@@ -65,16 +64,6 @@ export function AuthProvider({ children }) {
           avatar: decoded.avatar,
         });
         pop("Đăng nhập thành công", "s");
-        // Handle navigation
-        const savedLocation = localStorage.getItem("location");
-        if (savedLocation) {
-          localStorage.removeItem("location");
-          console.log("🚀 ~ login ~ savedLocation:", savedLocation);
-          navigate(savedLocation);
-        } else {
-          navigate("/");
-        }
-
         setLoading(false);
         return { success: true };
       } else {

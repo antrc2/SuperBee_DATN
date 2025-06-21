@@ -1,15 +1,16 @@
 // LoginForm.jsx - Chỉ xử lý UI và gọi AuthContext
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ChevronLeft, EyeOff, Eye } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext.jsx";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
+import { checkLocation } from "../../utils/hook";
 
 export default function LoginForm() {
   const [passwordType, setPasswordType] = useState("password");
   const { login, loading, user } = useAuth();
-
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -43,10 +44,14 @@ export default function LoginForm() {
     // All other error handling (notifications, navigation) is done in AuthContext
     // We only need to check if login was successful for any additional UI updates
     if (result.success) {
-      // Login successful - AuthContext handles navigation and notifications
-      console.log("Login successful");
+      const savedLocation = checkLocation();
+      if (savedLocation) {
+        localStorage.removeItem("location");
+        window.location.href = `${savedLocation}`;
+      } else {
+        navigate("/");
+      }
     } else {
-      // Login failed - AuthContext handles error notifications
       console.log("Login failed");
     }
   };

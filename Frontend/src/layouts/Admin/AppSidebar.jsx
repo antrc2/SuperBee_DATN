@@ -35,13 +35,6 @@ const navItems = [
   {
     icon: <DiscountCodeIcon />,
     name: "discountcode",
-    path: "/admin/discountcode",
-
-
-  },
-  {
-    icon: <DiscountCodeIcon />,
-    name: "discountcode",
    path: "/admin/discountcode"
   },
   {

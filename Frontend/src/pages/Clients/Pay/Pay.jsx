@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@contexts/CartContexts";
 import { useNotification } from "@contexts/NotificationProvider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";
 
@@ -88,7 +88,7 @@ const DiscountModal = ({ isOpen, onClose, discounts, onApplyDiscount }) => {
 // Component chính của trang thanh toán
 export default function Pay() {
   const { pop, conFim } = useNotification();
-  const { fetchCartItems, cartItems, loadingCart } = useCart();
+  const { fetchCartItems } = useCart();
   const [cartItemsPay, setCartItemsPay] = useState([]);
   const [userBalance, setUserBalance] = useState(0);
   const [promotionCodes, setPromotionCodes] = useState([]);
@@ -96,21 +96,21 @@ export default function Pay() {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [cartError, setCartError] = useState(null);
+  const [loadingCheckout, setLoadingCheckout] = useState(true);
+  const navigate = useNavigate();
 
   // Lấy dữ liệu từ API /orders/checkout
   useEffect(() => {
     const fetchCheckoutData = async () => {
-      setCartError(null);
+      setLoadingCheckout(true);
       try {
-        // Đồng bộ giỏ hàng từ context
         await fetchCartItems();
         const response = await api.get("/orders/checkout");
         if (response.data?.status) {
           const items = response.data.carts
-            .filter((item) => item.status === 1) // Chỉ lấy sản phẩm có status = 1
+            .filter((item) => item.status === 1)
             .map((item) => ({
-              id: item.id, // cart_item_id
+              id: item.id,
               product_id: item.product_id,
               name: item.product?.sku || "Sản phẩm không tên",
               image:
@@ -118,7 +118,7 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-              quantity: 1, // Giả định số lượng
+              quantity: 1,
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
@@ -135,22 +135,25 @@ export default function Pay() {
           );
           if (items.length === 0) {
             pop("Giỏ hàng của bạn đang trống.", "i");
+            navigate("/cart");
           }
         } else {
           pop(response.data.message, "e");
-          setCartError({ message: response.data.message });
+          navigate("/cart");
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
         const errorMessage =
           error.response?.data?.message || "Lỗi khi tải dữ liệu giỏ hàng.";
         pop(errorMessage, "e");
-        setCartError({ message: errorMessage });
+        navigate("/cart");
+      } finally {
+        setLoadingCheckout(false);
       }
     };
 
     fetchCheckoutData();
-  }, [fetchCartItems, pop]);
+  }, [fetchCartItems, pop, navigate]);
 
   // Tính toán tổng tiền
   const { subtotal, discountAmount, finalAmount } = useMemo(() => {
@@ -229,8 +232,8 @@ export default function Pay() {
         setCartItemsPay([]);
         setAppliedDiscount(null);
         pop(response.data.message, "s");
-        // Đồng bộ lại giỏ hàng
         await fetchCartItems();
+        navigate("/info/orders");
       } else {
         pop(response.data.message, "e");
       }
@@ -242,62 +245,10 @@ export default function Pay() {
     }
   };
 
-  // Xử lý xóa sản phẩm
-  const handleRemoveItem = async (itemId, itemName) => {
-    if (
-      !(await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`))
-    )
-      return;
+  // Hiển thị loading cho đến khi dữ liệu được xử lý
+  if (loadingCheckout) return <LoadingDomain />;
 
-    try {
-      await api.delete(`/cart/${itemId}`);
-      setCartItemsPay((prevItems) =>
-        prevItems.filter((item) => item.id !== itemId)
-      );
-      await fetchCartItems(); // Đồng bộ giỏ hàng
-      pop("Đã xóa sản phẩm khỏi giỏ hàng.", "s");
-    } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
-      const errorMessage =
-        error.response?.data?.message || "Lỗi khi xóa sản phẩm.";
-      pop(errorMessage, "e");
-    }
-  };
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity < 1) newQuantity = 1;
-    setCartItemsPay((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  // Hiển thị loading
-  if (loadingCart) return <LoadingDomain />;
-
-  // // Hiển thị giỏ hàng rỗng
-  // if (cartItemsPay.length === 0) {
-  //   return (
-  //     <div className="bg-gray-100 min-h-screen py-8 px-4">
-  //       <div className="max-w-4xl mx-auto text-center">
-  //         <ShoppingCart size={80} className="mx-auto text-gray-400 mb-6" />
-  //         <h1 className="text-3xl font-bold mb-4">Giỏ hàng của bạn đang trống</h1>
-  //         <p className="mb-8 text-gray-600">
-  //           Hãy khám phá thêm sản phẩm tuyệt vời của chúng tôi!
-  //         </p>
-  //         <Link
-  //           to="/"
-  //           className="px-6 py-3 bg-blue-600 text-white rounded-md font-medium inline-flex items-center"
-  //         >
-  //           <X size={20} className="mr-1" />
-  //           Quay lại mua sắm
-  //         </Link>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
+  // Hiển thị giao diện thanh toán
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
       <div className="mb-6 flex justify-between items-center">
@@ -345,13 +296,6 @@ export default function Pay() {
                 <span className="font-semibold text-red-600">
                   {formatCurrency(item.price * item.quantity)}
                 </span>
-                <button
-                  onClick={() => handleRemoveItem(item.id, item.name)}
-                  className="text-gray-500 hover:text-red-600"
-                  aria-label={`Xóa ${item.name}`}
-                >
-                  <X size={20} />
-                </button>
               </div>
             </div>
           ))}
@@ -430,6 +374,19 @@ export default function Pay() {
             <span className="text-blue-600 font-bold text-xl">
               {formatCurrency(userBalance)}
             </span>
+            {finalAmount > userBalance && (
+              <>
+                <p className="text-red-600 text-sm mt-2">
+                  Số dư không đủ để thanh toán. Vui lòng nạp thêm tiền.
+                </p>
+                <Link
+                  to="/recharge-atm"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+                >
+                  Nạp tiền ngay
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="mb-4">
@@ -455,7 +412,7 @@ export default function Pay() {
           <button
             onClick={handlePayment}
             disabled={
-              loadingCart || finalAmount > userBalance || !termsAccepted
+              loadingCheckout || finalAmount > userBalance || !termsAccepted
             }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
           >

@@ -1,31 +1,41 @@
 "use client";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Eye, Crown, Copy } from "lucide-react";
+import { useNotification } from "../../../contexts/NotificationProvider";
+import { useCart } from "../../../contexts/CartContexts";
 
 export default function Product({ product }) {
+  console.log("🚀 ~ Product ~ product:", product);
   const formatPrice = (num) =>
     num.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
-
-  // --- LOGIC MỚI ---
+  const { pop } = useNotification();
+  const { handleAddToCart } = useCart();
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await handleAddToCart(product);
+  };
   const originalPrice = product.price;
-  const discountPercent = product.sale;
+  const salePrice = product.sale;
 
-  // Tính giá cuối cùng sau khi đã áp dụng % giảm giá
-  // Nếu không có giảm giá, giá cuối cùng bằng giá gốc
-  const finalPrice =
-    discountPercent > 0
-      ? Math.round(originalPrice * (1 - discountPercent / 100))
-      : originalPrice;
+  let finalPrice = originalPrice;
+  let oldPrice = null;
+  let discountPercent = 0;
 
-  // Giá cũ (để gạch ngang) chỉ tồn tại khi có giảm giá
-  const oldPrice = discountPercent > 0 ? originalPrice : null;
+  if (salePrice > 0 && salePrice < originalPrice) {
+    finalPrice = salePrice;
+    oldPrice = originalPrice;
+
+    // Tính toán phần trăm giảm giá
+    const discountAmount = originalPrice - salePrice;
+    discountPercent = Math.round((discountAmount / originalPrice) * 100);
+  }
 
   const primaryImage = product.images?.[0]?.image_url || null;
 
   const handleCopyId = (e) => {
     e.preventDefault(); // Ngăn không cho Link hoạt động khi click vào nút copy
     navigator.clipboard.writeText(product.sku);
-    // Tùy chọn: Thêm thông báo "Đã sao chép!"
+    pop("Copy tạm vào bộ nhớ đệm", "s");
   };
 
   return (
@@ -44,11 +54,12 @@ export default function Product({ product }) {
       >
         {/* Phần 1: Ảnh (chiếm 40%) */}
         <div className="relative h-[40%] overflow-hidden">
-          {discountPercent > 0 && (
+          {/* Hiển thị % giảm giá nếu có */}
+          {/* {discountPercent > 0 && (
             <div className="absolute top-2 right-2 z-10 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm px-2 py-1 rounded-full font-bold">
               -{discountPercent}%
             </div>
-          )}
+          )} */}
           {primaryImage ? (
             <img
               src={`${import.meta.env.VITE_BACKEND_IMG}${primaryImage}`}
@@ -68,7 +79,10 @@ export default function Product({ product }) {
             >
               <Eye className="w-4 h-4" />
             </Link>
-            <button className="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200">
+            <button
+              onClick={handleAdd}
+              className="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"
+            >
               <ShoppingCart className="w-4 h-4" />
             </button>
           </div>
@@ -132,6 +146,7 @@ export default function Product({ product }) {
                   {/* Hiển thị giá cuối cùng */}
                   {formatPrice(finalPrice)}
                 </span>
+                {/* Chỉ hiển thị giá cũ nếu có giảm giá */}
                 {oldPrice && (
                   <span className="text-xs text-gray-400 line-through">
                     {/* Hiển thị giá gốc (giá cũ) */}

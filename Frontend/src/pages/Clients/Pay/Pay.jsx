@@ -5,7 +5,7 @@ import {
   X,
   CreditCard,
   ShieldCheck,
-  Gift
+  Gift,
 } from "lucide-react";
 import { useCart } from "@contexts/CartContexts";
 import { useNotification } from "@contexts/NotificationProvider";
@@ -19,7 +19,7 @@ const formatCurrency = (amount) => {
   if (isNaN(numberAmount)) return "0 ₫";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
-    currency: "VND"
+    currency: "VND",
   }).format(numberAmount);
 };
 
@@ -52,14 +52,18 @@ const DiscountModal = ({ isOpen, onClose, discounts, onApplyDiscount }) => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-blue-600 text-lg">{discount.code}</p>
+                    <p className="font-bold text-blue-600 text-lg">
+                      {discount.code}
+                    </p>
                     <p className="text-sm text-gray-700">
                       {discount.description || `Giảm ${discount.value}`}
                     </p>
                     <p className="text-xs text-gray-500">
                       Hạn sử dụng: {discount.expiry}
                       {discount.min_discount_amount > 0 &&
-                        ` | Đơn tối thiểu: ${formatCurrency(discount.min_discount_amount)}`}
+                        ` | Đơn tối thiểu: ${formatCurrency(
+                          discount.min_discount_amount
+                        )}`}
                     </p>
                   </div>
                   <button
@@ -114,7 +118,7 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-              quantity: 1 // Giả định số lượng
+              quantity: 1, // Giả định số lượng
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
@@ -126,7 +130,7 @@ export default function Pay() {
               type: "percentage",
               value: parseFloat(promo.discount_value) || 0,
               expiry: promo.end_date || "N/A",
-              min_discount_amount: promo.min_discount_amount || 0
+              min_discount_amount: promo.min_discount_amount || 0,
             }))
           );
           if (items.length === 0) {
@@ -170,13 +174,16 @@ export default function Pay() {
     if (!(await conFim(`Bạn muốn áp dụng mã giảm giá "${code}"?`))) return;
 
     try {
-      const response = await api.post("/orders/check", { promotion_code: code });
+      const response = await api.post("/orders/check", {
+        promotion_code: code,
+      });
       if (response.data.status) {
         setAppliedDiscount({
           code: response.data.promotion_code,
           discount_amount: parseFloat(response.data.discount_amount) || 0,
           discount_value: parseFloat(response.data.discount_value) || 0,
-          total_price_after_discount: parseFloat(response.data.total_price_after_discount) || 0
+          total_price_after_discount:
+            parseFloat(response.data.total_price_after_discount) || 0,
         });
         pop(response.data.message, "s");
         setDiscountCodeInput("");
@@ -215,7 +222,7 @@ export default function Pay() {
 
     try {
       const response = await api.post("/orders/purchase", {
-        promotion_code: appliedDiscount?.code || null
+        promotion_code: appliedDiscount?.code || null,
       });
       if (response.data.status) {
         setUserBalance((prev) => prev - finalAmount);
@@ -237,11 +244,16 @@ export default function Pay() {
 
   // Xử lý xóa sản phẩm
   const handleRemoveItem = async (itemId, itemName) => {
-    if (!(await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`))) return;
+    if (
+      !(await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`))
+    )
+      return;
 
     try {
       await api.delete(`/cart/${itemId}`);
-      setCartItemsPay((prevItems) => prevItems.filter((item) => item.id !== itemId));
+      setCartItemsPay((prevItems) =>
+        prevItems.filter((item) => item.id !== itemId)
+      );
       await fetchCartItems(); // Đồng bộ giỏ hàng
       pop("Đã xóa sản phẩm khỏi giỏ hàng.", "s");
     } catch (error) {
@@ -292,7 +304,10 @@ export default function Pay() {
         <h1 className="text-3xl font-bold">
           Thanh Toán ({cartItemsPay.length} sản phẩm)
         </h1>
-        <Link to="/cart" className="text-blue-600 font-medium flex items-center">
+        <Link
+          to="/cart"
+          className="text-blue-600 font-medium flex items-center"
+        >
           <X size={20} className="mr-1" />
           Quay lại giỏ hàng
         </Link>
@@ -321,7 +336,9 @@ export default function Pay() {
                 />
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-gray-500">Mã sản phẩm: {item.name}</p>
+                  <p className="text-sm text-gray-500">
+                    Mã sản phẩm: {item.name}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
@@ -410,7 +427,9 @@ export default function Pay() {
 
           <div className="mb-6">
             <p className="text-gray-700">Số dư tài khoản:</p>
-            <span className="text-blue-600 font-bold text-xl">{formatCurrency(userBalance)}</span>
+            <span className="text-blue-600 font-bold text-xl">
+              {formatCurrency(userBalance)}
+            </span>
           </div>
 
           <div className="mb-4">
@@ -435,7 +454,9 @@ export default function Pay() {
 
           <button
             onClick={handlePayment}
-            disabled={loadingCart || finalAmount > userBalance || !termsAccepted}
+            disabled={
+              loadingCart || finalAmount > userBalance || !termsAccepted
+            }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <CreditCard className="inline mr-2" />

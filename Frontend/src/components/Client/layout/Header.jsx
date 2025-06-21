@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   ChevronDown,
   Search,
@@ -28,6 +28,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContexts";
+
 export default function Header() {
   // State management
   const [dropdownStates, setDropdownStates] = useState({
@@ -43,6 +44,7 @@ export default function Header() {
 
   const { user } = useAuth();
   const { cartItems } = useCart();
+
   const isLogin = user != null;
 
   // Refs
@@ -54,46 +56,6 @@ export default function Header() {
   const notificationMenuRef = useRef(null);
   const cartMenuRef = useRef(null);
   const userMenuRef = useRef(null);
-
-  // Enhanced categories with color variables
-  const categories = [
-    {
-      name: "🔥 ACC HOT SALE",
-      icon: Flame,
-      href: "#",
-      gradient: "from-red-500 to-orange-500",
-    },
-    {
-      name: "⚡ LIÊN QUÂN VIP",
-      icon: Zap,
-      href: "#",
-      gradient: "from-yellow-400 to-orange-500",
-    },
-    {
-      name: "💎 BLOX FRUITS RARE",
-      icon: Sparkles,
-      href: "#",
-      gradient: "from-blue-500 to-purple-500",
-    },
-    {
-      name: "🎮 FREE FIRE PRO",
-      icon: Gamepad2,
-      href: "#",
-      gradient: "from-green-400 to-blue-500",
-    },
-    {
-      name: "🌟 VALORANT ELITE",
-      icon: Star,
-      href: "#",
-      gradient: "from-purple-500 to-pink-500",
-    },
-    {
-      name: "🛡️ ACC PREMIUM",
-      icon: Shield,
-      href: "#",
-      gradient: "from-indigo-500 to-purple-600",
-    },
-  ];
 
   const notifications = [
     {
@@ -474,7 +436,6 @@ export default function Header() {
                   />
                 </button>
                 <CategoryDropdown
-                  categories={categories}
                   isOpen={dropdownStates.category}
                   onClose={() => closeDropdown("category")}
                 />

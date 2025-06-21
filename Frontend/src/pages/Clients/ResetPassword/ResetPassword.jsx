@@ -36,7 +36,7 @@ const ResetPassword = () => {
       const response = await api.post("/reset-password", {
         token,
         password,
-        password_confirmation: passwordConfirmation
+        password_confirmation: passwordConfirmation,
       });
       setMessage(response.data.message);
       setError("");
@@ -44,7 +44,7 @@ const ResetPassword = () => {
       setPasswordConfirmation("");
       // Chuyển hướng người dùng về trang đăng nhập sau khi đặt lại thành công
       setTimeout(() => {
-        navigate("/login");
+        navigate("/auth/login");
       }, 3000);
     } catch (err) {
       if (err.response && err.response.data) {
@@ -70,7 +70,7 @@ const ResetPassword = () => {
         margin: "50px auto",
         padding: "20px",
         border: "1px solid #ccc",
-        borderRadius: "8px"
+        borderRadius: "8px",
       }}
     >
       <h2>Đặt lại mật khẩu</h2>
@@ -113,7 +113,7 @@ const ResetPassword = () => {
               color: "white",
               border: "none",
               borderRadius: "5px",
-              cursor: "pointer"
+              cursor: "pointer",
             }}
           >
             Đặt lại mật khẩu

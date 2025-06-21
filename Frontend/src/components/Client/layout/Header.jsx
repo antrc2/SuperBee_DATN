@@ -265,9 +265,9 @@ export default function Header() {
                   <MenuIcon size={24} />
                 )}
               </button>
-              <a href="/" className="flex items-center">
+              <Link to={`/`} className="flex items-center">
                 <SuperBeeLogo />
-              </a>
+              </Link>
             </div>
 
             {/* Center: Search Bar */}

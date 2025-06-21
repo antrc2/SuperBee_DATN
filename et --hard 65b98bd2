@@ -1,0 +1,233 @@
+[33me7f63142[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mdevelop[m[33m, [m[1;31morigin/develop[m[33m)[m Merge pull request #194 from antrc2/fix/categoris_delete_img
+[33mc5df0913[m[33m ([m[1;31morigin/fix/categoris_delete_img[m[33m)[m xóa ảnh khi update
+[33m65b98bd2[m Fix/db seeder (#193)
+[33m9685b758[m fix giao dien lan thu 10 (#190)
+[33m9049a094[m frontend purchase (#189)
+[33me1588871[m fix save cart (#187)
+[33mf6506dc9[m add admin product manage and partner purchase (#186)
+[33m4e0ab6e5[m fix lần 8 và tùy biến giao diện (#185)
+[33mde478e52[m fix xóa các giao diện cũ đi (#184)
+[33m0e5e9bc7[m Fix/view-5 (#183)
+[33mf004a15e[m fix lai các giao diện (#182)
+[33m7bc8a462[m add cloudfly storage (#181)
+[33meb589c2d[m Merge pull request #180 from antrc2/fix/product-7
+[33mcb1443c2[m[33m ([m[1;31morigin/fix/product-7[m[33m)[m Merge branch 'develop' into fix/product-7
+[33m45c664e7[m fix laij giao dien admin
+[33m6ffa1d0a[m Feature/aws upload (#179)
+[33m648efbb3[m add remove product in cart and change status product_id (#178)
+[33m68a3bca0[m fix-cho bug (#177)
+[33m12cb3f01[m Fix/orders purchases (#176)
+[33m3089cb2f[m fix/orders_purchase (#175)
+[33m52962516[m Fix/orders checkout (#174)
+[33mcd8984fd[m fix checkout and fix somethings (#173)
+[33mbda57445[m fix/orders_haha (#172)
+[33m43a8d795[m add checkout order (#171)
+[33m7b3db27c[m fix cart và banner (#170)
+[33mdbc944b4[m sưa lam SP4 (#169)
+[33m1f0e7f6f[m fix (#168)
+[33m3e60ed47[m fix lôi vân vân về cart (#167)
+[33m2f40e68a[m[33m ([m[1;32mfix/promo_code[m[33m)[m fix response when add product to cart (#166)
+[33m51778bc5[m fix order with affiliate (#165)
+[33m9939d048[m revert cart to develop (#164)
+[33m9eb4bbe7[m Xây dựng FE cart sau khi update develop (#163)
+[33m30a80acc[m Revert Frontend Cart
+[33m58a6549d[m Quản lý giỏ hàng (#162)
+[33me37dcbc8[m fix order FE & BE (#161)
+[33ma2722a8f[m Frontend/card (#160)
+[33mb619a329[m fix check product_id in cart (#159)
+[33m9b6a8a85[m fix check product_id in cart (#157)
+[33m1f935a03[m code moi (#156)
+[33mf14eb110[m add delete product_id from cart when purchase success (#155)
+[33m76d31359[m Feature/orders 2 (#154)
+[33me1f7ebcf[m Fix/cart (#153)
+[33m19c1ec5b[m doi buon jqk akakakak (#151)
+[33m2c6dee58[m fix/banners (#149)
+[33m25bd8233[m Update discountcode (#147)
+[33m81e9da19[m Revert "admin_discount (#145)"
+[33m7511e1ac[m admin_discount (#145)
+[33m109a4329[m fix lại giao diện client hiển thị (#146)
+[33md54e98de[m fix lại middlware giao diện (#143)
+[33mf6099f35[m Fix/hehe (#141)
+[33m0dd04097[m Feature/cart (#138)
+[33m804ca658[m Fix/router frontend (#140)
+[33m54327e36[m fix nhẹ nhẹ cái router (#139)
+[33ma4714247[m fix xong thêm sửa show chuyenr trạng thái sản phẩm (#137)
+[33mc86ef524[m[33m ([m[1;32mfix/product_manage2[m[33m)[m add accept, deny, cancel product adn fix somethings (#136)
+[33mb6df01df[m CRUD Products (#135)
+[33m9d95117a[m fix image_rul category (#134)
+[33m463a060c[m fix some things (#133)
+[33m1a98523b[m fix lai database (#131)
+[33mfe627b94[m fix router and fix transaction date (#130)
+[33md093c756[m change to SePay (#129)
+[33m4907643c[m Feature/UI category (#128)
+[33med9f8029[m  kiểm tra role nguoi dung va BE FE (#127)
+[33mebd746c8[m add bank callback and fix get transactions (#124)
+[33me06d2d6c[m add card callback and process donate promotion if exists (#123)
+[33m33a4c3f4[m add donate card (#122)
+[33m8b82d0b3[m Fix/database final (#121)
+[33m2be04463[m Fix/database final (#120)
+[33mf1d1c3e2[m Fix database, remove somethings (#119)
+[33m17390f83[m get Categories bên user (#118)
+[33m5c4544db[m Fix/qlac (#117)
+[33m672fad72[m add CRU products but role admin
+[33m7f1373d1[m Merge pull request #115 from antrc2/feature/category_parent
+[33me47a2c7d[m[33m ([m[1;31morigin/feature/category_parent[m[33m)[m Quản lý danh mục
+[33m4f368a3b[m Merge branch 'develop' of https://github.com/antrc2/SuperBee_DATN into develop
+[33m1bd0cabf[m delete old router (#114)
+[33mb97a1cb4[m Fix/info user (#112)
+[33m6b434124[m upload_admin_users (#113)
+[33m0610ac13[m hệ hệ (#111)
+[33mdfb188e7[m Fix/foget password (#110)
+[33m46177e75[m Merge branch 'develop' of https://github.com/antrc2/SuperBee_DATN into develop
+[33mffb779e8[m Fix/logout jwt (#109)
+[33mac64b33a[m Fix/checkdomain (#108)
+[33m9224746e[m Merge branch 'develop' of https://github.com/antrc2/SuperBee_DATN into develop
+[33m88b8be07[m Fix/register sus (#105)
+[33m0b66c577[m Merge branch 'develop' of https://github.com/antrc2/SuperBee_DATN into develop
+[33m2aeaff04[m Fix/login sus (#104)
+[33m13ab8bdf[m Fix/check domain (#103)
+[33mbe32e551[m ignore .vscode (#102)
+[33mb29997fe[m add AffiliateHistory and User Model (#101)
+[33mf9f5f429[m Fix/database 3 (#100)
+[33m7b7bb23b[m Fix/databaseeee (#99)
+[33m83163529[m Fix/database lan2 (#98)
+[33md285201e[m  tao giao dien admin (#96)
+[33mc65dfbed[m Update order (#93)
+[33ma2195433[m tao cac giao dien con lai
+[33mf68e1189[m Complete order (#91)
+[33mdc379b29[m fix view-product-management (#90)
+[33macd3bffb[m fix donate code (#89)
+[33m31a84d95[m Merge pull request #88 from antrc2/create/view-home-2
+[33m4cf63df2[m[33m ([m[1;31morigin/create/view-home-2[m[33m)[m Merge branch 'main' into create/view-home-2
+[33mb9c87af0[m lan 2
+[33m5c5e9de8[m  tạo giao diện home (#83)
+[33m1f00607b[m[33m ([m[1;31morigin/create/view-home[m[33m)[m  tạo giao diện home
+[33m5e31758f[m add note 26/05/2025 (#82)
+[33m0b2e7cd8[m fix somethings (#81)
+[33m2fb4bc39[m add note 26/05/2025 (#80)
+[33m413659c6[m fix somethings (#79)
+[33m37bb36cb[m Thêm lỗi khi thêm giỏ hàng (#78)
+[33mf191a951[m Thêm lỗi khi thêm giỏ hàng (#77)
+[33mdb86957d[m Giỏ hàng (#76)
+[33m40de897d[m add note 24/05/2025 (#75)
+[33m2e77b190[m crud products management (#74)
+[33m6f92a227[m add column donate_code to UserModel (#73)
+[33m6347c894[m Fix/bug discount code treollo (#72)
+[33m14706a16[m add donate when create account (#71)
+[33mc9b6ed81[m Update Destroy Function (#70)
+[33m63211fdf[m Complete login register (#69)
+[33m9ee1894c[m fix router2 (#68)
+[33m9c4cea68[m Fix/somethingsss (#67)
+[33m8657e6b7[m Jwt complete (#66)
+[33m90a48b0d[m Fix/somethingsss (#65)
+[33m400c9c6e[m Merge pull request #64 from antrc2/Fix/hook21/5
+[33m916a10f4[m[33m ([m[1;31morigin/fix/hook21/5[m[33m)[m Merge branch 'main' into Fix/hook21/5
+[33ma1445d7b[m fix lại hook url
+[33mb4a9075c[m Fix Discount code (#63)
+[33m79156ab5[m Feature/account management ver 0.0.2 (#62)
+[33ma978612c[m fix bug discount code (#61)
+[33m4d408fa5[m Merge pull request #59 from antrc2/fix/bug_categories_trello
+[33md9908fc4[m[33m ([m[1;31morigin/fix/bug_categories_trello[m[33m)[m Merge branch 'main' into fix/bug_categories_trello
+[33m16d69e02[m Add/hook (#57)
+[33md0d00978[m Fix/categories patch (#56)
+[33m8b5e2ee2[m fix bug_categories_trello
+[33m4b5bda60[m  fix/api old
+[33m01d133b0[m add hook localhost
+[33m275a666f[m Thêm phương thức patch
+[33mef3582b6[m add Donate Promotions and Fix Migrate (#55)
+[33m309d2002[m fix User Controller (#54)
+[33m79877377[m add GetAll, GetOne, Post (#53)
+[33mf34e5aa4[m Feature/account management (#52)
+[33m4fe2257f[m change Role in UserSeeder from 1 to 4 (#51)
+[33me02d954b[m fix DiscountCode Model (#50)
+[33me59393d8[m create route, controller, model account-management (#49)
+[33m034b8a86[m Fix Bank and Card Model (#48)
+[33m80a021eb[m add discount code id to card_histories and bank_histories (#47)
+[33m068a65f3[m[33m ([m[1;31morigin/fix/migrate[m[33m)[m fix user seeder (#46)
+[33m6ca7b9c3[m add some bug :((( (#45)
+[33m261237b3[m fix senEmail ANH CheckDomain (#44)
+[33m771ed2f8[m Fix/categories update (#43)
+[33m5e9e8973[m fix discount_code (#42)
+[33m182f80a0[m[33m ([m[1;31morigin/fix/categories-update[m[33m)[m Thêm status vào để trả về fe
+[33m0af67c93[m fix/categories-update
+[33m2dbc8a54[m fix and demo review code (#41)
+[33m997abb20[m Take note
+[33m284a16d4[m Fix middleware push register logout
+[33m613382bf[m Fix middleware (#38)
+[33m6ff8ab50[m Fix Router Frontend
+[33m6c232f5f[m Fix Folder Cde (#36)
+[33mafa7a63d[m Add Website Document
+[33mbfc71d64[m Fix JWT, add Sha256
+[33md1470d43[m add website document (#33)
+[33m8047c82c[m fix somethiings (#32)
+[33m15beab28[m feature discount_code (#31)
+[33m387dbafb[m  add Category (#30)
+[33m3b514453[m Fix Abstract Controller (#29)
+[33mec5f5c66[m upload (#28)
+[33mba954492[m Remove/abs controller (#27)
+[33m68f77ec1[m Fix Abstract Controller
+[33m3fbfedcf[m[33m ([m[1;31morigin/test[m[33m)[m Merge pull request #24 from antrc2/feature/create-view-categories-management
+[33m6f2a01ba[m[33m ([m[1;31morigin/feature/create-view-categories-management[m[33m)[m Merge branch 'main' into feature/create-view-categories-management
+[33m49b8008d[m create view management
+[33m63fd5d5a[m create view category management (#23)
+[33m518350f6[m create view category management
+[33m78b6ace8[m create view category management (#20)
+[33m23a09e07[m Fix Router
+[33mc30ed2c2[m create view category management
+[33m99245626[m[33m ([m[1;31morigin/feature/create-view-donate-promotions-management[m[33m, [m[1;31morigin/feature/create-view-discount-code-management[m[33m, [m[1;31morigin/feature/create-view-account-management[m[33m)[m config axios and update Frontend (#19)
+[33m9cb88573[m add somethings (#18)
+[33m013178dc[m add somethings (#17)
+[33me9199b34[m add abstract class controller (#16)
+[33mf725957d[m Merge pull request #15 from antrc2/fix-cors
+[33m74fa786b[m[33m ([m[1;31morigin/fix-cors[m[33m)[m fix cors
+[33mb86580d3[m Merge pull request #14 from antrc2/feature/create-view-home
+[33m2b86c2e3[m[33m ([m[1;31morigin/feature/create-view-home[m[33m)[m create hook use Work
+[33m97a1171a[m fs
+[33mec0f3c4c[m Merge pull request #13 from antrc2/all_router
+[33mb5f53f7b[m add All Router Backend
+[33m32b65ee5[m demo
+[33mecaba7c2[m Merge pull request #12 from antrc2/basic_router
+[33mb63a2974[m Merge pull request #11 from antrc2/backend_middleware
+[33m4c607810[m[33m ([m[1;31morigin/basic_router[m[33m, [m[1;32mbasic_router[m[33m)[m hehe
+[33me83b71b0[m add basic router
+[33m8c88cb2f[m[33m ([m[1;31morigin/backend_middleware[m[33m)[m fix middleware
+[33m4c8e13a6[m add auth and jwt middleware
+[33m6d191cf1[m fix create forder
+[33m00ce9970[m create forder Frontend
+[33m9112e5f9[m I used Grok3 to create all Models
+[33mb5e2d9dd[m[33m ([m[1;31morigin/backend_model[m[33m, [m[1;32mbackend_model[m[33m)[m add all Model
+[33m7f9685e8[m Add Migrate and Seeder to Database
+[33m85075c4d[m[33m ([m[1;31morigin/fix_backend[m[33m, [m[1;32mfix_backend[m[33m)[m add migrate and seeder
+[33m220e852b[m Fix AI and Transactions
+[33m9c68c31f[m[33m ([m[1;31morigin/ai_base_code[m[33m, [m[1;32mai_base_code[m[33m)[m fix python base code
+[33m7beffdb8[m add Python base code
+[33m414437c8[m Add Migrate Database
+[33m257b4b75[m[33m ([m[1;31morigin/database_migrate[m[33m)[m add database
+[33m54e6cd37[m Merge pull request #6 from antrc2/add_aws_env
+[33mc4bf6895[m Merge pull request #5 from antrc2/cors_backend
+[33m309e87df[m[33m ([m[1;31morigin/cors_backend[m[33m)[m add backend_cors
+[33m862e623b[m[33m ([m[1;31morigin/add_aws_env[m[33m, [m[1;32madd_aws_env[m[33m)[m add frontend env
+[33meff08381[m fix api document 2
+[33m93f3a16b[m Merge pull request #4 from antrc2/add_aws_env
+[33m15115dd2[m fix api documnet
+[33m7a66b77a[m fix api document
+[33m30638c53[m add aws enc
+[33m934bbec9[m Merge pull request #3 from antrc2/api_document
+[33m0f2b02cc[m[33m ([m[1;31morigin/api_document[m[33m)[m add tutorial to preview api document
+[33me4ea2b82[m Add Documents for some APIs
+[33maa3382d0[m add api_document 1
+[33m587085d1[m push view frontend to branch develop
+[33m69da9816[m[33m ([m[1;31morigin/add_middleware_by_role[m[33m)[m Create Frontend
+[33me0c52c89[m add website document 2
+[33m3f5c87f0[m add website document
+[33m9fed9ae0[m Merge branch 'main' of https://github.com/antrc2/SuperBee_DATN
+[33m0d5f4a8c[m hehe
+[33mbc8d7e22[m remove a.txt
+[33m3914dad9[m he
+[33m81580e6a[m hehee
+[33md678d705[m push
+[33me1b780b6[m Merge pull request #1 from antrc2/develop
+[33m087d339d[m he
+[33m169d17f4[m he
+[33m79b3012f[m add laravel base
+[33m27fe0184[m first commit

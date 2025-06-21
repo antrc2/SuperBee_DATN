@@ -42,12 +42,6 @@ export const adminModules = [
     allowedRoles: ["admin"],
   },
   {
-    name: "categories",
-    list: CategoryPage,
-    create: CreateCategoryPage,
-    edit: EditCategoryPage,
-  },
-  {
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,

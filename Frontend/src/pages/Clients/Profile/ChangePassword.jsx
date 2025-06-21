@@ -1,33 +1,47 @@
-import React, { useState } from "react";
-import api from "@utils/http"; // Import Axios instance
-import { toast } from "react-toastify"; // For notifications
+"use client";
+
+import { useState } from "react";
+import { Lock, Eye, EyeOff, Shield } from "lucide-react";
+import api from "@utils/http";
+import { toast } from "react-toastify";
 
 export default function ChangePassword() {
   const [formData, setFormData] = useState({
     current_password: "",
     new_password: "",
-    new_password_confirmation: ""
+    new_password_confirmation: "",
   });
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({}); // <-- State mới để lưu lỗi validation từng trường
+  const [errors, setErrors] = useState({});
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [name]: value
+      [name]: value,
     }));
-    // Xóa lỗi cho trường hiện tại khi người dùng bắt đầu gõ
     setErrors((prevErrors) => ({
       ...prevErrors,
-      [name]: undefined
+      [name]: undefined,
+    }));
+  };
+
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({
+      ...prev,
+      [field]: !prev[field],
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({}); // Xóa tất cả lỗi cũ trước khi gửi request mới
+    setErrors({});
 
     try {
       const response = await api.post("/user/change-password", formData);
@@ -37,7 +51,7 @@ export default function ChangePassword() {
         setFormData({
           current_password: "",
           new_password: "",
-          new_password_confirmation: ""
+          new_password_confirmation: "",
         });
       }
     } catch (error) {
@@ -47,19 +61,15 @@ export default function ChangePassword() {
         const generalMessage =
           error.response.data.message || "Đã có lỗi xảy ra.";
 
-        // Hiển thị toast cho thông báo chung
         toast.error(generalMessage);
 
         if (backendErrors) {
-          // Lưu lỗi vào state 'errors' để hiển thị dưới mỗi input
           setErrors(backendErrors);
-
-          // Hiển thị toast cho từng lỗi cụ thể nếu có
           for (const key in backendErrors) {
             if (Array.isArray(backendErrors[key])) {
               backendErrors[key].forEach((msg) => toast.error(msg));
             } else {
-              toast.error(backendErrors[key]); // Trường hợp lỗi không phải mảng (ít xảy ra với Laravel Validation)
+              toast.error(backendErrors[key]);
             }
           }
         }
@@ -72,98 +82,162 @@ export default function ChangePassword() {
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-3xl font-extrabold text-gray-900 mb-6 text-center">
-        Đổi mật khẩu
-      </h1>
-      <form onSubmit={handleSubmit}>
-        <div className="space-y-4">
-          <div>
-            <label
-              htmlFor="current_password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Mật khẩu hiện tại
-            </label>
-            <input
-              type="password"
-              id="current_password"
-              name="current_password"
-              value={formData.current_password}
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu hiện tại"
-              className={`mt-1 block w-full border ${
-                errors.current_password ? "border-red-500" : "border-gray-300"
-              } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
-            />
-            {errors.current_password && ( // <-- Hiển thị lỗi dưới input
-              <p className="mt-1 text-sm text-red-600">
-                {errors.current_password[0]}
+    <div className="max-w-md mx-auto ">
+      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-700 rounded-lg">
+              <Shield className="h-6 w-6 text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">Đổi mật khẩu</h1>
+              <p className="text-slate-400 text-sm">
+                Cập nhật mật khẩu bảo mật
               </p>
-            )}
+            </div>
           </div>
-          <div>
-            <label
-              htmlFor="new_password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Mật khẩu mới
-            </label>
-            <input
-              type="password"
-              id="new_password"
-              name="new_password"
-              value={formData.new_password}
-              onChange={handleChange}
-              placeholder="Nhập mật khẩu mới"
-              className={`mt-1 block w-full border ${
-                errors.new_password ? "border-red-500" : "border-gray-300"
-              } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
-            />
-            {errors.new_password && ( // <-- Hiển thị lỗi dưới input
-              <p className="mt-1 text-sm text-red-600">
-                {errors.new_password[0]}
-              </p>
-            )}
-          </div>
-          <div>
-            <label
-              htmlFor="new_password_confirmation"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Xác nhận mật khẩu mới
-            </label>
-            <input
-              type="password"
-              id="new_password_confirmation"
-              name="new_password_confirmation"
-              value={formData.new_password_confirmation}
-              onChange={handleChange}
-              placeholder="Xác nhận mật khẩu mới"
-              className={`mt-1 block w-full border ${
-                errors.new_password_confirmation
-                  ? "border-red-500"
-                  : "border-gray-300"
-              } rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm`}
-              required
-            />
-            {errors.new_password_confirmation && ( // <-- Hiển thị lỗi dưới input
-              <p className="mt-1 text-sm text-red-600">
-                {errors.new_password_confirmation[0]}
-              </p>
-            )}
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? "Đang lưu..." : "Lưu"}
-          </button>
         </div>
-      </form>
+
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Current Password */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+                <Lock className="h-4 w-4" />
+                Mật khẩu hiện tại
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.current ? "text" : "password"}
+                  name="current_password"
+                  value={formData.current_password}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu hiện tại"
+                  className={`w-full bg-slate-700 border rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:ring-1 focus:ring-blue-500 transition-colors ${
+                    errors.current_password
+                      ? "border-red-500"
+                      : "border-slate-600 focus:border-blue-500"
+                  }`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("current")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                >
+                  {showPasswords.current ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.current_password && (
+                <p className="mt-1 text-sm text-red-400">
+                  {errors.current_password[0]}
+                </p>
+              )}
+            </div>
+
+            {/* New Password */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+                <Lock className="h-4 w-4" />
+                Mật khẩu mới
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.new ? "text" : "password"}
+                  name="new_password"
+                  value={formData.new_password}
+                  onChange={handleChange}
+                  placeholder="Nhập mật khẩu mới"
+                  className={`w-full bg-slate-700 border rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:ring-1 focus:ring-blue-500 transition-colors ${
+                    errors.new_password
+                      ? "border-red-500"
+                      : "border-slate-600 focus:border-blue-500"
+                  }`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("new")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                >
+                  {showPasswords.new ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.new_password && (
+                <p className="mt-1 text-sm text-red-400">
+                  {errors.new_password[0]}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
+                <Lock className="h-4 w-4" />
+                Xác nhận mật khẩu mới
+              </label>
+              <div className="relative">
+                <input
+                  type={showPasswords.confirm ? "text" : "password"}
+                  name="new_password_confirmation"
+                  value={formData.new_password_confirmation}
+                  onChange={handleChange}
+                  placeholder="Xác nhận mật khẩu mới"
+                  className={`w-full bg-slate-700 border rounded-lg px-4 py-3 pr-12 text-white placeholder-slate-400 focus:ring-1 focus:ring-blue-500 transition-colors ${
+                    errors.new_password_confirmation
+                      ? "border-red-500"
+                      : "border-slate-600 focus:border-blue-500"
+                  }`}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => togglePasswordVisibility("confirm")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                >
+                  {showPasswords.confirm ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+              {errors.new_password_confirmation && (
+                <p className="mt-1 text-sm text-red-400">
+                  {errors.new_password_confirmation[0]}
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  Đang lưu...
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4" />
+                  Cập nhật mật khẩu
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

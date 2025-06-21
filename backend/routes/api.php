@@ -9,6 +9,7 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\User\DiscountCodeController;
@@ -25,15 +26,8 @@ use Illuminate\Support\Facades\Route;
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
-// cấp lại token
-Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
-// xác minh tài khoản
-Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
-// quên mật khẩu
-Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-// cài lại mật khẩu
-Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
+Route::post('/upload', [AWSController::class, 'upload']);
 Route::prefix("/callback")->group(function () {
 
     Route::post("/card", [CardController::class, 'callback']);
@@ -47,6 +41,16 @@ Route::prefix("/callback")->group(function () {
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
+    // cấp lại token
+    Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
+    // xác minh tài khoản
+    Route::get('/verify-email', [AuthController::class, 'verifyEmail']);
+    // quên mật khẩu
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    // cài lại mật khẩu
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    // gửi lại email kích hoạt tài khoản
+    Route::post('/sendActiveAccount', [AuthController::class, 'sendVerifyEmail']);
     // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
@@ -190,6 +194,15 @@ Route::middleware(['jwt'])->group(function () {
             Route::post('/', [AdminBannerController::class, 'store']);
             Route::put('/{id}', [AdminBannerController::class, 'update']);
             Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
+        });
+    });
+});
+
+Route::middleware(['jwt'])->group(function () {
+    Route::middleware(['role:partner'])->prefix('/partner')->group(function () {
+        Route::prefix("/orders")->group(function () {
+
+            Route::post("/purchase", [UserOrderController::class, 'purchase']);
         });
     });
 });

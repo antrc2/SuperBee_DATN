@@ -1,168 +1,186 @@
-import { Facebook, MapPin, MessageCircle, Star, Zap } from "lucide-react";
-// import Image from "next/image";
-// import Link from "next/link";
-
+import {
+  Zap,
+  Phone,
+  MapPin,
+  Facebook,
+  MessageCircle,
+  Shield,
+  Users,
+  CreditCard,
+  HelpCircle,
+} from "lucide-react";
 export default function Footer() {
   return (
-    <footer className="bg-black text-white mt-16  ">
-      <div className="container  py-16 max-w-7xl mx-auto">
-        {/* Main Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 md:gap-y-12 md:gap-x-8 lg:grid-cols-4 gap-12">
+    <footer className="bg-gradient-header text-white py-12 px-6 mt-10">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
-          <div>
-            <div className="space-y-8">
-              {/* <Image
-                src="/logo.png"
-                alt="ShopTi.com"
-                width={180}
-                height={60}
-                className="h-auto w-auto brightness-0 invert"
-              /> */}
-
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  <Zap className="w-8 h-8 text-yellow-400" />
-                  <div>
-                    <h3 className="text-2xl font-bold">SuperBee</h3>
-                    <p className="text-gray-400">Gaming Store Premium</p>
-                  </div>
-                </div>
-
-                <p className="text-gray-300 leading-relaxed text-lg">
-                  Bán nick Liên quân, Free fire, Roblox với chất lượng cao và
-                  giá cả hợp lý nhất thị trường
-                </p>
-
-                <div className="flex flex-wrap gap-3">
-                  {["UY TÍN", "GIÁ RẺ", "CHẤT LƯỢNG"].map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-4 py-2 bg-white text-black rounded-full text-sm font-bold"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+          <div className="space-y-6">
+            <div className="flex items-center space-x-2">
+              <div className="bg-yellow-400 p-2 rounded-lg">
+                <Zap className="h-6 w-6 text-slate-900" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">SuperBee</h3>
+                <p className="text-gray-400 text-sm">Gaming Store Premium</p>
               </div>
             </div>
+
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Bán nick Liên quân, Free fire, Roblox với chất lượng cao và giá cả
+              hợp lý nhất thị trường.
+            </p>
           </div>
 
-          {/* Navigation Links */}
-          <div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3">
-                <div className="w-2 h-8 bg-white rounded-full"></div>
-                THÔNG TIN CHUNG
-              </h3>
+          {/* Thông tin chung */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
+              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+              THÔNG TIN CHUNG
+            </h4>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Về chúng tôi
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Chính sách bảo mật và đổi trả
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                >
+                  <HelpCircle className="h-4 w-4 mr-2" />
+                  Điều khoản sử dụng
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                >
+                  <CreditCard className="h-4 w-4 mr-2" />
+                  Hướng dẫn nạp tiền thẻ cào
+                </a>
+              </li>
+            </ul>
+          </div>
 
-              <div className="space-y-4">
-                {[
-                  "Về chúng tôi",
-                  "Chính sách bảo mật và đổi trả",
-                  "Điều khoản sử dụng",
-                  "Hướng dẫn nạp tiền thẻ cào"
-                ].map((item, index) => (
+          {/* Sản phẩm */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
+              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+              SẢN PHẨM
+            </h4>
+            <ul className="space-y-3">
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                >
+                  Nick Liên Quân Giá Rẻ
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    HOT
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm"
+                >
+                  Nick Random Freefire 2k
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm"
+                >
+                  Nick Random Liên quân 2k
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                >
+                  Nick Random Blox Fruit 20k
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    HOT
+                  </span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#"
+                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                >
+                  Tặng 100 acc liên quân miễn phí
+                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                    HOT
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Hỗ trợ */}
+          <div className="space-y-4">
+            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
+              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+              HỖ TRỢ
+            </h4>
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="bg-green-500 p-2 rounded-lg">
+                  <MessageCircle className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Zalo Support</p>
+                  <p className="text-green-400 font-bold text-lg">0987654321</p>
+                  <p className="text-gray-400 text-xs">Bấm vào đây để chat</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-600 p-2 rounded-lg">
+                  <Facebook className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Facebook Admin</p>
                   <a
-                    key={index}
                     href="#"
-                    className="group flex items-center gap-4 py-2 hover:text-gray-300 transition-colors"
+                    className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
                   >
-                    <div className="w-2 h-2 bg-gray-500 rounded-full group-hover:bg-white transition-colors"></div>
-                    <span className="text-gray-300 group-hover:text-white transition-colors">
-                      {item}
-                    </span>
+                    SuperBee
                   </a>
-                ))}
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* Products */}
-          <div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3">
-                <div className="w-2 h-8 bg-white rounded-full"></div>
-                SẢN PHẨM
-              </h3>
-
-              <div className="space-y-4">
-                {[
-                  { name: "Nick Liên Quân Giá Rẻ", hot: true },
-                  { name: "Nick Random Freefire 2k", hot: false },
-                  { name: "Nick Random Liên quân 2k", hot: false },
-                  { name: "Nick Random Blox Fruit 20k", hot: true },
-                  { name: "Tặng 100 acc liên quân miễn phí", hot: true }
-                ].map((item, index) => (
+              <div className="flex items-start space-x-3">
+                <div className="bg-red-500 p-2 rounded-lg mt-1">
+                  <MapPin className="h-5 w-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-white font-medium">Địa chỉ</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Số 1, Trịnh Văn Bô, Nam Từ Liêm, Hà Nội
+                  </p>
                   <a
-                    key={index}
                     href="#"
-                    className="group flex items-center gap-4 py-2 hover:text-gray-300 transition-colors"
-                  >
-                    <div className="w-2 h-2 bg-gray-500 rounded-full group-hover:bg-white transition-colors"></div>
-                    <div className="flex-1">
-                      <span className="text-gray-300 group-hover:text-white transition-colors">
-                        {item.name}
-                      </span>
-                      {item.hot && (
-                        <span className="ml-2 px-2 py-1 bg-red-600 text-xs rounded-full text-white font-bold">
-                          HOT
-                        </span>
-                      )}
-                    </div>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Customer Support */}
-          <div>
-            <div className="space-y-6">
-              <h3 className="text-2xl font-bold flex items-center gap-3">
-                <div className="w-2 h-8 bg-white rounded-full"></div>
-                HỖ TRỢ
-              </h3>
-
-              <div className="space-y-6">
-                {/* Zalo Contact */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-6 h-6 text-green-400" />
-                    <span className="font-semibold">Zalo Support</span>
-                  </div>
-                  <p className="text-green-400 font-bold text-xl ml-9">
-                    0987654321
-                  </p>
-                  <p className="text-gray-400 text-sm ml-9">
-                    Bấm vào đây để chat
-                  </p>
-                </div>
-
-                {/* Facebook Contact */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <Facebook className="w-6 h-6 text-blue-400" />
-                    <span className="font-semibold">Facebook Admin</span>
-                  </div>
-                  <p className="text-blue-400 ml-9">SuperBee</p>
-                </div>
-
-                {/* Address */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="w-6 h-6 text-red-400" />
-                    <span className="font-semibold">Địa chỉ</span>
-                  </div>
-                  <p className="text-gray-300 text-sm ml-9 leading-relaxed">
-                    Số 1, Trịnh Văn Bô, Nam Từ Liêm,
-                    <br />
-                     Hà Nội
-                  </p>
-                </div>
-
-                <div className="ml-9 pt-4">
-                  <a
-                    href="https://www.facebook.com/beeit"
                     className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
                   >
                     facebook.com/superbee
@@ -173,31 +191,35 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="mt-16 pt-8 border-t border-gray-800">
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-6 flex-wrap">
-              <p className="text-gray-400">
-                © 2025 superbee.com - All rights reserved
-              </p>
-              <div className="flex items-center gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <Star
-                    key={star}
-                    className="w-4 h-4 fill-yellow-400 text-yellow-400"
-                  />
-                ))}
-                <span className="text-yellow-400 font-semibold ml-2">
-                  4.9/5 Rating
-                </span>
+        {/* Bottom section */}
+        <div className="border-t border-gray-700 mt-12 pt-8">
+          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <p className="text-gray-400 text-sm">
+              © {new Date().getFullYear()} SuperBee Gaming Store. Tất cả quyền
+              được bảo lưu.
+            </p>
+            <div className="flex items-center space-x-4">
+              <span className="text-gray-400 text-sm">Theo dõi chúng tôi:</span>
+              <div className="flex space-x-2">
+                <a
+                  href="#"
+                  className="bg-blue-600 p-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <Facebook className="h-4 w-4 text-white" />
+                </a>
+                <a
+                  href="#"
+                  className="bg-green-500 p-2 rounded-lg hover:bg-green-600 transition-colors"
+                >
+                  <MessageCircle className="h-4 w-4 text-white" />
+                </a>
+                <a
+                  href="#"
+                  className="bg-red-500 p-2 rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  <Phone className="h-4 w-4 text-white" />
+                </a>
               </div>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <span className="text-green-400 font-semibold flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                Online 24/7
-              </span>
             </div>
           </div>
         </div>

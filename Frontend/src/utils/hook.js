@@ -1,94 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import api from "./http";
-import queryString from "query-string";
+import { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-// Quản lý trạng thái bật/tắt
-// const [isOpen, toggleOpen] = useToggle(false);
-function useToggle(initialValue = false) {
-  const [value, setValue] = useState(initialValue);
-  const toggle = () => setValue(!value);
-  return [value, toggle];
-}
-// useFetch - Gọi API và quản lý trạng thái
-// Công dụng: Xử lý việc gọi API, quản lý trạng thái loading, dữ liệu trả về và lỗi.
-// post
-// const { data, loading, error } = useFetch("/login", "post", {
-//   data: { username: "admin", password: "123456" }
-// });
-// get
-// const { data, loading, error } = useFetch("/products", "get", {
-//   params: { category: "fruit" }
-// });
-function useFetchBase(url, method, options = {}) {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  const stableOptions = useMemo(() => JSON.stringify(options), [options]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    setLoading(true);
-    setError(null);
-    setData(null);
-
-    const fetchData = async () => {
-      try {
-        const res = await api.request({
-          url,
-          method,
-          signal: controller.signal,
-          ...options,
-        });
-        if (res.status >= 200 && res.status < 300) {
-          setData(res.data);
-          setLoading(false); // Chỉ tắt loading sau khi setData
-        } else {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-      } catch (err) {
-        if (err.name !== "CanceledError" && err.name !== "AbortError") {
-          setError(err);
-          setLoading(false); // Tắt loading khi có lỗi
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      controller.abort();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url, method, stableOptions]);
-
-  return { data, loading, error };
-}
-// Hook cho GET
-function useGet(url, options = {}) {
-  return useFetchBase(url, "get", options);
-}
-
-// Hook cho POST
-function usePost(url, options = {}) {
-  return useFetchBase(url, "post", options);
-}
-
-// Hook cho PUT
-function usePut(url, options = {}) {
-  return useFetchBase(url, "put", options);
-}
-
-// Hook cho DELETE
-function useDelete(url, options = {}) {
-  return useFetchBase(url, "delete", options);
-}
-
-// Hook cho PATCH
-function usePatch(url, options = {}) {
-  return useFetchBase(url, "patch", options);
-}
 // useDebounce - Trì hoãn cập nhật giá trị
 // Công dụng: Trì hoãn cập nhật giá trị, hữu ích trong các trường hợp như tìm kiếm để giảm tần suất xử lý.
 // const debouncedValue = useDebounce(inputValue, 500);
@@ -213,113 +124,24 @@ function setSessionValue(key, value) {
     console.error(`Không thể lưu sessionStorage với key="${key}":`, e);
   }
 }
-function useUrlUtils() {
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  /**
-   * Navigate to a new URL
-   * @param {string} url - target URL/path
-   * @param {{ replace?: boolean, state?: any }} options
-   */
-  const navigateTo = (url, options = {}) => {
-    const { replace = false, state } = options;
-    navigate(url, { replace, state });
-  };
-
-  /**
-   * Get current URL information
-   */
-  const getCurrentUrlInfo = () => ({
-    pathname: location.pathname,
-    search: location.search,
-    hash: location.hash,
-    state: location.state,
-    fullUrl: `${location.pathname}${location.search}${location.hash}`,
-  });
-
-  /**
-   * Parse and return query parameters as an object
-   */
-  const getQueryParams = () => queryString.parse(location.search);
-
-  /**
-   * Add or update query parameters
-   * @param {Record<string, any>} newParams
-   * @param {{ replace?: boolean, state?: any }} options
-   */
-  const updateQueryParams = (newParams, options = {}) => {
-    const currentParams = queryString.parse(location.search);
-    const updated = { ...currentParams, ...newParams };
-    const newSearch = queryString.stringify(updated);
-    const path = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
-    navigate(path, options);
-  };
-
-  /**
-   * Remove a specific query parameter
-   * @param {string} paramName
-   * @param {{ replace?: boolean, state?: any }} options
-   */
-  const removeQueryParam = (paramName, options = {}) => {
-    const currentParams = queryString.parse(location.search);
-    delete currentParams[paramName];
-    const newSearch = queryString.stringify(currentParams);
-    const path = `${location.pathname}${newSearch ? `?${newSearch}` : ""}`;
-    navigate(path, options);
-  };
-
-  return {
-    navigateTo,
-    getCurrentUrlInfo,
-    getQueryParams,
-    updateQueryParams,
-    removeQueryParam,
-  };
-}
 const viewImage = (url) => {
   const urlBE = import.meta.env.VITE_BACKEND_URL;
   const imageUrl = `${urlBE}${url}`;
   return imageUrl;
 };
-// Ví dụ sử dụng trong một component
-// function MyComponent() {
-//   const {
-//     navigateTo,
-//     getCurrentUrlInfo,
-//     getQueryParams,
-//     updateQueryParams,
-//     removeQueryParam
-//   } = useUrlUtils();
 
-//   const handleNavigate = () => {
-//     navigateTo("/home", { state: { from: "MyComponent" } });
-//   };
-
-//   const handleUpdateQuery = () => {
-//     updateQueryParams({ search: "react", page: 1 });
-//   };
-
-//   const handleRemoveQuery = () => {
-//     removeQueryParam("page");
-//   };
-
-//   const urlInfo = getCurrentUrlInfo();
-//   const queryParams = getQueryParams();
-
-//   return (
-//     <div>
-//       <button onClick={handleNavigate}>Go to Home</button>
-//       <button onClick={handleUpdateQuery}>Update Query Params</button>
-//       <button onClick={handleRemoveQuery}>Remove Page Param</button>
-//       <p>Current URL Info: {JSON.stringify(urlInfo)}</p>
-//       <p>Query Params: {JSON.stringify(queryParams)}</p>
-//     </div>
-//   );
-// }
 const decodeData = (token) => {
   const decoded = jwtDecode(token);
   return decoded;
+};
+const checkLocation = () => {
+  const savedLocation = localStorage.getItem("location");
+  if (savedLocation) {
+    return savedLocation;
+  } else {
+    return null;
+  }
 };
 
 // export default MyComponent;
@@ -329,18 +151,11 @@ export {
   useDebounce,
   useLocalStorage,
   useScrollPosition,
-  useToggle,
   writeToLocalStorage,
   getApiKey,
   setApiKeyHook,
   setSessionValue,
   useSessionStorage,
-  useGet,
-  usePost,
-  usePut,
-  useDelete,
-  usePatch,
-  useUrlUtils,
   decodeData,
-  useFetchBase,
+  checkLocation,
 };

@@ -1,79 +1,163 @@
-import React from "react";
+"use client";
 import { Link } from "react-router-dom";
+import { ShoppingCart, Eye, Crown, Copy } from "lucide-react";
+import { useNotification } from "../../../contexts/NotificationProvider";
+import { useCart } from "../../../contexts/CartContexts";
 
 export default function Product({ product }) {
+  console.log("🚀 ~ Product ~ product:", product);
   const formatPrice = (num) =>
     num.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
+  const { pop } = useNotification();
+  const { handleAddToCart } = useCart();
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    await handleAddToCart(product);
+  };
+  const originalPrice = product.price;
+  const salePrice = product.sale;
 
-  const Card = ({ className = "", children }) => (
-    <div className={`bg-white border rounded-lg ${className}`}>{children}</div>
-  );
+  let finalPrice = originalPrice;
+  let oldPrice = null;
+  let discountPercent = 0;
 
-  const CardContent = ({ className = "", children }) => (
-    <div className={`p-4 ${className}`}>{children}</div>
-  );
+  if (salePrice > 0 && salePrice < originalPrice) {
+    finalPrice = salePrice;
+    oldPrice = originalPrice;
 
-  const Badge = ({ className = "", children }) => (
-    <span
-      className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${className}`}
-    >
-      {children}
-    </span>
-  );
+    // Tính toán phần trăm giảm giá
+    const discountAmount = originalPrice - salePrice;
+    discountPercent = Math.round((discountAmount / originalPrice) * 100);
+  }
 
-  // Calculate old price and discount if there's a sale
-  const oldPrice =
-    product.sale > 0 ? product.price / (1 - product.sale / 100) : product.price;
-  const discount = product.sale;
+  const primaryImage = product.images?.[0]?.image_url || null;
+
+  const handleCopyId = (e) => {
+    e.preventDefault(); // Ngăn không cho Link hoạt động khi click vào nút copy
+    navigator.clipboard.writeText(product.sku);
+    pop("Copy tạm vào bộ nhớ đệm", "s");
+  };
 
   return (
-    <Link to={`/acc/${product.sku}`}>
-      <Card className="rounded-2xl shadow-md overflow-hidden">
-        <img
-          // Use the first image from the 'images' array
-          src={`${import.meta.env.VITE_BACKEND_IMG}${
-            product.images[0]?.image_url
-          }`}
-          alt={product.images[0]?.alt_text || `Product ID: ${product.id}`} // Fallback alt text
-          className="w-full h-40 object-cover"
-        />
-        <CardContent>
-          <h2 className="text-lg font-semibold leading-snug">
-            {product.category.name}
-          </h2>
-          <p className="text-sm text-gray-500 mb-1">ID: {product.sku}</p>
-
-          {/* Dynamically display game attributes */}
-          {product.game_attributes && product.game_attributes.length > 0 && (
-            <ul className="text-sm text-gray-700 space-y-0.5 mt-2">
-              {product.game_attributes.map(
-                (attr, index) =>
-                  index < 4 && (
-                    <li key={attr.id}>
-                      {attr.attribute_key}: {attr.attribute_value}
-                    </li>
-                  )
-              )}
-            </ul>
+    // Thêm class `group` vào đây để các hiệu ứng `group-hover:*` bên trong hoạt động
+    <Link to={`/acc/${product.sku}`} className="block group">
+      <div
+        className="
+        flex flex-col 
+        bg-gradient-to-br from-slate-800/50 to-slate-900/50 
+        rounded-xl border border-slate-700/50 
+        group-hover:border-purple-500/50 transition-all duration-300 
+        group-hover:scale-[1.02] group-hover:shadow-xl group-hover:shadow-purple-500/20 
+        overflow-hidden
+        h-[410px]
+      "
+      >
+        {/* Phần 1: Ảnh (chiếm 40%) */}
+        <div className="relative h-[40%] overflow-hidden">
+          {/* Hiển thị % giảm giá nếu có */}
+          {/* {discountPercent > 0 && (
+            <div className="absolute top-2 right-2 z-10 bg-gradient-to-r from-red-500 to-pink-500 text-white text-sm px-2 py-1 rounded-full font-bold">
+              -{discountPercent}%
+            </div>
+          )} */}
+          {primaryImage ? (
+            <img
+              src={`${import.meta.env.VITE_BACKEND_IMG}${primaryImage}`}
+              alt={product.images[0]?.alt_text || `Product ID: ${product.id}`}
+              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-purple-600 via-blue-600 to-pink-600 flex items-center justify-center">
+              <Crown className="w-16 h-16 text-white/80" />
+            </div>
           )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <Link
+              to={`/acc/${product.sku}`}
+              className="bg-purple-600 hover:bg-purple-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"
+            >
+              <Eye className="w-4 h-4" />
+            </Link>
+            <button
+              onClick={handleAdd}
+              className="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"
+            >
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
 
-          <div className="mt-4">
-            <span className="text-blue-600 font-bold text-lg">
-              {formatPrice(product.price)}
-            </span>
-            {discount > 0 && ( // Only show old price and badge if there's a discount
-              <div className="flex items-center gap-2 mt-1">
-                <span className="line-through text-sm text-gray-400">
-                  {formatPrice(oldPrice)}
-                </span>
-                <Badge className="bg-pink-500 text-white text-xs">
-                  {discount}%
-                </Badge>
+        {/* Phần 2: Nội dung chính */}
+        <div className="p-4 flex-1 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-xs text-gray-500">ID:</span>
+              <span className="text-xs text-purple-300 font-mono truncate">
+                {product.sku}
+              </span>
+              <button
+                onClick={handleCopyId}
+                className="h-4 w-4 p-0 text-gray-400 hover:text-purple-300 transition-colors duration-200"
+                title="Copy ID"
+              >
+                <Copy className="w-3 h-3" />
+              </button>
+            </div>
+            <h3
+              className="font-bold text-sm text-white mb-3 truncate"
+              title={product.category.name}
+            >
+              {product.category.name}
+            </h3>
+
+            {product.game_attributes?.length > 0 && (
+              <div className="space-y-1 max-h-[100px] overflow-y-auto">
+                {product.game_attributes.slice(0, 4).map((attr) => (
+                  <div key={attr.id} className="flex justify-between text-xs">
+                    <span
+                      className="text-gray-400 truncate max-w-[60%]"
+                      title={attr.attribute_key}
+                    >
+                      {attr.attribute_key}:
+                    </span>
+                    <span
+                      className="text-purple-300 font-medium truncate max-w-[35%]"
+                      title={attr.attribute_value}
+                    >
+                      {attr.attribute_value}
+                    </span>
+                  </div>
+                ))}
+                {product.game_attributes.length > 4 && (
+                  <div className="text-xs text-gray-500 text-center">
+                    +{product.game_attributes.length - 4} thuộc tính khác
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+
+          {/* Phần 3: Giá & nút */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-bold text-yellow-400">
+                  {/* Hiển thị giá cuối cùng */}
+                  {formatPrice(finalPrice)}
+                </span>
+                {/* Chỉ hiển thị giá cũ nếu có giảm giá */}
+                {oldPrice && (
+                  <span className="text-xs text-gray-400 line-through">
+                    {/* Hiển thị giá gốc (giá cũ) */}
+                    {formatPrice(oldPrice)}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </Link>
   );
 }

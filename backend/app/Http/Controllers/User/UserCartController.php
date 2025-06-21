@@ -47,7 +47,7 @@ class UserCartController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'product_id' => 'required|array|min:1',
+                'cart_item_id' => 'required|array|min:1',
             ]);
 
             if ($validator->fails()) {
@@ -57,7 +57,7 @@ class UserCartController extends Controller
                 ], 422);
             }
             $user_id = $request->user_id;
-            $product_id = $request->product_id;
+            $cart_item_id = $request->cart_item_id;
             $cart = Cart::where("user_id", $user_id)->first();
             DB::beginTransaction();
             if ($cart == null) {
@@ -88,8 +88,8 @@ class UserCartController extends Controller
                 //     "total_amount"=>0,
 
                 // ]);
-                foreach ($product_id as $item) {
-                    $cart_item = CartItem::where("cart_id", $cart->id)->where("product_id", $item)->with('product')->first();
+                foreach ($cart_item_id as $item) {
+                    $cart_item = CartItem::where("cart_id", $cart->id)->where("id", $item)->with('product')->first();
                     if ($cart_item == null) {
                         DB::rollBack();
                         return response()->json([
@@ -167,7 +167,8 @@ class UserCartController extends Controller
 
             // Thêm sản phẩm vào giỏ
             $cartItem = $cart->items()->create([
-                'product_id' => $product->id
+                'product_id' => $product->id,
+                'status'=>1
             ]);
 
             $cart = Cart::with([

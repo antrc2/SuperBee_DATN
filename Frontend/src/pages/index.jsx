@@ -17,6 +17,13 @@ import CreateBanners from "../pages/Admin/Banners/CreateBanners";
 import EditBanner from "../pages/Admin/Banners/EditBanner";
 import BannersPageLayout from "../pages/Admin/Banners/BannersPageLayout";
 import ListOrderPage from "./Admin/Orders/ListOrderPage";
+import TrangDanhSachAccGame from "./Admin/Products/TrangDanhSachAccGame";
+import EditProducts from "./Admin/Products/EditProducts";
+import CreateProducts from "./Admin/Products/CreateProducts";
+import HistoryOrder from "./Clients/Profile/HistoryOrder";
+import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
+import ProductDetailPage from "./Admin/Products/ProductDetailPage";
+
 // AUTH
 import Login from "./Auth/Login";
 import Register from "./Auth/Register";
@@ -39,26 +46,20 @@ import ProductDetail from "./Clients/ProductDetail/ProductDetail";
 import EmailVerification from "./Clients/EmailVerification/EmailVerification";
 import ResetPassword from "./Clients/ResetPassword/ResetPassword";
 import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
-import ProductsPageLayout from "./Admin/Products/ProductsPageLayout";
-import ProductsListPage from "./Admin/Products/ProductsListPage";
-import EditProducts from "./Admin/Products/EditProducts";
-import CreateProducts from "./Admin/Products/CreateProducts";
-import ProductDetailPage from "./Admin/Products/ProductDetailPage";
-import HistoryOrder from "./Clients/Profile/HistoryOrder";
-import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
-
+import ActiveAcc from "./Clients/ResetPassword/ActiveAcc";
+import ActivateWebPage from "./Clients/ActiveDomain/ActivateWebPage";
 export {
+  ActivateWebPage,
+  ActiveAcc,
+  ProductDetailPage,
+  AccountListPage,
   ListOrderPage,
   ShowOrderPage,
   HistoryOrder,
-  ProductDetailPage,
   CreateProducts,
   EditProducts,
-  ProductsListPage,
-  ProductsPageLayout,
   ForgotPassword,
   ResetPassword,
-  AccountListPage,
   ShowAccountPage,
   CategoryPage,
   CreateCategoryPage,
@@ -91,4 +92,5 @@ export {
   CreateBanners,
   EditBanner,
   BannersPageLayout,
+  TrangDanhSachAccGame,
 };

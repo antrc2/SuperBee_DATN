@@ -4,7 +4,7 @@ import Footer from "../../../components/Client/layout/Footer";
 
 export default function HomeLayout() {
   return (
-    <div>
+    <div className="bg-gradient-header">
       <header>
         <Header />
       </header>

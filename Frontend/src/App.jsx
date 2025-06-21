@@ -11,7 +11,8 @@ import LoadingDomain from "./components/Loading/LoadingDomain";
 import ActivateNotice from "./components/Loading/ActivateNotice";
 import ErrorPage from "./pages/Error/ErrorPage";
 import ActiveDomain from "./pages/Clients/ActiveDomain/ActiveDomain";
-
+import { CartProvider } from "./contexts/CartContexts.jsx";
+import { HomeProvider } from "./contexts/HomeContext.jsx";
 function AppRoutes() {
   const { authStatus, combinedError, enterKey, retryDomain } = useAuth();
   const appRoutes = useRoutes([
@@ -52,14 +53,17 @@ function AppRoutes() {
       return <ErrorPage message={`Lỗi hệ thống:\n${combinedError}`} />;
 
     case "app_ready":
-      // Domain active, API key ok → render phần chính của app (Route)
+      // KHI ỨNG DỤNG ĐÃ SẴN SÀNG
       return (
-        <div>
-          <ScrollToTop />
-          {appRoutes}
-        </div>
+        <HomeProvider>
+          <CartProvider>
+            <div>
+              <ScrollToTop />
+              {appRoutes} {/* Các route của bạn giờ là children */}
+            </div>
+          </CartProvider>
+        </HomeProvider>
       );
-
     default:
       return <LoadingDomain message="Đang khởi tạo..." />;
   }

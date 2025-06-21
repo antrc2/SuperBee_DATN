@@ -15,66 +15,108 @@ import { useNotification } from "./NotificationProvider";
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const { pop } = useNotification();
+  const { pop, showAlert, conFim } = useNotification();
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
       ? {
           name: decoded.name,
           money: decoded.money,
+          avatar: decoded?.avatar,
         }
       : sessionStorage.getItem("access_token");
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-
-  // Hàm login
   const login = async (credentials) => {
     setLoading(true);
-    setError(null);
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
         password: credentials.password,
+        web_id: credentials.web_id,
       });
 
-      if (!res?.data?.access_token) {
-        throw new Error("Không nhận được access_token từ server.");
+      // Handle unsuccessful response from server
+      if (!res?.data?.status) {
+        await handleLoginError(res.data);
+        setLoading(false);
+        return { success: false };
       }
+
+      // Handle missing access token
+      if (!res?.data?.access_token) {
+        pop("Không nhận được access_token từ server.", "e");
+        setLoading(false);
+        return { success: false };
+      }
+
+      // Success - process token and set user
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
       const decoded = getDecodedToken();
+
       if (decoded) {
         setUser({
           name: decoded.name,
           money: decoded.money,
           avatar: decoded.avatar,
         });
+        pop("Đăng nhập thành công", "s");
         setLoading(false);
-        const locationOld = localStorage.getItem("location");
-        if (locationOld) {
-          const locationNew = locationOld;
-          localStorage.removeItem("location");
-          navigate(`${locationNew}`);
-        } else {
-          navigate("/");
-        }
+        return { success: true };
       } else {
-        throw new Error("Không thể giải mã token từ phản hồi server.");
+        sessionStorage.removeItem("access_token");
+        pop("Không thể giải mã token từ phản hồi server.", "e");
+        setLoading(false);
+        return { success: false };
       }
-      return { success: true, data: res.data };
     } catch (err) {
       setLoading(false);
-      console.error("Login error from AuthContext:", err);
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
-      setError({ message: errorMessage, code: err.response?.status || 500 });
-      return { success: false, message: errorMessage };
+
+      pop(errorMessage, "e");
+      return { success: false };
     }
   };
+
+  const handleLoginError = async (errorData) => {
+    const { message, code } = errorData;
+    switch (code) {
+      case "NO_ACTIVE": {
+        const shouldActivate = await conFim(
+          message ||
+            "Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?"
+        );
+        if (shouldActivate) {
+          navigate("/activeAcc");
+        }
+        break;
+      }
+
+      case "LOCKED_ACCOUNT":
+        pop(message || "Tài khoản của bạn đã bị khóa.", "e");
+        break;
+
+      case "INVALID_CREDENTIALS":
+        pop(message || "Tên đăng nhập hoặc mật khẩu không đúng.", "e");
+        break;
+
+      case "VALIDATION_ERROR":
+        // For validation errors, we'll return them to be handled by the form
+        // The form component can access these through the return value
+        break;
+
+      default:
+        pop(message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
+        break;
+    }
+  };
+
   const register = async (credentials) => {
     setLoading(true);
     setError(null);
@@ -90,12 +132,14 @@ export function AuthProvider({ children }) {
       }
       pop("Đăng Ký thành công", "s");
       navigate("/auth/login");
+      await showAlert(
+        res?.data?.message || "vui lòng xem Email để kích hoạt tài khoản"
+      );
       return { success: true, data: res.data };
     } catch (err) {
-      console.error("Login error from AuthContext:", err);
-      // Kiểm tra nếu lỗi từ server phản hồi
+      // console.error("Login error from AuthContext:", err);
       const errorMessage =
-        err.response?.data?.message ||
+        err.response?.data?.errors ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
       setError({ message: errorMessage, code: err.response?.status || 500 });
@@ -114,13 +158,14 @@ export function AuthProvider({ children }) {
       setUser(null);
       sessionStorage.removeItem("access_token");
       setError(null);
+      pop("Đăng xuất thành công", "s");
       navigate("/");
     } catch (err) {
       console.error("Login error from AuthContext:", err);
     } finally {
       setLoading(false);
     }
-  }, [navigate]);
+  }, [navigate, pop]);
 
   const {
     apiKey,
@@ -141,13 +186,15 @@ export function AuthProvider({ children }) {
   const [combinedError, setCombinedError] = useState(null);
 
   useEffect(() => {
-    // Điều này sẽ kiểm tra lại token mỗi khi AuthProvider được render lại hoặc khi có sự thay đổi
-    // trong logic AuthContext, đảm bảo user luôn được cập nhật đúng đắn
     const decoded = getDecodedToken();
     if (decoded) {
-      setUser({ name: decoded.name, money: decoded.money });
+      setUser({
+        name: decoded.name,
+        money: decoded.money,
+        avatar: decoded?.avatar,
+      });
     } else {
-      setUser(null); // Đảm bảo user là null nếu token không hợp lệ/hết hạn
+      setUser(null); 
     }
 
     // Các logic về authStatus vẫn giữ nguyên

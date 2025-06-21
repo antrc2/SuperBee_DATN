@@ -1,125 +1,58 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation } from "react-router-dom"; // Sửa thành react-router-dom
 
-// Assume these icons are imported from an icon library
+// Nhập các biểu tượng cần thiết từ lucide-react
 import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-  UserIcon,
-  DiscountCodeIcon
-} from "@assets/icons";
+  LayoutGrid,
+  Users,
+  TicketPercent,
+  LayoutList,
+  Package,
+  ShoppingCart,
+  Calendar,
+  ChevronDown,
+  MoreHorizontal,
+} from "lucide-react";
+import Logo from "@assets/icons/logo.png";
 import { useSidebar } from "@contexts/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
 
+// Cập nhật navItems với các biểu tượng từ lucide-react
 const navItems = [
   {
-    icon: <GridIcon />,
+    icon: <LayoutGrid />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/admin", pro: false }]
+    subItems: [{ name: "Ecommerce", path: "/admin", pro: false }],
   },
   {
-    icon: <UserIcon />,
+    icon: <Users />,
     name: "Users",
     path: "/admin/users",
-
   },
   {
-    icon: <DiscountCodeIcon />,
-    name: "discountcode",
-   path: "/admin/discountcode"
+    icon: <TicketPercent />,
+    name: "Discount Code", // Sửa lại tên cho dễ đọc
+    path: "/admin/discountcode",
   },
   {
-    icon: <UserIcon />,
+    icon: <LayoutList />, // Biểu tượng phù hợp hơn cho Categories
     name: "Categories",
-    path: "/admin/categories"
+    path: "/admin/categories",
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/admin/calendar"
-  },
-  {
-    icon: <UserIcon />,
+    icon: <Package />, // Biểu tượng phù hợp hơn cho Products
     name: "Products",
     path: "/admin/products",
   },
   {
-    icon: <UserIcon />,
+    icon: <ShoppingCart />, // Biểu tượng phù hợp hơn cho Orders
     name: "Orders",
     path: "/admin/orders",
   },
   {
-    icon: <CalenderIcon />,
+    icon: <Calendar />,
     name: "Banners",
     path: "/admin/banners",
   },
-  {
-    icon: <UserCircleIcon />,
-    name: "User Profile",
-    path: "/admin/profile"
-  },
-  {
-    name: "Forms",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "Form Elements", path: "/admin/form-elements", pro: false }
-    ]
-  },
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [
-      { name: "Basic Tables", path: "/admin/basic-tables", pro: false }
-    ]
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/admin/blank", pro: false },
-      { name: "404 Error", path: "/admin/error-404", pro: false }
-    ]
-  }
-];
-
-const othersItems = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/admin/line-chart", pro: false },
-      { name: "Bar Chart", path: "/admin/bar-chart", pro: false }
-    ]
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/admin/alerts", pro: false },
-      { name: "Avatar", path: "/admin/avatars", pro: false },
-      { name: "Badge", path: "/admin/badge", pro: false },
-      { name: "Buttons", path: "/admin/buttons", pro: false },
-      { name: "Images", path: "/admin/images", pro: false },
-      { name: "Videos", path: "/admin/videos", pro: false }
-    ]
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/admin/signin", pro: false },
-      { name: "Sign Up", path: "/admin/signup", pro: false }
-    ]
-  }
 ];
 
 const AppSidebar = () => {
@@ -137,24 +70,21 @@ const AppSidebar = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType,
-                index
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
+    // Giả sử 'menuType' được định nghĩa ở đâu đó, nếu không, chúng ta sẽ mặc định là 'main'
+    const menuType = "main";
+    navItems.forEach((nav, index) => {
+      if (nav.subItems) {
+        nav.subItems.forEach((subItem) => {
+          if (isActive(subItem.path)) {
+            setOpenSubmenu({
+              type: menuType,
+              index,
+            });
+            submenuMatched = true;
+          }
+        });
+      }
     });
-
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
@@ -166,7 +96,7 @@ const AppSidebar = () => {
       if (subMenuRefs.current[key]) {
         setSubMenuHeight((prevHeights) => ({
           ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0
+          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
         }));
       }
     }
@@ -209,13 +139,15 @@ const AppSidebar = () => {
                     : "menu-item-icon-inactive"
                 }`}
               >
+                {/* lucide-react icons không cần set size qua className, chúng kế thừa từ font size hoặc có thể set qua props `size` */}
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
                 <span className="menu-item-text">{nav.name}</span>
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
+                // Thay thế ChevronDownIcon bằng ChevronDown
+                <ChevronDown
                   className={`ml-auto w-5 h-5 transition-transform duration-200 ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
@@ -258,7 +190,7 @@ const AppSidebar = () => {
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? `${subMenuHeight[`${menuType}-${index}`]}px`
-                    : "0px"
+                    : "0px",
               }}
             >
               <ul className="mt-2 space-y-1 ml-9">
@@ -324,26 +256,17 @@ const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        className={`pt-2 pb-4 flex ${
+          !isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
         }`}
       >
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <img
-                className="dark:hidden"
-                src="/images/logo/logo.svg"
+                className="dark:hidden max-w-44 object-fit-contain"
+                src={Logo}
                 alt="Logo"
-                width={150}
-                height={40}
-              />
-              <img
-                className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
-                alt="Logo"
-                width={150}
-                height={40}
               />
             </>
           ) : (
@@ -370,26 +293,11 @@ const AppSidebar = () => {
                 {isExpanded || isHovered || isMobileOpen ? (
                   "Menu"
                 ) : (
-                  <HorizontaLDots className="size-6" />
+                  // Thay thế HorizontaLDots bằng MoreHorizontal
+                  <MoreHorizontal className="size-6" />
                 )}
               </h2>
               {renderMenuItems(navItems, "main")}
-            </div>
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>

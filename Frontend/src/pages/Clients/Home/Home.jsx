@@ -1,39 +1,14 @@
-import { useEffect, useState } from "react";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
-import api from "../../../utils/http";
+import { useHome } from "../../../contexts/HomeContext";
 
 export default function Home() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState([]);
-  const getData = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.get("/home");
-      if (res.data.status) {
-        const d = {
-          categories: res.data?.data?.categories ?? [],
-          banners: res.data?.data?.banners ?? [],
-          top: res.data?.data?.top ?? [],
-        };
-        setData({ ...d });
-      }
-      setIsLoading(false);
-    } catch (error) {
-      setIsLoading(false);
-      console.log(error);
-    }
-  };
-  useEffect(() => {
-    getData();
-  }, []);
-  if (isLoading) return <LoadingDomain />;
-
+  const { data } = useHome();
   return (
-    <div>
-      <div className="mt-4">
+    <div className="bg-gradient-header">
+      <div>
         <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
       </div>
       <div>

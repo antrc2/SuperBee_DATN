@@ -1,158 +1,18 @@
-import React, { useEffect, useState } from "react";
+"use client";
 
+import { useEffect, useState } from "react";
+import {
+  Wallet,
+  Filter,
+  Calendar,
+  Eye,
+  X,
+  CreditCard,
+  ArrowUpRight,
+  ArrowDownLeft,
+  ShoppingBag,
+} from "lucide-react";
 import api from "@utils/http";
-
-const MOCK_API_RESPONSE = [
-  {
-    id: 5,
-    username: "admin",
-    email: "admin@example.com",
-    email_verified_at: null,
-    phone: "0123456789",
-    avatar_url:
-      "https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg",
-    donate_code: "222fef5a-ac71-491e-8d70-939909e7075c",
-    web_id: 1,
-    status: 1,
-    created_at: "2025-06-09T05:40:21.000000Z",
-    updated_at: "2025-06-09T05:40:21.000000Z",
-    wallet: {
-      id: 3,
-      user_id: 5,
-      balance: "200",
-      currency: "VND",
-      created_at: "2025-06-09T05:40:21.000000Z",
-      updated_at: "2025-06-09T05:40:21.000000Z",
-      transactions: [
-        {
-          id: 1,
-          wallet_id: 3,
-          type: "recharge_bank",
-          amount: "100",
-          related_id: null,
-          related_type: null,
-          status: 1,
-          created_at: "2025-06-09T05:40:21.000000Z",
-          updated_at: "2025-06-09T05:40:21.000000Z",
-          withdraw: null,
-          recharge_bank: null,
-          recharge_card: null,
-          order: null,
-        },
-        {
-          id: 2,
-          wallet_id: 3,
-          type: "purchase",
-          amount: "30",
-          related_id: 1,
-          related_type: "App\\Models\\Order",
-          status: 1,
-          created_at: "2025-06-10T05:40:21.000000Z",
-          updated_at: "2025-06-10T05:40:21.000000Z",
-          withdraw: null,
-          recharge_bank: null,
-          recharge_card: null,
-          order: {
-            id: 2,
-            user_id: 5,
-            order_code: "435252452",
-            total_amount: "345353",
-            wallet_transaction_id: 2,
-            status: 1,
-            promo_code: "453",
-            discount_amount: "5345",
-            created_at: "2025-06-13T10:06:27.000000Z",
-            updated_at: "2025-06-13T10:06:28.000000Z",
-          },
-        },
-        {
-          id: 3,
-          wallet_id: 3,
-          type: "recharge_card",
-          amount: "100",
-          related_id: 3,
-          related_type: "App\\Models\\RechargeCard",
-          status: 1,
-          created_at: "2025-06-11T05:40:21.000000Z",
-          updated_at: "2025-06-11T05:40:21.000000Z",
-          withdraw: null,
-          recharge_bank: null,
-          recharge_card: {
-            id: 1,
-            wallet_transaction_id: 3,
-            user_id: 1,
-            web_id: 1,
-            amount: 100,
-            value: 100000,
-            declared_value: 100000,
-            telco: "Viettel",
-            serial: "VT123456789E4A",
-            code: "VTCODE987654321G4B",
-            status: 1,
-            message: "Card accepted",
-            donate_promotion_id: null,
-            created_at: "2025-06-09T05:40:21.000000Z",
-            updated_at: "2025-06-09T05:40:21.000000Z",
-          },
-          order: null,
-        },
-        {
-          id: 4,
-          wallet_id: 3,
-          type: "recharge_bank",
-          amount: "200",
-          related_id: 4,
-          related_type: "App\\Models\\RechargeBank",
-          status: 1,
-          created_at: "2025-06-12T05:40:21.000000Z",
-          updated_at: "2025-06-12T05:40:21.000000Z",
-          withdraw: null,
-          recharge_bank: {
-            id: 1,
-            wallet_transaction_id: 4,
-            user_id: 2,
-            web_id: 1,
-            amount: "200",
-            transaction_reference: "BANKTXN001-c6l15",
-            status: 1,
-            donate_promotion_id: null,
-            created_at: "2025-06-09T05:40:21.000000Z",
-            updated_at: "2025-06-09T05:40:21.000000Z",
-          },
-          recharge_card: null,
-          order: null,
-        },
-        {
-          id: 5,
-          wallet_id: 3,
-          type: "withdraw",
-          amount: "50",
-          related_id: null,
-          related_type: null,
-          status: 0,
-          created_at: "2025-06-13T05:40:21.000000Z",
-          updated_at: "2025-06-13T05:40:21.000000Z",
-          withdraw: {
-            id: 1,
-            wallet_transaction_id: 5,
-            user_id: 1,
-            amount: "50",
-            bank_account_number: "1234567890",
-            bank_name: "UserBank",
-            withdraw_code: "AWDFWAGDF65468",
-            note: "Withdrawal request",
-            status: 0,
-            created_at: "2025-06-09T05:40:21.000000Z",
-            updated_at: "2025-06-09T05:40:21.000000Z",
-          },
-          recharge_bank: null,
-          recharge_card: null,
-          order: null,
-        },
-      ],
-    },
-  },
-];
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -162,7 +22,6 @@ const formatDate = (dateString) => {
   return `${day}/${month}/${year}`;
 };
 
-// Định dạng tiền tệ
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -170,7 +29,6 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-// "Dịch" loại giao dịch sang tiếng Việt
 const translateTransactionType = (type) => {
   switch (type) {
     case "recharge_bank":
@@ -186,23 +44,35 @@ const translateTransactionType = (type) => {
   }
 };
 
-// Hiển thị trạng thái với màu sắc
+const getTransactionIcon = (type) => {
+  switch (type) {
+    case "recharge_bank":
+    case "recharge_card":
+      return <ArrowDownLeft className="h-4 w-4 text-green-400" />;
+    case "purchase":
+      return <ShoppingBag className="h-4 w-4 text-blue-400" />;
+    case "withdraw":
+      return <ArrowUpRight className="h-4 w-4 text-red-400" />;
+    default:
+      return <CreditCard className="h-4 w-4 text-slate-400" />;
+  }
+};
+
 const renderStatus = (status) => {
   if (status === 1) {
     return (
-      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+      <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
         Thành công
       </span>
     );
   }
   return (
-    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+    <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
       Đang xử lý
     </span>
   );
 };
 
-// --- Component Modal để xem chi tiết ---
 const TransactionDetailModal = ({ transaction, onClose }) => {
   if (!transaction) return null;
 
@@ -210,126 +80,212 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
     switch (transaction.type) {
       case "purchase":
         return (
-          <>
-            <h4 className="font-bold">Chi tiết đơn hàng</h4>
+          <div className="space-y-3">
+            <h4 className="font-bold text-white">Chi tiết đơn hàng</h4>
             {transaction.order ? (
-              <ul>
-                <li>Mã đơn hàng: {transaction.order.order_code}</li>
-                <li>
-                  Tổng tiền: {formatCurrency(transaction.order.total_amount)}
-                </li>
-                <li>Mã giảm giá: {transaction.order.promo_code}</li>
-                <li>
-                  Số tiền giảm:{" "}
-                  {formatCurrency(transaction.order.discount_amount)}
-                </li>
-              </ul>
+              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mã đơn hàng:</span>
+                  <span className="text-white font-mono">
+                    #{transaction.order.order_code}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Tổng tiền:</span>
+                  <span className="text-white font-medium">
+                    {formatCurrency(transaction.order.total_amount)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mã giảm giá:</span>
+                  <span className="text-white">
+                    {transaction.order.promo_code || "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Số tiền giảm:</span>
+                  <span className="text-red-400">
+                    {formatCurrency(transaction.order.discount_amount)}
+                  </span>
+                </div>
+              </div>
             ) : (
-              <p>Không có thông tin chi tiết.</p>
+              <p className="text-slate-400">Không có thông tin chi tiết.</p>
             )}
-          </>
+          </div>
         );
       case "recharge_card":
         return (
-          <>
-            <h4 className="font-bold">Chi tiết nạp thẻ</h4>
+          <div className="space-y-3">
+            <h4 className="font-bold text-white">Chi tiết nạp thẻ</h4>
             {transaction.recharge_card ? (
-              <ul>
-                <li>Nhà mạng: {transaction.recharge_card.telco}</li>
-                <li>
-                  Mệnh giá: {formatCurrency(transaction.recharge_card.value)}
-                </li>
-                <li>Serial: {transaction.recharge_card.serial}</li>
-                <li>Mã thẻ: {transaction.recharge_card.code}</li>
-                <li>Trạng thái: {transaction.recharge_card.message}</li>
-              </ul>
+              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Nhà mạng:</span>
+                  <span className="text-white">
+                    {transaction.recharge_card.telco}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mệnh giá:</span>
+                  <span className="text-white font-medium">
+                    {formatCurrency(transaction.recharge_card.value)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Serial:</span>
+                  <span className="text-white font-mono">
+                    {transaction.recharge_card.serial}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mã thẻ:</span>
+                  <span className="text-white font-mono">
+                    {transaction.recharge_card.code}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Trạng thái:</span>
+                  <span className="text-green-400">
+                    {transaction.recharge_card.message}
+                  </span>
+                </div>
+              </div>
             ) : (
-              <p>Không có thông tin chi tiết.</p>
+              <p className="text-slate-400">Không có thông tin chi tiết.</p>
             )}
-          </>
+          </div>
         );
       case "recharge_bank":
         return (
-          <>
-            <h4 className="font-bold">Chi tiết nạp qua ngân hàng</h4>
+          <div className="space-y-3">
+            <h4 className="font-bold text-white">Chi tiết nạp qua ngân hàng</h4>
             {transaction.recharge_bank ? (
-              <ul>
-                <li>
-                  Mã giao dịch ngân hàng:{" "}
-                  {transaction.recharge_bank.transaction_reference}
-                </li>
-              </ul>
+              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mã giao dịch:</span>
+                  <span className="text-white font-mono">
+                    {transaction.recharge_bank.transaction_reference}
+                  </span>
+                </div>
+              </div>
             ) : (
-              <p>Không có thông tin chi tiết.</p>
+              <p className="text-slate-400">Không có thông tin chi tiết.</p>
             )}
-          </>
+          </div>
         );
       case "withdraw":
         return (
-          <>
-            <h4 className="font-bold">Chi tiết rút tiền</h4>
+          <div className="space-y-3">
+            <h4 className="font-bold text-white">Chi tiết rút tiền</h4>
             {transaction.withdraw ? (
-              <ul>
-                <li>Ngân hàng: {transaction.withdraw.bank_name}</li>
-                <li>
-                  Số tài khoản: {transaction.withdraw.bank_account_number}
-                </li>
-                <li>Mã rút tiền: {transaction.withdraw.withdraw_code}</li>
-                <li>Ghi chú: {transaction.withdraw.note}</li>
-              </ul>
+              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ngân hàng:</span>
+                  <span className="text-white">
+                    {transaction.withdraw.bank_name}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Số tài khoản:</span>
+                  <span className="text-white font-mono">
+                    {transaction.withdraw.bank_account_number}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Mã rút tiền:</span>
+                  <span className="text-white font-mono">
+                    {transaction.withdraw.withdraw_code}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Ghi chú:</span>
+                  <span className="text-white">
+                    {transaction.withdraw.note}
+                  </span>
+                </div>
+              </div>
             ) : (
-              <p>Không có thông tin chi tiết.</p>
+              <p className="text-slate-400">Không có thông tin chi tiết.</p>
             )}
-          </>
+          </div>
         );
       default:
-        return <p>Không có thông tin chi tiết cho loại giao dịch này.</p>;
+        return (
+          <p className="text-slate-400">
+            Không có thông tin chi tiết cho loại giao dịch này.
+          </p>
+        );
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-      <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold">
-            Chi tiết giao dịch #{transaction.id}
-          </h3>
+    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center">
+      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-xl w-full max-w-md">
+        <div className="flex justify-between items-center p-6 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-700 rounded-lg">
+              {getTransactionIcon(transaction.type)}
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-white">
+                Chi tiết giao dịch
+              </h3>
+              <p className="text-slate-400 text-sm">#{transaction.id}</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-800"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-colors text-slate-400 hover:text-white"
           >
-            &times;
+            <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="space-y-4">
-          <div>
-            <strong>Ngày:</strong> {formatDate(transaction.created_at)}
+
+        <div className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <span className="text-slate-400 text-sm">Ngày:</span>
+              <p className="text-white font-medium">
+                {formatDate(transaction.created_at)}
+              </p>
+            </div>
+            <div>
+              <span className="text-slate-400 text-sm">Loại:</span>
+              <p className="text-white font-medium">
+                {translateTransactionType(transaction.type)}
+              </p>
+            </div>
           </div>
+
           <div>
-            <strong>Loại:</strong> {translateTransactionType(transaction.type)}
-          </div>
-          <div>
-            <strong>Số tiền:</strong>{" "}
-            <span
-              className={
+            <span className="text-slate-400 text-sm">Số tiền:</span>
+            <p
+              className={`text-xl font-bold ${
                 transaction.type.includes("recharge")
-                  ? "text-green-600"
-                  : "text-red-600"
-              }
+                  ? "text-green-400"
+                  : "text-red-400"
+              }`}
             >
+              {transaction.type.includes("recharge") ? "+" : "-"}{" "}
               {formatCurrency(transaction.amount)}
-            </span>
+            </p>
           </div>
+
           <div>
-            <strong>Trạng thái:</strong> {renderStatus(transaction.status)}
+            <span className="text-slate-400 text-sm">Trạng thái:</span>
+            <div className="mt-1">{renderStatus(transaction.status)}</div>
           </div>
-          <hr />
-          <div className="text-sm">{renderDetails()}</div>
+
+          <hr className="border-slate-700" />
+
+          {renderDetails()}
         </div>
-        <div className="mt-6 text-right">
+
+        <div className="p-6 border-t border-slate-700 bg-slate-800/50">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+            className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
           >
             Đóng
           </button>
@@ -339,34 +295,23 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
   );
 };
 
-// --- Component chính ---
 export default function TransactionHistoryPage() {
-  // State để lưu trữ toàn bộ giao dịch gốc từ API
   const [allTransactions, setAllTransactions] = useState([]);
-  // State để lưu trữ các giao dịch đã được lọc để hiển thị
   const [filteredTransactions, setFilteredTransactions] = useState([]);
-  // State cho các giá trị của bộ lọc
   const [filters, setFilters] = useState({
     type: "all",
     status: "all",
     startDate: "",
     endDate: "",
   });
-  // State để điều khiển modal chi tiết
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  // Lấy dữ liệu khi component được mount
   useEffect(() => {
     const getTransactions = async () => {
       try {
-        // --- Thay thế đoạn này bằng API call thật của bạn ---
-        // const res = await api.get("/user/history-trans");
-        // const transactionsData = res.data[0]?.wallet?.transactions || [];
         const res = await api.get("/user/history-trans");
-        // Dùng dữ liệu giả lập
         const transactionsData = res?.data[0]?.wallet?.transactions || [];
 
-        // Sắp xếp giao dịch mới nhất lên đầu
         const sortedTransactions = transactionsData.sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
@@ -375,36 +320,29 @@ export default function TransactionHistoryPage() {
         setFilteredTransactions(sortedTransactions);
       } catch (error) {
         console.log(error);
-        // Có thể thêm state để hiển thị lỗi cho người dùng
       }
     };
     getTransactions();
   }, []);
 
-  // Lọc lại danh sách giao dịch mỗi khi `filters` hoặc `allTransactions` thay đổi
   useEffect(() => {
     let result = [...allTransactions];
 
-    // Lọc theo loại giao dịch
     if (filters.type !== "all") {
       result = result.filter((t) => t.type === filters.type);
     }
 
-    // Lọc theo trạng thái
     if (filters.status !== "all") {
       result = result.filter((t) => t.status.toString() === filters.status);
     }
 
-    // Lọc theo ngày bắt đầu
     if (filters.startDate) {
       result = result.filter(
         (t) => new Date(t.created_at) >= new Date(filters.startDate)
       );
     }
 
-    // Lọc theo ngày kết thúc
     if (filters.endDate) {
-      // Thêm 1 ngày để bao gồm cả ngày kết thúc
       const endDate = new Date(filters.endDate);
       endDate.setDate(endDate.getDate() + 1);
       result = result.filter((t) => new Date(t.created_at) < endDate);
@@ -427,25 +365,36 @@ export default function TransactionHistoryPage() {
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Lịch sử giao dịch</h1>
+    <div className="container mx-auto p-6">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-3 mb-2">
+          <div className="p-2 bg-slate-700 rounded-lg">
+            <Wallet className="h-6 w-6 text-blue-400" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-white">Lịch sử giao dịch</h1>
+            <p className="text-slate-400">Theo dõi các giao dịch ví của bạn</p>
+          </div>
+        </div>
+      </div>
 
-      {/* --- Khu vực bộ lọc --- */}
-      <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+      {/* Filters */}
+      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter className="h-5 w-5 text-slate-400" />
+          <h3 className="font-medium text-white">Bộ lọc</h3>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label
-              htmlFor="type"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Loại giao dịch
             </label>
             <select
-              id="type"
               name="type"
               value={filters.type}
               onChange={handleFilterChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">Tất cả</option>
               <option value="recharge_bank">Nạp tiền (Ngân hàng)</option>
@@ -455,18 +404,14 @@ export default function TransactionHistoryPage() {
             </select>
           </div>
           <div>
-            <label
-              htmlFor="status"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-slate-300 mb-2">
               Trạng thái
             </label>
             <select
-              id="status"
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             >
               <option value="all">Tất cả</option>
               <option value="1">Thành công</option>
@@ -474,107 +419,111 @@ export default function TransactionHistoryPage() {
             </select>
           </div>
           <div>
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              <Calendar className="h-4 w-4 inline mr-1" />
               Từ ngày
             </label>
             <input
               type="date"
-              id="startDate"
               name="startDate"
               value={filters.startDate}
               onChange={handleFilterChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
           <div>
-            <label
-              htmlFor="endDate"
-              className="block text-sm font-medium text-gray-700"
-            >
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              <Calendar className="h-4 w-4 inline mr-1" />
               Đến ngày
             </label>
             <input
               type="date"
-              id="endDate"
               name="endDate"
               value={filters.endDate}
               onChange={handleFilterChange}
-              className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
           </div>
         </div>
       </div>
 
-      {/* --- Bảng dữ liệu --- */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Ngày
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Loại
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Số tiền
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Chi tiết
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredTransactions.length > 0 ? (
-              filteredTransactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {formatDate(transaction.created_at)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {translateTransactionType(transaction.type)}
-                  </td>
-                  <td
-                    className={`px-6 py-4 whitespace-nowrap font-semibold ${
-                      transaction.type.includes("recharge")
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
+      {/* Table */}
+      <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full">
+            <thead className="bg-slate-700/50 border-b border-slate-700">
+              <tr>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                  Ngày
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                  Loại
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                  Số tiền
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                  Trạng thái
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
+                  Chi tiết
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700">
+              {filteredTransactions.length > 0 ? (
+                filteredTransactions.map((transaction) => (
+                  <tr
+                    key={transaction.id}
+                    className="hover:bg-slate-700/30 transition-colors"
                   >
-                    {transaction.type.includes("recharge") ? "+" : "-"}{" "}
-                    {formatCurrency(transaction.amount)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {renderStatus(transaction.status)}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <button
-                      onClick={() => handleViewDetails(transaction)}
-                      className="text-indigo-600 hover:text-indigo-900 font-medium"
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-300">
+                      {formatDate(transaction.created_at)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-2">
+                        {getTransactionIcon(transaction.type)}
+                        <span className="text-white">
+                          {translateTransactionType(transaction.type)}
+                        </span>
+                      </div>
+                    </td>
+                    <td
+                      className={`px-6 py-4 whitespace-nowrap font-semibold ${
+                        transaction.type.includes("recharge")
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
                     >
-                      Xem
-                    </button>
+                      {transaction.type.includes("recharge") ? "+" : "-"}{" "}
+                      {formatCurrency(transaction.amount)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {renderStatus(transaction.status)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <button
+                        onClick={() => handleViewDetails(transaction)}
+                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Xem
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="text-center py-10 text-slate-400">
+                    Không tìm thấy giao dịch nào.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center py-10 text-gray-500">
-                  Không tìm thấy giao dịch nào.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      {/* --- Modal chi tiết --- */}
       <TransactionDetailModal
         transaction={selectedTransaction}
         onClose={handleCloseModal}

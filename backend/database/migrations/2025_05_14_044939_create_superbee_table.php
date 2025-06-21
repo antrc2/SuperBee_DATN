@@ -39,9 +39,37 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->nullable(); // Người tạo/quản lý web con, không thể null
             $table->string('api_key', 255); // API Key bắt buộc
             $table->integer('status')->default(0); // Mặc định k hoạt động
+            $table->boolean('is_customized')->default(false); // Mặc định chưa tùy chỉnh
             $table->timestamps();
         });
+        // cấu hình các thông số của web 
+        Schema::create('business_settings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('shop_name');
+            $table->string('slogan')->nullable();
+            $table->string('logo_url')->nullable();
+            $table->string('favicon_url')->nullable();
+            $table->string('phone_number')->nullable();
+            $table->string('email')->nullable();
+            $table->string('address')->nullable();
+            $table->string('zalo_link')->nullable();
+            $table->string('facebook_link')->nullable();
+            $table->string('template_name')->default('default');
+            $table->json('header_settings')->nullable();
+            $table->json('footer_settings')->nullable();
+            $table->timestamps();
+        });
+        Schema::table('webs', function (Blueprint $table) {
+            // Thêm cột business_settings_id
+            $table->unsignedBigInteger('business_settings_id')->nullable()->after('is_customized'); // hoặc vị trí nào bạn muốn
 
+            // Định nghĩa khóa ngoại
+            $table->foreign('business_settings_id')
+                ->references('id')
+                ->on('business_settings')
+                ->onDelete('cascade');
+        });
         // Bảng categories (Danh mục của web mẹ)
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
@@ -235,7 +263,7 @@ return new class extends Migration
             $table->string('bank_account_number', 50); // Số tài khoản nhận
             $table->string('bank_name', 100); // Tên ngân hàng nhận
             // $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
-            $table->string("withdraw_code",16)->unique();
+            $table->string("withdraw_code", 16)->unique();
             $table->text('note')->nullable(); // Ghi chú thêm
             $table->integer('status')->default(0); // Trạng thái (0: pending, 1: completed, 2: rejected)
             $table->timestamps();
@@ -416,6 +444,7 @@ return new class extends Migration
         Schema::dropIfExists('comments');
         Schema::dropIfExists('posts');
         Schema::dropIfExists('system_logs');
+        Schema::dropIfExists('business_settings');
         // Schema::dropIfExists('promotion_usages');
         Schema::dropIfExists('domate_promotions');
         Schema::dropIfExists('promotions');
@@ -428,6 +457,11 @@ return new class extends Migration
         Schema::dropIfExists('orders');
         Schema::dropIfExists('cart_items');
         Schema::dropIfExists('carts');
+        Schema::table('webs', function (Blueprint $table) {
+            // Hủy bỏ khóa ngoại trước khi xóa cột
+            $table->dropForeign(['business_settings_id']);
+            $table->dropColumn('business_settings_id');
+        });
         // Schema::dropIfExists('general_complaints'); // Bảng mới
         Schema::dropIfExists('product_reports');
         Schema::dropIfExists('reviews');

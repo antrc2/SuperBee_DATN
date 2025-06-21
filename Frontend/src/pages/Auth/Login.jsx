@@ -1,93 +1,92 @@
-// src/components/LoginForm.jsx
+// LoginForm.jsx - Chỉ xử lý UI và gọi AuthContext
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@assets/icons";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { ChevronLeft, EyeOff, Eye } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext.jsx";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
-// import { decodeData } from "../../utils/hook"; // <-- Không cần import decodeData ở đây nữa
+import { checkLocation } from "../../utils/hook";
 
 export default function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Không cần setUser và navigator ở đây nữa vì AuthContext đã tự xử lý sau login
-  const { login, loading, error, user } = useAuth();
-
+  const [passwordType, setPasswordType] = useState("password");
+  const { login, loading, user } = useAuth();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
     formState: { errors },
+    setError,
     clearErrors,
-    trigger,
-    watch,
-    setError: setFormError, // Đổi tên để tránh xung đột với error từ useAuth
   } = useForm();
 
-  const username = watch("username");
-  const password = watch("password");
+  // Redirect if already logged in
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const onSubmit = async (data) => {
+    // Clear any previous form errors
     clearErrors();
-    try {
-      const result = await login(data); // Gọi hàm login từ AuthContext
 
-      if (!result.success) {
-        // AuthContext đã tự set error nếu login thất bại, bạn có thể display nó
-        // hoặc nếu muốn có lỗi validation riêng cho form thì dùng setFormError ở đây
-        // setFormError("general", {
-        //   type: "manual",
-        //   message: result.message || "Đăng nhập thất bại. Vui lòng thử lại."
-        // });
-      } else {
-        // Không cần làm gì ở đây vì AuthContext đã xử lý setUser và navigate
-        // alert("Đăng nhập thành công!"); // Có thể bỏ alert này
-      }
-    } catch (err) {
-      // Lỗi này chỉ xảy ra nếu hàm login trong AuthContext ném lỗi,
-      // chứ không phải trả về result.success: false
-      console.error("Login form submission error:", err);
-      setFormError("general", {
-        type: "manual",
-        message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
+    // Call login function from AuthContext
+    const result = await login(data);
+
+    // Handle validation errors from server if any
+    if (!result.success && result.validationErrors) {
+      Object.entries(result.validationErrors).forEach(([field, messages]) => {
+        setError(field, {
+          type: "server",
+          message: Array.isArray(messages) ? messages[0] : messages,
+        });
       });
+    }
+
+    // All other error handling (notifications, navigation) is done in AuthContext
+    // We only need to check if login was successful for any additional UI updates
+    if (result.success) {
+      const savedLocation = checkLocation();
+      if (savedLocation) {
+        localStorage.removeItem("location");
+        window.location.href = `${savedLocation}`;
+      } else {
+        navigate("/");
+      }
+    } else {
+      console.log("Login failed");
     }
   };
 
-  if (loading) {
-    return <LoadingDomain />;
-  }
+  if (loading) return <LoadingDomain />;
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon className="size-5" />
+          <ChevronLeft className="size-5" /> {/* Updated icon */}
           Back to dashboard
         </Link>
       </div>
+
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+            <h1 className="mb-2 font-semibold text-white text-title-sm dark:text-white/90 sm:text-title-md">
               Sign In
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-50 dark:text-gray-400">
               Enter your email and password to sign in!
             </p>
           </div>
-
-          {/* Display General Login Error (using error from useAuth) */}
+          {/* 
           {error && (
             <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
               <p>{error.message}</p>
             </div>
-          )}
+          )} */}
 
-          {/* Display User Data on Success (using user from useAuth) - this will now be handled by the main app layout */}
           {user && (
             <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">
               <h3 className="mb-2 text-lg font-semibold text-green-800 dark:text-green-100">
@@ -99,11 +98,11 @@ export default function LoginForm() {
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
-              {/* Username Field */}
+              {/* Username */}
               <div className="sm:col-span-1">
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   User Name<span className="text-error-500">*</span>
                 </label>
@@ -118,8 +117,11 @@ export default function LoginForm() {
                       value: 3,
                       message: "Username must be at least 3 characters",
                     },
-                    onChange: () => trigger("username"),
                   })}
+                  onChange={(e) => {
+                    clearErrors("username");
+                    register("username").onChange(e); // Ensure react-hook-form's onChange is still called
+                  }}
                 />
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
@@ -128,17 +130,17 @@ export default function LoginForm() {
                 )}
               </div>
 
-              {/* Password Field */}
+              {/* Password */}
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   Password<span className="text-error-500">*</span>
                 </label>
                 <div className="relative">
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={passwordType}
                     id="password"
                     placeholder="Enter your password"
                     className="block w-full px-4 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand-500 dark:focus:border-brand-500 pr-10"
@@ -148,17 +150,24 @@ export default function LoginForm() {
                         value: 6,
                         message: "Password must be at least 6 characters",
                       },
-                      onChange: () => trigger("password"),
                     })}
+                    onChange={(e) => {
+                      clearErrors("password");
+                      register("password").onChange(e); // Ensure react-hook-form's onChange is still called
+                    }}
                   />
                   <span
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() =>
+                      setPasswordType((prev) =>
+                        prev === "password" ? "text" : "password"
+                      )
+                    }
                     className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
-                    {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                    {passwordType === "password" ? (
+                      <EyeOff className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <Eye className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
                     )}
                   </span>
                 </div>
@@ -169,12 +178,12 @@ export default function LoginForm() {
                 )}
               </div>
 
-              {/* Submit Button */}
+              {/* Submit */}
               <div>
                 <button
                   type="submit"
                   className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading} // Sử dụng `loading` từ useAuth
+                  disabled={loading}
                 >
                   {loading ? (
                     <span className="flex items-center">
@@ -208,8 +217,9 @@ export default function LoginForm() {
             </div>
           </form>
 
+          {/* Đăng ký */}
           <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+            <p className="text-sm font-normal text-center text-gray-50 dark:text-gray-100 sm:text-start">
               Don&apos;t have an account?{" "}
               <Link
                 to="/auth/register"

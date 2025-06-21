@@ -48,14 +48,14 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     fetchCartItems();
-  }, [fetchCartItems]);
+  }, [fetchCartItems, user]);
 
   const handleAddToCart = useCallback(
     async (product) => {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
-        localStorage.setItem("location", `acc/${product.sku}`);
-        return { success: false, message: "Not logged in" };
+        localStorage.setItem("location", `/acc/${product.sku}`);
+        return navigator("/auth/login");
       }
       if (!product) return;
       const payload = { product_id: product.id };
@@ -87,7 +87,7 @@ export function CartProvider({ children }) {
         setLoadingCart(false);
       }
     },
-    [cartItems, isLoggedIn, pop]
+    [cartItems, isLoggedIn, navigator, pop]
   );
   // Hàm xóa một sản phẩm khỏi giỏ hàng
   const removeItem = useCallback(
@@ -98,6 +98,7 @@ export function CartProvider({ children }) {
         setCartItems((prevItems) =>
           prevItems.filter((item) => item.id !== itemId)
         );
+        pop("Xóa sản phẩm thành công", "s");
       } catch (error) {
         console.error(`Lỗi khi xóa sản phẩm ${itemId}:`, error);
         pop("Xóa sản phẩm thất bại, vui lòng thử lại.", "e");
@@ -109,8 +110,8 @@ export function CartProvider({ children }) {
     async (product) => {
       if (!isLoggedIn) {
         pop("Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.", "i");
-        localStorage.setItem("location", `acc/${product.sku}`);
-        return { success: false, message: "Not logged in" };
+        localStorage.setItem("location", `/acc/${product.sku}`);
+        return navigator("/auth/login");
       }
       if (!product) return;
       const payload = { product_id: product.id };
@@ -124,19 +125,38 @@ export function CartProvider({ children }) {
         if (res.data.status) {
           navigator("/cart");
         } else {
-          alert(res.data.message);
+          pop(res.data.message, "e");
         }
       } catch (err) {
-        // Bắt lỗi chính xác từ BE trả về
         if (err.response?.data?.message) {
-          alert(err.response.data.message);
+          pop(err.response.data.message, "e");
         } else {
-          alert("❌ Lỗi hệ thống, vui lòng thử lại sau.");
+          pop("❌ Lỗi hệ thống, vui lòng thử lại sau.", "e");
         }
       }
     },
-    [cartItems, isLoggedIn, pop]
+    [cartItems, isLoggedIn, navigator, pop]
   );
+  const handleUpdateSave = async (product_id) => {
+    setLoadingCart(true);
+    try {
+      const trueKeys = Object.keys(product_id).filter(
+        (key) => product_id[key] === true
+      );
+      const res = await api.post("/carts/save", {
+        cart_item_id: trueKeys,
+      });
+      if (res?.data?.status) {
+        navigator("/pay");
+      } else {
+        pop(res?.data?.message || "Lỗi", "e");
+      }
+      setLoadingCart(false);
+    } catch (error) {
+      setLoadingCart(false);
+      console.error(error);
+    }
+  };
 
   // Cung cấp cả state và các hàm để thao tác với state
   const value = {
@@ -147,6 +167,7 @@ export function CartProvider({ children }) {
     fetchCartItems,
     removeItem,
     handleAddToCart,
+    handleUpdateSave,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

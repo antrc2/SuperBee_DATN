@@ -12,6 +12,8 @@ import {
   Pay,
 } from "@pages";
 import {
+  ActivateWebPage,
+  ActiveAcc,
   EmailVerification,
   ForgotPassword,
   HistoryOrder,
@@ -85,6 +87,14 @@ export const clientModules = [
   {
     path: "/forgot-password",
     view: ForgotPassword,
+  },
+  {
+    path: "/activeAcc",
+    view: ActiveAcc,
+  },
+  {
+    path: "/activeWeb",
+    view: ActivateWebPage,
   },
 ];
 

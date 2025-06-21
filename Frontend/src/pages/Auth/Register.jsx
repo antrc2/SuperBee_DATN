@@ -1,26 +1,28 @@
-import { useState, useEffect } from "react";
-import { useForm } from
- "react-hook-form";
-import { Link, useLocation } from "react-router-dom"; // Import useLocation
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@assets/icons";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { Link, useLocation } from "react-router-dom";
+import { ChevronLeft, EyeOff, Eye } from "lucide-react"; // Updated import
 import { useAuth } from "@contexts/AuthContext.jsx";
-import LoadingDomain from "../../components/Loading/LoadingDomain"; // Assuming this path is correct
+import LoadingDomain from "../../components/Loading/LoadingDomain";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false); // For terms and conditions checkbox
 
-  const { register: authRegister, loading, error, user } = useAuth(); // Renamed register to authRegister to avoid conflict
-  const location = useLocation(); // Get current URL location
+  const { register: authRegister, loading, error: errorBE, user } = useAuth();
+  console.log("🚀 ~ SignUpForm ~ error:", errorBE?.message);
+  const location = useLocation();
 
   const {
-    register, // This is react-hook-form's register
+    register,
     handleSubmit,
     formState: { errors },
-    clearErrors,
-    trigger,
-    setError: setFormError // Renamed to avoid conflict with error from useAuth
-  } = useForm();
+    clearErrors, // Keep clearErrors for specific field clearing on change
+    setError: setFormError,
+  } = useForm({
+    // By default, validation on submit. No need to explicitly set mode: "onSubmit" here
+    // unless you want to override a global default or a parent's useForm config.
+    // The default behavior for handleSubmit is to validate on submit.
+  });
 
   // Function to extract 'aff' parameter from URL
   const getAffiliateId = () => {
@@ -29,30 +31,35 @@ export default function SignUpForm() {
   };
 
   const onSubmit = async (data) => {
-    clearErrors(); // Clear all errors from react-hook-form
-    // setFormError("general", { type: "manual", message: "" }); // Optionally reset general form error
-    const affiliateId = getAffiliateId(); // Get affiliate ID from URL
-    getAffiliateId();
-    try {
-      const result = await authRegister({ ...data, aff: affiliateId }); // Call authRegister from AuthContext
+    // This clearErrors() will clear ALL form errors right before submission attempt.
+    // This is useful if you had any manual errors set previously.
+    // However, react-hook-form will re-evaluate all fields on submit,
+    // so it's often not strictly necessary if you rely on RHF's internal validation.
+    // For server errors, you'll still set them manually.
+    clearErrors();
 
-      if (!result.success) {
-        // AuthContext already sets the error, you can display it directly
-        // or set a specific form error if needed for individual fields
-        // setFormError("general", {
-        //   type: "manual",
-        //   message: result.message || "Đăng ký thất bại. Vui lòng thử lại."
-        // });
-      } else {
-        // AuthContext handles user setting and navigation on successful registration
-      }
+    const affiliateId = getAffiliateId();
+    // No need to call getAffiliateId() twice here
+    try {
+      await authRegister({ ...data, aff: affiliateId });
     } catch (err) {
       console.error("Register form submission error:", err);
-      setFormError("general", {
-        type: "manual",
-        message:
-          err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại."
-      });
+      // Assuming errorBE.message contains server-side validation errors
+      // in an object format like { username: ["message"], email: ["message"] }
+      if (err.message && typeof err.message === "object") {
+        Object.entries(err.message).forEach(([field, messages]) => {
+          setFormError(field, {
+            type: "server",
+            message: messages[0],
+          });
+        });
+      } else {
+        setFormError("general", {
+          type: "manual",
+          message:
+            err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
+        });
+      }
     }
   };
 
@@ -65,30 +72,22 @@ export default function SignUpForm() {
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
         >
-          <ChevronLeftIcon className="size-5" />
+          <ChevronLeft className="size-5" /> {/* Updated icon */}
           Back to dashboard
         </Link>
       </div>
       <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+            <h1 className="mb-2 font-semibold text-white text-title-sm dark:text-white/90 sm:text-title-md">
               Sign Up
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-50 dark:text-gray-400">
               Enter your email and password to sign up!
             </p>
           </div>
-
-          {/* Display General Registration Error (using error from useAuth) */}
-          {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
-              <p>{error.message}</p>
-            </div>
-          )}
-
           {/* Display User Data on Success (using user from useAuth) - This will likely be handled by a redirect */}
           {user && (
             <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">
@@ -102,13 +101,29 @@ export default function SignUpForm() {
             </div>
           )}
 
+          {/* Display general backend errors */}
+          {errorBE && !errors.username && !errors.email && !errors.password && (
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
+              <p>
+                {errorBE.message && typeof errorBE.message === "string"
+                  ? errorBE.message
+                  : "Đã xảy ra lỗi khi đăng ký."}
+              </p>
+            </div>
+          )}
+          {errors.general && (
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
+              <p>{errors.general.message}</p>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
               {/* Username Field */}
               <div className="sm:col-span-1">
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   User Name<span className="text-error-500">*</span>
                 </label>
@@ -121,14 +136,22 @@ export default function SignUpForm() {
                     required: "Username is required",
                     minLength: {
                       value: 3,
-                      message: "Username must be at least 3 characters"
+                      message: "Username must be at least 3 characters",
                     },
-                    onChange: () => trigger("username")
                   })}
+                  // Clear errors for this field when user starts typing again
+                  onChange={() => clearErrors("username")}
                 />
+                {/* Display react-hook-form validation errors */}
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
+                  </p>
+                )}
+                {/* Display specific backend username error if any and no client error */}
+                {errorBE?.message?.username && !errors.username && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message.username[0]}
                   </p>
                 )}
               </div>
@@ -137,7 +160,7 @@ export default function SignUpForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   Email<span className="text-error-500">*</span>
                 </label>
@@ -150,14 +173,22 @@ export default function SignUpForm() {
                     required: "Email is required",
                     pattern: {
                       value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                      message: "Invalid email address"
+                      message: "Invalid email address",
                     },
-                    onChange: () => trigger("email")
                   })}
+                  // Clear errors for this field when user starts typing again
+                  onChange={() => clearErrors("email")}
                 />
+                {/* Display react-hook-form validation errors */}
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.email.message}
+                  </p>
+                )}{" "}
+                {/* Display specific backend email error if any and no client error */}
+                {errorBE?.message?.email && !errors.email && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message.email[0]}
                   </p>
                 )}
               </div>
@@ -166,7 +197,7 @@ export default function SignUpForm() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
                 >
                   Password<span className="text-error-500">*</span>
                 </label>
@@ -180,67 +211,50 @@ export default function SignUpForm() {
                       required: "Password is required",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters"
+                        message: "Password must be at least 6 characters",
                       },
-                      onChange: () => trigger("password")
                     })}
+                    // Clear errors for this field when user starts typing again
+                    onChange={() => clearErrors("password")}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
                     {showPassword ? (
-                      <EyeIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <Eye className="fill-gray-500 dark:fill-gray-400 size-5" />
                     ) : (
-                      <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400 size-5" />
+                      <EyeOff className="fill-gray-500 dark:fill-gray-400 size-5" />
                     )}
                   </span>
                 </div>
+                {/* Display react-hook-form validation errors */}
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.password.message}
                   </p>
                 )}
+                {/* Display specific backend password error if any and no client error */}
+                {errorBE?.message?.password && !errors.password && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errorBE.message.password[0]}
+                  </p>
+                )}
               </div>
 
-              {/* Terms and Conditions Checkbox */}
-              {/* <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="terms"
-                  className="w-5 h-5"
-                  checked={isChecked}
-                  onChange={() => setIsChecked(!isChecked)}
-                  {...register("termsAccepted", {
-                    required: "You must accept the terms and conditions"
-                  })}
-                />
-                {/* <label
-                  htmlFor="terms"
-                  className="inline-block font-normal text-gray-500 dark:text-gray-400"
-                >
-                  By creating an account means you agree to the{" "}
-                  <span className="text-gray-800 dark:text-white/90">
-                    Terms and Conditions,
-                  </span>{" "}
-                  and our{" "}
-                  <span className="text-gray-800 dark:text-white">
-                    Privacy Policy
-                  </span>
-                </label> */}
-              {/* </div> */}
-              {errors.termsAccepted && (
+              {/* No termsAccepted field in original code, removed the error display for it */}
+              {/* {errors.termsAccepted && (
                 <p className="mt-1 text-sm text-red-500">
                   {errors.termsAccepted.message}
                 </p>
-              )}
+              )} */}
 
               {/* Submit Button */}
               <div>
                 <button
                   type="submit"
                   className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading} // Disable if loading or terms not accepted
+                  disabled={loading} // Disable if loading
                 >
                   {loading ? (
                     <span className="flex items-center">
@@ -275,7 +289,7 @@ export default function SignUpForm() {
           </form>
 
           <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+            <p className="text-sm font-normal text-center text-gray-50 dark:text-gray-400 sm:text-start">
               Already have an account?{" "}
               <Link
                 to="/auth/login"

@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useGet } from "@utils/hook";
 import api from "@utils/http";
 import {
   Card,
@@ -23,6 +22,8 @@ import {
   ChevronRightIcon,
 } from "@heroicons/react/24/outline";
 
+import Image from "@components/Client/Image/Image.jsx"
+
 const CategoryPage = () => {
   const navigate = useNavigate();
   const [deleteId, setDeleteId] = useState(null);
@@ -30,14 +31,25 @@ const CategoryPage = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState(null);
   const [expandedCategories, setExpandedCategories] = useState(new Set());
+  const [categoriesData, setCategoriesData] = useState();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState();
 
-  const {
-    data: categoriesData,
-    loading,
-    error,
-    refetch,
-  } = useGet("/admin/categories");
-
+  const getCategories = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get("/admin/categories");
+      setCategoriesData(res?.data);
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setError(error);
+      console.log(error);
+    }
+  };
+  useEffect(() => {
+    getCategories();
+  }, []);
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => {
       const newSet = new Set(prev);
@@ -79,8 +91,8 @@ const CategoryPage = () => {
 
           categoriesData.data = updatedCategories;
         }
+        getCategories();
 
-        refetch();
       }
     } catch (error) {
       setDeleteError(
@@ -103,8 +115,8 @@ const CategoryPage = () => {
             {/* Image Column */}
             <div className="w-16 h-16 flex-shrink-0 mr-4">
               {category.image_url ? (
-                <img
-                  src={`${import.meta.env.VITE_BACKEND_IMG}${
+                <Image
+                  url={`${
                     category.image_url
                   }`}
                   alt={category.name}
@@ -166,7 +178,7 @@ const CategoryPage = () => {
               <div
                 className="text-sm text-gray-600 truncate"
                 title={category.created_by || "N/A"}
-              >
+              > 
                 {category.created_by || "N/A"}
               </div>
             </div>

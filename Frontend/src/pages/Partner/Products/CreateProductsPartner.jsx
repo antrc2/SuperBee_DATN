@@ -5,7 +5,7 @@ import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; /
 import api from "@utils/http";
 import { ArrowLeft } from "lucide-react";
 
-export default function CreateProducts() {
+export default function CreateProductsPartner() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -14,13 +14,13 @@ export default function CreateProducts() {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.post("/admin/products", formData, {
+      const response = await api.post("/partner/products", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
       if (response.status === 201 || response.status === 200) {
-        navigate("/admin/products");
+        navigate("/partner/products");
       }
       return response.data;
     } catch (err) {
@@ -46,7 +46,7 @@ export default function CreateProducts() {
             Quay lại danh sách
           </Link>
         </div>
-        <h2 className="text-2xl font-semibold mb-4 ml-4 mt-3 text-gray-700">
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
           Thêm sản phẩm mới
         </h2>
       </div>

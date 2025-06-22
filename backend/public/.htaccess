@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    <FilesMatch "\.(png|jpe?g|gif|svg|webp|ico|bmp|pdf)$">
+    Require all granted
+    </FilesMatch>
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

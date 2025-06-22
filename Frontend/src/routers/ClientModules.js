@@ -14,6 +14,7 @@ import {
 import {
   ActivateWebPage,
   ActiveAcc,
+  ChatComponent,
   EmailVerification,
   ForgotPassword,
   HistoryOrder,
@@ -42,7 +43,7 @@ export const clientModules = [
   // Trang danh sách category con
   {
     path: "/mua-acc",
-    view: ShopAccount,
+    view: ChatComponent,
     requiresAuth: false,
   },
   // Trang chi tiết của một category con gồm list sản phẩm

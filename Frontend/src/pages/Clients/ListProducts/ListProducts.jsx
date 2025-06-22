@@ -12,6 +12,7 @@ export default function ListProducts() {
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState([]);
   const [category, setCategory] = useState({});
+  console.log("🚀 ~ ListProducts ~ category:", category);
   const getData = async () => {
     try {
       setIsLoading(true);

@@ -13,12 +13,14 @@ import ErrorPage from "./pages/Error/ErrorPage";
 import ActiveDomain from "./pages/Clients/ActiveDomain/ActiveDomain";
 import { CartProvider } from "./contexts/CartContexts.jsx";
 import { HomeProvider } from "./contexts/HomeContext.jsx";
+import partnerRoutes from "./routers/Partner.jsx";
 function AppRoutes() {
   const { authStatus, combinedError, enterKey, retryDomain } = useAuth();
   const appRoutes = useRoutes([
     ...authRoutes,
     ...clientRoutes,
     ...adminRoutes,
+    ...partnerRoutes,
     ...profileRoutes,
   ]);
 

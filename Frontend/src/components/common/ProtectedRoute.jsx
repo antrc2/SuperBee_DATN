@@ -6,6 +6,7 @@ import { hasRequiredRole } from "@utils/tokenUtils";
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
   const isAllowed = hasRequiredRole(allowedRoles);
+console.log("ProtectedRoute isAllowed:", isAllowed, "allowedRoles:", allowedRoles);
 
   if (!isAllowed) {
     return <Navigate to="/not-authorized" replace />;

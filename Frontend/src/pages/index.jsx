@@ -23,6 +23,12 @@ import CreateProducts from "./Admin/Products/CreateProducts";
 import HistoryOrder from "./Clients/Profile/HistoryOrder";
 import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
 import ProductDetailPage from "./Admin/Products/ProductDetailPage";
+import ProductsBrowse from "./Admin/Products/ProductsBrowse";
+
+import TrangDanhSachAccGamePartner from "./Partner/Products/TrangDanhSachAccGame";
+import ProductDetailPagePartner from "./Partner/Products/ProductDetailPagePartner";
+import EditProductsPartner from "./Partner/Products/EditProductsPartner";
+import CreateProductsPartner from "./Partner/Products/CreateProductsPartner";
 
 // AUTH
 import Login from "./Auth/Login";
@@ -93,4 +99,10 @@ export {
   EditBanner,
   BannersPageLayout,
   TrangDanhSachAccGame,
+  TrangDanhSachAccGamePartner,
+  ProductDetailPagePartner,
+  EditProductsPartner,
+  CreateProductsPartner,
+  ProductsBrowse
+
 };

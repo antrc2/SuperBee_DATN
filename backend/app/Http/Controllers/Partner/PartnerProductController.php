@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Admin;
+namespace App\Http\Controllers\Partner;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
@@ -12,61 +12,12 @@ use Aws\Glacier\TreeHash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-class AdminProductController extends Controller
+class PartnerProductController extends Controller
 {
     public function index(Request $request)
     {
         // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
-        $query = Product::query()->where("status", "!=", 2)->with(['category', 'images', 'gameAttributes']);
-
-        try {
-            // Lọc theo danh mục sản phẩm (category_id)
-            // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->input('category_id'));
-            }
-
-            // Lọc theo giá tối thiểu (price_min)
-            if ($request->filled('price_min')) {
-                // Đảm bảo giá trị là số trước khi query
-                $priceMin = filter_var($request->input('price_min'), FILTER_SANITIZE_NUMBER_INT);
-                $query->where('price', '>=', $priceMin);
-            }
-
-            // Lọc theo giá tối đa (price_max)
-            if ($request->filled('price_max')) {
-                $priceMax = filter_var($request->input('price_max'), FILTER_SANITIZE_NUMBER_INT);
-                $query->where('price', '<=', $priceMax);
-            }
-
-            // Lọc theo trạng thái (ví dụ: 1 = 'còn hàng', 0 = 'đã bán')
-            // Dùng `has` thay vì `filled` nếu status có thể là '0'
-            if ($request->has('status') && $request->input('status') !== '') {
-                $query->where('status', $request->input('status'));
-            }
-
-            // Lấy số lượng item mỗi trang từ request, mặc định là 10
-            $perPage = $request->input('per_page', 10);
-            $products = $query->latest()->paginate($perPage); // Sắp xếp theo mới nhất và phân trang
-
-            return response()->json([
-                "status" => true,
-                "message" => "Lấy danh sách sản phẩm thành công",
-                "data" => $products
-            ]);
-        } catch (\Throwable $th) {
-            return response()->json([
-                "status" => false,
-                "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
-                // "error" => $th->getMessage() // Không nên trả về lỗi chi tiết cho client ở môi trường production
-                "data" => []
-            ], 500); // Trả về status code 500
-        }
-    }
-    public function getProductsBrowse(Request $request)
-    {
-        // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
-        $query = Product::query()->where("status", "=", 2)->with(['category', 'images', 'gameAttributes']);
+        $query = Product::query()->where("created_by", $request->user_id)->with(['category', 'images', 'gameAttributes']);
 
         try {
             // Lọc theo danh mục sản phẩm (category_id)
@@ -195,6 +146,7 @@ class AdminProductController extends Controller
                 'price'       => $validated['price'] ?? $product->price,
                 'sale'        => $validated['sale']  ?? $product->sale,
                 'updated_by'  => $request->user_id,
+                "status" => 2, // Mặc định là 2 (chờ duyệt)
             ]);
 
             // Lấy danh sách đường dẫn ảnh cũ phía client muốn giữ lại (ví dụ: ["/storage/product_images/…", …])
@@ -353,7 +305,7 @@ class AdminProductController extends Controller
                 "price" => $validatedData['price'],
                 "sale" => $validatedData['sale'] ?? null,
                 "web_id" => $request->web_id,
-                'status' => 1, // Mặc định là 1 (có sẵn)
+                'status' => 2, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,
                 "updated_by" => $request->user_id,
             ]);
@@ -428,7 +380,7 @@ class AdminProductController extends Controller
     {
         try {
             if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)->where("status", 1)->update([
+                $product = Product::where("id", $id)->whereIn("status", [1, 2])->update([
                     "status" => 3
                 ]);
 
@@ -465,7 +417,7 @@ class AdminProductController extends Controller
             $password = $request->password;
             if ($this->check_isset_product_by_id($id)) {
                 $product = Product::where("id", $id)->where("status", 2)->update([
-                    "status" => $request->status
+                    "status" => 1
                 ]);
 
 
@@ -502,7 +454,7 @@ class AdminProductController extends Controller
         try {
             if ($this->check_isset_product_by_id($id)) {
                 $product = Product::where("id", $id)->where("status", 3)->update([
-                    "status" => 1
+                    "status" => 2
                 ]);
 
 

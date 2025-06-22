@@ -8,11 +8,10 @@ import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import api from "../../../utils/http";
 import { PRODUCT_FILTERS_CONFIG } from "./filterConfigs";
 import { useNotification } from "../../../contexts/NotificationProvider";
-import ProductsBrowse from "./ProductsBrowse";
 // Các key dùng để tìm kiếm ở FE (trên dữ liệu đã tải về của trang hiện tại)
 const LOCAL_SEARCHABLE_KEYS = ["sku"];
 
-const TrangDanhSachAccGame = () => {
+const TrangDanhSachAccGamePartner = () => {
   const { pop, conFim } = useNotification();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +49,7 @@ const TrangDanhSachAccGame = () => {
     // Lấy các tham số từ URL hiện tại
     const params = new URLSearchParams(location.search);
     try {
-      const response = await api.get("/admin/products", { params });
+      const response = await api.get("/partner/products", { params });
       const { data, ...meta } = response.data.data;
       setProducts(data);
       setPaginationMeta(meta);
@@ -112,14 +111,13 @@ const TrangDanhSachAccGame = () => {
   }, [products, searchTermLocal]);
 
   // Các hàm hành động khác
-  const handleAddAccount = () => navigate("/admin/products/new");
-  const handleApprove = () => navigate("/admin/products/browse");
+  const handleAddAccount = () => navigate("/partner/products/new");
   const handleAction = async (actionType, id, confirmMessage) => {
     const ok = await conFim(confirmMessage);
     console.log("🚀 ~ handleAction ~ ok:", ok);
     if (ok) {
       try {
-        const url = `/admin/products/${id}/${actionType}`;
+        const url = `/partner/products/${id}/${actionType}`;
         await api.post(url);
         getProducts(); // Tải lại dữ liệu sau khi thực hiện hành động
       } catch (err) {
@@ -134,11 +132,9 @@ const TrangDanhSachAccGame = () => {
     <Layout
       title="Danh sách tài khoản game"
       showBackButton={false}
-      showBrowse={true}
-
+      showBrowse={false}
       showAddButton={true}
       onAdd={handleAddAccount}
-      onApprove={handleApprove}
       onLocalSearch={setSearchTermLocal}
       initialSearchTermLocal={searchTermLocal}
       paginationMeta={paginationMeta}
@@ -157,9 +153,8 @@ const TrangDanhSachAccGame = () => {
         }
         handleLock={(id) => handleAction("cancel", id, "Khóa sản phẩm này?")}
       />
-     
     </Layout>
   );
 };
 
-export default TrangDanhSachAccGame;
+export default TrangDanhSachAccGamePartner;

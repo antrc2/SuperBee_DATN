@@ -1,0 +1,21 @@
+RewriteEngine On
+
+# Điều hướng các request đến /socket.io/ sang /backend/socket.io/, giữ nguyên query string
+
+RewriteCond %{REQUEST_URI} ^/socket\.io/ [NC]
+RewriteRule ^socket\.io/(.*)$ /backend/socket.io/$1 [L]
+
+
+
+# Cho phép truy cập vào /backend và /ai
+RewriteCond %{REQUEST_URI} ^/backend/ [NC]
+RewriteRule ^backend/(.*)$ public/index.php/api/$1 [L,QSA]
+
+
+
+# Cho phép truy cập trực tiếp đến các file tĩnh (JS, CSS, hình ảnh, fonts, v.v.)
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule .* - [L]
+
+# Tất cả request khác sẽ được chuyển hướng đến index.html mà không đổi URL
+RewriteRule ^ index.html [L]

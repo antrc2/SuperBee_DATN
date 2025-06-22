@@ -1,14 +1,19 @@
-import React from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import CategoryForm from "@components/Admin/Category/CategoryForm";
 import api from "@utils/http";
+import { ArrowLeft } from "lucide-react";
 
 export default function CreateCategoryPage() {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const handleSave = async (data) => {
+  const handleCreateSubmit = async (formData) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await api.post("/admin/categories", data, {
+      const response = await api.post("/admin/categories", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -17,21 +22,38 @@ export default function CreateCategoryPage() {
         navigate("/admin/categories");
       }
       return response.data;
-    } catch (error) {
-      console.error(
-        "Error creating category:",
-        error.response?.data || error.message
+    } catch (err) {
+      console.error(err);
+      setError(
+        err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại."
       );
-      // Ném lỗi ra ngoài để `CategoryForm` có thể bắt và hiển thị
-      throw new Error(
-        error.response?.data?.message || "Failed to save category"
-      );
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
-      <CategoryForm initialData={null} onSave={handleSave} />
+    <div>
+      <div className="flex items-center h-14">
+        <div className="flex items-center">
+          <Link
+            to="/admin/categories"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={20} />
+            Quay lại danh sách
+          </Link>
+        </div>
+        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+          Thêm danh mục mới
+        </h2>
+      </div>
+      {error && (
+        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+          {error}
+        </div>
+      )}
+      <CategoryForm onSubmit={handleCreateSubmit} isLoading={isLoading} />
     </div>
   );
 }

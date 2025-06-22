@@ -135,6 +135,14 @@ const decodeData = (token) => {
   const decoded = jwtDecode(token);
   return decoded;
 };
+const checkLocation = () => {
+  const savedLocation = localStorage.getItem("location");
+  if (savedLocation) {
+    return savedLocation;
+  } else {
+    return null;
+  }
+};
 
 // export default MyComponent;
 export {
@@ -149,4 +157,5 @@ export {
   setSessionValue,
   useSessionStorage,
   decodeData,
+  checkLocation,
 };

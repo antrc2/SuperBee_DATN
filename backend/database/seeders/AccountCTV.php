@@ -16,6 +16,16 @@ class AccountCTV extends Seeder
     /**
      * Run the database seeds.
      */
+    private function generateCode(int $length = 16): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        $max = strlen($characters) - 1;
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $characters[random_int(0, $max)];
+        }
+        return $code;
+    }
     public function run(): void
     {
         // Create roles
@@ -36,24 +46,37 @@ class AccountCTV extends Seeder
         $web1 = Web::create([
             'subdomain' => '' . Str::random(5),
             'user_id' => null,
-            'api_key' => Str::random(16),
+            'api_key' => "D9BD170B6093FF737C754C8A5070FC97",
             'status' => 1,
             'is_customized' => true,
         ]);
         $web2 = Web::create([
             'subdomain' => '' . Str::random(5),
             'user_id' => null,
-            'api_key' => Str::random(16),
+            'api_key' => $this->generateCode(32),
             'status' => 1,
             'is_customized' => false,
         ]);
+        $admin = User::create([
+            'username' => 'admin',
+            'email' => 'admin@gmail.com',
+            'password' => Hash::make('password'),
+            'web_id' => $web1->id,
+            'avatar_url' => 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg', // Default or specific
+            'donate_code' =>$this->generateCode(16),
+            'status' => 1, // Active
+            'phone' => '0123456789'
+        ]);
+        $admin->assignRole('admin');
+        $this->command->info('gán quyền admin');
+        
         $user1 = User::create([
             'username' => 'userHai',
             'email' => 'userHai@gmail.com',
             'password' => Hash::make('password'),
             'web_id' => $web1->id,
             'avatar_url' => 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg', // Default or specific
-            'donate_code' => Str::uuid()->toString(),
+            'donate_code' => $this->generateCode(16),
             'status' => 1, // Active
             'phone' => '0123456789'
         ]);
@@ -66,7 +89,7 @@ class AccountCTV extends Seeder
             'password' => Hash::make('password'),
             'web_id' => $web1->id,
             'avatar_url' => 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg',
-            'donate_code' => Str::uuid()->toString(),
+            'donate_code' => $this->generateCode(16),
             'status' => 1, // Active
         ]);
         $user2->assignRole('partner');
@@ -76,30 +99,20 @@ class AccountCTV extends Seeder
             'username' => 'reseller',
             'email' => 'reseller@gmail.com',
             'password' => Hash::make('password'),
-            'web_id' => $web2->id, // User must belong to a web
+            'web_id' => $web2->id, 
             'avatar_url' => 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg',
-            'donate_code' => Str::uuid()->toString(),
+            'donate_code' => $this->generateCode(16),
             'status' => 1, // Active
         ]);
         $user3->assignRole('reseller');
         $this->command->info('gán quyền reseller');
 
-        $admin = User::create([
-            'username' => 'admin',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'),
-            'web_id' => $web1->id,
-            'avatar_url' => 'https://cdn2.fptshop.com.vn/unsafe/800x0/avatar_anime_nam_cute_18_a74be9502d.jpg', // Default or specific
-            'donate_code' => Str::uuid()->toString(),
-            'status' => 1, // Active
-            'phone' => '0123456789'
-        ]);
-        $admin->assignRole('admin');
-        $this->command->info('gán quyền admin');
+        
         $web1->user_id = $admin->id;
         $web2->user_id = $user1->id;
         $web1->save();
         $web2->save();
+
         Wallet::create([
             "user_id" => $user1->id,
             "balance" => "0",

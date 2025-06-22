@@ -95,15 +95,48 @@ class UserOrderController extends Controller
                         $price = $cart_item->product->sale ?? $cart_item->product->price;
                         $total_price += $price;
                         $cart_item->unit_price = $price;
-                    } else {
+                    } elseif ($cart_item->product->status == 0) {
                         return [
                             "status" => False,
-                            "message" => "Một sản phẩm không tồn tại",
+                            "message" => "Sản phẩm {$cart_item->product->sku} đã bị từ chối bán do sai thông tin",
+                            "carts" => [],
+                            "total_price" => 0,
+                            "status_code" => 404
+                        ];
+                    } elseif ($cart_item->product->status == 2) {
+                        return [
+                            "status" => False,
+                            "message" => "Sản phẩm {$cart_item->product->sku} đang đợi duyệt",
+                            "carts" => [],
+                            "total_price" => 0,
+                            "status_code" => 404
+                        ];
+                    } elseif ($cart_item->product->status == 3) {
+                        return [
+                            "status" => False,
+                            "message" => "Sản phẩm {$cart_item->product->sku} đã bị hủy bán",
+                            "carts" => [],
+                            "total_price" => 0,
+                            "status_code" => 404
+                        ];
+                    } elseif ($cart_item->product->status == 4) {
+                        return [
+                            "status" => False,
+                            "message" => "Sản phẩm {$cart_item->product->sku} đã được bán",
                             "carts" => [],
                             "total_price" => 0,
                             "status_code" => 404
                         ];
                     }
+                    // } else {
+                    //     return [
+                    //         "status" => False,
+                    //         "message" => "Một sản phẩm không tồn tại",
+                    //         "carts" => [],
+                    //         "total_price" => 0,
+                    //         "status_code" => 404
+                    //     ];
+                    // }
                 }
                 return [
                     "status" => True,

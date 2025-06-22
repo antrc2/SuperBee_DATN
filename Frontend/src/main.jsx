@@ -5,18 +5,19 @@ import App from "./App.jsx";
 import { AuthProvider } from "./contexts/AuthContext.jsx";
 import { BrowserRouter } from "react-router-dom";
 import { ThemeProvider } from "./contexts/ThemeContext.jsx";
-import { CartProvider } from "./contexts/CartContexts.jsx";
 import { NotificationProvider } from "./contexts/NotificationProvider.jsx";
 import "@styles/theme.css";
+
+// src/main.jsx (ĐÃ SỬA)
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <ThemeProvider>
         <NotificationProvider>
           <AuthProvider>
-            <CartProvider>
-              <App />
-            </CartProvider>
+            {" "}
+            {/* AuthProvider là "nhạc trưởng" */}
+            <App /> {/* Truyền App trực tiếp vào AuthProvider */}
           </AuthProvider>
         </NotificationProvider>
       </ThemeProvider>

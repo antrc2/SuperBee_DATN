@@ -3,7 +3,7 @@ import { Frown } from "lucide-react";
 
 export default function NoProduct() {
   return (
-    <div className="flex flex-col items-center justify-center py-10 px-4 text-center bg-pink-50 rounded-2xl shadow-md border border-pink-200">
+    <div className="flex flex-col items-center justify-center py-10 px-4 text-center   ">
       <div className="bg-pink-100 p-4 rounded-full mb-4 animate-bounce">
         <Frown className="w-10 h-10 text-pink-500" />
       </div>

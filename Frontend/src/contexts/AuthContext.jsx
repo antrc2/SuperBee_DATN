@@ -16,7 +16,6 @@ const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
   const { pop, showAlert, conFim } = useNotification();
-
   const [user, setUser] = useState(() => {
     const decoded = getDecodedToken();
     return decoded
@@ -65,16 +64,6 @@ export function AuthProvider({ children }) {
           avatar: decoded.avatar,
         });
         pop("Đăng nhập thành công", "s");
-        // Handle navigation
-        const savedLocation = localStorage.getItem("location");
-        if (savedLocation) {
-          localStorage.removeItem("location");
-          console.log("🚀 ~ login ~ savedLocation:", savedLocation);
-          navigate(savedLocation);
-        } else {
-          navigate("/");
-        }
-
         setLoading(false);
         return { success: true };
       } else {
@@ -197,8 +186,6 @@ export function AuthProvider({ children }) {
   const [combinedError, setCombinedError] = useState(null);
 
   useEffect(() => {
-    // Điều này sẽ kiểm tra lại token mỗi khi AuthProvider được render lại hoặc khi có sự thay đổi
-    // trong logic AuthContext, đảm bảo user luôn được cập nhật đúng đắn
     const decoded = getDecodedToken();
     if (decoded) {
       setUser({
@@ -207,7 +194,7 @@ export function AuthProvider({ children }) {
         avatar: decoded?.avatar,
       });
     } else {
-      setUser(null); // Đảm bảo user là null nếu token không hợp lệ/hết hạn
+      setUser(null); 
     }
 
     // Các logic về authStatus vẫn giữ nguyên

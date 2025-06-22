@@ -73,6 +73,8 @@
   --font-heading: "Poppins", "Inter", sans-serif;
   --font-gaming: "Orbitron", "Roboto Mono", monospace;
   --font-japanese: "Noto Sans JP", sans-serif;
+  /* color text */
+  --text-color: "font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent";
 }
 
 /* Utility classes using CSS variables */
@@ -118,6 +120,10 @@
 
 .font-primary {
   font-family: var(--font-primary);
+}
+
+.text-color {
+  color: var(--text-color);
 }
 
 /* Custom animations */

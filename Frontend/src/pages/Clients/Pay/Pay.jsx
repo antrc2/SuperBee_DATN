@@ -5,11 +5,11 @@ import {
   X,
   CreditCard,
   ShieldCheck,
-  Gift
+  Gift,
 } from "lucide-react";
 import { useCart } from "@contexts/CartContexts";
 import { useNotification } from "@contexts/NotificationProvider";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";
 
@@ -19,7 +19,7 @@ const formatCurrency = (amount) => {
   if (isNaN(numberAmount)) return "0 ₫";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
-    currency: "VND"
+    currency: "VND",
   }).format(numberAmount);
 };
 
@@ -52,14 +52,18 @@ const DiscountModal = ({ isOpen, onClose, discounts, onApplyDiscount }) => {
               >
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-bold text-blue-600 text-lg">{discount.code}</p>
+                    <p className="font-bold text-blue-600 text-lg">
+                      {discount.code}
+                    </p>
                     <p className="text-sm text-gray-700">
                       {discount.description || `Giảm ${discount.value}`}
                     </p>
                     <p className="text-xs text-gray-500">
                       Hạn sử dụng: {discount.expiry}
                       {discount.min_discount_amount > 0 &&
-                        ` | Đơn tối thiểu: ${formatCurrency(discount.min_discount_amount)}`}
+                        ` | Đơn tối thiểu: ${formatCurrency(
+                          discount.min_discount_amount
+                        )}`}
                     </p>
                   </div>
                   <button
@@ -84,7 +88,7 @@ const DiscountModal = ({ isOpen, onClose, discounts, onApplyDiscount }) => {
 // Component chính của trang thanh toán
 export default function Pay() {
   const { pop, conFim } = useNotification();
-  const { fetchCartItems, cartItems, loadingCart } = useCart();
+  const { fetchCartItems } = useCart();
   const [cartItemsPay, setCartItemsPay] = useState([]);
   const [userBalance, setUserBalance] = useState(0);
   const [promotionCodes, setPromotionCodes] = useState([]);
@@ -92,21 +96,21 @@ export default function Pay() {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [cartError, setCartError] = useState(null);
+  const [loadingCheckout, setLoadingCheckout] = useState(true);
+  const navigate = useNavigate();
 
   // Lấy dữ liệu từ API /orders/checkout
   useEffect(() => {
     const fetchCheckoutData = async () => {
-      setCartError(null);
+      setLoadingCheckout(true);
       try {
-        // Đồng bộ giỏ hàng từ context
         await fetchCartItems();
         const response = await api.get("/orders/checkout");
         if (response.data?.status) {
           const items = response.data.carts
-            .filter((item) => item.status === 1) // Chỉ lấy sản phẩm có status = 1
+            .filter((item) => item.status === 1)
             .map((item) => ({
-              id: item.id, // cart_item_id
+              id: item.id,
               product_id: item.product_id,
               name: item.product?.sku || "Sản phẩm không tên",
               image:
@@ -114,8 +118,6 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-              quantity: 1 // Giả định số lượng
-            }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
           setPromotionCodes(
@@ -126,34 +128,34 @@ export default function Pay() {
               type: "percentage",
               value: parseFloat(promo.discount_value) || 0,
               expiry: promo.end_date || "N/A",
-              min_discount_amount: promo.min_discount_amount || 0
+              min_discount_amount: promo.min_discount_amount || 0,
             }))
           );
           if (items.length === 0) {
             pop("Giỏ hàng của bạn đang trống.", "i");
+            navigate("/cart");
           }
         } else {
           pop(response.data.message, "e");
-          setCartError({ message: response.data.message });
+          navigate("/cart");
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
         const errorMessage =
           error.response?.data?.message || "Lỗi khi tải dữ liệu giỏ hàng.";
         pop(errorMessage, "e");
-        setCartError({ message: errorMessage });
+        navigate("/cart");
+      } finally {
+        setLoadingCheckout(false);
       }
     };
 
     fetchCheckoutData();
-  }, [fetchCartItems, pop]);
+  }, [fetchCartItems, pop, navigate]);
 
   // Tính toán tổng tiền
   const { subtotal, discountAmount, finalAmount } = useMemo(() => {
-    const subtotal = cartItemsPay.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+    const subtotal = cartItemsPay.reduce((sum, item) => sum + item.price, 0);
     const discountAmount = appliedDiscount?.discount_amount || 0;
     const finalAmount = Math.max(subtotal - discountAmount, 0);
     return { subtotal, discountAmount, finalAmount };
@@ -170,13 +172,16 @@ export default function Pay() {
     if (!(await conFim(`Bạn muốn áp dụng mã giảm giá "${code}"?`))) return;
 
     try {
-      const response = await api.post("/orders/check", { promotion_code: code });
+      const response = await api.post("/orders/check", {
+        promotion_code: code,
+      });
       if (response.data.status) {
         setAppliedDiscount({
           code: response.data.promotion_code,
           discount_amount: parseFloat(response.data.discount_amount) || 0,
           discount_value: parseFloat(response.data.discount_value) || 0,
-          total_price_after_discount: parseFloat(response.data.total_price_after_discount) || 0
+          total_price_after_discount:
+            parseFloat(response.data.total_price_after_discount) || 0,
         });
         pop(response.data.message, "s");
         setDiscountCodeInput("");
@@ -215,15 +220,15 @@ export default function Pay() {
 
     try {
       const response = await api.post("/orders/purchase", {
-        promotion_code: appliedDiscount?.code || null
+        promotion_code: appliedDiscount?.code || null,
       });
       if (response.data.status) {
         setUserBalance((prev) => prev - finalAmount);
         setCartItemsPay([]);
         setAppliedDiscount(null);
         pop(response.data.message, "s");
-        // Đồng bộ lại giỏ hàng
         await fetchCartItems();
+        navigate("/info/orders");
       } else {
         pop(response.data.message, "e");
       }
@@ -235,64 +240,20 @@ export default function Pay() {
     }
   };
 
-  // Xử lý xóa sản phẩm
-  const handleRemoveItem = async (itemId, itemName) => {
-    if (!(await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`))) return;
+  // Hiển thị loading cho đến khi dữ liệu được xử lý
+  if (loadingCheckout) return <LoadingDomain />;
 
-    try {
-      await api.delete(`/cart/${itemId}`);
-      setCartItemsPay((prevItems) => prevItems.filter((item) => item.id !== itemId));
-      await fetchCartItems(); // Đồng bộ giỏ hàng
-      pop("Đã xóa sản phẩm khỏi giỏ hàng.", "s");
-    } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
-      const errorMessage =
-        error.response?.data?.message || "Lỗi khi xóa sản phẩm.";
-      pop(errorMessage, "e");
-    }
-  };
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity < 1) newQuantity = 1;
-    setCartItemsPay((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  // Hiển thị loading
-  if (loadingCart) return <LoadingDomain />;
-
-  // // Hiển thị giỏ hàng rỗng
-  // if (cartItemsPay.length === 0) {
-  //   return (
-  //     <div className="bg-gray-100 min-h-screen py-8 px-4">
-  //       <div className="max-w-4xl mx-auto text-center">
-  //         <ShoppingCart size={80} className="mx-auto text-gray-400 mb-6" />
-  //         <h1 className="text-3xl font-bold mb-4">Giỏ hàng của bạn đang trống</h1>
-  //         <p className="mb-8 text-gray-600">
-  //           Hãy khám phá thêm sản phẩm tuyệt vời của chúng tôi!
-  //         </p>
-  //         <Link
-  //           to="/"
-  //           className="px-6 py-3 bg-blue-600 text-white rounded-md font-medium inline-flex items-center"
-  //         >
-  //           <X size={20} className="mr-1" />
-  //           Quay lại mua sắm
-  //         </Link>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
+  // Hiển thị giao diện thanh toán
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
       <div className="mb-6 flex justify-between items-center">
         <h1 className="text-3xl font-bold">
           Thanh Toán ({cartItemsPay.length} sản phẩm)
         </h1>
-        <Link to="/cart" className="text-blue-600 font-medium flex items-center">
+        <Link
+          to="/cart"
+          className="text-blue-600 font-medium flex items-center"
+        >
           <X size={20} className="mr-1" />
           Quay lại giỏ hàng
         </Link>
@@ -321,20 +282,15 @@ export default function Pay() {
                 />
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-gray-500">Mã sản phẩm: {item.name}</p>
+                  <p className="text-sm text-gray-500">
+                    Mã sản phẩm: {item.name}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-semibold text-red-600">
-                  {formatCurrency(item.price * item.quantity)}
+                  {formatCurrency(item.price)}
                 </span>
-                <button
-                  onClick={() => handleRemoveItem(item.id, item.name)}
-                  className="text-gray-500 hover:text-red-600"
-                  aria-label={`Xóa ${item.name}`}
-                >
-                  <X size={20} />
-                </button>
               </div>
             </div>
           ))}
@@ -410,7 +366,22 @@ export default function Pay() {
 
           <div className="mb-6">
             <p className="text-gray-700">Số dư tài khoản:</p>
-            <span className="text-blue-600 font-bold text-xl">{formatCurrency(userBalance)}</span>
+            <span className="text-blue-600 font-bold text-xl">
+              {formatCurrency(userBalance)}
+            </span>
+            {finalAmount > userBalance && (
+              <>
+                <p className="text-red-600 text-sm mt-2">
+                  Số dư không đủ để thanh toán. Vui lòng nạp thêm tiền.
+                </p>
+                <Link
+                  to="/recharge-atm"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center mt-2"
+                >
+                  Nạp tiền ngay
+                </Link>
+              </>
+            )}
           </div>
 
           <div className="mb-4">
@@ -435,7 +406,8 @@ export default function Pay() {
 
           <button
             onClick={handlePayment}
-            disabled={loadingCart || finalAmount > userBalance || !termsAccepted}
+            disabled={loadingCheckout || finalAmount > userBalance || !termsAccepted}
+
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <CreditCard className="inline mr-2" />

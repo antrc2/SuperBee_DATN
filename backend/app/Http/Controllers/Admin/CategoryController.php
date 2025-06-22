@@ -20,14 +20,14 @@ class CategoryController extends Controller
     {
         try {
             $categories = Category::with(['creator', 'updater'])->get();
-            
+
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
-                
+
                 foreach ($categories as $category) {
                     if ($category->parent_id === $parentId) {
                         $children = $buildTree($categories, $category->id);
-                        
+
                         $tree[] = [
                             'id' => $category->id,
                             'name' => $category->name,
@@ -43,7 +43,7 @@ class CategoryController extends Controller
                         ];
                     }
                 }
-                
+
                 return $tree;
             };
 
@@ -94,7 +94,7 @@ class CategoryController extends Controller
 
 
             $imageUrl = null;
-            
+
             // 2. Kiểm tra và tải ảnh nếu có
             if ($request->hasFile('image_url')) {
                 // Gọi hàm uploadFile từ Controller cha
@@ -114,7 +114,7 @@ class CategoryController extends Controller
                 'name' => $request->name,
                 'parent_id' => $request->parent_id,
                 'slug' => $slug,
-                'image_url'=> $imageUrl,
+                'image_url' => $imageUrl,
                 'status' => $request->status ?? 1,
                 'created_by' => $request->user_id ?? null,
                 'updated_by' => $request->user_id ?? null
@@ -125,7 +125,6 @@ class CategoryController extends Controller
                 'message' => 'Tạo danh mục thành công',
                 'data' => $category
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
@@ -139,19 +138,19 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        try{
+        try {
             $category = Category::findOrFail($id);
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy danh mục thành công',
                 'data' => $category
             ], 200);
-        }catch(ModelNotFoundException $e){
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Danh mục không tồn tại'
             ], 404);
-        }catch(\Exception $e){
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => $e->getMessage()
@@ -195,7 +194,7 @@ class CategoryController extends Controller
             }
 
             // Kiểm tra tên đã thay đổi và đã tồn tại chưa
-         
+
             if ($category->name !== $request->name) {
                 $existingCategory = Category::where('name', $request->name)
                     ->where('id', '!=', $id)
@@ -229,20 +228,21 @@ class CategoryController extends Controller
 
                 while (Category::where('slug', $slug)
                     ->where('id', '!=', $id)
-                    ->exists()) {
+                    ->exists()
+                ) {
                     $slug = $originalSlug . '-' . $count++;
                 }
             } else {
                 $slug = $category->slug;
             }
             $imageUrl = $category->image_url;
-            
+
             // 2. Kiểm tra và tải ảnh nếu có
             if ($request->hasFile('image_url')) {
                 // Gọi hàm uploadFile từ Controller cha
                 $imageUrl = $this->uploadFile(
                     $request->file('image_url'),
-                    'category_images' 
+                    'category_images'
                 );
 
                 if (is_null($imageUrl)) {
@@ -250,18 +250,15 @@ class CategoryController extends Controller
                     return response()->json(['message' => 'Failed to upload category image.'], 500);
                 }
                 if ($category->image_url) {
-                    $oldImagePath = str_replace(Storage::url('/'), '', $category->image_url);
-                    // Kiểm tra xem file có tồn tại trên disk 'public' không trước khi xóa
-                    if (Storage::disk('public')->exists($oldImagePath)) {
-                        Storage::disk('public')->delete($oldImagePath);
-                    } 
+                    $relativePath = str_replace('/storage/', '', $category->image_url);
+                    $this->deleteFile($relativePath, 'public');
                 }
             }
             // Cập nhật danh mục
             $category->update([
                 'name' => $request->name ?? $category->name,
                 'parent_id' => $request->parent_id ?? $category->parent_id,
-                'image_url' => $imageUrl ,
+                'image_url' => $imageUrl,
                 'slug' => $slug ?? $category->slug,
                 'status' => $request->status ?? $category->status,
                 'updated_by' => $request->user_id ?? null
@@ -272,7 +269,6 @@ class CategoryController extends Controller
                 'message' => 'Cập nhật danh mục thành công',
                 'data' => $category
             ], 200);
-
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => false,
@@ -336,12 +332,10 @@ class CategoryController extends Controller
                     'status' => true,
                     'message' => 'Xóa danh mục thành công'
                 ], 200);
-
             } catch (\Exception $e) {
                 DB::rollBack();
                 throw $e;
             }
-
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'status' => false,
@@ -366,7 +360,7 @@ class CategoryController extends Controller
             $processedIds[] = $category->id;
             $ids = [];
             $children = Category::where('parent_id', $category->id)->get();
-            
+
             foreach ($children as $child) {
                 $ids[] = $child->id;
                 $childIds = $this->getAllChildrenIds($child, $processedIds);
@@ -375,7 +369,7 @@ class CategoryController extends Controller
                 }
                 $ids = array_merge($ids, $childIds);
             }
-            
+
             return $ids;
         } catch (\Exception $e) {
             return [];

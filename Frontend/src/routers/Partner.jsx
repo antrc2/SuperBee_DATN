@@ -3,15 +3,16 @@
 
 import { Navigate, Outlet, useLoaderData } from "react-router-dom";
 import { adminModules } from "@routers/adminModules";
-import AppLayout from "@layouts/Admin/AppLayout";
+import AppLayout from "@layouts/Partner/AppLayout";
 import Home from "@pages/Admin/Dashboard/Home";
 import ProtectedRoute from "@components/common/ProtectedRoute";
 import { NotFound } from "../pages";
-const adminRoutes = [
+import { partnerModules } from "./PartnerModules";
+const partnerRoutes = [
   {
-    path: "/admin",
+    path: "/partner",
     element: (
-      <ProtectedRoute allowedRoles={["admin"]}>
+      <ProtectedRoute allowedRoles={["partner"]}>
         <AppLayout />
       </ProtectedRoute>
     ),
@@ -22,7 +23,7 @@ const adminRoutes = [
       },
       // cho mỗi module
 
-      ...adminModules.map(
+      ...partnerModules.map(
         // Lấy thêm `allowedRoles` từ mỗi module
         ({
           name,
@@ -30,8 +31,6 @@ const adminRoutes = [
           create: Create,
           edit: Edit,
           show: Show,
-          browse: Browse,
-          update: Update,
           allowedRoles,
         }) => ({
           path: name,
@@ -45,10 +44,8 @@ const adminRoutes = [
           children: [
             { index: true, element: <List /> },
             { path: "new", element: <Create /> },
-            { path: "browse", element: <Browse /> },
             { path: ":id", element: <Show /> },
             { path: ":id/edit", element: <Edit /> },
-            { path: ":id/update", element: <Update /> },
             { path: "*", element: <NotFound /> },
           ],
         })
@@ -59,4 +56,4 @@ const adminRoutes = [
   },
 ];
 
-export default adminRoutes;
+export default partnerRoutes;

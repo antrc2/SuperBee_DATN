@@ -37,7 +37,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                 {product.price.toLocaleString()}đ
               </td>
               <td className="py-3 px-4 text-sm">
-                 <span
+               <span
                   className={`px-2 py-1 text-xs font-semibold rounded-full ${
                     product.status === 1
                       ? "bg-green-100 text-green-800"
@@ -53,19 +53,20 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                   {product.status === 1
                     ? "Đang bán"
                     : product.status === 2
-                    ? "Chờ duyệt"
+                    ? "Đang chờ duyệt"
                     : product.status === 3
                     ? "Đã hủy"
                     : product.status === 4
-                    ? "Bán thành công"
-                    : "Không xác định"}
+                    ? "Đã bán"
+                    : "Không rõ"}
                 </span>
+
               </td>
               <td className="py-3 px-4 text-center">
                 <div className="flex justify-center gap-4">
                   {/* NÚT XEM CHI TIẾT */}
                   <Link
-                    to={`/admin/products/${product.id}`}
+                    to={`/partner/products/${product.id}`}
                     title="Xem chi tiết"
                   >
                     <Eye
@@ -76,7 +77,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
 
                   {/* NÚT CHỈNH SỬA */}
                   <Link
-                    to={`/admin/products/${product.id}/edit`}
+                    to={`/partner/products/${product.id}/edit`}
                     title="Chỉnh sửa"
                   >
                     <FilePenLine
@@ -84,7 +85,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                       size={20}
                     />
                   </Link>
-                  {product.status === 1 ? (
+                  {product.status === 1 || product.status === 2 ? (
                     <button
                       onClick={() => handleLock(product.id)}
                       title="Hủy Bán"

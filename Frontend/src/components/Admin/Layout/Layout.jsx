@@ -11,8 +11,10 @@ const Layout = ({
   children,
   showBackButton = true,
   showAddButton = false,
+  showBrowse = false,
   onBack,
   onAdd,
+  onApprove, // Giả sử bạn có hàm này để duyệt sản phẩm  
   onLocalSearch,
   initialSearchTermLocal,
   paginationMeta,
@@ -76,6 +78,7 @@ const Layout = ({
               </div>
 
               {showAddButton && (
+              
                 <button
                   onClick={onAdd}
                   className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -84,6 +87,19 @@ const Layout = ({
                   <Plus size={18} />
                   Thêm mới
                 </button>
+
+               
+              )}
+              {showBrowse && (
+                
+                
+                <button
+                  onClick={onApprove}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  Duyệt SP
+                </button>
+             
               )}
             </div>
           </div>

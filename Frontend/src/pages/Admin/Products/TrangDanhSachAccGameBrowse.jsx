@@ -12,7 +12,7 @@ import ProductsBrowse from "./ProductsBrowse";
 // Các key dùng để tìm kiếm ở FE (trên dữ liệu đã tải về của trang hiện tại)
 const LOCAL_SEARCHABLE_KEYS = ["sku"];
 
-const TrangDanhSachAccGame = () => {
+const TrangDanhSachAccGameBrowse = () => {
   const { pop, conFim } = useNotification();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -50,7 +50,7 @@ const TrangDanhSachAccGame = () => {
     // Lấy các tham số từ URL hiện tại
     const params = new URLSearchParams(location.search);
     try {
-      const response = await api.get("/admin/products", { params });
+      const response = await api.get("/admin/products/browse", { params });
       const { data, ...meta } = response.data.data;
       setProducts(data);
       setPaginationMeta(meta);
@@ -112,8 +112,8 @@ const TrangDanhSachAccGame = () => {
   }, [products, searchTermLocal]);
 
   // Các hàm hành động khác
-  const handleAddAccount = () => navigate("/admin/products/new");
-  const handleApprove = () => navigate("/admin/products/browse");
+  // const handleAddAccount = () => navigate("/admin/products/new");
+  // const handleApprove = () => navigate("/admin/products/browse");
   const handleAction = async (actionType, id, confirmMessage) => {
     const ok = await conFim(confirmMessage);
     console.log("🚀 ~ handleAction ~ ok:", ok);
@@ -132,13 +132,12 @@ const TrangDanhSachAccGame = () => {
 
   return (
     <Layout
-      title="Danh sách tài khoản game"
+      title="Danh sách tài khoản game chờ duyệt"
       showBackButton={false}
-      showBrowse={true}
-
+      showBrowse={false}
       showAddButton={true}
-      onAdd={handleAddAccount}
-      onApprove={handleApprove}
+      // onAdd={handleAddAccount}
+      // onApprove={handleApprove}
       onLocalSearch={setSearchTermLocal}
       initialSearchTermLocal={searchTermLocal}
       paginationMeta={paginationMeta}
@@ -150,7 +149,7 @@ const TrangDanhSachAccGame = () => {
       filterConfig={PRODUCT_FILTERS_CONFIG}
       activeFilterCount={Object.keys(filters).length} // Đếm số bộ lọc đang active
     >
-      <ProductsListPage
+      <ProductsBrowse
         products={displayedProducts}
         handleKey={(id) =>
           handleAction("restore", id, "Kích hoạt lại sản phẩm này?")
@@ -162,4 +161,4 @@ const TrangDanhSachAccGame = () => {
   );
 };
 
-export default TrangDanhSachAccGame;
+export default TrangDanhSachAccGameBrowse;

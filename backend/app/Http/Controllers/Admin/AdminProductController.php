@@ -349,7 +349,7 @@ class AdminProductController extends Controller
             // Tạo sản phẩm
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
-                "sku" => generate_sku(8),
+                "sku" => $sku,
                 "price" => $validatedData['price'],
                 "sale" => $validatedData['sale'] ?? null,
                 "web_id" => $request->web_id,

@@ -25,7 +25,7 @@ class UserOrderController extends Controller
         if ($user_id !== 0) {
             $query->where("user_id", $user_id);
         }
-        return count($query->get());
+        return $query->count();
     }
     private function generateCode(int $length = 16): string
     {
@@ -252,7 +252,7 @@ class UserOrderController extends Controller
                     "status_code" => 404
                 ];
             }
-            if ($total_used_user >= $promotion->per_user_limit) {
+            if ($total_used_user >= $promotion->per_user_limit & $promotion->per_user_limit != -1) {
                 return [
                     'status' => false,
                     "message" => "Bạn đã hết số lần sử dụng mã giảm giá {$promotion_code}",
@@ -264,7 +264,7 @@ class UserOrderController extends Controller
                 ];
             }
 
-            if ($total_used_user >= $promotion->usage_limit) {
+            if ($total_used_user >= $promotion->usage_limit & $promotion->usage_limit != -1) {
                 return [
                     "status" => false,
                     "message" => "Mã giảm giá {$promotion_code} đã hết số lần sử dụng",
@@ -277,6 +277,7 @@ class UserOrderController extends Controller
             }
 
             $discount_value = $promotion->discount_value / 100;
+            // $discount_amount = $promotion_code->discount_value;
             $discount_amount = 0;
 
             // Xử lý điều kiện min, max
@@ -335,7 +336,7 @@ class UserOrderController extends Controller
                 'message' => "Áp dụng mã giảm giá {$promotion_code} thành công",
                 "promotion_code" => $promotion_code,
                 "discount_amount" => $discount_amount,
-                "discount_value" => $discount_value,
+                "discount_value" => $discount_value * 100,
                 "total_price_after_discount" => $total_price - $discount_amount,
                 "status_code" => 200,
             ];
@@ -377,6 +378,7 @@ class UserOrderController extends Controller
         try {
 
             $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
+            
             $wallet = Wallet::where('user_id',$request->user_id)->first();
             if ($wallet == null) {
                 $balance = 0;

@@ -27,16 +27,6 @@ class UserOrderController extends Controller
         }
         return $query->count();
     }
-    private function generateCode(int $length = 16): string
-    {
-        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $code = '';
-        $max = strlen($characters) - 1;
-        for ($i = 0; $i < $length; $i++) {
-            $code .= $characters[random_int(0, $max)];
-        }
-        return $code;
-    }
     public function index(Request $request)
     {
         try {
@@ -564,10 +554,16 @@ class UserOrderController extends Controller
                         "related_type" => "App\Models\Order",
                         "status"=>1,
                     ]);
+                    $order_code = "";
+
+                    do {
+                        $order_code = $this->generateCode(16);
+                    } while (Order::where('order_code',$order_code)->first() != null);
+
 
                     $order = Order::create([
                         "user_id"=>$user_id,
-                        "order_code"=> "ORDER-". $this->generateCode(16),
+                        "order_code"=> $order_code,
                         "total_amount"=>$total_price,
                         "wallet_transaction_id"=>$wallet_transaction->id,
                         "status"=>1,

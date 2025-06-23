@@ -193,7 +193,7 @@ class AdminProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'price'       => $validated['price'] ?? $product->price,
-                'sale'        => $validated['sale']  ?? $product->sale,
+                'sale'        => $validated['sale'] ? $validated['sale'] != 0 & $validated['sale'] != null : null,
                 'updated_by'  => $request->user_id,
             ]);
 
@@ -320,7 +320,6 @@ class AdminProductController extends Controller
                 'images' => 'required|array',
                 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
-
             // Kiểm tra giá sale so với giá gốc
             if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
                 return response()->json([
@@ -344,14 +343,14 @@ class AdminProductController extends Controller
             $sku = "";
 
             do {
-                $sku = generate_sku();
+                $sku = generate_sku(8);
             } while (Product::where('sku', $sku)->first() !== NULL);
             // Tạo sản phẩm
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
                 "price" => $validatedData['price'],
-                "sale" => $validatedData['sale'] ?? null,
+                "sale" => $validatedData['sale'] ? $validatedData['sale'] != 0 & $validatedData['sale'] != null : null ,
                 "web_id" => $request->web_id,
                 'status' => 1, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,

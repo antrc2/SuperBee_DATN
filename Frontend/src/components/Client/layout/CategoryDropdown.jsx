@@ -34,7 +34,7 @@ export default function CategoryDropdown({ isOpen, onClose }) {
 
       {/* Categories Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {categories.treeCategories.map((e, i) => (
+        {categories.treeCategories?.map((e, i) => (
           <CategoryCha item={e} key={i} onClose={onClose} />
         ))}
       </div>

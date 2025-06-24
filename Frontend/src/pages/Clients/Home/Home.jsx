@@ -12,7 +12,7 @@ export default function Home() {
         <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
       </div>
       <div>
-        <ListCategoryCha categories={data?.categories?.treeCategories ?? []} />
+        <ListCategoryCha categories={data?.categories?.onlyChildren ?? []} />
       </div>
       {/* LQ */}
       <div className="mt-8">

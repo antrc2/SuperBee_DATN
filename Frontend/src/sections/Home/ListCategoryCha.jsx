@@ -2,7 +2,7 @@ import CategoryCha from "../../components/Client/Category/CategoryCha";
 import { Gamepad2, Sparkles } from "lucide-react";
 
 export default function ListCategoryCha({ categories }) {
-  const cate = categories.filter((e) => e.parent_id === null) || [];
+  const cate = categories || [];
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 mt-8">

@@ -2,25 +2,19 @@
 import { verifyToken } from "../utils/jwt.js"; // Để giải mã JWT
 import connectionManager from "../models/ConnectionManager.js"; // Để quản lý danh sách các kết nối
 import { v4 as uuidv4 } from "uuid"; // Để tạo ID duy nhất cho người dùng khách
-
+import "../models/Chat.js";
+// import "../services/Email.js";
 const ANONYMOUS_USER_ID_PREFIX = "guest_"; // Tiền tố cho các ID của người dùng chưa đăng nhập (khách)
 
 // Hàm chính để thiết lập tất cả các sự kiện Socket.IO
 const setupSocketEvents = (io) => {
-  // --- Lắng nghe sự kiện "connection" (khi có client mới kết nối) ---
+  //  Lắng nghe sự kiện "connection" (khi có client mới kết nối)
   io.on("connection", (socket) => {
-    // Ngay khi một client kết nối, middleware 'auth.js' đã chạy trước đó
-    // và đã gán 'socket.userId' và 'socket.isLoggedIn' cho socket này.
     console.log(
       `[SocketEvents] Client mới đã kết nối: ${socket.id}, ID người dùng: ${socket.userId}, Đã đăng nhập: ${socket.isLoggedIn}`
     );
-    // Ví dụ về log ra:
-    // [SocketEvents] Client mới đã kết nối: Abc123xyz, ID người dùng: guest_12345, Đã đăng nhập: false
-    // HOẶC
-    // [SocketEvents] Client mới đã kết nối: Def456uvw, ID người dùng: user_789, Đã đăng nhập: true
-
-    // --- Gửi trạng thái xác thực ban đầu về phía Frontend (FE) ---
-    // FE sẽ nhận được thông tin này ngay sau khi kết nối thành công để biết mình là ai
+    const a = connectionManager.getConnectedUserIds();
+    console.log("🚀 ~ io.on ~ a:", a);
     socket.emit("authenticated", {
       success: socket.isAuthenticated, // Luôn là true ở đây vì middleware luôn gán một ID (khách hoặc người dùng)
       userId: socket.userId, // ID mà server đã gán cho socket này
@@ -30,7 +24,6 @@ const setupSocketEvents = (io) => {
         : "Kết nối ban đầu dưới dạng khách/người dùng tạm thời.",
     });
     // Ví dụ FE nhận: { success: true, userId: 'guest_12345', isLoggedIn: false, message: '...' }
-    // HOẶC: { success: true, userId: 'user_789', isLoggedIn: true, message: '...' }
 
     // --- Lắng nghe sự kiện "authenticate" từ FE (khi client muốn xác thực lại hoặc nâng cấp quyền) ---
     socket.on("authenticate", (token) => {
@@ -42,11 +35,7 @@ const setupSocketEvents = (io) => {
       let authMessage = "Xác thực lại thất bại: Token không hợp lệ."; // Thông báo mặc định nếu thất bại
 
       const decoded = token ? verifyToken(token) : null; // Giải mã token nếu có
-      console.log("🚀 ~ socket.on ~ decoded:", decoded);
-
-      // --- Logic xử lý token khi xác thực lại ---
       if (decoded && decoded.name) {
-        // Nếu token hợp lệ và có trường 'sub' (ID người dùng)
         newUserId = decoded.name; // Lấy ID người dùng từ token
         newIsLoggedIn = true; // Người dùng đã đăng nhập
         authMessage = "Xác thực lại thành công.";
@@ -63,7 +52,6 @@ const setupSocketEvents = (io) => {
         console.warn(
           `[SocketEvents] Xác thực lại thất bại cho socket ${socket.id}. Không có/token không hợp lệ. Đặt người dùng là ${newUserId}.`
         );
-        // Ví dụ log: [SocketEvents] Xác thực lại thất bại cho socket Abc123xyz. Không có/token không hợp lệ. Đặt người dùng là guest_12345.
       }
 
       // --- Cập nhật ConnectionManager và thông tin socket nếu ID hoặc trạng thái đăng nhập thay đổi ---
@@ -83,10 +71,7 @@ const setupSocketEvents = (io) => {
         console.log(
           `[SocketEvents] Socket ${socket.id} đã cập nhật: ID người dùng thay đổi từ ${previousUserId} sang ${newUserId}, Đã đăng nhập: ${newIsLoggedIn}`
         );
-        // Ví dụ log khi đăng nhập: [SocketEvents] Socket Abc123xyz đã cập nhật: ID người dùng thay đổi từ guest_12345 sang user_789, Đã đăng nhập: true
-        // Ví dụ log khi đăng xuất: [SocketEvents] Socket user_789 đã cập nhật: ID người dùng thay đổi từ user_789 sang guest_12345, Đã đăng nhập: false
       } else {
-        // Nếu ID người dùng và trạng thái đăng nhập không thay đổi (ví dụ: client gửi lại cùng token hợp lệ)
         console.log(
           `[SocketEvents] Socket ${socket.id} xác thực lại nhưng không có thay đổi về ID người dùng hoặc trạng thái đăng nhập.`
         );
@@ -100,7 +85,6 @@ const setupSocketEvents = (io) => {
         message: authMessage, // Thông báo kết quả xác thực
       });
       // Ví dụ FE nhận: { success: true, userId: 'user_789', isLoggedIn: true, message: 'Re-authenticated successfully.' }
-      // HOẶNG: { success: true, userId: 'guest_12345', isLoggedIn: false, message: 'Invalid or no token provided...' }
     });
 
     // --- Lắng nghe sự kiện "disconnect" (khi client ngắt kết nối) ---

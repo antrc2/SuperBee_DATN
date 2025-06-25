@@ -1,5 +1,4 @@
 // config/index.js
-import "dotenv/config"; // Import dotenv and immediately configure it
 
 const config = {
   port: process.env.PORT || 3001,

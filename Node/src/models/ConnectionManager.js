@@ -1,12 +1,8 @@
-// src/models/ConnectionManager.js
 // Quản lý các socket đang kết nối
 class ConnectionManager {
   constructor() {
     this.connectedClients = {}; // { 'user_id': ['socket_id_1', 'socket_id_2', ...] }
     this.socketIdToUserId = {}; // { 'socket_id': 'user_id' }
-    // Nếu bạn muốn hỗ trợ webId, bạn cần sửa đổi cấu trúc dữ liệu ở đây
-    // Ví dụ: this.connectedClients = { 'user_id': [{ socketId: '...', webId: '...' }] }
-    // và cập nhật addConnection/removeConnection/getSocketIdByWebId cho phù hợp.
   }
 
   addConnection(userId, socketId) {
@@ -61,6 +57,12 @@ class ConnectionManager {
       // return found ? found.socketId : undefined;
     }
     return undefined;
+  }
+
+  getConnectedUserIds() {
+    // Các "key" của đối tượng connectedClients chính là các userId duy nhất đang online.
+    // Phương thức Object.keys() sẽ trả về một mảng chứa tất cả các key này.
+    return Object.keys(this.connectedClients);
   }
 }
 

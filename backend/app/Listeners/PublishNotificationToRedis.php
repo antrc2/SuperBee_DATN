@@ -21,8 +21,6 @@ class PublishNotificationToRedis // implements ShouldQueue
         $payload = [
             'type' => $event->type,
             'data' => $event->data,
-            'user_id' => $event->userId,
-            'web_id' => $event->webId,
         ];
 
         // Chuyển đổi mảng thành chuỗi JSON

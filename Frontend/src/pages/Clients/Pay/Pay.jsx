@@ -118,7 +118,8 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-            }));
+
+              }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
           setPromotionCodes(

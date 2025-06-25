@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PartnerProductController as AdminPartnerProductController;
 use App\Http\Controllers\AWSController;
@@ -153,14 +154,14 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
             Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
         });
-        Route::prefix('/discountcode')->group(function () {
-            Route::get('/', [AdminDiscountCodeController::class, 'index']);
-            Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
-            Route::post('/', [AdminDiscountCodeController::class, 'store']);
-            Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
-            Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
-            Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
-        });
+        // Route::prefix('/discountcode')->group(function () {
+        //     Route::get('/', [AdminDiscountCodeController::class, 'index']);
+        //     Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+        //     Route::post('/', [AdminDiscountCodeController::class, 'store']);
+        //     Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+        //     Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+        //     Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+        // });
         Route::prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/', [CategoryController::class, 'store']);
@@ -175,10 +176,11 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
         });
-        Route::get("/products/browse", [AdminProductController::class, 'getProductsBrowse']);
+        
 
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/browse", [AdminProductController::class, 'getProductsBrowse']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
             Route::post('/', [AdminProductController::class, 'store']); // Thêm sản phẩm mới, chỉ cho partner
             Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
@@ -188,8 +190,10 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminProductController::class, 'update']);
         });
         Route::prefix("/orders")->group(function () {
-            Route::get("/", [OrderController::class, 'index']);
-            Route::get("/{id}", [OrderController::class, 'show']);
+            Route::get("/",[AdminOrderController::class,'index']);
+            Route::get("/",[AdminOrderController::class,'show']);
+            // Route::get("/", [OrderController::class, 'index']);
+            // Route::get("/{id}", [OrderController::class, 'show']);
         });
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);

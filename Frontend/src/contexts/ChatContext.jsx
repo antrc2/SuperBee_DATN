@@ -21,6 +21,7 @@ export function ChatProvider({ children }) {
   const [notifications, setNotifications] = useState([]);
   const [chatMessages, setChatMessages] = useState([]);
   const socketRef = useRef(null);
+  console.log("🚀 ~ ChatProvider ~ socketRef:", socketRef);
 
   // Callback xử lý thông báo riêng tư
   // Kênh lắng nghe là "private_notification"
@@ -112,11 +113,23 @@ export function ChatProvider({ children }) {
       // Có thể hiển thị thông báo lỗi cho người dùng
     }
   };
+  // hàm kiểm tra xem đã tồn tại chat_room chưa
+  const checkRoom = () => {
+    if (socketRef.current && socketRef.current.connected) {
+      // Server sẽ kiểm tra quyền dựa trên socket.userId
+      // socketRef.current.emit("checkRoom", messagePayload);
+      // console.log("Đã gửi tin nhắn chat:", messagePayload);
+    } else {
+      console.warn("Socket chưa kết nối, không thể gửi tin nhắn chat.");
+      // Có thể hiển thị thông báo lỗi cho người dùng
+    }
+  };
 
   const value = {
     notifications,
     chatMessages,
     sendChatMessage,
+    checkRoom,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

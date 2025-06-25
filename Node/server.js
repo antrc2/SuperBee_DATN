@@ -3,11 +3,14 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import Redis from "ioredis";
+import dotenv from "dotenv";
+dotenv.config();
 import config from "./config/index.js"; // Note the .js extension for local modules
 import setupSocketEvents from "./src/routers/socketEvents.js"; // Note the .js extension
 import handleIncomingNotification from "./src/controllers/NotificationController.js"; // Note the .js extension
 import authMiddleware from "./src/middleware/auth.js"; // Note the .js extension
 
+// import "./db.js";
 const app = express();
 const server = http.createServer(app);
 

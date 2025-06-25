@@ -169,12 +169,12 @@ return new class extends Migration
 
         Schema::table('chat_rooms', function (Blueprint $table) {
             // created_by in chat_rooms is not nullable.
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
+             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
         });
 
         Schema::table('messages', function (Blueprint $table) {
             $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
-            $table->foreign('sender_id')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::table('banners', function (Blueprint $table) {

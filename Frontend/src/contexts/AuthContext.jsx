@@ -27,6 +27,7 @@ export function AuthProvider({ children }) {
       : sessionStorage.getItem("access_token");
   });
   const [loading, setLoading] = useState(false);
+  const [token, setToken] = useState(sessionStorage.getItem("access_token"));
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const login = async (credentials) => {
@@ -55,6 +56,7 @@ export function AuthProvider({ children }) {
       // Success - process token and set user
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
+      setToken(accessToken);
       const decoded = getDecodedToken();
 
       if (decoded) {
@@ -157,6 +159,7 @@ export function AuthProvider({ children }) {
       }
       setUser(null);
       sessionStorage.removeItem("access_token");
+      setToken(null);
       setError(null);
       pop("Đăng xuất thành công", "s");
       navigate("/");
@@ -193,8 +196,9 @@ export function AuthProvider({ children }) {
         money: decoded.money,
         avatar: decoded?.avatar,
       });
+      setToken(sessionStorage.getItem("access_token"));
     } else {
-      setUser(null); 
+      setUser(null);
     }
 
     // Các logic về authStatus vẫn giữ nguyên
@@ -252,6 +256,7 @@ export function AuthProvider({ children }) {
   return (
     <AuthContext.Provider
       value={{
+        token,
         navigate,
         isLoggedIn,
         apiKey,

@@ -118,6 +118,7 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
+            }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
           setPromotionCodes(
@@ -406,8 +407,9 @@ export default function Pay() {
 
           <button
             onClick={handlePayment}
-            disabled={loadingCheckout || finalAmount > userBalance || !termsAccepted}
-
+            disabled={
+              loadingCheckout || finalAmount > userBalance || !termsAccepted
+            }
             className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <CreditCard className="inline mr-2" />

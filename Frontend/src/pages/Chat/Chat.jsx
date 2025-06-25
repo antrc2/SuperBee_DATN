@@ -1,61 +1,66 @@
-import React, { useEffect, useState } from "react";
-import io from "socket.io-client";
+// src/Demo.js (hoặc một component Layout/Header)
+// import React, { useState, useEffect } from "react";
+// import useSocketNotifications from "../../hooks/useSocketNotifications";
+// import NotificationList from "@components/NotificationList"; // Component để hiển thị thông báo
 
-const ChatComponent = () => {
-  const [messages, setMessages] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [socket, setSocket] = useState(null);
+function Demo() {
+  // const [loggedIn, setLoggedIn] = useState(false);
+  // const [jwtToken, setJwtToken] = useState(null);
+  // const nodeJsSocketUrl = "http://localhost:3001"; // URL của Node.js server
 
-  useEffect(() => {
-    // Kết nối đến server Node.js
-    const newSocket = io("http://localhost:3000"); // Địa chỉ server Node.js của bạn
-    setSocket(newSocket);
+  // // Giả lập trạng thái đăng nhập và JWT Token sau khi người dùng đăng nhập
+  // useEffect(() => {
+  //   // Trong ứng dụng thực tế, bạn sẽ lấy JWT từ API đăng nhập của Laravel
+  //   const storedToken = localStorage.getItem("jwt_token");
+  //   if (storedToken) {
+  //     setJwtToken(storedToken);
+  //     setLoggedIn(true);
+  //   }
+  // }, []);
 
-    newSocket.on("connect", () => {
-      console.log("Connected to Node.js Socket.IO server");
-    });
+  // // Sử dụng custom hook để quản lý notifications
+  // const { socket, notifications } = useSocketNotifications(
+  //   nodeJsSocketUrl,
+  //   loggedIn,
+  //   jwtToken
+  // );
 
-    // Lắng nghe sự kiện "message-sent" từ Node.js (tên sự kiện từ broadcastAs() của Laravel)
-    newSocket.on("message-sent", (data) => {
-      console.log("New message received:", data);
-      setMessages((prevMessages) => [...prevMessages, data]);
-    });
+  // const handleLogin = () => {
+  //   // Giả lập đăng nhập: lấy token từ Laravel và lưu vào localStorage
+  //   // Ví dụ: axios.post('/api/login', credentials).then(res => { localStorage.setItem('jwt_token', res.data.token); ... })
+  //   const dummyToken =
+  //     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjMiLCJuYW1lIjoiSm9obiBEb2UiLCJpYXQiOjE1MTYyMzkwMjJ9.g7sNf13_b9G_3_2_5_8_4_6_0_1_2_3_4_5_6_7_8_9_0_1_2_3_4_5_6_7_8_9_0"; // Thay bằng token thật
+  //   localStorage.setItem("jwt_token", dummyToken);
+  //   setJwtToken(dummyToken);
+  //   setLoggedIn(true);
+  //   console.log("Logged in and JWT set.");
+  // };
 
-    // Lắng nghe sự kiện thông báo (ví dụ, bạn có thể tạo một event khác trong Laravel)
-    // newSocket.on('new-notification', (data) => {
-    //     console.log('New notification received:', data);
-    //     setNotifications(prevNotifications => [...prevNotifications, data]);
-    // });
-
-    newSocket.on("disconnect", () => {
-      console.log("Disconnected from Node.js Socket.IO server");
-    });
-
-    // Cleanup khi component unmount
-    return () => {
-      newSocket.disconnect();
-    };
-  }, []);
+  // const handleLogout = () => {
+  //   localStorage.removeItem("jwt_token");
+  //   setJwtToken(null);
+  //   setLoggedIn(false);
+  //   console.log("Logged out.");
+  // };
 
   return (
-    <div>
-      <h1>Real-time Chat</h1>
-      <div>
-        <h2>Messages:</h2>
-        {messages.map((msg, index) => (
-          <p key={index}>
-            <strong>{msg.user.name}:</strong> {msg.message}
-          </p>
-        ))}
-      </div>
-      {/* <div>
-                <h2>Notifications:</h2>
-                {notifications.map((notif, index) => (
-                    <p key={index}>{notif.title}: {notif.content}</p>
-                ))}
-            </div> */}
+    <div className="App">
+      <h1>Web Bán Acc Game</h1>
+      {/* {loggedIn ? (
+        <div>
+          <p>Chào mừng, bạn đã đăng nhập!</p>
+          <button onClick={handleLogout}>Đăng xuất</button>
+          <NotificationList notifications={notifications} />
+        </div>
+      ) : (
+        <div>
+          <p>Bạn chưa đăng nhập.</p>
+          <button onClick={handleLogin}>Đăng nhập (Giả lập)</button>
+        </div>
+      )} */}
+      {/* Các phần khác của ứng dụng ReactJS */}
     </div>
   );
-};
+}
 
-export default ChatComponent;
+export default Demo;

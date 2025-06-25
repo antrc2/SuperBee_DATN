@@ -1,19 +1,25 @@
 <?php
 
 use App\Events\NewMessage;
+use App\Events\SystemNotification;
 use Illuminate\Support\Facades\Route;
 use Predis\Client;
 Route::get('/', function () {
-    $r = new Client([
-        'scheme' => 'tcp',
-        'host'   => '127.0.0.1',
-        'port'   => 6379,
-        'password' => null,
-        'database' => 0,
-    ]);
+    $userId = "admin";
+    $user = [
+        "id"=>1,
+        "name"=>"admin"
+    ];
     
-    $r->set('foo', 'bar');
-    echo $r->get('foo'); // bar
+    event(new SystemNotification(
+        'order_status_updated', // Loại thông báo
+        [
+            'order_id' => 3,
+            'status' => false,
+            'message' => 'Đơn hàng #' . 33 . ' của bạn đã được cập nhật thành ' . "" . '.',
+        ],
+        $userId // Gửi userId để Node.js biết gửi cho ai
+    ));
     
 });
 Route::get('/test', function () {

@@ -10,7 +10,6 @@ export default function CartDropdown({
   onClose,
   isMobile = false,
 }) {
-  console.log("🚀 ~ cartItems:", cartItems);
   const dropdownRef = useRef(null);
 
   useEffect(() => {

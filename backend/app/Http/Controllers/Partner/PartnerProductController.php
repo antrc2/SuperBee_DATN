@@ -8,7 +8,6 @@ use App\Models\Product;
 use App\Models\ProductCredential;
 use App\Models\ProductGameAttribute;
 use App\Models\ProductImage;
-use Aws\Glacier\TreeHash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -66,8 +65,11 @@ class PartnerProductController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $product = Product::with(['category', "images", "gameAttributes", "credentials", "updater", "creator"])->where('id', $id)->get();
-            if (count($product) == 0) {
+            $product = Product::with(['category', "images", "gameAttributes", "updater", "creator"])
+                ->where('id', $id)
+                ->where('created_by', $request->user_id)
+                ->first();
+            if (!$product) {
                 return response()->json(
                     [
                         "status" => false,
@@ -76,6 +78,10 @@ class PartnerProductController extends Controller
                     ],
                     404
                 );
+            }
+
+            if (in_array($product->status, [0, 2], true)) {
+                $product->load('credentials');
             }
 
             return response()->json(
@@ -101,7 +107,7 @@ class PartnerProductController extends Controller
                 ->find($id);
             if (!$product) {
                 return response()->json([
-                    'status'  => false,
+                    'status' => false,
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
@@ -115,16 +121,16 @@ class PartnerProductController extends Controller
 
             // Validate dữ liệu
             $validated = $request->validate([
-                'category_id'                 => 'nullable|integer|exists:categories,id',
-                'price'                       => 'nullable|numeric|min:0',
-                'sale'                        => 'nullable|numeric|min:0',
-                'username'                    => 'nullable|string',
-                'password'                    => 'nullable|string',
-                'attributes'                  => 'nullable|array',
-                'attributes.*.attribute_key'  => 'required_with:attributes|string',
+                'category_id' => 'nullable|integer|exists:categories,id',
+                'price' => 'nullable|numeric|min:0',
+                'sale' => 'nullable|numeric|min:0',
+                'username' => 'nullable|string',
+                'password' => 'nullable|string',
+                'attributes' => 'nullable|array',
+                'attributes.*.attribute_key' => 'required_with:attributes|string',
                 'attributes.*.attribute_value' => 'required_with:attributes|string',
-                'images'                      => 'nullable|array',
-                'images.*'                    => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'images' => 'nullable|array',
+                'images.*' => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
 
             // Kiểm tra sale < price
@@ -133,7 +139,7 @@ class PartnerProductController extends Controller
                 $validated['sale'] >= $validated['price']
             ) {
                 return response()->json([
-                    'status'  => false,
+                    'status' => false,
                     'message' => 'Giá sale phải nhỏ hơn giá gốc',
                 ], 400);
             }
@@ -143,9 +149,9 @@ class PartnerProductController extends Controller
             // Cập nhật fields cơ bản
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
-                'price'       => $validated['price'] ?? $product->price,
-                'sale'        => $validated['sale']  ?? $product->sale,
-                'updated_by'  => $request->user_id,
+                'price' => $validated['price'] ?? $product->price,
+                'sale' => $validated['sale'] ?? $product->sale,
+                'updated_by' => $request->user_id,
                 "status" => 2, // Mặc định là 2 (chờ duyệt)
             ]);
 
@@ -164,7 +170,7 @@ class PartnerProductController extends Controller
             if ($request->hasFile('images') || $keepCount !== $dbCount) {
                 // 1) Xóa những ảnh DB mà client không giữ lại
                 foreach ($product->images as $img) {
-                    if (! in_array($img->image_url, $keepList, true)) {
+                    if (!in_array($img->image_url, $keepList, true)) {
                         // Chuyển URL public về đường dẫn relative: "product_images/uuid.jpg"
                         $relative = ltrim(parse_url($img->image_url, PHP_URL_PATH), '/storage/');
                         $this->deleteFile($relative);
@@ -179,14 +185,14 @@ class PartnerProductController extends Controller
                         if (is_null($url)) {
                             DB::rollBack();
                             return response()->json([
-                                'status'  => false,
+                                'status' => false,
                                 'message' => 'Upload ảnh thất bại',
                             ], 500);
                         }
                         ProductImage::create([
                             'product_id' => $product->id,
-                            'alt_text'   => $file->getClientOriginalName(),
-                            'image_url'  => $url,
+                            'alt_text' => $file->getClientOriginalName(),
+                            'image_url' => $url,
                         ]);
                     }
                 }
@@ -216,8 +222,8 @@ class PartnerProductController extends Controller
                 // Thêm mới
                 foreach ($validated['attributes'] as $attr) {
                     ProductGameAttribute::create([
-                        'product_id'      => $product->id,
-                        'attribute_key'   => $attr['attribute_key'],
+                        'product_id' => $product->id,
+                        'attribute_key' => $attr['attribute_key'],
                         'attribute_value' => $attr['attribute_value'],
                     ]);
                 }
@@ -226,32 +232,77 @@ class PartnerProductController extends Controller
             DB::commit();
 
             return response()->json([
-                'status'  => true,
+                'status' => true,
                 'message' => 'Cập nhật sản phẩm thành công',
             ], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             DB::rollBack();
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Dữ liệu không hợp lệ',
-                'errors'  => $e->errors(),
+                'errors' => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
-                'status'  => false,
+                'status' => false,
                 'message' => 'Đã có lỗi xảy ra',
-                'error'   => $th->getMessage(),
+                'error' => $th->getMessage(),
             ], 500);
         }
     }
 
+    private function generate_sku($length = 20)
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $characters[random_int(0, strlen($characters) - 1)];
+        }
+        return $code;
+    }
+
+    private function generateUniqueSku($length = 8, $maxTries = 100)
+    {
+        $tries = 0;
+        do {
+            $sku = $this->generate_sku($length);
+            $tries++;
+            if ($tries >= $maxTries) {
+                throw new \Exception('Không thể tạo SKU duy nhất sau ' . $maxTries . ' lần thử');
+            }
+        } while (Product::where('sku', $sku)->exists());
+
+        return $sku;
+    }
+
+    private function uploadFile($file, $directory)
+    {
+        try {
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($directory, $filename, 'public');
+            return '/storage/' . $path;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    private function deleteFile($relativePath)
+    {
+        try {
+            $fullPath = storage_path('app/public/' . $relativePath);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 
     public function store(Request $request)
     {
         try {
-            $data = $request->json()->all();
-
             // Nếu attributes là chuỗi JSON, chuyển nó thành mảng
             $attributes = is_string($request->input('attributes'))
                 ? json_decode($request->input('attributes'), true)
@@ -283,25 +334,13 @@ class PartnerProductController extends Controller
 
             // Bắt đầu transaction
             DB::beginTransaction();
-            function generate_sku($length = 20)
-            {
-                $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-                $code = '';
-                for ($i = 0; $i < $length; $i++) {
-                    $code .= $characters[random_int(0, strlen($characters) - 1)];
-                }
-                return $code;
-            }
 
-            $sku = "";
+            $sku = $this->generateUniqueSku(8);
 
-            do {
-                $sku = generate_sku();
-            } while (Product::where('sku', $sku)->first() !== NULL);
             // Tạo sản phẩm
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
-                "sku" => generate_sku(8),
+                "sku" => $sku,
                 "price" => $validatedData['price'],
                 "sale" => $validatedData['sale'] ?? null,
                 "web_id" => $request->web_id,
@@ -371,7 +410,7 @@ class PartnerProductController extends Controller
         }
     }
 
-    private function   check_isset_product_by_id($id)
+    private function check_isset_product_by_id($id)
     {
         return Product::where("id", $id)->exists();
     }
@@ -380,9 +419,12 @@ class PartnerProductController extends Controller
     {
         try {
             if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)->whereIn("status", [1, 2])->update([
-                    "status" => 3
-                ]);
+                $product = Product::where("id", $id)
+                    ->where("created_by", $request->user_id)
+                    ->whereIn("status", [1, 2])
+                    ->update([
+                        "status" => 3
+                    ]);
 
 
                 if ($product) {
@@ -414,35 +456,55 @@ class PartnerProductController extends Controller
     public function accept(Request $request, $id)
     {
         try {
+            $request->validate([
+                'password' => 'required|string|min:6'
+            ]);
+
             $password = $request->password;
-            if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)->where("status", 2)->update([
-                    "status" => 1
-                ]);
 
-
-                if ($product) {
-                    ProductCredential::where("product_id", $id)->update([
-                        "password" => $password
-                    ]);
-                    return response()->json([
-                        "status" => true,
-                        "message" => "Chấp nhận bán sản phẩm thành công",
-                    ]);
-                } else {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Không thể chấp nhận bán sản phẩm",
-                    ], 400);
-                }
-            } else {
+            if (!$this->check_isset_product_by_id($id)) {
                 return response()->json([
-                    "status" => False,
+                    "status" => false,
                     "message" => "Sản phẩm không tồn tại",
                 ], 404);
             }
+
+            DB::beginTransaction();
+
+            $product = Product::where("id", $id)
+                ->where("created_by", $request->user_id)
+                ->where("status", 2)
+                ->update([
+                    "status" => 1
+                ]);
+
+            if ($product) {
+                ProductCredential::where("product_id", $id)->update([
+                    "password" => $password
+                ]);
+
+                DB::commit();
+
+                return response()->json([
+                    "status" => true,
+                    "message" => "Chấp nhận bán sản phẩm thành công",
+                ]);
+            } else {
+                DB::rollBack();
+                return response()->json([
+                    "status" => false,
+                    "message" => "Không thể chấp nhận bán sản phẩm",
+                ], 400);
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+            return response()->json([
+                "status" => false,
+                "message" => "Dữ liệu không hợp lệ",
+                "errors" => $e->errors(),
+            ], 422);
         } catch (\Throwable $th) {
-            //throw $th;
+            DB::rollBack();
             return response()->json([
                 "status" => False,
                 'message' => "Đã có lỗi xảy ra",
@@ -453,9 +515,12 @@ class PartnerProductController extends Controller
     {
         try {
             if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)->where("status", 3)->update([
-                    "status" => 2
-                ]);
+                $product = Product::where("id", $id)
+                    ->where("created_by", $request->user_id)
+                    ->where("status", 3)
+                    ->update([
+                        "status" => 2
+                    ]);
 
 
                 if ($product) {
@@ -489,9 +554,12 @@ class PartnerProductController extends Controller
     {
         try {
             if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)->where("status", 2)->update([
-                    "status" => 0
-                ]);
+                $product = Product::where("id", $id)
+                    ->where("created_by", $request->user_id)
+                    ->where("status", 2)
+                    ->update([
+                        "status" => 0
+                    ]);
 
 
                 if ($product) {

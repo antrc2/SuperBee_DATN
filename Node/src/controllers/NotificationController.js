@@ -1,63 +1,97 @@
-import connectionManager from "../models/ConnectionManager.js"; // Import ConnectionManager để quản lý các kết nối
+// src/controllers/NotificationController.js
+import connectionManager from "../models/ConnectionManager.js";
 
-// Hàm xử lý thông báo đến từ Redis
-// Hàm này nhận đối tượng 'io' của Socket.IO để có thể gửi thông báo tới các client
-const handleIncomingNotification = (io) => (channel, message) => {
-  try {
-    const payload = JSON.parse(message); // Phân tích cú pháp chuỗi JSON nhận được từ Redis
-    // Lấy các thông tin cần thiết từ payload: loại thông báo, dữ liệu, và ID người dùng
-    const { type, data, user_id } = payload; // Đã bỏ 'web_id' khỏi đây
+function sendSocketNotification(io, notificationEventType, notificationData) {
+  const userId = notificationData.user_id;
 
+  if (userId) {
+    // Đây là thông báo cá nhân (cho một hoặc nhiều phiên của cùng một người dùng)
     console.log(
-      `[Thông báo Redis] Loại: ${type}, ID Người dùng: ${
-        user_id || "Không có (Công khai)"
-      }`
+      `[Socket Notif] Đang xử lý thông báo riêng tư cho người dùng: ${userId}, Event: ${notificationEventType}`
     );
-    // Ví dụ log: [Thông báo Redis] Loại: order_status_updated, ID Người dùng: user_123
-    // Ví dụ log: [Thông báo Redis] Loại: system_alert, ID Người dùng: Không có (Công khai)
-    io.emit("public_notification", { type, data });
-    if (user_id) {
-      // Nếu payload có user_id, đây là thông báo cá nhân dành cho một người dùng cụ thể
+    const socketIds = connectionManager.getSocketIdsByUserId(userId);
+
+    if (socketIds.length > 0) {
+      socketIds.forEach((socketId) => {
+        // Gửi thông báo tới từng socket của người dùng đó
+        io.to(socketId).emit(notificationEventType, notificationData);
+      });
       console.log(
-        `[Thông báo Redis] Đang xử lý thông báo cá nhân cho người dùng: ${user_id}`
+        `[Socket Notif] Đã gửi thông báo riêng tư '${notificationEventType}' tới TẤT CẢ các phiên của người dùng ${userId}.`
       );
+    } else {
+      console.log(`[Socket Notif] Người dùng ${userId} hiện không trực tuyến.`);
+    }
+  } else {
+    // Đây là thông báo công khai (gửi tới tất cả client đang kết nối)
+    console.log(
+      `[Socket Notif] Đang xử lý thông báo công khai, Event: ${notificationEventType}`
+    );
+    io.emit(notificationEventType, notificationData);
+    console.log(
+      `[Socket Notif] Đã gửi thông báo công khai '${notificationEventType}' tới tất cả client đang kết nối.`
+    );
+  }
+}
 
-      // Lấy tất cả Socket IDs của người dùng này từ ConnectionManager
-      // (Người dùng có thể có nhiều phiên kết nối trên các thiết bị/tab khác nhau)
-      const socketIds = connectionManager.getSocketIdsByUserId(user_id);
-      console.log("🚀 ~ socketIds:", socketIds); // Kiểm tra các socket ID tìm thấy
+/**
+ * Hàm xử lý chính cho thông báo đến từ Redis (email, real-time notification, chat message).
+ */
+const handleIncomingNotification = (io) => async (channel, message) => {
+  try {
+    const payload = JSON.parse(message);
+    const { type, data } = payload;
 
-      if (socketIds.length > 0) {
-        // Nếu tìm thấy các socket đang hoạt động của người dùng
-        socketIds.forEach((socketId) => {
-          // Gửi thông báo 'private_notification' tới từng socket của người dùng đó
-          // Đây là event name mà client sẽ lắng nghe
-          io.to(socketId).emit("private_notification", { type, data });
-        });
+    console.log(`\n--- Nhận tin nhắn Redis ---`);
+    console.log(`  Kênh: ${channel}`);
+    console.log(`  Loại Payload: ${type}`);
+    console.log(`  Dữ liệu Payload:`, data);
+
+    // Logic để phân loại và xử lý thông báo dựa vào 'type'
+    if (type.startsWith("email_")) {
+      // Đây là một thông báo email.
+      // Ví dụ: 'email_welcome', 'email_order_confirmation', 'email_password_reset'
+      console.log(
+        `[Handler] Nhận yêu cầu gửi email loại '${type}'. Đang chuyển tiếp đến dịch vụ email...`
+      );
+      // Vui lòng import và gọi hàm gửi email từ dịch vụ bên ngoài của bạn ở đây.
+      // Ví dụ: await emailService.sendEmailByType(type, data);
+      // Bạn cần tự tạo và cấu hình 'src/services/emailService.js'
+      // và đảm bảo nó export hàm 'sendEmailByType'
+      try {
+        // Đây là nơi bạn sẽ gọi hàm từ dịch vụ gửi email bên ngoài
+        // Ví dụ: await emailService.sendEmailByType(type, data);
         console.log(
-          `[Thông báo Redis] Đã gửi thông báo riêng tư tới TẤT CẢ các phiên của người dùng ${user_id}.`
+          `[Handler] Logic gửi email cho loại '${type}' cần được xử lý bởi một service email riêng biệt.`
         );
-      } else {
-        // Nếu người dùng đó không online (không có socket nào được tìm thấy)
-        console.log(
-          `[Thông báo Redis] Người dùng ${user_id} hiện không trực tuyến.`
+        // Thêm code để gọi dịch vụ email của bạn ở đây!
+      } catch (emailError) {
+        console.error(
+          `[Handler] Lỗi khi chuyển tiếp yêu cầu email loại '${type}':`,
+          emailError
         );
       }
+    } else if (type.startsWith("notification_")) {
+      // Đây là một thông báo real-time chung hoặc cá nhân.
+      // Ví dụ: 'notification_order_status_updated', 'notification_system_alert', 'notification_new_follower'
+      sendSocketNotification(io, type, data); // 'data' ở đây chứa user_id (nếu có) và nội dung thông báo
+    } else if (type.startsWith("message_")) {
+      // Đây là một tin nhắn (ví dụ: chat message, tin nhắn hệ thống qua chat)
+      // Ví dụ: 'message_chat', 'message_group_chat', 'message_direct'
+      console.log(`[Handler] Đang xử lý tin nhắn loại '${type}'...`);
+      // Có thể dùng chung hàm sendSocketNotification nếu logic tương tự,
+      // hoặc tạo một hàm riêng cho logic chat phức tạp hơn.
+      sendSocketNotification(io, type, data); // Gửi tin nhắn qua Socket.IO, 'data' chứa thông tin chat (sender_id, recipient_id, message_text, ...)
     } else {
-      // Nếu payload không có user_id, đây là thông báo chung cho tất cả các client đang kết nối
-      console.log(
-        `[Thông báo Redis] Đang xử lý thông báo chung cho TẤT CẢ client.`
-      );
-      // Gửi thông báo 'public_notification' tới tất cả các client
-      io.emit("public_notification", { type, data });
-      console.log(
-        `[Thông báo Redis] Đã gửi thông báo công khai: Loại "${type}".`
+      console.warn(
+        `[Handler] Loại tin nhắn không được xử lý từ Redis: ${type}. Bỏ qua.`
       );
     }
-  } catch (error) {
+  } catch (e) {
     // Xử lý lỗi nếu có vấn đề trong quá trình phân tích payload hoặc xử lý
     console.error(
-      `[Lỗi Xử lý Redis] Có lỗi khi xử lý tin nhắn Redis: ${error.message}`
+      `[Lỗi Xử lý Redis] Có lỗi khi xử lý tin nhắn Redis: ${e.message}`,
+      e.stack
     );
   }
 };

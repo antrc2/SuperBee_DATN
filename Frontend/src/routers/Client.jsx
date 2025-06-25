@@ -15,7 +15,7 @@ export const clientRoutes = [
     children: [
       {
         index: true,
-        element: <Demo />,
+        element: <Home />,
       },
 
       // Áp dụng logic kiểm tra tại đây

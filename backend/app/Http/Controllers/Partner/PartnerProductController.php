@@ -57,7 +57,6 @@ class PartnerProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
-                // "error" => $th->getMessage() // Không nên trả về lỗi chi tiết cho client ở môi trường production
                 "data" => []
             ], 500); // Trả về status code 500
         }
@@ -132,6 +131,10 @@ class PartnerProductController extends Controller
                 'images' => 'nullable|array',
                 'images.*' => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
+            if (isset($validated['sale']) && $validated['sale'] == 0) {
+                $validated['sale'] = null;
+            }
+
 
             // Kiểm tra sale < price
             if (
@@ -247,7 +250,6 @@ class PartnerProductController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Đã có lỗi xảy ra',
-                'error' => $th->getMessage(),
             ], 500);
         }
     }
@@ -276,29 +278,7 @@ class PartnerProductController extends Controller
         return $sku;
     }
 
-    private function uploadFile($file, $directory)
-    {
-        try {
-            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($directory, $filename, 'public');
-            return '/storage/' . $path;
-        } catch (\Exception $e) {
-            return null;
-        }
-    }
 
-    private function deleteFile($relativePath)
-    {
-        try {
-            $fullPath = storage_path('app/public/' . $relativePath);
-            if (file_exists($fullPath)) {
-                unlink($fullPath);
-            }
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
 
     public function store(Request $request)
     {
@@ -323,6 +303,9 @@ class PartnerProductController extends Controller
                 'images' => 'required|array',
                 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
+            if (isset($validatedData['sale']) && $validatedData['sale'] == 0) {
+                $validatedData['sale'] = null;
+            }
 
             // Kiểm tra giá sale so với giá gốc
             if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
@@ -405,7 +388,6 @@ class PartnerProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Đã có lỗi xảy ra",
-                "error" => $th->getMessage(),
             ], 500);
         }
     }

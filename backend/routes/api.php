@@ -211,16 +211,13 @@ Route::middleware(['jwt'])->group(function () {
 
             Route::post("/purchase", [UserOrderController::class, 'purchase']);
         });
-        Route::prefix("/products")->group(function () {
-            Route::get("/", [PartnerProductController::class, 'index']);
-            Route::get("/{id}", [PartnerProductController::class, 'show']);
-
-            Route::post('/', [PartnerProductController::class, 'store']); // Thêm sản phẩm mới, chỉ cho partner
-            Route::post("/{id}/deny", [PartnerProductController::class, 'deny']); // Từ chối sản phẩm
-            Route::post("/{id}/accept", [PartnerProductController::class, 'accept']); // Chấp nhận sản phẩm 
-            Route::post("/{id}/restore", [PartnerProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
-            Route::post("/{id}/cancel", [PartnerProductController::class, 'cancel']); // Người bán hủy bán
+        Route::prefix('/products')->group(function () {
+            Route::get('/', [PartnerProductController::class, 'index']);
+            Route::get('/{id}', [PartnerProductController::class, 'show']);
+            Route::post('/store', [PartnerProductController::class, 'store']);
             Route::put('/{id}', [PartnerProductController::class, 'update']);
+            Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
+            Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);
         });
     });
 });

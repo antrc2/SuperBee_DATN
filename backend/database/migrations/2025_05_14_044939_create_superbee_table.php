@@ -376,8 +376,11 @@ return new class extends Migration
         Schema::create('chat_rooms', function (Blueprint $table) {
             $table->id();
             $table->string('name', 255)->nullable(); // Tên phòng chat (có thể null nếu là chat riêng)
-            $table->unsignedBigInteger('created_by'); // Người tạo phòng (null nếu là hệ thống tạo)
+            $table->unsignedBigInteger('created_by')->nullable(); // Người tạo phòng (có thể null nếu là hệ thống tạo hoặc khách hàng ẩn danh)
+            // $table->unsignedBigInteger('consultant_user_id')->nullable(); // Đã loại bỏ cột này
+            $table->string('status', 50)->default('open'); // Thêm trạng thái phòng chat: 'open', 'closed', 'pending_assignment'
             $table->timestamps();
+          
         });
 
         // Bảng messages (Nội dung tin nhắn)
@@ -387,7 +390,39 @@ return new class extends Migration
             $table->unsignedBigInteger('sender_id'); // Ai gửi tin nhắn
             $table->text('content')->nullable(); // Nội dung tin nhắn (có thể null nếu chỉ có attachment)
             $table->string('attachment_url', 255)->nullable(); // Đường dẫn file đính kèm
-            $table->timestamps(); // Đổi từ `timestamp('created_at')` thành `timestamps()`
+            $table->timestamps();
+          
+        });
+
+        // Bảng agents (Thông tin nhân viên tư vấn)
+        Schema::create('agents', function (Blueprint $table) {
+            $table->id(); // ID của nhân viên tư vấn (agent_id)
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->string('name', 255)->nullable(); // Tên hiển thị của nhân viên (có thể lấy từ bảng users)
+            $table->string('status', 50)->default('offline'); // Trạng thái của nhân viên: 'online', 'offline', 'available', 'busy', 'away'
+            $table->integer('current_chats_count')->default(0); // Số lượng cuộc trò chuyện đang hoạt động
+            $table->integer('max_chats_limit')->default(5); // Giới hạn số lượng chat tối đa mà một nhân viên có thể xử lý cùng lúc.
+            $table->decimal('average_rating', 3, 2)->nullable(); // Đánh giá trung bình của nhân viên
+            $table->integer('total_ratings_count')->default(0); // Tổng số lượt đánh giá đã nhận
+            $table->timestamp('last_active_at')->nullable(); // Thời gian hoạt động gần nhất
+            $table->unsignedBigInteger('web_id')->nullable(); // ID của website hoặc kênh mà agent này thuộc về
+            $table->timestamps();
+        });
+
+        // Bảng chat_room_participants (Thành viên trong phòng chat)
+        // Bảng này sẽ liệt kê tất cả các user tham gia vào một phòng chat, bao gồm cả khách hàng và nhân viên tư vấn được gán.
+        Schema::create('chat_room_participants', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('chat_room_id');
+            $table->unsignedBigInteger('user_id'); // Đây có thể là khách hàng hoặc nhân viên
+            $table->string('role', 50); // 'customer' hoặc 'agent' - Rất quan trọng để xác định vai trò trong phòng chat 1-1
+            $table->timestamp('joined_at')->useCurrent(); // Thời gian tham gia phòng chat
+            $table->timestamp('left_at')->nullable(); // Thời gian rời phòng chat (nếu có, cho chat nhóm hoặc khi chat kết thúc)
+            $table->timestamps();
+            // Đảm bảo mỗi người dùng chỉ có một vai trò trong một phòng chat tại một thời điểm
+            $table->unique(['chat_room_id', 'user_id']);
+            $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         // Bảng banners (Banner tiêu đề)

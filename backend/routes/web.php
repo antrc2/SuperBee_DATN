@@ -1,28 +1,20 @@
 <?php
 
-use App\Events\NewMessage;
+
+
+use App\Events\EmailNotificationRequested;
+use App\Events\SystemNotification;
 use Illuminate\Support\Facades\Route;
 use Predis\Client;
-Route::get('/', function () {
-    $r = new Client([
-        'scheme' => 'tcp',
-        'host'   => '127.0.0.1',
-        'port'   => 6379,
-        'password' => null,
-        'database' => 0,
-    ]);
+Route::get('/', function () {    
+    event(new SystemNotification(
+        'email_welcom', // Loại thông báo
+        [
+            'order_id' => 3,
+            'status' => false,
+            'message' => 'Đơn hàng #' . 33 . ' của bạn đã được cập nhật thành ' . "" . '.',
+        ],
+        
+    ));
     
-    $r->set('foo', 'bar');
-    echo $r->get('foo'); // bar
-    
-});
-Route::get('/test', function () {
-    $message ="hello";
-    $user = [
-        "id"=>1,
-        "name"=>"HaiTran"
-    ];
-   $a = event(new NewMessage($message, $user));
-   var_dump($a);
-
 });

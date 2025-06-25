@@ -278,7 +278,29 @@ class PartnerProductController extends Controller
         return $sku;
     }
 
+    private function uploadFile($file, $directory)
+    {
+        try {
+            $filename = uniqid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs($directory, $filename, 'public');
+            return '/storage/' . $path;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
 
+    private function deleteFile($relativePath)
+    {
+        try {
+            $fullPath = storage_path('app/public/' . $relativePath);
+            if (file_exists($fullPath)) {
+                unlink($fullPath);
+            }
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
+    }
 
     public function store(Request $request)
     {

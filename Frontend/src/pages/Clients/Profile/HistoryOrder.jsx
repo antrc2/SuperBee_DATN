@@ -7,8 +7,9 @@ import {
   Calendar,
   Filter,
   Eye,
-  ShoppingCart,
   X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import api from "../../../utils/http";
 
@@ -59,9 +60,13 @@ const renderStatus = (status) => {
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
 
-  const handleBuySimilar = (productId) => {
-    console.log(`Bắt đầu quá trình mua lại sản phẩm có ID: ${productId}`);
-    alert(`Chuyển đến trang của sản phẩm ID: ${productId}`);
+  const [expandedItems, setExpandedItems] = useState({});
+
+  const toggleDetails = (itemId) => {
+    setExpandedItems((prev) => ({
+      ...prev,
+      [itemId]: !prev[itemId],
+    }));
   };
 
   const subtotal = order.items.reduce(
@@ -97,35 +102,119 @@ const OrderDetailModal = ({ order, onClose }) => {
             <h4 className="font-bold text-lg mb-4 text-white">
               Danh sách sản phẩm
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {order.items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center p-4 bg-slate-700/50 rounded-lg border border-slate-600"
+                  className="p-4 bg-slate-700/50 rounded-lg border border-slate-600"
                 >
-                  <img
-                    src={item.product_image || "/placeholder.svg"}
-                    alt={item.product_name}
-                    className="h-16 w-16 object-cover rounded-lg mr-4"
-                  />
-                  <div className="flex-grow">
-                    <p className="font-semibold text-white">
-                      {item.product_name}
-                    </p>
-                    <p className="text-sm text-slate-400">
-                      ID: {item.product_id}
-                    </p>
-                    <p className="text-sm font-medium text-blue-400">
-                      {formatCurrency(item.unit_price)}
-                    </p>
+                  <div className="flex items-center">
+                    <img
+                      src={item.product?.images[0]?.image_url || "/placeholder.svg"}
+                      alt={item.product_name || "Sản phẩm"}
+                      className="h-16 w-16 object-cover rounded-lg mr-4"
+                    />
+                    <div className="flex-grow">
+                      <p className="font-semibold text-white">
+                        SKU: {item.product?.sku || item.product_id}
+                      </p>
+                      <p className="text-sm font-medium text-blue-400">
+                        {formatCurrency(item.unit_price)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => toggleDetails(item.id)}
+                      className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
+                    >
+                      Xem chi tiết
+                      {expandedItems[item.id] ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => handleBuySimilar(item.product_id)}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors"
-                  >
-                    <ShoppingCart className="h-4 w-4" />
-                    Mua lại
-                  </button>
+                  
+                  {expandedItems[item.id] && (
+                    <div className="mt-4 pt-4 border-t border-slate-600">
+                      {item.product?.credentials && item.product.credentials.length > 0 ? (
+                    <div className="mt-4 pt-4 border-t border-slate-600">
+                      <h5 className="font-semibold text-white mb-2">
+                        Thông tin tài khoản
+                      </h5>
+                      <div className="bg-slate-800/50 p-3 rounded-lg space-y-2">
+                        <p className="text-sm text-slate-300">
+                          <span className="font-medium">Tên đăng nhập:</span>{" "}
+                          {item.product.credentials[0].username}
+                        </p>
+                        <div className="text-sm text-slate-300">
+                          <span className="font-medium">Mật khẩu:</span>{" "}
+                          <input
+                            type="text"
+                            value={item.product.credentials[0].password}
+                            disabled
+                            style={{
+                              backgroundColor: "#2d2d2d",
+                              color: "#2d2d2d",
+                              border: "1px solid #3a3a3a",
+                              padding: "2px 4px",
+                              borderRadius: "4px",
+                              width: "100px",
+                            }}
+                            onFocus={(e) => e.target.select()}
+                          /><br></br>
+                        </div>
+                      </div>
+                          {/* <span><i>*bôi đen ô màu nâu để có thể nhìn thấy mật khẩu</i></span> */}
+                    </div>
+                  ) : (
+                    <div className="mt-4 pt-4 border-t border-slate-600">
+                      <p className="text-sm text-red-400">
+                        Không có thông tin tài khoản cho sản phẩm này.
+                      </p>
+                    </div>
+                  )}
+                      <h5 className="font-semibold text-white mb-2">
+                        Thông tin chi tiết sản phẩm
+                      </h5>
+                      <div className="bg-slate-800/50 p-3 rounded-lg space-y-2">
+                        <div>
+                          <p className="text-sm text-slate-300 font-medium">
+                            Danh mục:
+                          </p>
+                          <p className="text-sm text-slate-400">
+                            {item.product?.category?.name || "Không có danh mục"}
+                          </p>
+                          {item.product?.category?.image_url && (
+                            <img
+                              src={item.product.category.image_url}
+                              alt={item.product.category.name}
+                              className="h-16 w-16 object-cover rounded-lg mt-2"
+                            />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-300 font-medium">
+                            Thuộc tính sản phẩm:
+                          </p>
+                          {item.product?.game_attributes &&
+                          item.product.game_attributes.length > 0 ? (
+                            <ul className="text-sm text-slate-400 list-disc pl-5">
+                              {item.product.game_attributes.map((attr, index) => (
+                                <li key={index}>
+                                  {attr.attribute_key}: {attr.attribute_value}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-sm text-slate-400">
+                              Không có thuộc tính nào.
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -180,13 +269,17 @@ export default function HistoryOrder() {
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const response = await api.get("/user/order");
-      const data = response.data;
-      const sortedData = data.sort(
-        (a, b) => new Date(b.created_at) - new Date(a.created_at)
-      );
-      setAllOrders(sortedData);
-      setFilteredOrders(sortedData);
+      try {
+        const response = await api.get("/user/order");
+        const data = response.data;
+        const sortedData = data.sort(
+          (a, b) => new Date(b.created_at) - new Date(a.created_at)
+        );
+        setAllOrders(sortedData);
+        setFilteredOrders(sortedData);
+      } catch (error) {
+        console.error(error);
+      }
     };
     fetchOrders();
   }, []);
@@ -225,8 +318,14 @@ export default function HistoryOrder() {
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleViewDetails = (order) => {
-    setSelectedOrder(order);
+  const handleViewDetails = async (order) => {
+    try {
+      const response = await api.get(`/orders/${order.id}`);
+      console.log(response.data);
+      setSelectedOrder(response.data.data);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   return (

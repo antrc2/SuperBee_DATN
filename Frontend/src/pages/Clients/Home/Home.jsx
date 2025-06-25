@@ -12,12 +12,12 @@ export default function Home() {
         <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
       </div>
       <div>
-        <ListCategoryCha categories={data?.categories ?? []} />
+        <ListCategoryCha categories={data?.categories?.onlyChildren ?? []} />
       </div>
       {/* LQ */}
       <div className="mt-8">
         <ListCategoryCon
-          items={data?.categories?.filter((e) => e.id == 18)}
+          items={data?.categories?.onlyChildren?.filter((e) => e.id == 18)}
           count={5}
           title="KHO NICK LIÊN QUÂN"
         />
@@ -25,7 +25,7 @@ export default function Home() {
       {/* {/* FF */}
       <div className="mt-8">
         <ListCategoryCon
-          items={data?.categories?.filter((e) => e.id == 7)}
+          items={data?.categories?.onlyChildren?.filter((e) => e.id == 7)}
           count={8}
           title="KHO NICK FREE FIRE"
         />

@@ -20,9 +20,16 @@ export default function CategoryForm({
     const fetchCategories = async () => {
       try {
         const res = await api.get("/categories");
-        setCategories(res.data?.data || []);
+        // Đảm bảo categories luôn là mảng
+        let cats = res.data?.data;
+        // Nếu API trả về object có treeCategories thì lấy treeCategories
+        if (cats && !Array.isArray(cats) && Array.isArray(cats.treeCategories)) {
+          cats = cats.treeCategories;
+        }
+        setCategories(Array.isArray(cats) ? cats : []);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        setCategories([]); // fallback an toàn
       }
     };
     fetchCategories();
@@ -70,13 +77,13 @@ export default function CategoryForm({
   };
 
   // Render category options
-  const renderCategory = (cats, lvl = 0) =>
-    cats.flatMap((cat) => {
+  const renderCategory = (cats, lvl = 0) => {
+    if (!Array.isArray(cats)) return null; // Fix lỗi flatMap
+    return cats.flatMap((cat) => {
       // Skip current category when editing
       if (isEditing && initialData && cat.id === initialData.id) {
         return [];
       }
-      
       return [
         <option key={cat.id} value={cat.id}>
           {" ".repeat(lvl * 4)}
@@ -85,6 +92,7 @@ export default function CategoryForm({
         ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
       ];
     });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">

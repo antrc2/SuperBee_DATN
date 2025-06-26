@@ -44,14 +44,44 @@ class PartnerProductController extends Controller
                 $query->where('status', $request->input('status'));
             }
 
-            // Lấy số lượng item mỗi trang từ request, mặc định là 10
-            $perPage = $request->input('per_page', 10);
-            $products = $query->latest()->paginate($perPage); // Sắp xếp theo mới nhất và phân trang
+            // 6) Lấy số bản ghi mỗi trang (mặc định 10)
+            $perPage = (int) $request->input('per_page', 10);
 
+            // 7) Chạy query phân trang và sắp xếp mới nhất
+            $products = $query->latest()->paginate($perPage);
+
+            // 8) Override credentials: chỉ giữ nếu status == 2
+            // 4) Transform mỗi product trong page để thay đổi credentials
+            $products->getCollection()->transform(function ($product) {
+                // Lấy collection gốc của credentials
+                $creds = $product->getRelation('credentials');
+
+                // Map lại: nếu status == 2 thì giữ username/password thật,
+                // ngược lại trả về blank.
+                $newCreds = $creds->map(function ($c) use ($product) {
+                    if ($product->status == 2) {
+                        return [
+                            'username' => $c->username,
+                            'password' => $c->password,
+                        ];
+                    }
+                    return [
+                        'username' => '',
+                        'password' => '',
+                    ];
+                });
+
+                // Ép relation credentials thành collection mới
+                $product->setRelation('credentials', $newCreds);
+
+                return $product;
+            });
+
+            // 9) Trả về JSON chuẩn
             return response()->json([
-                "status" => true,
-                "message" => "Lấy danh sách sản phẩm thành công",
-                "data" => $products
+                'status'  => true,
+                'message' => 'Lấy danh sách sản phẩm thành công',
+                'data'    => $products,
             ]);
         } catch (\Throwable $th) {
             return response()->json([

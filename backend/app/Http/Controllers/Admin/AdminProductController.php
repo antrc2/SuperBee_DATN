@@ -16,15 +16,17 @@ class AdminProductController extends Controller
 {
     public function index(Request $request)
     {
+        try {
         // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
         $query = Product::query()->where("status", "!=", 2)->with(['category', 'images', 'gameAttributes']);
 
-        try {
+        
             // Lọc theo danh mục sản phẩm (category_id)
             // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->input('category_id'));
-            }
+
+            // if ($request->filled('category_id')) {
+            //     $query->where('category_id', $request->input('category_id'));
+            // }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
@@ -48,7 +50,10 @@ class AdminProductController extends Controller
             // Lấy số lượng item mỗi trang từ request, mặc định là 10
             $perPage = $request->input('per_page', 10);
             $products = $query->latest()->paginate($perPage); // Sắp xếp theo mới nhất và phân trang
+            // $products = $query->get();
 
+            
+            // $products = Product::where("status","!=",2)->with(['category', 'images', 'gameAttributes'])->latest()->paginate(10);
             return response()->json([
                 "status" => true,
                 "message" => "Lấy danh sách sản phẩm thành công",

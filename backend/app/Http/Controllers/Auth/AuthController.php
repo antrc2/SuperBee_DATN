@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Events\SystemNotification;
 use App\Http\Controllers\Controller;
 use App\Mail\ResetPassword;
 use App\Mail\VerifyEmail;
@@ -216,8 +217,14 @@ class AuthController extends Controller
                 ]);
             }
             // Gửi email xác minh tài khoản
-            Mail::to($user->email)->queue(new VerifyEmail($tokenEmail, $user->username));
-
+            event(new SystemNotification(
+                'EMAIL_ACTIVE_USER', // Loại thông báo
+                [
+                    'email' => $user->email,
+                    "username" => $user->username,
+                    "verificationToken" => $tokenEmail
+                ],
+            ));
             return response()->json([
                 'message' => 'Đăng ký thành công! Vui lòng kiểm tra email của bạn để kích hoạt tài khoản.',
                 'status' => true,
@@ -309,7 +316,14 @@ class AuthController extends Controller
             );
 
             DB::commit(); // Xác nhận tất cả các thay đổi vào cơ sở dữ liệu
-
+            event(new SystemNotification(
+                'EMAIL_WELCOME', // Loại thông báo
+                [
+                    'email' =>$user->email,
+                    "username" => $user->username,
+                    "loginUrl" => "http://localhost:5173/auth/login"
+                ],
+            ));
             // 9. Trả về phản hồi thành công
             return response()->json([
                 "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
@@ -344,7 +358,15 @@ class AuthController extends Controller
             $user->email_verification_token = $tokenEmail;
             $user->email_verification_expires_at =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
             $user->save();
-            Mail::to($user->email)->queue(new VerifyEmail($tokenEmail, $user->username));
+           // Gửi email xác minh tài khoản
+           event(new SystemNotification(
+            'EMAIL_ACTIVE_USER', // Loại thông báo
+            [
+                'email' => $user->email,
+                "username" => $user->username,
+                "verificationToken" => $tokenEmail
+            ],
+        ));
             return response()->json(['message' => 'Vui lòng kiểm tra email để kích hoạt tài khoản'], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => 'Không thể gửi email kích hoạt tài khoản lúc này. Vui lòng thử lại sau.'], 500);
@@ -361,7 +383,7 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->where('web_id',$request->web_id)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
+            return response()->json(['message' => 'Tài khoản của bạn không tồn tại'], 200);
         }
 
         $token = $this->generateCode(20);
@@ -370,7 +392,14 @@ class AuthController extends Controller
         $user->save();
 
         try {
-            Mail::to($user->email)->queue(new ResetPassword($token, $user->username));
+            event(new SystemNotification(
+                'EMAIL_FORGOT_PASSWORD', // Loại thông báo
+                [
+                    'email' => $user->email,
+                    "username" => $user->username,
+                    "verificationToken" => $token
+                ],
+            ));
             return response()->json(['message' => 'Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu.'], 200);
         } catch (\Exception $e) {
 
@@ -383,25 +412,52 @@ class AuthController extends Controller
      */
     public function resetPassword(Request $request)
     {
-        $request->validate([
-            'token' => 'required|string',
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        try {
+            // 1. Xác thực dữ liệu đầu vào
+            $request->validate([
+                'token' => 'required|string',
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+            ]);
 
-        $user = User::where('password_reset_token', $request->token)
-            ->where('password_reset_expires_at', '>', now())
-            ->first();
+            // 2. Tìm người dùng dựa trên token và kiểm tra thời hạn
+            $user = User::where('password_reset_token', $request->token)
+                ->where('password_reset_expires_at', '>', now())
+                ->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'], 400);
+            // 3. Xử lý trường hợp token không hợp lệ hoặc đã hết hạn
+            if (!$user) {
+                return response()->json(['message' => 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'], 400);
+            }
+
+            // 4. Cập nhật mật khẩu và xóa token
+            $user->password = Hash::make($request->password);
+            $user->password_reset_token = null; // Xóa token sau khi dùng
+            $user->password_reset_expires_at = null; // Xóa thời gian hết hạn
+            $user->save(); // Lưu thay đổi vào cơ sở dữ liệu
+            // EMAIL_INFO_ME 
+            event(new SystemNotification(
+                'EMAIL_INFO_ME', // Loại thông báo
+                [
+                    'email' => $user->email,
+                    "username" => $user->username,
+                    "changedFields" => ['password']
+                ],
+            ));
+            // 5. Trả về phản hồi thành công
+            return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
+        } catch (\Exception $e) {
+            // Xử lý các lỗi ngoại lệ khác
+            // Ghi lại lỗi để kiểm tra sau (trong storage/logs/laravel.log)
+            Log::error("Lỗi khi đặt lại mật khẩu: " . $e->getMessage(), [
+                'token' => $request->token,
+                'user_id' => isset($user) ? $user->id : 'N/A',
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            // Trả về phản hồi lỗi chung cho người dùng
+            return response()->json(['message' => 'Đã xảy ra lỗi trong quá trình đặt lại mật khẩu. Vui lòng thử lại sau.'], 500); // Mã 500 Internal Server Error
         }
-
-        $user->password = Hash::make($request->password);
-        $user->password_reset_token = null; // Xóa token sau khi dùng
-        $user->password_reset_expires_at = null; // Xóa thời gian hết hạn
-        $user->save();
-
-        return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
     }
 
 

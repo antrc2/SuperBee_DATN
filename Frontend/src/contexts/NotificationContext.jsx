@@ -1,15 +1,15 @@
 // src/components/NotificationProvider.jsx
 import React, {
   createContext,
-  useContext,
   useState,
   useCallback,
   useRef,
+  useContext,
 } from "react";
 import clsx from "clsx";
 import { Info, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
-// Context để cung cấp các hàm pop (toast), conFim (xác nhận) và showAlert (cảnh báo)
+// eslint-disable-next-line react-refresh/only-export-components
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {

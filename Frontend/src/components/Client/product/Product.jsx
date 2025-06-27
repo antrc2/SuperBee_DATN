@@ -1,8 +1,8 @@
 "use client";
 import { Link } from "react-router-dom";
 import { ShoppingCart, Eye, Crown, Copy } from "lucide-react";
-import { useNotification } from "../../../contexts/NotificationProvider";
-import { useCart } from "../../../contexts/CartContexts";
+import { useNotification } from "../../../contexts/NotificationContext";
+import { useCart } from "@contexts/CartContext";
 
 export default function Product({ product }) {
   console.log("🚀 ~ Product ~ product:", product);

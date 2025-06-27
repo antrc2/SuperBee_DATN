@@ -2,7 +2,7 @@ import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
-import { useHome } from "../../../contexts/HomeContext";
+import { useHome } from "@contexts/HomeContext";
 
 export default function Home() {
   const { data } = useHome();

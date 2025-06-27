@@ -8,9 +8,9 @@ import {
   CreditCard,
   ShieldCheck,
 } from "lucide-react";
-import { useCart } from "../../../contexts/CartContexts";
+import { useCart } from "@contexts/CartContext";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
-import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNotification } from "../../../contexts/NotificationContext";
 import Image from "../../../components/Client/Image/Image";
 import { Link } from "react-router-dom";
 

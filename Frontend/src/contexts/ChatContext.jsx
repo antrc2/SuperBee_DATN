@@ -1,4 +1,4 @@
-// src/contexts/HomeContext.jsx
+// src/contexts/ChatContext.jsx
 import React, {
   createContext,
   useContext,
@@ -7,134 +7,138 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-
-// Đảm bảo đường dẫn import cho socket.js là đúng
-import { authenticateSocket, getSocket, connectSocket } from "@utils/socket";
-import { useAuth } from "./AuthContext"; // Giả định AuthContext cung cấp user và token
+import { getSocket, connectSocket, authenticateSocket } from "@utils/socket";
+import { useAuth } from "@contexts/AuthContext";
+import { decodeData } from "../utils/hook";
 
 const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
-  const { user, token } = useAuth();
-  // const userName = user?.name; // Lấy tên người dùng nếu có
+  const { token, isLoggedIn } = useAuth();
+  const refToken = useRef(null);
 
-  const [notifications, setNotifications] = useState([]);
-  const [chatMessages, setChatMessages] = useState([]);
+  const [agentChatRoom, setAgentChatRoom] = useState(null); // Lưu trữ thông tin phòng chat với nhân viên
   const socketRef = useRef(null);
-  console.log("🚀 ~ ChatProvider ~ socketRef:", socketRef);
 
-  // Callback xử lý thông báo riêng tư
-  // Kênh lắng nghe là "private_notification"
-  const handlePrivateNotification = useCallback((payload) => {
-    console.log("Thông báo riêng tư đã nhận:", payload);
-    setNotifications((prev) => [
-      ...prev,
-      { ...payload, id: Date.now(), type: "private" },
-    ]);
-  }, []);
-
-  // Callback xử lý thông báo chung
-  // Kênh lắng nghe là "public_notification"
-  const handlePublicNotification = useCallback((payload) => {
-    console.log("Thông báo chung đã nhận:", payload);
-    setNotifications((prev) => [
-      ...prev,
-      { ...payload, id: Date.now(), type: "public" },
-    ]);
-  }, []);
-
-  // Callback xử lý tin nhắn chat mới từ server
-  // Kênh lắng nghe là "new_chat_message"
-  const handleNewChatMessage = useCallback((payload) => {
-    console.log("Tin nhắn chat đã nhận:", payload);
-    setChatMessages((prev) => [...prev, { ...payload, id: Date.now() }]);
-  }, []);
-
-  // Callback xử lý xác nhận gửi tin nhắn chat
-  // Kênh lắng nghe là "chat_message_ack"
-  const handleChatMessageAck = useCallback((payload) => {
-    console.log("Xác nhận tin nhắn chat (ACK):", payload);
-    // Cập nhật trạng thái tin nhắn trong UI (ví dụ: từ "đang gửi" sang "đã gửi")
-  }, []);
-
-  // Effect để quản lý kết nối socket và listeners
+  // Khởi tạo và quản lý listeners
   useEffect(() => {
-    console.log(
-      "HomeContext: Effect chạy. Đang kết nối Socket với token hiện tại."
-    );
-    // Gọi connectSocket với token hiện tại để đảm bảo socket được cấu hình đúng
-    connectSocket(token);
+    // Di chuyển việc gán refToken vào trong effect để nó luôn được cập nhật khi token thay đổi
+    if (token) {
+      refToken.current = decodeData(token);
+    } else {
+      refToken.current = null; // Xóa refToken khi logout
+    }
 
-    // Lấy instance socket đã được cấu hình/kết nối
-    socketRef.current = getSocket(token);
-    const currentSocket = socketRef.current;
+    const socket = getSocket();
+    socketRef.current = socket;
 
-    // --- Đăng ký TẤT CẢ các listeners cho các sự kiện CỐ ĐỊNH ---
-    // Socket.IO sẽ tự động định tuyến các sự kiện này tới đúng socket đã kết nối
-    // khi server dùng io.to(socketId).emit("event_name", data);
+    connectSocket();
 
-    currentSocket.on("private_notification", handlePrivateNotification);
-    currentSocket.on("public_notification", handlePublicNotification);
-    currentSocket.on("new_chat_message", handleNewChatMessage);
-    currentSocket.on("chat_message_ack", handleChatMessageAck);
+    const handleChatRoomJoined = (data) => {
+      console.log("Successfully joined chat room:", data);
+      setAgentChatRoom({
+        roomId: data.roomId,
+        messages: data.messages || [],
+        participants: data.participants || [],
+        info: data.roomInfo || {},
+      });
+    };
 
-    console.log(
-      "Đã đăng ký các kênh lắng nghe: private_notification, public_notification, new_chat_message, chat_message_ack."
-    );
+    const handleNewChatMessage = (message) => {
+      setAgentChatRoom((prev) => {
+        if (prev && prev.roomId === message.chat_room_id) {
+          return { ...prev, messages: [...prev.messages, message] };
+        }
+        return prev;
+      });
+    };
 
-    // --- Cleanup function ---
-    return () => {
-      if (currentSocket) {
-        // Hủy đăng ký tất cả các listeners khi component unmount hoặc dependencies thay đổi
-        currentSocket.off("private_notification", handlePrivateNotification);
-        currentSocket.off("public_notification", handlePublicNotification);
-        currentSocket.off("new_chat_message", handleNewChatMessage);
-        currentSocket.off("chat_message_ack", handleChatMessageAck);
-        console.log("Đã hủy đăng ký tất cả các kênh lắng nghe.");
+    const handleNewChatAssigned = (data) => {
+      // Sửa 2: Truy cập `refToken.current` để lấy dữ liệu token đã giải mã
+      const roles = refToken.current?.role_ids || [];
+
+      // Sửa 3: Kiểm tra trong mảng `role_ids` bằng .includes()
+      if (roles.includes("agent") || roles.includes("admin")) {
+        console.log("A new chat has been assigned to you:", data);
+        // Logic tự động mở cửa sổ chat cho nhân viên ở đây
       }
     };
-  }, [
-    token, // Re-run effect khi token thay đổi (đăng nhập/xuất)
-    // userName không cần là dependency trực tiếp cho việc đăng ký kênh nếu kênh là cố định
-    handlePrivateNotification,
-    handlePublicNotification,
-    handleNewChatMessage,
-    handleChatMessageAck,
-  ]);
 
-  // Hàm gửi tin nhắn chat
-  const sendChatMessage = (messagePayload) => {
-    if (socketRef.current && socketRef.current.connected) {
-      // Server sẽ kiểm tra quyền dựa trên socket.userId
-      socketRef.current.emit("send_chat_message", messagePayload);
-      console.log("Đã gửi tin nhắn chat:", messagePayload);
-    } else {
-      console.warn("Socket chưa kết nối, không thể gửi tin nhắn chat.");
-      // Có thể hiển thị thông báo lỗi cho người dùng
+    socket.on("chat_room_joined", handleChatRoomJoined);
+    socket.on("new_chat_message", handleNewChatMessage);
+    socket.on("new_chat_assigned", handleNewChatAssigned);
+
+    return () => {
+      socket.off("chat_room_joined", handleChatRoomJoined);
+      socket.off("new_chat_message", handleNewChatMessage);
+      socket.off("new_chat_assigned", handleNewChatAssigned);
+    };
+  }, [token]); // Thay đổi dependency thành [token]
+
+  // Gửi lại token mỗi khi nó thay đổi (login/logout)
+  useEffect(() => {
+    if (socketRef.current) {
+      authenticateSocket(token);
     }
-  };
-  // hàm kiểm tra xem đã tồn tại chat_room chưa
-  const checkRoom = () => {
-    if (socketRef.current && socketRef.current.connected) {
-      // Server sẽ kiểm tra quyền dựa trên socket.userId
-      // socketRef.current.emit("checkRoom", messagePayload);
-      // console.log("Đã gửi tin nhắn chat:", messagePayload);
-    } else {
-      console.warn("Socket chưa kết nối, không thể gửi tin nhắn chat.");
-      // Có thể hiển thị thông báo lỗi cho người dùng
+  }, [token]);
+
+  // Hàm để khách hàng yêu cầu chat
+  const requestAgentChat = useCallback(() => {
+    if (!isLoggedIn) {
+      return Promise.reject(new Error("User is not logged in."));
     }
-  };
+
+    return new Promise((resolve, reject) => {
+      socketRef.current.emit("request_agent_chat", {}, (response) => {
+        if (response.success) {
+          console.log("Chat request successful:", response);
+          // Cập nhật trạng thái phòng chat từ phản hồi
+          setAgentChatRoom({
+            roomId: response.roomId,
+            messages: response.messages || [],
+            info: { message: response.message },
+          });
+          resolve(response);
+        } else {
+          console.error("Chat request failed:", response.message);
+          reject(new Error(response.message));
+        }
+      });
+    });
+  }, [isLoggedIn]);
+
+  // Hàm gửi tin nhắn
+  const sendChatMessage = useCallback(
+    (content) => {
+      if (!agentChatRoom?.roomId) return false;
+      if (!refToken.current) return false;
+      const payload = {
+        roomId: agentChatRoom.roomId,
+        content,
+        senderId: refToken.current?.user_id,
+      };
+      socketRef.current.emit("send_chat_message", payload, (ack) => {
+        console.log("🚀 ~ socketRef.current.emit ~ ack:", ack);
+        // Xử lý ack nếu cần
+      });
+      return true;
+    },
+    [agentChatRoom?.roomId]
+  );
 
   const value = {
-    notifications,
-    chatMessages,
+    isLoggedIn,
+    agentChatRoom,
+    requestAgentChat,
     sendChatMessage,
-    checkRoom,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
 }
-
 export function useChat() {
-  return useContext(ChatContext);
+  const context = useContext(ChatContext);
+  if (context === undefined) {
+    throw new Error("useChat must be used within a ChatProvider");
+  }
+  return context;
 }

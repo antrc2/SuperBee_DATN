@@ -23,13 +23,12 @@ const navItems = [
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/partner", pro: false }],
   },
- 
+
   {
     icon: <Package />, // Biểu tượng phù hợp hơn cho Products
     name: "Products",
     path: "/partner/products",
   },
-  
 ];
 
 const AppSidebar = () => {

@@ -43,12 +43,9 @@ class CategoryController extends Controller
                         ];
                     }
                 }
-
                 return $tree;
             };
-
             $treeCategories = $buildTree($categories);
-
             return response()->json([
                 'status' => true,
                 'data' => $treeCategories,

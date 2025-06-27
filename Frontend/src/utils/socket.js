@@ -1,129 +1,158 @@
-// src/services/socket.js
 import io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 
-// Đảm bảo SOCKET_URL được định nghĩa trong môi trường của bạn (ví dụ: .env.local)
-// Ví dụ: VITE_SOCKET_URL=http://localhost:3001
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? "http://localhost:3001";
 
-// Sử dụng sessionStorage để guestId chỉ tồn tại trong phiên làm việc
-const getGuestId = () => {
+// Create guestId immediately when the page loads and save it to sessionStorage
+export const initializeGuestId = () => {
   let guestId = sessionStorage.getItem("guestId");
   if (!guestId) {
-    const newGuestId = uuidv4();
-    sessionStorage.setItem("guestId", newGuestId); // Lưu vào sessionStorage
-    return newGuestId;
+    guestId = uuidv4();
+    sessionStorage.setItem("guestId", guestId);
+    console.log("Guest ID has been created:", guestId);
   }
   return guestId;
 };
 
-let socket = null;
+// Initialize guestId immediately when the module is imported
+const GUEST_ID = initializeGuestId();
 
-// Hàm khởi tạo/lấy instance của socket
-export const getSocket = (token = null) => {
+// Use sessionStorage so guestId only exists for the session
+export const getGuestId = () => {
+  return sessionStorage.getItem("guestId") || GUEST_ID;
+};
+
+let socket = null; // This variable will hold the single socket instance
+
+// Function to initialize/get the socket instance
+export const getSocket = () => {
   const currentGuestId = getGuestId();
 
-  // Nếu socket chưa được khởi tạo HOẶC
-  // Nếu socket đã tồn tại nhưng token hoặc guestId trong query khác với giá trị hiện tại
-  if (
-    !socket ||
-    (socket.io.opts.query &&
-      (socket.io.opts.query.token !== token ||
-        socket.io.opts.query.guestId !== currentGuestId))
-  ) {
-    // Nếu socket đã tồn tại, ngắt kết nối cũ trước khi tạo mới
-    if (socket) {
-      console.log(
-        "Socket: Token/GuestId thay đổi hoặc socket cần khởi tạo lại. Đang ngắt kết nối cũ."
-      );
-      socket.disconnect();
-    }
-
+  if (!socket) {
+    console.log(
+      "Socket: Creating a new instance with Guest ID:",
+      currentGuestId
+    );
     socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
+      // CHỈ GỬI GUESTID QUA QUERY BAN ĐẦU
       query: {
-        token: token || "", // Luôn gửi token mới nhất
-        guestId: currentGuestId, // Luôn gửi guestId mới nhất
+        guestId: currentGuestId, // Always send guestId for general notifications
       },
-      autoConnect: false, // Vẫn tắt autoConnect để chúng ta chủ động kết nối
-      reconnectionAttempts: 5, // Thử kết nối lại 5 lần
-      reconnectionDelay: 1000, // Sau 1 giây
+      autoConnect: false,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      // LOẠI BỎ TOKEN KHỎI AUTH CALLBACK Ở ĐÂY
+      // Auth callback này vẫn cần thiết cho reconnect, nhưng sẽ không gửi token ban đầu
+      auth: (cb) => {
+        // Khi reconnect, nó vẫn gửi query params đã được thiết lập ban đầu (guestId)
+        // và bạn sẽ dùng authenticateSocket() để gửi token sau
+        cb({}); // Gửi một object rỗng, hoặc chỉ {} nếu bạn không muốn gửi thêm gì ở đây
+      },
     });
 
-    // --- Đăng ký các sự kiện socket cơ bản (chỉ một lần khi socket được tạo) ---
+    // --- Register basic socket events (only once when socket is created) ---
     socket.on("connect", () => {
-      console.log("Socket Đã Kết Nối:", socket.id);
+      console.log("Socket Connected:", socket.id);
+      // Sau khi kết nối thành công, bạn có thể cân nhắc gọi authenticateSocket ở đây
+      // nếu user đã đăng nhập nhưng socket vừa reconnect.
+      // Tuy nhiên, ChatContext.jsx đã có useEffect để gọi authenticateSocket khi token thay đổi,
+      // nên có thể không cần thiết gọi lại ở đây.
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("Socket Đã Ngắt Kết Nối:", reason);
+      console.log("Socket Disconnected:", reason);
     });
 
     socket.on("connect_error", (err) => {
-      console.error("Lỗi Kết Nối Socket:", err.message);
+      console.error("Socket Connection Error:", err.message);
     });
 
     socket.on("error", (err) => {
-      console.error("Lỗi Sự Kiện Socket Tùy Chỉnh:", err);
+      console.error("Custom Socket Event Error:", err);
     });
 
     socket.on("authenticated", (response) => {
       if (response.success) {
         console.log(
-          `Socket đã xác thực thành công cho người dùng ${
-            response.userId || "ẩn danh"
-          } (Đã đăng nhập: ${response.isLoggedIn})`
+          `Socket successfully authenticated for user ${
+            response.userId || "anonymous"
+          } (Logged in: ${response.isLoggedIn})`
         );
       } else {
-        console.warn("Xác thực Socket thất bại:", response.message);
+        console.warn("Socket authentication failed:", response.message);
       }
     });
-
-    // Thêm log khi tạo socket mới
-    console.log(
-      "Socket: Instance mới đã được tạo hoặc cập nhật với query:",
-      socket.io.opts.query
-    );
   } else {
-    console.log("Socket: Đã tồn tại và không cần cập nhật query params.");
+    console.log("Socket: Already exists, not creating again.");
   }
 
   return socket;
 };
 
-// Hàm kết nối socket một cách chủ động
-export const connectSocket = (token) => {
-  const s = getSocket(token); // Luôn lấy socket với token mới nhất
+// Function to actively connect the socket
+export const connectSocket = () => {
+  const s = getSocket(); // Get the socket instance
   if (!s.connected) {
-    s.connect(); // Bắt đầu kết nối nếu chưa kết nối
-    console.log("Socket: Đang cố gắng thiết lập kết nối...");
+    s.connect(); // Start connection if not already connected
+    console.log("Socket: Attempting to establish connection...");
   } else {
-    console.log("Socket: Đã kết nối. Không cần gọi connect() lại.");
+    console.log("Socket: Already connected. No need to call connect() again.");
   }
 };
 
-// Hàm gửi sự kiện xác thực lại (dùng khi đăng nhập/đăng xuất bằng API, không phải reload)
+// Function to send authentication event (e.g., when token changes)
 export const authenticateSocket = (jwtToken) => {
-  const s = getSocket(jwtToken); // Đảm bảo socket đã được cấu hình với token này
+  const s = getSocket(); // Get the socket instance
   if (s && s.connected) {
     console.log(
-      `Socket: Gửi sự kiện 'authenticate' với trạng thái token: ${
-        jwtToken ? "có" : "rỗng"
+      `Socket: Emitting 'authenticate' event with token status: ${
+        jwtToken ? "present" : "empty"
       }`
     );
-    s.emit("authenticate", jwtToken);
+    s.emit("authenticate", jwtToken); // Send the token to the server for re-authentication
   } else {
     console.warn(
-      "Socket: Chưa kết nối hoặc không tồn tại. Không thể gửi sự kiện 'authenticate' ngay lập tức."
+      "Socket: Not connected or does not exist. Cannot emit 'authenticate' immediately."
     );
+    // If socket is not connected, try to connect and then authenticate
+    if (s && !s.connected) {
+      s.once("connect", () => {
+        // Emit authenticate after successful connection
+        s.emit("authenticate", jwtToken);
+        console.log("Socket: Connected and then emitted 'authenticate'.");
+      });
+      s.connect(); // Attempt to connect
+    }
   }
 };
 
-// Hàm đóng kết nối socket
+// Function to close the socket connection
 export const disconnectSocket = () => {
   if (socket) {
     socket.disconnect();
-    socket = null; // Reset socket instance để có thể tạo mới sau này nếu cần
-    console.log("Socket: Đã ngắt kết nối thủ công.");
+    console.log("Socket: Manually disconnected.");
+  }
+};
+
+// Function to join a specific chat room (only for logged-in users)
+export const joinChatRoom = (roomId, callback) => {
+  const s = getSocket();
+  if (s && s.connected) {
+    s.emit("join_chat_room", { roomId }, callback);
+  } else {
+    console.warn("Socket not connected, cannot join chat room");
+    if (callback) callback({ success: false, message: "Socket not connected" });
+  }
+};
+
+// Function to leave a chat room
+export const leaveChatRoom = (roomId, callback) => {
+  const s = getSocket();
+  if (s && s.connected) {
+    s.emit("leave_chat_room", { roomId }, callback);
+  } else {
+    console.warn("Socket not connected, cannot leave chat room");
+    if (callback) callback({ success: false, message: "Socket not connected" });
   }
 };

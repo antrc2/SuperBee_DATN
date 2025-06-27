@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "@utils/http"; // Ensure this path is correct
 
 import { getDecodedToken } from "../../../utils/tokenUtils"; // Ensure this path is correct
-import { useAuth } from "../../../contexts/AuthContext"; // Ensure this path is correct
+import { useAuth } from "@contexts/AuthContext";
 
 const EmailVerification = () => {
   const [message, setMessage] = useState("");

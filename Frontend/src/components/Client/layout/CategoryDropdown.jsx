@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useHome } from "../../../contexts/HomeContext";
+import { useHome } from "@contexts/HomeContext";
 import ListCategoryCha from "../../../sections/Home/ListCategoryCha";
 import CategoryCha from "../Category/CategoryCha";
 

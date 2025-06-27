@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useAuth } from "../../../contexts/AuthContext";
+import { useAuth } from "@contexts/AuthContext";
 
 export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
   const dropdownRef = useRef(null);

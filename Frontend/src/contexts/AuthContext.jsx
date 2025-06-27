@@ -1,17 +1,13 @@
 // src/contexts/AuthContext.jsx
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-} from "react";
-import { useApiKeyManager } from "@utils/useApiKeyManager.js";
-import { useDomainCheck } from "@utils/useDomainCheck.js";
+import React, { createContext, useEffect, useState, useCallback } from "react";
 import api from "../utils/http";
 import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
-import { useNotification } from "./NotificationProvider";
+import { useNotification } from "@contexts/NotificationContext";
+import { useContext } from "react";
+
+// AuthContext sẽ chỉ quản lý thông tin xác thực người dùng (login, register, logout, user data)
+// eslint-disable-next-line react-refresh/only-export-components
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -24,14 +20,41 @@ export function AuthProvider({ children }) {
           money: decoded.money,
           avatar: decoded?.avatar,
         }
-      : sessionStorage.getItem("access_token");
+      : null;
   });
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState(sessionStorage.getItem("access_token"));
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Trạng thái lỗi riêng cho các thao tác auth
   const navigate = useNavigate();
+
+  // useEffect để đồng bộ user và token khi access_token thay đổi (vd: đăng nhập thành công)
+  // và để xử lý trường hợp token bị xóa hoặc không hợp lệ sau khi load
+  useEffect(() => {
+    const storedToken = sessionStorage.getItem("access_token");
+    setToken(storedToken); // Cập nhật token state
+    if (storedToken) {
+      const decoded = getDecodedToken();
+      if (decoded) {
+        setUser({
+          // Set user object nếu token hợp lệ
+          name: decoded.name,
+          money: decoded.money,
+          avatar: decoded?.avatar,
+        });
+      } else {
+        // Token không hợp lệ, xóa khỏi sessionStorage và set user về null
+        sessionStorage.removeItem("access_token");
+        setUser(null);
+      }
+    } else {
+      // Không có token trong sessionStorage, set user về null
+      setUser(null);
+    }
+  }, []); // Chạy một lần khi component mount
+
   const login = async (credentials) => {
-    setLoading(true);
+    setLoading(true); // Bắt đầu loading cho thao tác login
+    setError(null); // Reset lỗi
     try {
       const res = await api.post("/accounts/login", {
         username: credentials.username,
@@ -39,21 +62,16 @@ export function AuthProvider({ children }) {
         web_id: credentials.web_id,
       });
 
-      // Handle unsuccessful response from server
       if (!res?.data?.status) {
         await handleLoginError(res.data);
-        setLoading(false);
         return { success: false };
       }
 
-      // Handle missing access token
       if (!res?.data?.access_token) {
         pop("Không nhận được access_token từ server.", "e");
-        setLoading(false);
         return { success: false };
       }
 
-      // Success - process token and set user
       const accessToken = res.data.access_token;
       sessionStorage.setItem("access_token", accessToken);
       setToken(accessToken);
@@ -66,23 +84,22 @@ export function AuthProvider({ children }) {
           avatar: decoded.avatar,
         });
         pop("Đăng nhập thành công", "s");
-        setLoading(false);
         return { success: true };
       } else {
         sessionStorage.removeItem("access_token");
         pop("Không thể giải mã token từ phản hồi server.", "e");
-        setLoading(false);
         return { success: false };
       }
     } catch (err) {
-      setLoading(false);
       const errorMessage =
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
-
       pop(errorMessage, "e");
+      setError({ message: errorMessage, code: err.response?.status || 500 });
       return { success: false };
+    } finally {
+      setLoading(false); // Kết thúc loading
     }
   };
 
@@ -99,20 +116,14 @@ export function AuthProvider({ children }) {
         }
         break;
       }
-
       case "LOCKED_ACCOUNT":
         pop(message || "Tài khoản của bạn đã bị khóa.", "e");
         break;
-
       case "INVALID_CREDENTIALS":
         pop(message || "Tên đăng nhập hoặc mật khẩu không đúng.", "e");
         break;
-
       case "VALIDATION_ERROR":
-        // For validation errors, we'll return them to be handled by the form
-        // The form component can access these through the return value
         break;
-
       default:
         pop(message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
         break;
@@ -120,8 +131,8 @@ export function AuthProvider({ children }) {
   };
 
   const register = async (credentials) => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); // Bắt đầu loading cho thao tác register
+    setError(null); // Reset lỗi
     try {
       const res = await api.post("/accounts/register", {
         email: credentials.email,
@@ -129,34 +140,33 @@ export function AuthProvider({ children }) {
         aff: credentials.aff,
         password: credentials.password,
       });
-      if (res?.data?.status == false) {
-        throw new Error("Không nhận được access_token từ server.");
+      if (res?.data?.status === false) {
+        throw new Error(res.data.message || "Đăng ký không thành công.");
       }
       pop("Đăng Ký thành công", "s");
       navigate("/auth/login");
       await showAlert(
-        res?.data?.message || "vui lòng xem Email để kích hoạt tài khoản"
+        res?.data?.message || "Vui lòng xem Email để kích hoạt tài khoản"
       );
       return { success: true, data: res.data };
     } catch (err) {
-      // console.error("Login error from AuthContext:", err);
       const errorMessage =
         err.response?.data?.errors ||
+        err.response?.data?.message ||
         err.message ||
-        "Đăng nhập thất bại. Vui lòng thử lại.";
+        "Đăng ký thất bại. Vui lòng thử lại.";
       setError({ message: errorMessage, code: err.response?.status || 500 });
+      pop(errorMessage, "e");
       return { success: false, message: errorMessage };
     } finally {
-      setLoading(false);
+      setLoading(false); // Kết thúc loading
     }
   };
-  // đăng xuất
+
   const logout = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await api.post("/logout");
-      if (res?.status == 500) {
-        throw new Error("Không đăng xuất đc.");
-      }
+      await api.post("/logout");
       setUser(null);
       sessionStorage.removeItem("access_token");
       setToken(null);
@@ -164,120 +174,38 @@ export function AuthProvider({ children }) {
       pop("Đăng xuất thành công", "s");
       navigate("/");
     } catch (err) {
-      console.error("Login error from AuthContext:", err);
+      console.error("Logout error from AuthContext:", err);
+      pop("Đăng xuất thất bại.", "e");
     } finally {
       setLoading(false);
     }
   }, [navigate, pop]);
 
-  const {
-    apiKey,
-    status: keyStatus,
-    errorMessage: keyError,
-    saveKeyManually,
-    clearKey,
-  } = useApiKeyManager();
-
-  const {
-    domainStatus,
-    errorMessage: domainError,
-    retryCheck,
-  } = useDomainCheck(apiKey);
-
-  // 3. Tổng hợp authStatus + combinedError
-  const [authStatus, setAuthStatus] = useState("loading_key");
-  const [combinedError, setCombinedError] = useState(null);
-
-  useEffect(() => {
-    const decoded = getDecodedToken();
-    if (decoded) {
-      setUser({
-        name: decoded.name,
-        money: decoded.money,
-        avatar: decoded?.avatar,
-      });
-      setToken(sessionStorage.getItem("access_token"));
-    } else {
-      setUser(null);
-    }
-
-    // Các logic về authStatus vẫn giữ nguyên
-    if (keyStatus === "idle" || keyStatus === "checking") {
-      setAuthStatus("loading_key");
-      setCombinedError(null);
-      return;
-    }
-    if (keyStatus === "error") {
-      setAuthStatus("needs_key");
-      setCombinedError(keyError);
-      return;
-    }
-    if (domainStatus === "idle" || domainStatus === "checking") {
-      setAuthStatus("ready_check_domain");
-      setCombinedError(null);
-      return;
-    }
-    if (domainStatus === "inactive") {
-      setAuthStatus("needs_activation");
-      setCombinedError(domainError);
-      return;
-    }
-    if (domainStatus === "invalid_key") {
-      setAuthStatus("invalid_key");
-      setCombinedError(domainError);
-      return;
-    }
-    if (domainStatus === "error") {
-      setAuthStatus("error");
-      setCombinedError(domainError);
-      return;
-    }
-    if (domainStatus === "active") {
-      setAuthStatus("app_ready");
-      setCombinedError(null);
-      return;
-    }
-  }, [keyStatus, keyError, domainStatus, domainError]); // Add dependencies
-
-  // Hàm để user nhập thủ công API key (khi needs_key)
-  const enterKey = useCallback(
-    (newKey) => {
-      clearKey();
-      saveKeyManually(newKey);
-    },
-    [clearKey, saveKeyManually]
-  );
-
-  // Hàm retry khi ở needs_activation hoặc error_domain
-  const retryDomain = useCallback(() => {
-    retryCheck();
-  }, [retryCheck]);
   const isLoggedIn = !!user;
+
   return (
     <AuthContext.Provider
       value={{
-        token,
-        navigate,
-        isLoggedIn,
-        apiKey,
-        authStatus,
-        combinedError,
-        enterKey,
-        retryDomain,
-        login,
-        register,
         user,
+        token,
+        isLoggedIn,
         loading,
         error,
-        setUser,
+        login,
+        register,
         logout,
+        setUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 }
-
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("import { useAuth } from r");
+  }
+  return context;
 }

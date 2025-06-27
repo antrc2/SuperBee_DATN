@@ -23,7 +23,6 @@ class Agent extends Model
      */
     protected $fillable = [
         'user_id',
-        'name',
         'status',
         'current_chats_count',
         'max_chats_limit',

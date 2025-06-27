@@ -1,13 +1,18 @@
 // src/contexts/HomeContext.jsx
 import React, { createContext, useContext, useEffect, useState } from "react";
 import api from "../utils/http";
-import LoadingDomain from "../components/Loading/LoadingDomain";
 
+// eslint-disable-next-line react-refresh/only-export-components
 const HomeContext = createContext();
 
 export function HomeProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false);
-  const [data, setData] = useState([]);
+  const [data, setData] = useState({
+    // Khởi tạo với cấu trúc rỗng để tránh lỗi undefined
+    categories: [],
+    banners: [],
+    top: [],
+  });
 
   useEffect(() => {
     const getData = async () => {
@@ -20,23 +25,28 @@ export function HomeProvider({ children }) {
             banners: res.data?.data?.banners ?? [],
             top: res.data?.data?.top ?? [],
           };
-          setData({ ...d });
+          setData(d);
         }
-        setIsLoading(false);
       } catch (error) {
+        console.error("Error fetching home data:", error);
+      } finally {
         setIsLoading(false);
-        console.log(error);
       }
     };
     getData();
-  }, [setData]);
-  if (isLoading) return <LoadingDomain />;
+  }, []);
 
   return (
-    <HomeContext.Provider value={{ data }}>{children}</HomeContext.Provider>
+    <HomeContext.Provider value={{ data, isLoading }}>
+      {children}
+    </HomeContext.Provider>
   );
 }
 
 export function useHome() {
-  return useContext(HomeContext);
+  const context = useContext(HomeContext);
+  if (context === undefined) {
+    throw new Error("useHome must be used within a HomeProvider");
+  }
+  return context;
 }

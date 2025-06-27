@@ -175,6 +175,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+            Route::post('/role/{id}', [UserController::class, 'updateRole']); // update role 
         });
         
 

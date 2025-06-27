@@ -13,7 +13,7 @@ class UserController extends Controller
     //
     public function index(Request $request)
     {
-        
+
         $user = User::with(['roles', 'wallet'])->get();
         $roles = Role::all();
         return response()->json([
@@ -114,6 +114,29 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi khôi phục tài khoản',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateRole(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'role' => 'required|string|exists:roles,name',
+            ]);
+
+            $user = User::findOrFail($id);
+            $user->syncRoles($request->role_id);
+            return response()->json([
+                "message" => "Cập nhật vai trò người dùng thành công",
+                "status" => true,
+                "data" => $user
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Cập nhật vai trò thất bại.',
                 'error' => $e->getMessage()
             ], 500);
         }

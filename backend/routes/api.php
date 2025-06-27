@@ -176,6 +176,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
             Route::post('/role/{id}', [UserController::class, 'updateRole']); // update role 
+            Route::patch('/status/{id}', [UserController::class, 'updateStatus']); //update status
+
         });
         
 

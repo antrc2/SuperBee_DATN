@@ -141,4 +141,28 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    public function updateStatus(Request $request, $id)
+    {
+        try {
+            $request->validate([
+            'status' => 'required|in:0,1,2',
+        ]);
+
+        $user = User::findOrFail($id);
+        $user->status = $request->status;
+        $user->save();
+
+        return response()->json([
+            "message" => "Cập nhật trạng thái người dùng thành công",
+            "status" => true,
+            "data" => $user
+        ]);
+        }catch (Exception $e){
+            return response()->json([
+            'status' => false,
+            'message' => 'Có lỗi xảy ra khi cập nhật trạng thái.',
+        ], 500);
+        }
+    }
 }

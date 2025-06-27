@@ -9,7 +9,7 @@ from io import BytesIO
 from PIL import Image
 
 # Load mô hình
-model = load_model("nsfw.h5")
+model = load_model("best_nsfw_model.keras")
 
 # Cấu hình FastAPI
 app = FastAPI()

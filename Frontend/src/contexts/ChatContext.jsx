@@ -45,6 +45,7 @@ export function ChatProvider({ children }) {
     };
 
     const handleNewChatMessage = (message) => {
+      console.log("🚀 ~ handleNewChatMessage ~ message:", message);
       setAgentChatRoom((prev) => {
         if (prev && prev.roomId === message.chat_room_id) {
           return { ...prev, messages: [...prev.messages, message] };
@@ -54,13 +55,9 @@ export function ChatProvider({ children }) {
     };
 
     const handleNewChatAssigned = (data) => {
-      // Sửa 2: Truy cập `refToken.current` để lấy dữ liệu token đã giải mã
       const roles = refToken.current?.role_ids || [];
-
-      // Sửa 3: Kiểm tra trong mảng `role_ids` bằng .includes()
       if (roles.includes("agent") || roles.includes("admin")) {
         console.log("A new chat has been assigned to you:", data);
-        // Logic tự động mở cửa sổ chat cho nhân viên ở đây
       }
     };
 
@@ -78,9 +75,20 @@ export function ChatProvider({ children }) {
   // Gửi lại token mỗi khi nó thay đổi (login/logout)
   useEffect(() => {
     if (socketRef.current) {
+      console.log(
+        `ChatContext: Token changed, calling authenticateSocket with token: ${
+          token ? token.substring(0, 10) + "..." : "null"
+        }`
+      ); // [LOG MỚI]
       authenticateSocket(token);
     }
   }, [token]);
+
+  // [LOG MỚI] Kiểm tra trạng thái isLoggedIn hiện tại
+  console.log(
+    "ChatContext: Current isLoggedIn state from useAuth:",
+    isLoggedIn
+  );
 
   // Hàm để khách hàng yêu cầu chat
   const requestAgentChat = useCallback(() => {
@@ -117,10 +125,7 @@ export function ChatProvider({ children }) {
         content,
         senderId: refToken.current?.user_id,
       };
-      socketRef.current.emit("send_chat_message", payload, (ack) => {
-        console.log("🚀 ~ socketRef.current.emit ~ ack:", ack);
-        // Xử lý ack nếu cần
-      });
+      socketRef.current.emit("send_chat_message", payload);
       return true;
     },
     [agentChatRoom?.roomId]

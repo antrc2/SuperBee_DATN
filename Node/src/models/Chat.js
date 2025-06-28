@@ -28,6 +28,7 @@ async function getAvailableAgent() {
  */
 async function findOrCreateChatRoomForCustomer(customerId) {
   let connection;
+
   try {
     connection = await pool.getConnection();
     await connection.beginTransaction();
@@ -102,7 +103,6 @@ async function findOrCreateChatRoomForCustomer(customerId) {
         );
         statusMessage += " Không có nhân viên khả dụng, vui lòng chờ.";
       }
-
       await connection.commit();
       return {
         roomId,

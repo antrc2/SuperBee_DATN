@@ -53,7 +53,7 @@ export const getSocket = () => {
 
     // --- Register basic socket events (only once when socket is created) ---
     socket.on("connect", () => {
-      console.log("Socket Connected:", socket.id);
+      console.log("Socket Connected:", socket.id); // [LOG MỚI]
       // Sau khi kết nối thành công, bạn có thể cân nhắc gọi authenticateSocket ở đây
       // nếu user đã đăng nhập nhưng socket vừa reconnect.
       // Tuy nhiên, ChatContext.jsx đã có useEffect để gọi authenticateSocket khi token thay đổi,
@@ -61,11 +61,11 @@ export const getSocket = () => {
     });
 
     socket.on("disconnect", (reason) => {
-      console.log("Socket Disconnected:", reason);
+      console.log("Socket Disconnected:", reason); // [LOG MỚI]
     });
 
     socket.on("connect_error", (err) => {
-      console.error("Socket Connection Error:", err.message);
+      console.error("Socket Connection Error:", err.message); // [LOG MỚI]
     });
 
     socket.on("error", (err) => {
@@ -77,14 +77,18 @@ export const getSocket = () => {
         console.log(
           `Socket successfully authenticated for user ${
             response.userId || "anonymous"
-          } (Logged in: ${response.isLoggedIn})`
+          } (Logged in: ${response.isLoggedIn}). Server message: ${
+            response.message
+          }` // [LOG MỚI]
         );
       } else {
-        console.warn("Socket authentication failed:", response.message);
+        console.warn(
+          `Socket authentication failed: ${response.message}. IsLoggedIn: ${response.isLoggedIn}` // [LOG MỚI]
+        );
       }
     });
   } else {
-    console.log("Socket: Already exists, not creating again.");
+    console.log("Socket: Already exists, not creating again."); // [LOG MỚI]
   }
 
   return socket;
@@ -95,9 +99,9 @@ export const connectSocket = () => {
   const s = getSocket(); // Get the socket instance
   if (!s.connected) {
     s.connect(); // Start connection if not already connected
-    console.log("Socket: Attempting to establish connection...");
+    console.log("Socket: Attempting to establish connection..."); // [LOG MỚI]
   } else {
-    console.log("Socket: Already connected. No need to call connect() again.");
+    console.log("Socket: Already connected. No need to call connect() again."); // [LOG MỚI]
   }
 };
 
@@ -108,7 +112,7 @@ export const authenticateSocket = (jwtToken) => {
     console.log(
       `Socket: Emitting 'authenticate' event with token status: ${
         jwtToken ? "present" : "empty"
-      }`
+      }, token: ${jwtToken ? jwtToken.substring(0, 10) + "..." : "null"}` // [LOG MỚI]
     );
     s.emit("authenticate", jwtToken); // Send the token to the server for re-authentication
   } else {
@@ -120,7 +124,11 @@ export const authenticateSocket = (jwtToken) => {
       s.once("connect", () => {
         // Emit authenticate after successful connection
         s.emit("authenticate", jwtToken);
-        console.log("Socket: Connected and then emitted 'authenticate'.");
+        console.log(
+          `Socket: Connected and then emitted 'authenticate'. Token status: ${
+            jwtToken ? "present" : "empty"
+          }, token: ${jwtToken ? jwtToken.substring(0, 10) + "..." : "null"}` // [LOG MỚI]
+        );
       });
       s.connect(); // Attempt to connect
     }

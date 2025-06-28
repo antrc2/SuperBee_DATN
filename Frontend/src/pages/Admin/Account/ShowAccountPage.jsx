@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useParams, useNavigate } from "react-router-dom";
+import { getDecodedToken } from "@utils/tokenUtils";
 
 // Helper để format số tiền
 const formatCurrency = (amount, currency = "VND") => {
@@ -63,12 +64,31 @@ const getTransactionTypeLabel = (type) => {
   }
 };
 
+// Helper để map tên quyền
+const getRoleDisplayName = (roleName) => {
+  switch (roleName) {
+    case 'admin':
+      return 'Admin';
+    case 'user':
+      return 'Người dùng';
+    case 'partner':
+      return 'Đối tác';
+    case 'reseller':
+      return 'Đại lý';
+    default:
+      return roleName;
+  }
+};
+
 const ShowAccountPage = () => {
   const { id } = useParams();
   const [account, setAccount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview"); // Mặc định là tab tổng quan
+  const [selectedRole, setSelectedRole] = useState("");
+  const [updatingRole, setUpdatingRole] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,7 +96,10 @@ const ShowAccountPage = () => {
       try {
         const res = await api.get(`/admin/accounts/${id}`);
         // Đảm bảo lấy đúng dữ liệu 'user' từ cấu trúc phản hồi API của bạn
-        setAccount(res.data?.data?.user || res.data);
+        const userData = res.data?.data?.user || res.data;
+        setAccount(userData);
+        // Set quyền hiện tại cho select
+        setSelectedRole(userData.roles?.[0]?.name || "");
       } catch (err) {
         setError(err);
       } finally {
@@ -85,6 +108,75 @@ const ShowAccountPage = () => {
     };
     fetchAccount();
   }, [id]);
+
+  // Lấy thông tin user hiện tại từ token
+  useEffect(() => {
+    const decoded = getDecodedToken();
+    if (decoded) {
+      setCurrentUser({
+        id: decoded.user_id,
+        name: decoded.name,
+        roles: decoded.role_ids || []
+      });
+    }
+  }, []);
+
+  // Hàm cập nhật quyền
+  const handleUpdateRole = async () => {
+    if (!currentUser) {
+      alert('Không tìm thấy thông tin người dùng hiện tại');
+      return;
+    }
+
+    if (!selectedRole) {
+      alert('Vui lòng chọn quyền');
+      return;
+    }
+
+    // Kiểm tra nếu user hiện tại là reseller thì không cho cập nhật
+    if (account.roles?.[0]?.name === 'reseller') {
+      alert('Không thể cập nhật quyền của đại lý');
+      return;
+    }
+
+    // Kiểm tra nếu user hiện tại là admin và user bị cập nhật cũng là admin
+    if (account.roles?.[0]?.name === 'admin') {
+      alert('Không thể cập nhật quyền của admin');
+      return;
+    }
+
+    setUpdatingRole(true);
+    try {
+      const response = await api.put(`/admin/accounts/${id}/role`, {
+        roles: selectedRole,
+        user_id: currentUser.id
+      });
+
+      if (response.data.status) {
+        console.log("Cập nhật thành công");
+        // Cập nhật lại dữ liệu account
+        const res = await api.get(`/admin/accounts/${id}`);
+        const userData = res.data?.data?.user || res.data;
+        setAccount(userData);
+        setSelectedRole(userData.roles?.[0]?.name || "");
+      } else {
+       console.log("Cập nhật thất bại");
+       
+      }
+    } catch (err) {
+      console.error('Lỗi cập nhật quyền:', err);
+    } finally {
+      setUpdatingRole(false);
+    }
+  };
+
+  // Kiểm tra xem có thể cập nhật quyền hay không
+  const canUpdateRole = () => {
+    if (!currentUser) return false;
+    if (account?.roles?.[0]?.name === 'reseller') return false;
+    if (account?.roles?.[0]?.name === 'admin') return false;
+    return true;
+  };
 
   if (loading)
     return <div className="text-center p-8">Đang tải dữ liệu...</div>;
@@ -144,12 +236,46 @@ const ShowAccountPage = () => {
               {account.username}
             </h2>
             <p className="text-blue-600 text-lg">{account.email}</p>
-            <p className="text-gray-600 mt-1">
-              Quyền:{" "}
-              <span className="font-semibold text-gray-700">
-                {account.roles?.[0]?.name || "Không rõ"}
-              </span>
-            </p>
+            
+            {/* Phần quyền với select */}
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Quyền hiện tại:
+              </label>
+              {canUpdateRole() ? (
+                <div className="flex items-center gap-3">
+                  <select
+                    value={selectedRole}
+                    onChange={(e) => setSelectedRole(e.target.value)}
+                    className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    disabled={updatingRole}
+                  >
+                    <option value="user">Người dùng</option>
+                    <option value="partner">Đối tác</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <button
+                    onClick={handleUpdateRole}
+                    disabled={updatingRole || !selectedRole}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition duration-200"
+                  >
+                    {updatingRole ? 'Đang cập nhật...' : 'Cập nhật quyền'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-gray-700">
+                    {getRoleDisplayName(account.roles?.[0]?.name || "Không rõ")}
+                  </span>
+                  {account.roles?.[0]?.name === 'reseller' && (
+                    <span className="text-xs text-gray-500"></span>
+                  )}
+                  {account.roles?.[0]?.name === 'admin' && (
+                    <span className="text-xs text-gray-500"></span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-5">

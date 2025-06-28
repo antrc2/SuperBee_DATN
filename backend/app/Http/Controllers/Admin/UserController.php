@@ -13,7 +13,7 @@ class UserController extends Controller
     //
     public function index(Request $request)
     {
-        
+
         $user = User::with(['roles', 'wallet'])->get();
         $roles = Role::all();
         return response()->json([
@@ -118,4 +118,76 @@ class UserController extends Controller
             ], 500);
         }
     }
+    public function updateRoles(Request $request, $id)
+    {
+        try {
+            // Bước 1: Validate đầu vào
+            $request->validate([
+                'roles' => 'required',
+                'user_id' => 'required|integer|exists:users,id',
+            ]);
+    
+            // Chuyển roles thành mảng nếu là chuỗi
+            $roles = is_array($request->roles) ? $request->roles : [$request->roles];
+    
+            // Chỉ chấp nhận admin, user, partner
+            $allowedRoles = ['admin', 'user', 'partner'];
+            foreach ($roles as $role) {
+                if (!in_array($role, $allowedRoles)) {
+                    return response()->json([
+                        'status' => false,
+                        'message' => "Đã có lỗi xảy ra"
+                    ], 422);
+                }
+            }
+    
+            // Lấy user bị cập nhật
+            $targetUser = User::find($id);
+            if (!$targetUser) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy tài khoản'
+                ], 404);
+            }
+    
+            // Lấy user thực hiện
+            $authUser = User::find($request->user_id);
+            if (!$authUser || !$authUser->hasRole('admin')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Bạn không có quyền thực hiện hành động này'
+                ], 403);
+            }
+    
+            // Nếu người bị chỉnh sửa là admin thì không được cập nhật roles nữa (vì ngang cấp)
+            if ($targetUser->hasRole('admin')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Đã có lỗi xảy ra!'
+                ], 403);
+            }
+    
+            // Gán quyền mới
+            $targetUser->syncRoles($roles);
+            $targetUser->load('roles');
+    
+            return response()->json([
+                'status' => true,
+                'message' => 'Cập nhật quyền thành công',
+            ], 200);
+    
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Dữ liệu không hợp lệ',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra khi cập nhật quyền',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }    
 }

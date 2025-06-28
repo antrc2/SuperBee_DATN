@@ -2,7 +2,7 @@
 
 import { NavLink } from "react-router-dom";
 import { User, Lock, Wallet, Package, LogOut, Coins } from "lucide-react";
-import { useAuth } from "@contexts/AuthContext.jsx";
+import { useAuth } from "@contexts/AuthContext";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();

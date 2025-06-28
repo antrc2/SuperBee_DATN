@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ChevronLeft, EyeOff, Eye } from "lucide-react";
-import { useAuth } from "@contexts/AuthContext.jsx";
+import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 import { checkLocation } from "../../utils/hook";
 

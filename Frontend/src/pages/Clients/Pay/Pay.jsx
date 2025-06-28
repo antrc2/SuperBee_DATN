@@ -7,8 +7,8 @@ import {
   ShieldCheck,
   Gift,
 } from "lucide-react";
-import { useCart } from "@contexts/CartContexts";
-import { useNotification } from "@contexts/NotificationProvider";
+import { useCart } from "@contexts/CartContext";
+import { useNotification } from "@contexts/NotificationContext";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";

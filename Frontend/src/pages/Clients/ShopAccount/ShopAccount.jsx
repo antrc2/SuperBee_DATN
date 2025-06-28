@@ -1,7 +1,7 @@
 import React from "react";
 import Breadcrumbs from "../../../utils/Breadcrumbs";
 import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
-import { useHome } from "../../../contexts/HomeContext";
+import { useHome } from "@contexts/HomeContext";
 
 export default function ShopAccount() {
   const { data } = useHome();

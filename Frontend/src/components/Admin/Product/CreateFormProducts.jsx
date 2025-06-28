@@ -24,9 +24,7 @@ export default function CreateFormProducts({
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [categories, setCategories] = useState([]);
-  console.log("🚀 ~ categories:", categories);
   const [categoriesSelect, setCategoriesSelect] = useState([]);
-  console.log("🚀 ~ categoriesSelect:", categoriesSelect);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -35,7 +33,7 @@ export default function CreateFormProducts({
     const fetchCategories = async () => {
       try {
         const res = await api.get("/categories");
-        setCategories(res.data?.data || []);
+        setCategories(res.data?.data?.treeCategories || []);
       } catch (error) {
         console.error("Error fetching categories:", error);
       }

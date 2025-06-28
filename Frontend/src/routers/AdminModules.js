@@ -28,6 +28,7 @@ import {
 } from "../pages";
 import TrangDanhSachAccGameBrowse from "../pages/Admin/Products/TrangDanhSachAccGameBrowse";
 import UpdateProductBrowse from "../pages/Admin/Products/UpdateProductBrowse";
+import AgentDashboardPage from "../pages/AgentDashboard/AgentDashboardPage";
 export const adminModules = [
   {
     name: "discountcode",
@@ -71,6 +72,12 @@ export const adminModules = [
   {
     name: "orders",
     list: ListOrderPage,
+    show: ShowOrderPage,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "agent",
+    list: AgentDashboardPage,
     show: ShowOrderPage,
     allowedRoles: ["admin"],
   },

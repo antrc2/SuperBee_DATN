@@ -1,15 +1,15 @@
 import {
   createContext,
-  useContext,
   useState,
   useEffect,
   useCallback,
+  useContext,
 } from "react";
 import api from "@utils/http";
-import { useAuth } from "./AuthContext";
-import { useNotification } from "./NotificationProvider";
+import { useNotification } from "@contexts/NotificationContext";
 import { useNavigate } from "react-router-dom";
-
+import { useAuth } from "@contexts/AuthContext";
+// eslint-disable-next-line react-refresh/only-export-components
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
@@ -172,7 +172,6 @@ export function CartProvider({ children }) {
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
-
 export function useCart() {
   const context = useContext(CartContext);
   if (context === undefined) {

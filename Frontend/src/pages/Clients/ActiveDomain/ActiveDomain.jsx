@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import api from "../../../utils/http";
 import { Sparkles } from "lucide-react";
-import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNotification } from "../../../contexts/NotificationContext";
 import { useNavigate } from "react-router-dom";
 
 export default function ActiveDomain() {

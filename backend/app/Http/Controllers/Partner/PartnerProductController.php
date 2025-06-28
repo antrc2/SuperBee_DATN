@@ -16,14 +16,14 @@ class PartnerProductController extends Controller
     public function index(Request $request)
     {
         // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
-        $query = Product::query()->where("created_by", $request->user_id)->with(['category', 'images', 'gameAttributes']);
+        $query = Product::query()->where("created_by", $request->user_id)->with(['category', 'images', 'gameAttributes','credentials']);
 
         try {
             // Lọc theo danh mục sản phẩm (category_id)
             // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-            if ($request->filled('category_id')) {
-                $query->where('category_id', $request->input('category_id'));
-            }
+            // if ($request->filled('category_id')) {
+            //     $query->where('category_id', $request->input('category_id'));
+            // }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
@@ -87,7 +87,9 @@ class PartnerProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
-                "data" => []
+                "data" => [],
+                "error"=>$th->getMessage(),
+                "line"=>$th->getLine()
             ], 500); // Trả về status code 500
         }
     }

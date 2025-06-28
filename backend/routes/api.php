@@ -215,7 +215,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::prefix('/products')->group(function () {
             Route::get('/', [PartnerProductController::class, 'index']);
             Route::get('/{id}', [PartnerProductController::class, 'show']);
-            Route::post('/store', [PartnerProductController::class, 'store']);
+            Route::post('/', [PartnerProductController::class, 'store']);
             Route::put('/{id}', [PartnerProductController::class, 'update']);
             Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
             Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);

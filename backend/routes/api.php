@@ -3,12 +3,15 @@
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Partner\PartnerProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
+use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\OrderController;
+use App\Http\Controllers\Admin\PartnerProductController as AdminPartnerProductController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CardController;
@@ -151,6 +154,14 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
             Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
         });
+        // Route::prefix('/discountcode')->group(function () {
+        //     Route::get('/', [AdminDiscountCodeController::class, 'index']);
+        //     Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
+        //     Route::post('/', [AdminDiscountCodeController::class, 'store']);
+        //     Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
+        //     Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
+        //     Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+        // });
         Route::prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/', [CategoryController::class, 'store']);
@@ -164,12 +175,15 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+            Route::put('/{id}/role', [UserController::class, 'updateRoles']); // Cập nhật roles cho user
         });
+        
+
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
+            Route::get("/browse", [AdminProductController::class, 'getProductsBrowse']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
-            Route::post('/', [AdminProductController::class, 'store']);
-
+            Route::post('/', [AdminProductController::class, 'store']); // Thêm sản phẩm mới, chỉ cho partner
             Route::post("/{id}/deny", [AdminProductController::class, 'deny']); // Từ chối sản phẩm
             Route::post("/{id}/accept", [AdminProductController::class, 'accept']); // Chấp nhận sản phẩm 
             Route::post("/{id}/restore", [AdminProductController::class, 'restore']); // Sau khi hủy bán, tôi muốn bán lại
@@ -177,8 +191,10 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminProductController::class, 'update']);
         });
         Route::prefix("/orders")->group(function () {
-            Route::get("/", [OrderController::class, 'index']);
-            Route::get("/{id}", [OrderController::class, 'show']);
+            Route::get("/",[AdminOrderController::class,'index']);
+            Route::get("/",[AdminOrderController::class,'show']);
+            // Route::get("/", [OrderController::class, 'index']);
+            // Route::get("/{id}", [OrderController::class, 'show']);
         });
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);
@@ -190,11 +206,19 @@ Route::middleware(['jwt'])->group(function () {
     });
 });
 
-Route::middleware(['jwt'])->group(function(){
-    Route::middleware(['role:partner'])->prefix('/partner')->group(function(){
-        Route::prefix("/orders")->group(function(){
+Route::middleware(['jwt'])->group(function () {
+    Route::middleware(['role:partner'])->prefix('/partner')->group(function () {
+        Route::prefix("/orders")->group(function () {
 
-            Route::post("/purchase",[UserOrderController::class,'purchase']);
+            Route::post("/purchase", [UserOrderController::class, 'purchase']);
+        });
+        Route::prefix('/products')->group(function () {
+            Route::get('/', [PartnerProductController::class, 'index']);
+            Route::get('/{id}', [PartnerProductController::class, 'show']);
+            Route::post('/', [PartnerProductController::class, 'store']);
+            Route::put('/{id}', [PartnerProductController::class, 'update']);
+            Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
+            Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);
         });
     });
 });

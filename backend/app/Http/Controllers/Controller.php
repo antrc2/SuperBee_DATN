@@ -10,6 +10,16 @@ use Illuminate\Support\Facades\Log; // Import facade Log
 
 abstract class Controller
 {
+    public function generateCode(int $length = 16): string
+    {
+        $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        $code = '';
+        $max = strlen($characters) - 1;
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $characters[random_int(0, $max)];
+        }
+        return $code;
+    }
     /**
      * Lưu một file và trả về đường dẫn công khai.
      * Hàm sẽ tự động tạo thư mục nếu nó chưa tồn tại.

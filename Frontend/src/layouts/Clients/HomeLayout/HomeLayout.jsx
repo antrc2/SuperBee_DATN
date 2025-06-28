@@ -3,11 +3,22 @@ import { Outlet } from "react-router-dom";
 import Header from "@components/Client/layout/Header";
 import Footer from "@components/Client/layout/Footer";
 import { ChatComponent } from "../../../pages";
+import { useChat } from "../../../contexts/ChatContext";
 
 export default function HomeLayout() {
   const [isChatOpen, setIsChatOpen] = useState(false); // State để kiểm soát hiển thị hộp thoại chat
-
-  const toggleChat = () => {
+  const { isLoggedIn, requestAgentChat } = useChat();
+  const handleRequestAgentChat = async () => {
+    try {
+      await requestAgentChat();
+    } catch (error) {
+      console.error("Không thể tạo cuộc trò chuyện với agent:", error);
+    }
+  };
+  const toggleChat = async () => {
+    if (isLoggedIn) {
+      await handleRequestAgentChat();
+    }
     setIsChatOpen(!isChatOpen); // Đảo ngược trạng thái hiển thị chat
   };
 
@@ -68,7 +79,7 @@ export default function HomeLayout() {
 
           {/* Hộp thoại chat, chỉ hiển thị khi isChatOpen là true */}
           {isChatOpen && (
-            <div className="absolute bottom-[70px] right-0 w-[30rem] h-[calc(100svh-120px)] max-h-[600px] bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+            <div className="absolute bottom-[70px] right-0 w-[30rem] max-h-[600px] bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
               <ChatComponent />
             </div>
           )}

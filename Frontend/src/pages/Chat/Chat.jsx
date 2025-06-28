@@ -1,34 +1,37 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useChat } from "@contexts/ChatContext";
-import { useAuth } from "@contexts/AuthContext";
+import { useEffect, useRef, useState } from "react";
+import { useChat } from "../../contexts/ChatContext";
+import { useAuth } from "../../contexts/AuthContext";
 import { decodeData } from "../../utils/hook";
 
 const ChatComponent = () => {
-  const {
-    isLoggedIn,
-    agentChatRoom, // object containing roomId, messages, info, etc. for the agent chat
-    sendChatMessage,
-    requestAgentChat,
-    leaveAgentChatRoom, // Function to leave the agent chat room
-  } = useChat();
-  console.log("🚀 ~ ChatComponent ~ agentChatRoom:", agentChatRoom);
+  const { isLoggedIn, agentChatRoom, sendChatMessage } = useChat();
+
   const refToken = useRef(null);
-  const { token } = useAuth(); // To identify the user's own messages (sender_id)
-  if (token) {
-    refToken.current = decodeData(token);
-  } else {
-    refToken.current = null; // Xóa refToken khi logout
-  }
+  const { token } = useAuth();
+  useEffect(() => {
+    if (token) {
+      refToken.current = decodeData(token);
+    } else {
+      refToken.current = null; // Xóa refToken khi đăng xuất
+    }
+  }, [token]);
 
   const [newMessage, setNewMessage] = useState("");
+  const [localMessages, setLocalMessages] = useState([]);
   const messagesEndRef = useRef(null);
 
-  // Auto scroll to bottom when new messages arrive or when agentChatRoom updates
+  useEffect(() => {
+    if (agentChatRoom?.messages) {
+      setLocalMessages(agentChatRoom.messages);
+    } else {
+      setLocalMessages([]);
+    }
+  }, [agentChatRoom?.messages]);
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [agentChatRoom?.messages]); // Only scroll when the messages array in agentChatRoom changes
+  }, [localMessages]);
 
-  // Display message if user is not logged in
   if (!isLoggedIn) {
     return (
       <div className="flex flex-col min-h-[30rem] max-h-[45rem] bg-gray-100 p-4 rounded-lg shadow-lg">
@@ -50,14 +53,13 @@ const ChatComponent = () => {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Chat Functionality
+              Chức năng Chat
             </h3>
             <p className="text-gray-500 mb-4">
-              You need to log in to use the chat feature with support staff.
+              Bạn cần đăng nhập để sử dụng tính năng chat với nhân viên hỗ trợ.
             </p>
             <p className="text-sm text-gray-400">
-              However, you can still receive general notifications from the
-              system.
+              Tuy nhiên, bạn vẫn có thể nhận thông báo chung từ hệ thống.
             </p>
           </div>
         </div>
@@ -65,119 +67,82 @@ const ChatComponent = () => {
     );
   }
 
-  // Handle sending message
+  // Xử lý gửi tin nhắn mới.
   const handleSendMessage = () => {
-    if (newMessage.trim() && agentChatRoom?.roomId) {
-      const success = sendChatMessage(newMessage.trim());
-      if (success) {
-        setNewMessage(""); // Clear input content after successful send
+    const trimmedMessage = newMessage.trim();
+    if (trimmedMessage && agentChatRoom?.roomId) {
+      const tempMessage = {
+        id: `temp-${Date.now()}-${Math.random()}`,
+        sender_id: refToken.current?.user_id,
+        sender_name: "Bạn",
+        content: trimmedMessage,
+        created_at: new Date().toISOString(),
+      };
+      setLocalMessages((prevMessages) => [...prevMessages, tempMessage]);
+      setNewMessage("");
+      const success = sendChatMessage(trimmedMessage);
+      if (!success) {
+        console.error("Không thể gửi tin nhắn ngay lập tức do sự cố nội bộ.");
       }
     }
   };
 
-  // Handle requesting chat with agent
-  const handleRequestAgentChat = async () => {
-    try {
-      await requestAgentChat();
-    } catch (error) {
-      console.error("Could not create chat with agent:", error);
-      alert("Could not create chat with agent: " + error.message);
-    }
-  };
-
-  // Handle leaving chat room with agent
-  const handleLeaveRoom = async () => {
-    if (!agentChatRoom?.roomId) {
-      return;
-    }
-
-    try {
-      await leaveAgentChatRoom();
-    } catch (error) {
-      console.error("Could not leave agent chat room:", error);
-      alert("Could not leave agent chat room: " + error.message);
-    }
-  };
-
-  const currentMessages = agentChatRoom?.messages || [];
   return (
-    <div className="flex flex-col min-h-[30rem] max-h-[45rem] bg-gray-100 p-4 rounded-lg shadow-lg">
-      <div className="flex justify-between items-center mb-4 p-3 bg-white rounded-lg shadow">
-        <div className="flex space-x-2">
-          {!agentChatRoom?.roomId && (
-            <button
-              onClick={handleRequestAgentChat}
-              className="px-3 py-1 bg-purple-500 text-white text-sm rounded hover:bg-purple-600"
-            >
-              Chat with Agent
-            </button>
-          )}
-        </div>
-      </div>
-
+    <div className="flex flex-col max-h-[45rem] bg-gray-100 p-4 rounded-lg shadow-lg">
+      {/* Khu vực hiển thị tin nhắn chat chính */}
       <div className="flex-1 bg-white p-4 rounded-lg overflow-y-auto shadow-inner mb-4 flex flex-col space-y-2">
-        {agentChatRoom?.roomId ? (
-          <>
-            {currentMessages.map((msg) => {
-              const isOwnMessage = msg.sender_id == refToken.current?.user_id;
-              return (
-                <div
-                  key={msg.id}
-                  className={`p-3 rounded-lg max-w-[80%] ${
-                    isOwnMessage
-                      ? "bg-blue-500 text-white self-end ml-auto"
-                      : "bg-gray-300 text-gray-800 self-start mr-auto"
-                  }`}
-                >
-                  <p className="font-semibold text-sm">
-                    {isOwnMessage
-                      ? "You"
-                      : `${msg.sender_name || "Support Staff"}`}
-                  </p>
-                  <p className="text-base">{msg.content}</p>
-                  <span className="block text-xs mt-1 opacity-75">
-                    {new Date(msg.created_at).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-              );
-            })}
-
-            <div ref={messagesEndRef} />
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 text-center">
-              Click "Chat with Agent" to start a conversation with support
-              staff.
-            </p>
-          </div>
-        )}
+        {localMessages.map((msg) => {
+          // Xác định xem tin nhắn có phải do người dùng hiện tại gửi hay không
+          const isOwnMessage = msg.sender_id == refToken.current?.user_id;
+          return (
+            <div
+              key={msg.id} // Sử dụng ID tin nhắn làm khóa để React render danh sách
+              className={`p-3 rounded-lg max-w-[80%] ${
+                isOwnMessage
+                  ? "bg-blue-500 text-white self-end ml-auto" // Kiểu dáng cho tin nhắn của chính mình (căn phải, màu xanh)
+                  : "bg-gray-300 text-gray-800 self-start mr-auto" // Kiểu dáng cho các tin nhắn khác (căn trái, màu xám)
+              }`}
+            >
+              <p className="font-semibold text-sm">
+                {isOwnMessage
+                  ? "Bạn"
+                  : `${msg.sender_name || "Nhân viên hỗ trợ"}`}
+              </p>
+              <p className="text-base">{msg.content}</p>
+              <span className="block text-xs mt-1 opacity-75">
+                {/* Định dạng dấu thời gian tin nhắn theo giờ địa phương */}
+                {new Date(msg.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
       </div>
-
       {agentChatRoom?.roomId && (
         <div className="flex items-center p-2 bg-white rounded-lg shadow">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Type your message..."
+            placeholder="Nhập tin nhắn của bạn..."
             className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             onKeyPress={(e) => {
+              // Gửi tin nhắn khi nhấn phím Enter
               if (e.key === "Enter") {
                 handleSendMessage();
               }
             }}
-            disabled={!agentChatRoom?.roomId}
+            disabled={!agentChatRoom?.roomId} // Vô hiệu hóa ô nhập nếu không có chat đang hoạt động
           />
           <button
             onClick={handleSendMessage}
             className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            disabled={!newMessage.trim() || !agentChatRoom?.roomId}
+            disabled={!newMessage.trim() || !agentChatRoom?.roomId} // Vô hiệu hóa nút gửi nếu không có tin nhắn hoặc không có chat đang hoạt động
           >
-            Send
+            Gửi
           </button>
         </div>
       )}
@@ -186,4 +151,3 @@ const ChatComponent = () => {
 };
 
 export default ChatComponent;
-//  chat của client

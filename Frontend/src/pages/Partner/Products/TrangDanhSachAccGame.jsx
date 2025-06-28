@@ -7,7 +7,7 @@ import ProductsListPage from "./ProductsListPage";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import api from "../../../utils/http";
 import { PRODUCT_FILTERS_CONFIG } from "./filterConfigs";
-import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNotification } from "../../../contexts/NotificationContext";
 // Các key dùng để tìm kiếm ở FE (trên dữ liệu đã tải về của trang hiện tại)
 const LOCAL_SEARCHABLE_KEYS = ["sku"];
 

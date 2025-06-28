@@ -27,7 +27,7 @@ import CategoryDropdown from "./CategoryDropdown";
 import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
-import { useCart } from "../../../contexts/CartContexts";
+import { useCart } from "../../../contexts/CartContext";
 
 export default function Header() {
   // State management

@@ -9,7 +9,7 @@ import NoProduct from "@components/Loading/NoProduct";
 import BannerAndCart from "@sections/Home/BannerAndCart";
 import api from "@utils/http";
 import Pagination from "./Pagination";
-import { useNotification } from "@contexts/NotificationProvider";
+import { useNotification } from "@contexts";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -60,7 +60,7 @@ import LoadingDomain from "@components/Loading/LoadingDomain";
 import NoProduct from "@components/Loading/NoProduct";
 import BannerAndCart from "@sections/Home/BannerAndCart";
 import api from "@utils/http";
-import { useNotification } from "@contexts/NotificationProvider";
+import { useNotification } from "@contexts";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -95,7 +95,7 @@ export default function Home() {
 ### Thông báo
 
 ```js
-import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNotification } from "../../../contexts/index";
 const { pop, conFim } = useNotification();
 const hendelC = async () => {
   // ok sẽ trả về true hoặc false

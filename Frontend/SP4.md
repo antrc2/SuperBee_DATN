@@ -167,7 +167,7 @@
 
 ## 🔔 Thông Báo
 
-- Sử dụng từ `import { useNotification } from "@contexts/NotificationProvider";`:
+- Sử dụng từ `import { useNotification } from "@contexts";`:
   `const { pop, conFim } = useNotification();`
 
   - Thành công:

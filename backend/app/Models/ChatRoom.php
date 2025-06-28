@@ -11,7 +11,6 @@ class ChatRoom extends Model
 
     protected $fillable = [
         'name',
-        'created_by',
         'status', // Thêm 'status' vào fillable
     ];
 
@@ -20,10 +19,6 @@ class ChatRoom extends Model
      *
      *
      */
-    public function creator(){
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
     /**
      * Lấy tất cả tin nhắn trong phòng chat.
      *

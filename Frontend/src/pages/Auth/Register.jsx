@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { ChevronLeft, EyeOff, Eye } from "lucide-react"; // Updated import
-import { useAuth } from "@contexts/AuthContext.jsx";
+import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 
 export default function SignUpForm() {
@@ -88,7 +88,7 @@ export default function SignUpForm() {
               Enter your email and password to sign up!
             </p>
           </div>
-          {/* Display User Data on Success (using user from useAuth) - This will likely be handled by a redirect */}
+          {/* Display User Data on Success (using user from import { useAuth } from "@contexts/AuthContext";) - This will likely be handled by a redirect */}
           {user && (
             <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">
               <h3 className="mb-2 text-lg font-semibold text-green-800 dark:text-green-100">

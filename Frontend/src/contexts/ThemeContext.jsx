@@ -1,6 +1,6 @@
-import React, { createContext, useState, useContext, useEffect } from "react";
+import React, { createContext, useState, useEffect, useContext } from "react";
 
-// Create a ThemeContext with default value null
+// eslint-disable-next-line react-refresh/only-export-components
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
@@ -38,7 +38,6 @@ export function ThemeProvider({ children }) {
     </ThemeContext.Provider>
   );
 }
-
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === null) {

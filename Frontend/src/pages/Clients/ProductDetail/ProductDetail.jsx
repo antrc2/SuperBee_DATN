@@ -13,7 +13,7 @@ import {
 import LoadingDomain from "@components/Loading/LoadingDomain"; // Giả sử đường dẫn này chính xác
 import api from "@utils/http"; // Giả sử đường dẫn này chính xác
 import { useParams } from "react-router-dom";
-import { useCart } from "../../../contexts/CartContexts"; // Giả sử đường dẫn này chính xác
+import { useCart } from "@contexts/CartContext"; // Giả sử đường dẫn này chính xác
 import Image from "../../../components/Client/Image/Image";
 
 // Định nghĩa component Button ngay trong file này

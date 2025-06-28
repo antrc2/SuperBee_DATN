@@ -53,6 +53,11 @@ const navItems = [
     name: "Banners",
     path: "/admin/banners",
   },
+  {
+    icon: <Calendar />,
+    name: "agent",
+    path: "/admin/agent",
+  },
 ];
 
 const AppSidebar = () => {

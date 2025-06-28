@@ -7,7 +7,7 @@ import ProductsListPage from "./ProductsListPage";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import api from "../../../utils/http";
 import { PRODUCT_FILTERS_CONFIG } from "./filterConfigs";
-import { useNotification } from "../../../contexts/NotificationProvider";
+import { useNotification } from "../../../contexts/NotificationContext";
 import ProductsBrowse from "./ProductsBrowse";
 // Các key dùng để tìm kiếm ở FE (trên dữ liệu đã tải về của trang hiện tại)
 const LOCAL_SEARCHABLE_KEYS = ["sku"];
@@ -135,7 +135,6 @@ const TrangDanhSachAccGame = () => {
       title="Danh sách tài khoản game"
       showBackButton={false}
       showBrowse={true}
-
       showAddButton={true}
       onAdd={handleAddAccount}
       onApprove={handleApprove}
@@ -157,7 +156,6 @@ const TrangDanhSachAccGame = () => {
         }
         handleLock={(id) => handleAction("cancel", id, "Khóa sản phẩm này?")}
       />
-     
     </Layout>
   );
 };

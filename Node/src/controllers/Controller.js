@@ -1,5 +1,6 @@
 // src/controllers/NotificationController.js
 import { sendEmail } from "./EmailControleer.js";
+import { formatNotificationMessage } from "./NotificationControler.js";
 // import { sendSocketNotification } from "./NotificationControler.js";
 
 const handleIncomingNotification = (io) => async (channel, message) => {
@@ -21,10 +22,16 @@ const handleIncomingNotification = (io) => async (channel, message) => {
           emailError
         );
       }
-      // } else if (type.startsWith("notification_")) {
-      //   // Đây là một thông báo real-time chung hoặc cá nhân.
-      //   // Ví dụ: 'notification_order_status_updated', 'notification_system_alert', 'notification_new_follower'
-      //   sendSocketNotification(io, type, data); // 'data' ở đây chứa user_id (nếu có) và nội dung thông báo
+    } else if (type.startsWith("NOTIFICATION_")) {
+      try {
+        console.log("type", type);
+        formatNotificationMessage(io, type, data);
+      } catch (emailError) {
+        console.error(
+          `[Handler] Lỗi khi chuyển tiếp yêu cầu NOTIFICATION_ loại '${type}':`,
+          emailError
+        );
+      }
       // } else if (type.startsWith("message_")) {
       //   // Đây là một tin nhắn (ví dụ: chat message, tin nhắn hệ thống qua chat)
       //   // Ví dụ: 'message_chat', 'message_group_chat', 'message_direct'

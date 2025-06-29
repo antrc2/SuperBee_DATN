@@ -11,6 +11,7 @@ use App\Models\ProductImage;
 use Aws\Glacier\TreeHash;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class AdminProductController extends Controller
 {
@@ -219,7 +220,7 @@ class AdminProductController extends Controller
                 foreach ($product->images as $img) {
                     if (! in_array($img->image_url, $keepList, true)) {
                         // Chuyển URL public về đường dẫn relative: "product_images/uuid.jpg"
-                        $relative = ltrim(parse_url($img->image_url, PHP_URL_PATH), '/storage/');
+                        $relative = parse_url($img->image_url, PHP_URL_PATH);
                         $this->deleteFile($relative);
                         $img->delete();
                     }
@@ -228,7 +229,7 @@ class AdminProductController extends Controller
                 // 2) Nếu có file mới, upload rồi lưu vào DB
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $file) {
-                        $url = $this->uploadFile($file, 'product_images');
+                        $url = $this->uploadFile($file, 'product_images/'.$product->sku);
                         if (is_null($url)) {
                             DB::rollBack();
                             return response()->json([
@@ -366,7 +367,7 @@ class AdminProductController extends Controller
             $images = $request->file('images'); // Lấy mảng các file
             foreach ($images as $image) {
                 // Gọi uploadFile cho từng file riêng lẻ
-                $imageUrl = $this->uploadFile($image, 'product_images');
+                $imageUrl = $this->uploadFile($image, 'product_images/'.$sku);
 
                 if (is_null($imageUrl)) {
                     // Rollback nếu upload thất bại

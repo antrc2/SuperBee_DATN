@@ -15,7 +15,7 @@ AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_DEFAULT_REGION = os.getenv("AWS_DEFAULT_REGION", "ap-southeast-2")
 AWS_BUCKET = os.getenv("AWS_BUCKET")
-AWS_URL = os.getenv("AWS_URL")  # ví dụ: https://bucket.s3.region.amazonaws.com
+AWS_URL = os.getenv("AWS_URL")
 
 # Thiết lập logging
 logging.basicConfig(level=logging.INFO)

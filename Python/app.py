@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form, Request
 from typing import List
 import uvicorn
 from io import BytesIO
-from Controller.S3Controller import S3Controller
+from controller.S3Controller import S3Controller
 app = FastAPI()
 s3_client = S3Controller()
 

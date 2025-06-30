@@ -175,6 +175,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
             Route::patch('/key/{id}', [UserController::class, 'key']); // Sửa thành {id}
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
+            Route::put('/{id}/role', [UserController::class, 'updateRoles']); // Cập nhật roles cho user
         });
         
 
@@ -214,7 +215,7 @@ Route::middleware(['jwt'])->group(function () {
         Route::prefix('/products')->group(function () {
             Route::get('/', [PartnerProductController::class, 'index']);
             Route::get('/{id}', [PartnerProductController::class, 'show']);
-            Route::post('/store', [PartnerProductController::class, 'store']);
+            Route::post('/', [PartnerProductController::class, 'store']);
             Route::put('/{id}', [PartnerProductController::class, 'update']);
             Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
             Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);

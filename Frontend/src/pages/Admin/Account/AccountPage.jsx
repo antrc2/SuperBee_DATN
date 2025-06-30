@@ -2,6 +2,22 @@ import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useNavigate } from "react-router-dom";
 
+// Helper để map tên quyền
+const getRoleDisplayName = (roleName) => {
+  switch (roleName) {
+    case 'admin':
+      return 'Admin';
+    case 'user':
+      return 'Người dùng';
+    case 'partner':
+      return 'Đối tác';
+    case 'reseller':
+      return 'Đại lý';
+    default:
+      return roleName;
+  }
+};
+
 const AccountListPage = () => {
   const [filterRole, setFilterRole] = useState(0);
   const [accounts, setAccounts] = useState([]);
@@ -89,6 +105,7 @@ const AccountListPage = () => {
               <th className="px-3 py-2">Email</th>
               <th className="px-3 py-2">Phone</th>
               <th className="px-3 py-2">Người giới thiệu</th>
+              <th className="px-3 py-2">Quyền</th>
               <th className="px-3 py-2">Số dư</th>
               <th className="px-3 py-2">Trạng thái</th>
               <th className="px-3 py-2 text-center">Hành động</th>
@@ -102,6 +119,16 @@ const AccountListPage = () => {
                 <td className="px-3 py-2">{acc.email}</td>
                 <td className="px-3 py-2">{acc.phone}</td>
                 <td className="px-3 py-2">{acc.affiliated_by}</td>
+                <td className="px-3 py-2">
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    acc.roles?.[0]?.name === 'admin' ? 'bg-red-100 text-red-800' :
+                    acc.roles?.[0]?.name === 'reseller' ? 'bg-purple-100 text-purple-800' :
+                    acc.roles?.[0]?.name === 'partner' ? 'bg-blue-100 text-blue-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {getRoleDisplayName(acc.roles?.[0]?.name || 'Không rõ')}
+                  </span>
+                </td>
                 <td className="px-3 py-2">
                   {acc.wallet?.currency
                     ? `${Number(acc.wallet?.balance || 0).toLocaleString()} ${

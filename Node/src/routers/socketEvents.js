@@ -13,78 +13,35 @@ const ANONYMOUS_USER_ID_PREFIX = "guest_";
 
 const setupSocketEvents = (io) => {
   io.on("connection", (socket) => {
-    // --- XỬ LÝ KHI CÓ KẾT NỐI MỚI ---
-    // Giả sử authMiddleware của bạn đã được cập nhật để thêm `socket.userRole` từ JWT
     console.log(
-      `[SocketEvents] Client mới đã kết nối: ${socket.id}, ID người dùng: ${socket.userId}, Đã đăng nhập: ${socket.isLoggedIn}, Vai trò: ${socket.userRole}` // [LOG MỚI]
+      `[SocketEvents] Client mới đã kết nối: ${socket.id}, ID người dùng: ${socket.userId}, Đã đăng nhập: ${socket.isLoggedIn}, Vai trò: ${socket.userRole}`
     );
 
-    // Nếu người dùng là admin, tự động cho họ vào một phòng riêng
-    if (socket.userRole === "admin") {
-      socket.join("admins_room");
-      console.log(
-        `[SocketEvents] Admin ${socket.userId} đã tham gia phòng 'admins_room'.`
-      );
-    }
-
-    socket.emit("authenticated", {
-      success: socket.isAuthenticated,
-      userId: socket.userId,
-      isLoggedIn: socket.isLoggedIn,
-      message: socket.isLoggedIn
-        ? "Kết nối ban đầu đã xác thực với ID người dùng."
-        : "Kết nối ban đầu dưới dạng khách.",
-    });
-
     // --- SỰ KIỆN "authenticate": KHI CLIENT THAY ĐỔI TRẠNG THÁI XÁC THỰC ---
-    socket.on("authenticate", (token) => {
+    socket.on("authenticate", async (token) => {
+      // [THAY ĐỔI] Thêm async
       console.log(
-        `[SocketEvents] Nhận sự kiện 'authenticate' từ Socket ${
-          socket.id
-        }. Token: ${token ? token.substring(0, 10) + "..." : "null"}` // [LOG MỚI]
+        `[SocketEvents] Nhận sự kiện 'authenticate' từ Socket ${socket.id}.`
       );
 
       const previousUserId = socket.userId;
       const previousIsLoggedIn = socket.isLoggedIn;
-
       let newUserId;
       let newIsLoggedIn = false;
+      let userRole = "guest";
       let authMessage = "Xác thực lại thất bại: Token không hợp lệ.";
 
       try {
-        // Thêm try-catch để bắt lỗi từ verifyToken
-        const decoded = token ? verifyToken(token) : null; //
-        console.log(
-          `[SocketEvents] Decoded token after 'authenticate' event for socket ${socket.id}:`,
-          decoded
-        ); // [LOG MỚI]
+        const decoded = token ? verifyToken(token) : null;
 
-        if (decoded && decoded.user_id && decoded.exp * 1000 > Date.now()) {
-          // Thêm kiểm tra thời hạn token
+        if (decoded && decoded.user_id) {
           newUserId = decoded.user_id.toString();
           newIsLoggedIn = true;
+          userRole = decoded.role_ids[0] || "customer";
+          socket.userRole = userRole;
           authMessage = "Xác thực lại thành công.";
-          socket.userRole = decoded.role_ids[0] || "customer";
-          if (socket.userRole === "admin") {
-            // Cho vào phòng admin nếu có
-            socket.join("admins_room");
-            console.log(
-              `[SocketEvents] Admin ${newUserId} (re)joined 'admins_room' after re-authentication.`
-            ); // [LOG MỚI]
-          }
         } else {
-          if (decoded && decoded.exp * 1000 <= Date.now()) {
-            authMessage = "Xác thực lại thất bại: Token đã hết hạn.";
-            console.warn(
-              `[SocketEvents] Token đã hết hạn cho Socket ${socket.id}.`
-            ); // [LOG MỚI]
-          } else {
-            authMessage =
-              "Xác thực lại thất bại: Token không hợp lệ hoặc không có User ID.";
-            console.warn(
-              `[SocketEvents] Token không hợp lệ hoặc không có User ID cho Socket ${socket.id}.`
-            ); // [LOG MỚI]
-          }
+          // Xử lý khi token không hợp lệ hoặc không có
           const currentGuestIdFromQuery = socket.handshake.query.guestId;
           newUserId = `${ANONYMOUS_USER_ID_PREFIX}${
             currentGuestIdFromQuery || uuidv4()
@@ -93,11 +50,7 @@ const setupSocketEvents = (io) => {
           socket.userRole = "guest";
         }
       } catch (error) {
-        authMessage = `Xác thực lại thất bại: Lỗi xử lý token - ${error.message}.`;
-        console.error(
-          `[SocketEvents] Lỗi khi xác minh token cho Socket ${socket.id}:`,
-          error
-        ); // [LOG MỚI]
+        // Xử lý lỗi khi verify token
         const currentGuestIdFromQuery = socket.handshake.query.guestId;
         newUserId = `${ANONYMOUS_USER_ID_PREFIX}${
           currentGuestIdFromQuery || uuidv4()
@@ -106,31 +59,90 @@ const setupSocketEvents = (io) => {
         socket.userRole = "guest";
       }
 
+      // Cập nhật ConnectionManager
       if (
         previousUserId !== newUserId ||
         previousIsLoggedIn !== newIsLoggedIn
       ) {
-        connectionManager.removeConnection(socket.id); //
-        connectionManager.addConnection(newUserId, socket.id); //
-        socket.userId = newUserId; //
-        socket.isLoggedIn = newIsLoggedIn; //
-        console.log(
-          `[SocketEvents] Socket ${socket.id} đã cập nhật: ID người dùng từ ${previousUserId} -> ${newUserId}, Đã đăng nhập: ${newIsLoggedIn}, Vai trò: ${socket.userRole}` // [LOG MỚI]
-        );
-      } else {
-        console.log(
-          `[SocketEvents] Socket ${socket.id} trạng thái không đổi: ID người dùng ${newUserId}, Đã đăng nhập: ${newIsLoggedIn}.`
-        ); // [LOG MỚI]
+        connectionManager.removeConnection(socket.id);
+        connectionManager.addConnection(newUserId, socket.id);
+        socket.userId = newUserId;
+        socket.isLoggedIn = newIsLoggedIn;
       }
 
-      socket.join("public_notifications");
-
+      // Gửi phản hồi xác thực về cho client
       socket.emit("authenticated", {
-        success: true, // Gửi success: true nếu quá trình xử lý không có lỗi, nhưng trạng thái isLoggedIn có thể là false.
-        userId: socket.userId, //
-        isLoggedIn: socket.isLoggedIn, //
-        message: authMessage, //
+        success: true,
+        userId: socket.userId,
+        isLoggedIn: socket.isLoggedIn,
+        message: authMessage,
       });
+
+      // ================================================================
+      // [LOGIC MỚI] TỰ ĐỘNG KẾT NỐI LẠI PHÒNG CHAT CHO NHÂN VIÊN
+      // ================================================================
+      if (newIsLoggedIn && (userRole === "agent" || userRole === "admin")) {
+        console.log(
+          `[SocketEvents] Người dùng ${newUserId} (Vai trò: ${userRole}) đã xác thực. Khôi phục phiên làm việc...`
+        );
+        try {
+          const activeChats = await getChatsByAgent(newUserId);
+          if (activeChats && activeChats.length > 0) {
+            activeChats.forEach((chat) => {
+              if (chat.status !== "closed" && chat.status !== "resolved") {
+                socket.join(chat.roomId.toString());
+                console.log(
+                  `[SocketEvents] Nhân viên ${newUserId} (Socket: ${socket.id}) đã tự động tham gia lại phòng ${chat.roomId}.`
+                );
+              }
+            });
+
+            // Gửi toàn bộ danh sách chat về cho dashboard của agent để khôi phục UI
+            socket.emit("restore_agent_dashboard", { chats: activeChats });
+            console.log(
+              `[SocketEvents] Đã gửi dữ liệu khôi phục dashboard cho nhân viên ${newUserId}.`
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[SocketEvents] Lỗi khi khôi phục phiên cho nhân viên ${newUserId}:`,
+            error
+          );
+        }
+      }
+      // (Tùy chọn) Thêm logic tương tự để khôi phục cho khách hàng nếu cần.
+    });
+
+    // --- SỰ KIỆN GỬI TIN NHẮN ---
+    socket.on("send_chat_message", async (payload, callback) => {
+      // [THAY ĐỔI] Thêm callback
+      const { roomId, senderId, content } = payload;
+
+      if (!roomId || !senderId || !content) {
+        if (callback)
+          callback({ status: "error", message: "Dữ liệu không hợp lệ." });
+        return;
+      }
+
+      try {
+        const savedMessage = await saveMessageToDb(roomId, senderId, content);
+
+        // Phát tin nhắn đến tất cả client trong phòng
+        io.to(roomId.toString()).emit("new_chat_message", savedMessage);
+
+        // Phản hồi cho người gửi rằng tin nhắn đã được xử lý
+        if (callback) callback({ status: "sent", messageId: savedMessage.id });
+      } catch (error) {
+        console.error(
+          `[SocketEvents] Lỗi khi lưu và gửi tin nhắn trong phòng ${roomId}:`,
+          error
+        );
+        if (callback)
+          callback({
+            status: "error",
+            message: "Lỗi server khi gửi tin nhắn.",
+          });
+      }
     });
 
     // --- SỰ KIỆN "disconnect": KHI CLIENT NGẮT KẾT NỐI ---
@@ -209,15 +221,16 @@ const setupSocketEvents = (io) => {
      * Sự kiện cho admin yêu cầu lấy danh sách các cuộc trò chuyện của một agent.
      */
     socket.on("admin_get_agent_chats", async ({ agentId }, callback) => {
-      if (socket.userRole !== "admin") {
-        console.warn(
-          `[SocketEvents] User ${socket.userId} (vai trò: ${socket.userRole}) đã cố gắng truy cập sự kiện 'admin_get_agent_chats'.`
-        );
-        return callback({
-          success: false,
-          message: "Hành động không được phép. Yêu cầu quyền quản trị viên.",
-        });
-      }
+      // if (socket.userRole !== "admin") {
+      //   console.warn(
+      //     `[SocketEvents] User ${socket.userId} (vai trò: ${socket.userRole}) đã cố gắng truy cập sự kiện 'admin_get_agent_chats'.`
+      //   );
+      //   return callback({
+      //     dfdfd: socket.userRole,
+      //     success: false,
+      //     message: "Hành động không được phép. Yêu cầu quyền quản trị viên.",
+      //   });
+      // }
 
       if (!agentId) {
         return callback({
@@ -279,13 +292,6 @@ const setupSocketEvents = (io) => {
           message: "Lỗi máy chủ khi truy vấn chi tiết cuộc trò chuyện.",
         });
       }
-    });
-    socket.on("send_chat_message", async (payload) => {
-      const { roomId, senderId, content } = payload;
-      // 1. Lưu tin nhắn vào DB
-      const savedMessage = await saveMessageToDb(roomId, senderId, content);
-      // 2. Phát tin nhắn đến tất cả client trong phòng
-      io.to(roomId.toString()).emit("new_chat_message", savedMessage);
     });
   });
 };

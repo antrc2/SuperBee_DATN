@@ -6,10 +6,8 @@ import { v4 as uuidv4 } from "uuid";
 const ANONYMOUS_USER_ID_PREFIX = "guest_";
 
 const authSocketMiddleware = (socket, next) => {
-  const token = socket.handshake.query.token; // Khi client đã sửa, cái này sẽ là undefined/"" lúc đầu
-  console.log("🚀 ~ authSocketMiddleware ~ token:", token);
-  const guestId = socket.handshake.query.guestId; // Luôn có giá trị từ client
-  console.log("🚀 ~ authSocketMiddleware ~ guestId:", guestId);
+  const token = socket.handshake.query.token;
+  const guestId = socket.handshake.query.guestId;
 
   let userId;
   let isLoggedIn = false;

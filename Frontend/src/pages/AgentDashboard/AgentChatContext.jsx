@@ -7,31 +7,40 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { getSocket, connectSocket } from "@utils/socket";
+import { getSocket, connectSocket, authenticateSocket } from "@utils/socket"; // [THAY ĐỔI] Thêm authenticateSocket
 import { useAuth } from "@contexts/AuthContext";
 
 export const AgentChatContext = createContext();
 export const useAgentChat = () => useContext(AgentChatContext);
 
 export function AgentChatProvider({ children }) {
-  const { token, user } = useAuth(); // Agent phải đăng nhập để có user.id
-  const [chatList, setChatList] = useState([]); // Danh sách các cuộc trò chuyện
-  const [activeChatId, setActiveChatId] = useState(null); // ID của phòng chat đang mở
-  const [messages, setMessages] = useState([]); // Tin nhắn của phòng chat đang mở
-  const [isLoading, setIsLoading] = useState(false); // Trạng thái loading khi lấy tin nhắn
+  const { token, user } = useAuth();
+  const [chatList, setChatList] = useState([]);
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const socketRef = useRef(null);
 
-  // --- PHẦN 1: KẾT NỐI VÀ LẮNG NGHE SỰ KIỆN REAL-TIME ---
-
   useEffect(() => {
-    // Chỉ thực hiện khi có thông tin user (agent)
     if (!user?.id) return;
 
     const socket = getSocket();
     socketRef.current = socket;
 
-    // Đảm bảo socket đã kết nối (nếu chưa)
-    connectSocket(token);
+    // Xác thực lại mỗi khi token thay đổi (quan trọng cho việc reload)
+    authenticateSocket(token);
+
+    // --- Lắng nghe các sự kiện từ server ---
+
+    // [LOGIC MỚI] Lắng nghe sự kiện khôi phục dashboard
+    const handleRestoreDashboard = (data) => {
+      console.log("Restoring agent dashboard:", data);
+      const formattedChatList = data.chats.map((chat) => ({
+        ...chat,
+        unreadCount: 0,
+      }));
+      setChatList(formattedChatList);
+    };
 
     // --- Lắng nghe các sự kiện từ server ---
 
@@ -85,29 +94,31 @@ export function AgentChatProvider({ children }) {
             ) // Sắp xếp lại để chat mới nhất lên đầu
       );
     };
-
+    socket.on("restore_agent_dashboard", handleRestoreDashboard); // [MỚI]
     socket.on("new_chat_assigned", handleNewChatAssigned);
     socket.on("new_chat_message", handleNewMessage);
 
     // --- Lấy dữ liệu ban đầu ---
-    // Yêu cầu server gửi danh sách các cuộc trò chuyện hiện có của agent
-    socket.emit("admin_get_agent_chats", { agentId: user.id }, (response) => {
-      if (response.success) {
-        // Định dạng lại dữ liệu từ server cho phù hợp với state
-        const formattedChatList = response.data.map((chat) => ({
-          ...chat,
-          unreadCount: 0, // Tạm thời đặt là 0
-        }));
-        setChatList(formattedChatList);
-      }
-    });
+    // // Yêu cầu server gửi danh sách các cuộc trò chuyện hiện có của agent
+    // socket.emit("admin_get_agent_chats", { agentId: user.id }, (response) => {
+    //   if (response.success) {
+    //     // Định dạng lại dữ liệu từ server cho phù hợp với state
+    //     const formattedChatList = response.data.map((chat) => ({
+    //       ...chat,
+    //       unreadCount: 0, // Tạm thời đặt là 0
+    //     }));
+    //     setChatList(formattedChatList);
+    //   }
+    // });
 
     // Dọn dẹp listener khi component unmount
+    // Dọn dẹp listener
     return () => {
+      socket.off("restore_agent_dashboard", handleRestoreDashboard); // [MỚI]
       socket.off("new_chat_assigned", handleNewChatAssigned);
       socket.off("new_chat_message", handleNewMessage);
     };
-  }, [token, user?.id, activeChatId]); // Phụ thuộc vào activeChatId để cập nhật unreadCount chính xác
+  }, [token, user?.id, activeChatId]);
 
   // --- PHẦN 2: CÁC HÀM HÀNH ĐỘNG ---
 
@@ -151,35 +162,24 @@ export function AgentChatProvider({ children }) {
       if (!socketRef.current || !activeChatId || !content.trim()) {
         return;
       }
-
       const payload = {
         roomId: activeChatId,
         senderId: user.id,
         content: content.trim(),
       };
 
-      // Gửi sự kiện lên server
+      // Gửi sự kiện lên server với một callback để nhận xác nhận
       socketRef.current.emit("send_chat_message", payload, (ack) => {
-        if (ack.status === "sent") {
-          // Cập nhật giao diện ngay lập tức (Optimistic Update)
-          const newMessage = {
-            id: ack.messageId, // ID từ server trả về
-            chat_room_id: activeChatId,
-            content: payload.content,
-            sender_id: user.id, // ID của agent
-            created_at: new Date().toISOString(),
-          };
-          setMessages((prev) => [...prev, newMessage]);
-          // Cập nhật last message trong danh sách
-          setChatList((prevList) =>
-            prevList.map((chat) =>
-              chat.roomId === activeChatId
-                ? { ...chat, lastMessage: content }
-                : chat
-            )
-          );
+        if (ack && ack.status === "sent") {
+          // Tin nhắn đã được server nhận và lưu, không cần làm gì thêm
+          // vì sự kiện 'new_chat_message' sẽ cập nhật UI cho tất cả mọi người, bao gồm cả người gửi.
+          console.log(`Message sent successfully, ID: ${ack.messageId}`);
         } else {
-          alert(`Lỗi gửi tin nhắn: ${ack.message}`);
+          alert(
+            `Lỗi gửi tin nhắn: ${
+              ack?.message || "Không nhận được phản hồi từ server."
+            }`
+          );
         }
       });
     },

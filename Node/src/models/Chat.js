@@ -41,6 +41,14 @@ async function findOrCreateChatRoomForCustomer(customerId) {
        LIMIT 1`,
       [customerId]
     );
+    const [name] = await connection.query(
+      `SELECT username from users where id = ? `,
+      [customerId]
+    );
+    console.log(
+      "🚀 ~ findOrCreateChatRoomForCustomer ~ name:",
+      name[0].username
+    );
 
     if (existingRooms.length > 0) {
       // 2a. Nếu đã có, tải lại thông tin phòng và lịch sử tin nhắn
@@ -64,7 +72,8 @@ async function findOrCreateChatRoomForCustomer(customerId) {
     } else {
       // 2b. Nếu chưa có, tạo phòng chat mới
       const [newRoomResult] = await connection.query(
-        "INSERT INTO chat_rooms (status, created_at, updated_at) VALUES ('open', NOW(), NOW())"
+        "INSERT INTO chat_rooms (name, status, created_at, updated_at) VALUES (?,'open', NOW(), NOW())",
+        [name[0].username]
       );
       const roomId = newRoomResult.insertId;
 

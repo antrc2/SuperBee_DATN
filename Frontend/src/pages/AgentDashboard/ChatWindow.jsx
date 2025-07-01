@@ -1,11 +1,7 @@
-// src/pages/AgentDashboard/ChatWindow.jsx
 import React, { useState, useRef, useEffect } from "react";
-import { useAgentChat } from "./AgentChatContext";
-import { useAuth } from "@contexts/AuthContext";
-
+import { useAgentChat } from "../../contexts/AgentChatContext";
 export default function ChatWindow() {
-  const { messages, activeChatId, sendMessage } = useAgentChat();
-  const { user } = useAuth();
+  const { messages, activeChatId, sendMessage, refToken } = useAgentChat();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 
@@ -31,21 +27,33 @@ export default function ChatWindow() {
   return (
     <div className="w-2/3 flex flex-col">
       <div className="flex-1 p-4 bg-gray-100 overflow-y-auto">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`mb-2 p-2 rounded-lg max-w-[80%] ${
-              msg.senderId === user.id
-                ? "bg-blue-500 text-white self-end ml-auto"
-                : "bg-white text-gray-800 self-start mr-auto shadow"
-            }`}
-          >
-            <p>{msg.content}</p>
-            <span className="block text-xs mt-1 opacity-75">
-              {new Date(msg.createdAt).toLocaleTimeString()}
-            </span>
-          </div>
-        ))}
+        {messages.map((msg) => {
+          console.log("🚀 ~ {messages.map ~ msg:", msg);
+          // Xác định xem tin nhắn có phải do người dùng hiện tại gửi hay không
+          const isOwnMessage = msg.sender_id == refToken.current?.user_id;
+          return (
+            <div
+              key={msg.id} // Sử dụng ID tin nhắn làm khóa để React render danh sách
+              className={`p-3 rounded-lg max-w-[80%] ${
+                isOwnMessage
+                  ? "bg-blue-500 text-white self-end ml-auto" // Kiểu dáng cho tin nhắn của chính mình (căn phải, màu xanh)
+                  : "bg-gray-300 text-gray-800 self-start mr-auto" // Kiểu dáng cho các tin nhắn khác (căn trái, màu xám)
+              }`}
+            >
+              <p className="font-semibold text-sm">
+                {isOwnMessage ? "Bạn" : `${msg.sender_name || "khách hàng"}`}
+              </p>
+              <p className="text-base">{msg.content}</p>
+              <span className="block text-xs mt-1 opacity-75">
+                {/* Định dạng dấu thời gian tin nhắn theo giờ địa phương */}
+                {new Date(msg.created_at).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          );
+        })}
         <div ref={messagesEndRef} />
       </div>
       <div className="p-4 border-t bg-white">

@@ -152,7 +152,7 @@ return new class extends Migration
 
         Schema::table('posts', function (Blueprint $table) {
             // category_id in posts IS nullable.
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('set null');
+            $table->foreign('category_id')->references('id')->on('categories_post')->onDelete('set null');
             $table->foreign('author_id')->references('id')->on('users')->onDelete('restrict');
         });
 

@@ -19,7 +19,6 @@ export function ChatProvider({ children }) {
 
   const [agentChatRoom, setAgentChatRoom] = useState(null); // Lưu trữ thông tin phòng chat với nhân viên
   const socketRef = useRef(null);
-
   // Khởi tạo và quản lý listeners
   useEffect(() => {
     // Di chuyển việc gán refToken vào trong effect để nó luôn được cập nhật khi token thay đổi
@@ -60,12 +59,24 @@ export function ChatProvider({ children }) {
         console.log("A new chat has been assigned to you:", data);
       }
     };
-
+    const handleRestoreSession = (chatDetails) => {
+      console.log("Restoring customer chat session from server:", chatDetails);
+      if (chatDetails && chatDetails.roomInfo) {
+        setAgentChatRoom({
+          roomId: chatDetails.roomInfo.id,
+          messages: chatDetails.messages || [],
+          participants: chatDetails.participants || [],
+          info: chatDetails.roomInfo || {},
+        });
+      }
+    };
+    socket.on("restore_customer_session", handleRestoreSession);
     socket.on("chat_room_joined", handleChatRoomJoined);
     socket.on("new_chat_message", handleNewChatMessage);
     socket.on("new_chat_assigned", handleNewChatAssigned);
 
     return () => {
+      socket.off("restore_customer_session", handleRestoreSession);
       socket.off("chat_room_joined", handleChatRoomJoined);
       socket.off("new_chat_message", handleNewChatMessage);
       socket.off("new_chat_assigned", handleNewChatAssigned);
@@ -131,7 +142,42 @@ export function ChatProvider({ children }) {
     [agentChatRoom?.roomId]
   );
 
+  // hàm lấy danh sách chat dành cho admin
+  const getAllChat = useCallback(() => {
+    if (!isLoggedIn) {
+      return Promise.reject(new Error("User is not logged in."));
+    }
+    if (!socketRef.current) {
+      console.warn(
+        "Socket not initialized or connected when calling getAllChat."
+      );
+      return;
+    }
+    return new Promise((resolve, reject) => {
+      socketRef.current.emit(
+        "admin_get_agent_chats",
+        { agentId: refToken.current?.user_id },
+        (response) => {
+          if (response.success) {
+            console.log("Chat request successful:", response);
+            // Cập nhật trạng thái phòng chat từ phản hồi
+            // setAgentChatRoom({
+            //   roomId: response.roomId,
+            //   messages: response.messages || [],
+            //   info: { message: response.message },
+            // });
+            resolve(response);
+          } else {
+            console.error("Chat request failed:", response);
+            reject(new Error(response.message));
+          }
+        }
+      );
+    });
+  }, [isLoggedIn]);
+
   const value = {
+    getAllChat,
     isLoggedIn,
     agentChatRoom,
     requestAgentChat,

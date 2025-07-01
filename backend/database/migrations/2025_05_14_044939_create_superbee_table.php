@@ -82,12 +82,20 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by'); // Có thể null
             $table->timestamps();
         });
+        Schema::create('categories_post', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique(); // Tên category, phải là duy nhất
+            $table->string('slug')->unique(); // Slug cho URL thân thiện, cũng phải duy nhất
+            $table->text('description')->nullable(); // Mô tả ngắn về category
+            $table->timestamps(); // created_at và updated_at
+        });
 
         // Bảng products
         Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
             $table->string('sku', 50)->unique();           // SKU duy nhất
+            $table->integer('import_price');             // giá nhập
             $table->integer('price');
             $table->integer('sale')->nullable();
             $table->integer('status')->default(0);         // Trạng thái (mặc định = 1: hoạt động)
@@ -507,6 +515,7 @@ return new class extends Migration
         Schema::dropIfExists('product_credentials');
         Schema::dropIfExists('product_game_attributes');
         Schema::dropIfExists('products');
+        Schema::dropIfExists('categories_post');
         Schema::dropIfExists('categories');
         Schema::dropIfExists('webs');
         Schema::dropIfExists('users');

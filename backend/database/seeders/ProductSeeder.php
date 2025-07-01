@@ -2,9 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Categorypost;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
@@ -83,6 +85,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 2,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 100000,
                 'sale' => 90000,
                 'status' => 1,
@@ -95,6 +98,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 2,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 80000,
                 'sale' => 75000,
                 'status' => 1,
@@ -107,6 +111,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 4,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 120000,
                 'sale' => null,
                 'status' => 1,
@@ -119,6 +124,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 4,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 150000,
                 'sale' => 140000,
                 'status' => 0,
@@ -131,6 +137,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 5,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 200000,
                 'sale' => 190000,
                 'status' => 1,
@@ -143,6 +150,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 5,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 110000,
                 'sale' => 105000,
                 'status' => 1,
@@ -155,6 +163,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 2,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 90000,
                 'sale' => 85000,
                 'status' => 1,
@@ -167,6 +176,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => 5,
                 'sku' => $this->generate_sku(16),
+                'import_price' => 50000,
                 'price' => 130000,
                 'sale' => null,
                 'status' => 1,
@@ -249,5 +259,44 @@ class ProductSeeder extends Seeder
             ['product_id' => 8, 'image_url' => 'https://example.com/images/product8_2.jpg', 'alt_text' => 'Ảnh sản phẩm 8 - 2'],
             ['product_id' => 8, 'image_url' => 'https://example.com/images/product8_3.jpg', 'alt_text' => 'Ảnh sản phẩm 8 - 3'],
         ]);
+
+        $categories = [
+            [
+                'name' => 'Tin tức Game',
+                'description' => 'Cập nhật các tin tức mới nhất về game, sự kiện và giải đấu.',
+            ],
+            [
+                'name' => 'Hướng dẫn & Mẹo chơi',
+                'description' => 'Các bài viết hướng dẫn chi tiết, mẹo và chiến thuật giúp người chơi nâng cao kỹ năng.',
+            ],
+            [
+                'name' => 'Review & Đánh giá',
+                'description' => 'Đánh giá chuyên sâu về các tựa game, nhân vật, trang bị và trải nghiệm chơi game.',
+            ],
+            [
+                'name' => 'Cộng đồng & Văn hóa Game',
+                'description' => 'Khám phá những câu chuyện, phỏng vấn và xu hướng trong cộng đồng game thủ.',
+            ],
+            [
+                'name' => 'Ưu đãi Website',
+                'description' => 'Thông tin về các chương trình khuyến mãi, giảm giá và cập nhật dịch vụ trên website.',
+            ],
+            [
+                'name' => 'Phân tích Meta',
+                'description' => 'Phân tích xu hướng meta game và các thay đổi quan trọng trong lối chơi.',
+            ],
+            [
+                'name' => 'Giải đấu Esports',
+                'description' => 'Tổng hợp tin tức, lịch thi đấu và kết quả các giải đấu Esports lớn nhỏ.',
+            ],
+        ];
+
+        foreach ($categories as $categoryData) {
+            Categorypost::create([
+                'name' => $categoryData['name'],
+                'slug' => Str::slug($categoryData['name']), // Tự động tạo slug từ tên
+                'description' => $categoryData['description'],
+            ]);
+        }
     }
 }

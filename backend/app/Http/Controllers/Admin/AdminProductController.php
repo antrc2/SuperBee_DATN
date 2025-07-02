@@ -217,32 +217,49 @@ class AdminProductController extends Controller
             // Nếu có file mới upload, hoặc số ảnh giữ lại khác với số ảnh DB => cần xử lý lại
             if ($request->hasFile('images') || $keepCount !== $dbCount) {
                 // 1) Xóa những ảnh DB mà client không giữ lại
+                $delete_images = [];
                 foreach ($product->images as $img) {
                     if (! in_array($img->image_url, $keepList, true)) {
                         // Chuyển URL public về đường dẫn relative: "product_images/uuid.jpg"
                         $relative = parse_url($img->image_url, PHP_URL_PATH);
-                        $this->deleteFile($relative);
+                        // $this->deleteFile($relative);
+                        $delete_images[] = $relative;
                         $img->delete();
                     }
                 }
+                $this->deleteFiles($delete_images);
 
                 // 2) Nếu có file mới, upload rồi lưu vào DB
-                if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $file) {
-                        $url = $this->uploadFile($file, 'product_images/'.$product->sku);
-                        if (is_null($url)) {
-                            DB::rollBack();
-                            return response()->json([
-                                'status'  => false,
-                                'message' => 'Upload ảnh thất bại',
-                            ], 500);
-                        }
-                        ProductImage::create([
-                            'product_id' => $product->id,
-                            'alt_text'   => $file->getClientOriginalName(),
-                            'image_url'  => $url,
-                        ]);
+                // if ($request->hasFile('images')) {
+                //     foreach ($request->file('images') as $file) {
+                //         $url = $this->uploadFile($file, 'product_images/'.$product->sku);
+                //         if (is_null($url)) {
+                //             DB::rollBack();
+                //             return response()->json([
+                //                 'status'  => false,
+                //                 'message' => 'Upload ảnh thất bại',
+                //             ], 500);
+                //         }
+                //         ProductImage::create([
+                //             'product_id' => $product->id,
+                //             'alt_text'   => $file->getClientOriginalName(),
+                //             'image_url'  => $url,
+                //         ]);
+                //     }
+                // }
+                $response = $this->uploadFiles($request->file('images'),'product_images/'.$product->sku);
+                foreach ($response as $image){
+                    if (is_null($image['url'])){
+                        DB::rollBack();
+                        return response()->json(['message' => 'Failed to upload product image.'], 500);
                     }
+
+                    ProductImage::create([
+                        'product_id'=>$product->id,
+                        "alt_text"=>$image['filename'],
+                        "image_url"=>$image['url']
+                    ]);
+                    
                 }
             }
             // Cập nhật credentials nếu có
@@ -365,22 +382,36 @@ class AdminProductController extends Controller
 
             // Xử lý upload hình ảnh
             $images = $request->file('images'); // Lấy mảng các file
-            foreach ($images as $image) {
-                // Gọi uploadFile cho từng file riêng lẻ
-                $imageUrl = $this->uploadFile($image, 'product_images/'.$sku);
+            // foreach ($images as $image) {
+            //     // Gọi uploadFile cho từng file riêng lẻ
+            //     $imageUrl = $this->uploadFile($image, 'product_images/'.$sku);
 
-                if (is_null($imageUrl)) {
-                    // Rollback nếu upload thất bại
+            //     if (is_null($imageUrl)) {
+            //         // Rollback nếu upload thất bại
+            //         DB::rollBack();
+            //         return response()->json(['message' => 'Failed to upload product image.'], 500);
+            //     }
+
+            //     // Lưu thông tin hình ảnh vào bảng ProductImage
+            //     ProductImage::create([
+            //         'product_id' => $product->id,
+            //         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
+            //         'image_url' => $imageUrl, // Đường dẫn đã upload
+            //     ]);
+            // }
+            $response = $this->uploadFiles($images,'product_images/'.$sku);
+            foreach ($response as $image){
+                if (is_null($image['url'])){
                     DB::rollBack();
                     return response()->json(['message' => 'Failed to upload product image.'], 500);
                 }
 
-                // Lưu thông tin hình ảnh vào bảng ProductImage
                 ProductImage::create([
-                    'product_id' => $product->id,
-                    'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
-                    'image_url' => $imageUrl, // Đường dẫn đã upload
+                    'product_id'=>$product->id,
+                    "alt_text"=>$image['filename'],
+                    "image_url"=>$image['url']
                 ]);
+                
             }
 
             // Lưu thông tin đăng nhập

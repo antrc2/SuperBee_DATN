@@ -428,10 +428,10 @@ return new class extends Migration
             $table->timestamp('joined_at')->useCurrent()->comment('Time user joined the room');
             $table->timestamp('left_at')->nullable()->comment('Time user left the room (for group chats or end of session)');
             $table->timestamps(); // Adds created_at and updated_at
-
+            $table->unsignedBigInteger('last_read_message_id')->nullable()->comment('ID of the last message read by this participant'); // New column
+            $table->foreign('last_read_message_id')->references('id')->on('messages')->onDelete('set null');
             // Unique constraint to ensure a user has only one role in a specific chat room at a time
             $table->unique(['chat_room_id', 'user_id']);
-
             // Foreign key constraints
             $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
 

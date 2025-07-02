@@ -40,6 +40,9 @@ export function ChatProvider({ children }) {
         messages: data.messages || [],
         participants: data.participants || [],
         info: data.roomInfo || {},
+        agentDetails: data.agentDetails, // Thêm thông tin agent
+        customerName: data.customerName, // Thêm thông tin customer
+        customerAvatar: data.customerAvatar, // Thêm thông tin customer
       });
     };
 
@@ -47,6 +50,17 @@ export function ChatProvider({ children }) {
       console.log("🚀 ~ handleNewChatMessage ~ message:", message);
       setAgentChatRoom((prev) => {
         if (prev && prev.roomId === message.chat_room_id) {
+          // Cập nhật last_read_message_id khi nhận tin nhắn mới
+          if (
+            socketRef.current &&
+            refToken.current?.user_id === message.sender_id
+          ) {
+            // Nếu là tin nhắn của chính mình gửi, đánh dấu là đã đọc
+            socketRef.current.emit("mark_chat_as_read", {
+              roomId: message.chat_room_id,
+              messageId: message.id,
+            });
+          }
           return { ...prev, messages: [...prev.messages, message] };
         }
         return prev;
@@ -67,7 +81,23 @@ export function ChatProvider({ children }) {
           messages: chatDetails.messages || [],
           participants: chatDetails.participants || [],
           info: chatDetails.roomInfo || {},
+          agentDetails: chatDetails.agentDetails, // Thêm thông tin agent
+          customerName: chatDetails.customerName, // Thêm thông tin customer
+          customerAvatar: chatDetails.customerAvatar, // Thêm thông tin customer
         });
+        // Khi khôi phục phiên, đánh dấu tất cả tin nhắn là đã đọc
+        if (
+          chatDetails.messages.length > 0 &&
+          socketRef.current &&
+          refToken.current?.user_id
+        ) {
+          const lastMessageId =
+            chatDetails.messages[chatDetails.messages.length - 1].id;
+          socketRef.current.emit("mark_chat_as_read", {
+            roomId: chatDetails.roomInfo.id,
+            messageId: lastMessageId,
+          });
+        }
       }
     };
     socket.on("restore_customer_session", handleRestoreSession);
@@ -116,7 +146,23 @@ export function ChatProvider({ children }) {
             roomId: response.roomId,
             messages: response.messages || [],
             info: { message: response.message },
+            agentDetails: response.agentDetails, // Thêm thông tin agent
+            customerName: response.customerName, // Thêm thông tin customer
+            customerAvatar: response.customerAvatar, // Thêm thông tin customer
           });
+          // Khi yêu cầu chat thành công, đánh dấu tất cả tin nhắn là đã đọc
+          if (
+            response.messages.length > 0 &&
+            socketRef.current &&
+            refToken.current?.user_id
+          ) {
+            const lastMessageId =
+              response.messages[response.messages.length - 1].id;
+            socketRef.current.emit("mark_chat_as_read", {
+              roomId: response.roomId,
+              messageId: lastMessageId,
+            });
+          }
           resolve(response);
         } else {
           console.error("Chat request failed:", response.message);
@@ -160,12 +206,6 @@ export function ChatProvider({ children }) {
         (response) => {
           if (response.success) {
             console.log("Chat request successful:", response);
-            // Cập nhật trạng thái phòng chat từ phản hồi
-            // setAgentChatRoom({
-            //   roomId: response.roomId,
-            //   messages: response.messages || [],
-            //   info: { message: response.message },
-            // });
             resolve(response);
           } else {
             console.error("Chat request failed:", response);

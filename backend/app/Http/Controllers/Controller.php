@@ -29,6 +29,45 @@ abstract class Controller
      * @param string $directory Thư mục đích trong storage/app/public (ví dụ: 'images', 'documents').
      * @return string|null Đường dẫn công khai của file đã lưu, hoặc null nếu có lỗi.
      */
+
+    public function uploadFiles(array $files, string $directory): array
+{
+    try {
+        $apiUrl = env('PYTHON_API');
+
+        // Bắt đầu builder request
+        $request = Http::withHeaders([
+            'Accept' => 'application/json',
+        ]);
+
+        // Attach tất cả các file vào mảng images[]
+        foreach ($files as $file) {
+            if ($file instanceof \Illuminate\Http\UploadedFile) {
+                // attach dùng để thêm dữ liệu dạng multi part vào form
+                $request = $request->attach(
+                    'images',
+                    file_get_contents($file->getRealPath()),
+                    $file->getClientOriginalName()
+                );
+            }
+        }
+
+        // Gửi 1 lần duy nhất
+        $response = $request->post("{$apiUrl}/upload_files", [
+            'folder' => $directory,
+        ]);
+
+        $response = $response->json();
+        // $response = json_encode($response);
+
+        // Giả sử API trả về key 'urls' là mảng đường dẫn
+        return $response;
+    } catch (\Throwable $e) {
+        // \Log::error('UploadFiles error: '.$e->getMessage());
+        return [];
+    }
+}
+
     public function uploadFile(UploadedFile $file, string $directory): ?string
     {
         try {
@@ -77,6 +116,17 @@ abstract class Controller
         //     ]);
         //     return null; // Trả về null nếu có lỗi
         // }
+    }
+    public function  deleteFiles(array $paths){
+        try {
+            $api_url = env('PYTHON_API');
+            $response = Http::post("{$api_url}/delete_files",["paths"=>$paths]);
+            $response = json_decode($response);
+            return $response->status;
+        } catch (\Throwable $th) {
+            // throw $th;
+            return false;
+        }
     }
     public function deleteFile(string $relativePath ){
         try {

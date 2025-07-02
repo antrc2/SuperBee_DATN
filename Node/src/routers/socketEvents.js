@@ -7,6 +7,7 @@ import {
   getChatsByAgent,
   getChatDetails,
   saveMessageToDb,
+  updateLastReadMessage, // Import hàm mới
 } from "../models/Chat.js";
 
 const ANONYMOUS_USER_ID_PREFIX = "guest_";
@@ -19,11 +20,9 @@ const setupSocketEvents = (io) => {
 
     // --- SỰ KIỆN "authenticate": KHI CLIENT THAY ĐỔI TRẠNG THÁI XÁC THỰC ---
     socket.on("authenticate", async (token) => {
-      // [THAY ĐỔI] Thêm async
       console.log(
         `[SocketEvents] Nhận sự kiện 'authenticate' từ Socket ${socket.id}.`
       );
-
       const previousUserId = socket.userId;
       const previousIsLoggedIn = socket.isLoggedIn;
       let newUserId;
@@ -41,7 +40,6 @@ const setupSocketEvents = (io) => {
           socket.userRole = userRole;
           authMessage = "Xác thực lại thành công.";
         } else {
-          // Xử lý khi token không hợp lệ hoặc không có
           const currentGuestIdFromQuery = socket.handshake.query.guestId;
           newUserId = `${ANONYMOUS_USER_ID_PREFIX}${
             currentGuestIdFromQuery || uuidv4()
@@ -77,10 +75,6 @@ const setupSocketEvents = (io) => {
         isLoggedIn: socket.isLoggedIn,
         message: authMessage,
       });
-
-      // ================================================================
-      // [LOGIC MỚI] TỰ ĐỘNG KẾT NỐI LẠI PHÒNG CHAT CHO NHÂN VIÊN
-      // ================================================================
       if (newIsLoggedIn && (userRole === "agent" || userRole === "admin")) {
         console.log(
           `[SocketEvents] Người dùng ${newUserId} (Vai trò: ${userRole}) đã xác thực. Khôi phục phiên làm việc...`
@@ -109,18 +103,28 @@ const setupSocketEvents = (io) => {
             error
           );
         }
+      } else if (newIsLoggedIn && userRole === "customer") {
+        // Khôi phục phiên chat cho khách hàng
+        try {
+          const chatRoomData = await findOrCreateChatRoomForCustomer(newUserId);
+          if (chatRoomData && chatRoomData.roomId) {
+            socket.join(chatRoomData.roomId.toString());
+            socket.emit("restore_customer_session", chatRoomData);
+            console.log(
+              `[SocketEvents] Đã khôi phục phiên chat cho khách hàng ${newUserId} trong phòng ${chatRoomData.roomId}.`
+            );
+          }
+        } catch (error) {
+          console.error(
+            `[SocketEvents] Lỗi khi khôi phục phiên chat cho khách hàng ${newUserId}:`,
+            error
+          );
+        }
       }
-      // (Tùy chọn) Thêm logic tương tự để khôi phục cho khách hàng nếu cần.
     });
 
-    // --- SỰ KIỆN GỬI TIN NHẮN ---
     socket.on("send_chat_message", async (payload, callback) => {
-      // [THAY ĐỔI] Thêm callback
       const { roomId, senderId, content } = payload;
-      console.log("🚀 ~ socket.on ~ roomId:", roomId);
-      console.log("🚀 ~ socket.on ~ content:", content);
-      console.log("🚀 ~ socket.on ~ senderId:", senderId);
-
       if (!roomId || !senderId || !content) {
         if (callback)
           callback({ status: "error", message: "Dữ liệu không hợp lệ." });
@@ -129,11 +133,12 @@ const setupSocketEvents = (io) => {
 
       try {
         const savedMessage = await saveMessageToDb(roomId, senderId, content);
-
         // Phát tin nhắn đến tất cả client trong phòng
         io.to(roomId.toString()).emit("new_chat_message", savedMessage);
 
-        // Phản hồi cho người gửi rằng tin nhắn đã được xử lý
+        // Cập nhật last_read_message_id cho người gửi ngay lập tức
+        await updateLastReadMessage(roomId, senderId, savedMessage.id);
+
         if (callback) callback({ status: "sent", messageId: savedMessage.id });
       } catch (error) {
         console.error(
@@ -148,7 +153,6 @@ const setupSocketEvents = (io) => {
       }
     });
 
-    // --- SỰ KIỆN "disconnect": KHI CLIENT NGẮT KẾT NỐI ---
     socket.on("disconnect", () => {
       connectionManager.removeConnection(socket.id); //
       console.log(
@@ -177,6 +181,14 @@ const setupSocketEvents = (io) => {
         console.log(
           `User ${customerId} (Socket: ${socket.id}) joined room ${roomId}`
         );
+
+        // Cập nhật last_read_message_id cho khách hàng khi họ tham gia/tạo phòng
+        if (chatRoomData.messages.length > 0) {
+          const lastMessageId =
+            chatRoomData.messages[chatRoomData.messages.length - 1].id;
+          await updateLastReadMessage(roomId, customerId, lastMessageId);
+        }
+
         // 4. Nếu có nhân viên được gán, thông báo cho họ
         if (assignedAgentUserId) {
           const agentSocketIds =
@@ -189,8 +201,12 @@ const setupSocketEvents = (io) => {
           if (agentSocketIds.length > 0) {
             io.to(agentSocketIds).emit("new_chat_assigned", {
               roomId,
-              customerId,
-              // Gửi thêm thông tin để hiển thị trên dashboard của nhân viên
+              customerId: chatRoomData.customerId,
+              customerName: chatRoomData.customerName,
+              customerAvatar: chatRoomData.customerAvatar,
+              lastMessage: "Cuộc trò chuyện mới.", // Có thể lấy tin nhắn đầu tiên nếu có
+              unreadMessageCount: 1, // Mặc định có 1 tin nhắn chưa đọc
+              roomUpdatedAt: new Date().toISOString(),
             });
             agentSocketIds.forEach((socketId) => {
               const agentSocket = io.sockets.sockets.get(socketId);
@@ -213,6 +229,36 @@ const setupSocketEvents = (io) => {
           success: false,
           message: "Lỗi hệ thống khi tạo phòng chat.",
         });
+      }
+    });
+
+    // --- SỰ KIỆN "mark_chat_as_read": CẬP NHẬT TRẠNG THÁI ĐỌC ---
+    socket.on("mark_chat_as_read", async ({ roomId, messageId }, callback) => {
+      if (!socket.userId || !roomId || !messageId) {
+        if (callback) {
+          // Kiểm tra callback trước khi gọi
+          callback({ success: false, message: "Dữ liệu không hợp lệ." });
+        }
+        return;
+      }
+      try {
+        await updateLastReadMessage(roomId, socket.userId, messageId);
+        if (callback) {
+          // Kiểm tra callback trước khi gọi
+          callback({ success: true });
+        }
+      } catch (error) {
+        console.error(
+          `[SocketEvents] Lỗi khi đánh dấu đã đọc cho phòng ${roomId}, người dùng ${socket.userId}:`,
+          error
+        );
+        if (callback) {
+          // Kiểm tra callback trước khi gọi
+          callback({
+            success: false,
+            message: "Không thể cập nhật trạng thái đọc.",
+          });
+        }
       }
     });
 
@@ -281,6 +327,12 @@ const setupSocketEvents = (io) => {
       try {
         const chatDetails = await getChatDetails(roomId);
         if (chatDetails) {
+          // Khi admin xem chi tiết chat, đánh dấu tất cả tin nhắn là đã đọc
+          if (chatDetails.messages.length > 0) {
+            const lastMessageId =
+              chatDetails.messages[chatDetails.messages.length - 1].id;
+            await updateLastReadMessage(roomId, socket.userId, lastMessageId);
+          }
           callback({ success: true, data: chatDetails });
         } else {
           callback({ success: false, message: "Không tìm thấy phòng chat." });

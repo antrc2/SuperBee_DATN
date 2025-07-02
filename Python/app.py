@@ -19,8 +19,17 @@ async def upload(image: UploadFile = File(...), folder: str = Form(...)):
 
     return {"url": file_url}
 
-# @app.post("/upload_files")
-# async def uploads(images: List[UploadFile] = File(...)):
+@app.post("/upload_files")
+async def uploads(images: List[UploadFile] = File(...),folder: str = Form(...)):
+    object_name = f"uploads/{folder}/"
+    image_contents = []
+    for image in images:
+        image_contents.append({
+            "image": BytesIO(await image.read()),
+            "filename": image.filename
+        })
+    files = s3_client.uploads(image_contents,object_name)
+    return files
 
 
 @app.post("/delete_file")
@@ -30,6 +39,13 @@ async def delete(request: Request):
     s3_client.delete(data['path'])
 
     return {"status": True}
+
+@app.post("/delete_files")
+async def deletes(request: Request):
+    data = await request.json()
+    # print(data)
+    s3_client.deletes(data['paths'])
+    return {'status': True}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

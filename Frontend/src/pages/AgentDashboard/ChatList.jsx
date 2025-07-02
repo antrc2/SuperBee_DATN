@@ -1,6 +1,6 @@
 // src/pages/AgentDashboard/ChatList.jsx
 import React from "react";
-import { useAgentChat } from "./AgentChatContext";
+import { useAgentChat } from "../../contexts/AgentChatContext";
 
 export default function ChatList() {
   // [THAY ĐỔI] Chỉ dùng context của Agent

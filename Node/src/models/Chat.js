@@ -41,39 +41,60 @@ async function findOrCreateChatRoomForCustomer(customerId) {
        LIMIT 1`,
       [customerId]
     );
-    const [name] = await connection.query(
-      `SELECT username from users where id = ? `,
+
+    const [customerInfo] = await connection.query(
+      `SELECT username, avatar_url FROM users WHERE id = ?`,
       [customerId]
-    );
-    console.log(
-      "🚀 ~ findOrCreateChatRoomForCustomer ~ name:",
-      name[0].username
     );
 
     if (existingRooms.length > 0) {
       // 2a. Nếu đã có, tải lại thông tin phòng và lịch sử tin nhắn
       const roomId = existingRooms[0].id;
       const [messages] = await connection.query(
-        "SELECT * FROM messages WHERE chat_room_id = ? ORDER BY created_at ASC",
+        `SELECT m.*, u.username AS sender_name, u.avatar_url AS sender_avatar
+         FROM messages m
+         JOIN users u ON m.sender_id = u.id
+         WHERE m.chat_room_id = ? ORDER BY m.created_at ASC`,
         [roomId]
       );
-      const [agent] = await connection.query(
+      const [agentParticipant] = await connection.query(
         "SELECT user_id FROM chat_room_participants WHERE chat_room_id = ? AND role = 'agent'",
         [roomId]
       );
+
+      let assignedAgentUserId = null;
+      let agentDetails = null;
+
+      if (agentParticipant.length > 0) {
+        assignedAgentUserId = agentParticipant[0].user_id;
+        const [agentRows] = await connection.query(
+          `SELECT u.username AS agentName, u.avatar_url AS agentAvatar,
+                  a.average_rating, a.total_ratings_count
+           FROM users u
+           JOIN agents a ON u.id = a.user_id
+           WHERE u.id = ?`,
+          [assignedAgentUserId]
+        );
+        if (agentRows.length > 0) {
+          agentDetails = agentRows[0];
+        }
+      }
 
       await connection.commit();
       return {
         roomId,
         messages,
         message: "Đã tìm thấy phòng chat hiện có.",
-        assignedAgentUserId: agent.length > 0 ? agent[0].user_id : null,
+        assignedAgentUserId,
+        agentDetails, // Thêm thông tin agent vào đây
+        customerName: customerInfo[0]?.username,
+        customerAvatar: customerInfo[0]?.avatar_url,
       };
     } else {
       // 2b. Nếu chưa có, tạo phòng chat mới
       const [newRoomResult] = await connection.query(
-        "INSERT INTO chat_rooms (name, status, created_at, updated_at) VALUES (?,'open', NOW(), NOW())",
-        [name[0].username]
+        "INSERT INTO chat_rooms (name, status, created_at, updated_at) VALUES (?, 'open', NOW(), NOW())",
+        [customerInfo[0]?.username || `Khách ${customerId}`]
       );
       const roomId = newRoomResult.insertId;
 
@@ -86,6 +107,7 @@ async function findOrCreateChatRoomForCustomer(customerId) {
       // 3. Tìm và gán nhân viên
       const assignedAgentUserId = await getAvailableAgent();
       let statusMessage = "Đã tạo phòng chat mới.";
+      let agentDetails = null;
 
       if (assignedAgentUserId) {
         // Gán nhân viên vào phòng
@@ -103,6 +125,19 @@ async function findOrCreateChatRoomForCustomer(customerId) {
           "UPDATE chat_rooms SET status = 'assigned' WHERE id = ?",
           [roomId]
         );
+
+        const [agentRows] = await connection.query(
+          `SELECT u.username AS agentName, u.avatar_url AS agentAvatar,
+                  a.average_rating, a.total_ratings_count
+           FROM users u
+           JOIN agents a ON u.id = a.user_id
+           WHERE u.id = ?`,
+          [assignedAgentUserId]
+        );
+        if (agentRows.length > 0) {
+          agentDetails = agentRows[0];
+        }
+
         statusMessage += ` Đã gán nhân viên ${assignedAgentUserId}.`;
       } else {
         // Nếu không có nhân viên, đưa vào hàng chờ
@@ -118,6 +153,9 @@ async function findOrCreateChatRoomForCustomer(customerId) {
         messages: [], // Phòng mới chưa có tin nhắn
         message: statusMessage,
         assignedAgentUserId,
+        agentDetails, // Thêm thông tin agent vào đây
+        customerName: customerInfo[0]?.username,
+        customerAvatar: customerInfo[0]?.avatar_url,
       };
     }
   } catch (error) {
@@ -144,6 +182,12 @@ async function saveMessageToDb(roomId, senderId, content) {
       [roomId]
     );
 
+    // Lấy thông tin người gửi để trả về
+    const [senderInfo] = await connection.query(
+      `SELECT username AS sender_name, avatar_url AS sender_avatar FROM users WHERE id = ?`,
+      [senderId]
+    );
+
     const messageId = result.insertId;
 
     return {
@@ -153,6 +197,8 @@ async function saveMessageToDb(roomId, senderId, content) {
       content: content,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      sender_name: senderInfo[0]?.sender_name,
+      sender_avatar: senderInfo[0]?.sender_avatar,
     };
   } catch (error) {
     console.error("Lỗi khi lưu tin nhắn vào DB:", error);
@@ -161,10 +207,6 @@ async function saveMessageToDb(roomId, senderId, content) {
     if (connection) connection.release();
   }
 }
-
-// ===============================================================
-// PHẦN CODE MỚI THÊM CHO CHỨC NĂNG ADMIN
-// ===============================================================
 
 /**
  * Lấy danh sách các cuộc trò chuyện của một nhân viên cụ thể.
@@ -176,33 +218,40 @@ async function getChatsByAgent(agentId) {
   let connection;
   try {
     connection = await pool.getConnection();
-    // Câu lệnh SQL này sẽ:
-    // 1. Tìm tất cả các `chat_room_id` mà nhân viên (agent) đã tham gia.
-    // 2. JOIN với bảng `chat_rooms` để lấy trạng thái và thời gian tạo phòng.
-    // 3. LEFT JOIN với `chat_room_participants` một lần nữa để tìm khách hàng (customer) trong cùng phòng chat.
-    // 4. Dùng subquery để lấy tin nhắn cuối cùng, giúp admin có cái nhìn tổng quan nhanh.
-    // 5. Sắp xếp theo thời gian cập nhật của phòng chat để cuộc trò chuyện mới nhất nổi lên trên.
     const [chats] = await connection.query(
       `
       SELECT
         cr.id AS roomId,
         cr.status,
-        cr.created_at AS roomCreatedAt,
         cr.updated_at AS roomUpdatedAt,
         p_customer.user_id AS customerId,
-        (SELECT content FROM messages WHERE chat_room_id = cr.id ORDER BY created_at DESC LIMIT 1) AS lastMessage
+        u_customer.username AS customerName,
+        u_customer.avatar_url AS customerAvatar,
+        (SELECT content FROM messages WHERE chat_room_id = cr.id ORDER BY created_at DESC LIMIT 1) AS lastMessage,
+        (
+          SELECT COUNT(m.id)
+          FROM messages AS m
+          WHERE
+            m.chat_room_id = cr.id
+            AND m.id > COALESCE(p_agent.last_read_message_id, 0)
+            AND m.sender_id != ? -- Không tính tin nhắn do chính agent gửi
+        ) AS unreadMessageCount
       FROM
         chat_room_participants AS p_agent
       JOIN
         chat_rooms AS cr ON p_agent.chat_room_id = cr.id
+      JOIN
+        users AS u_agent ON p_agent.user_id = u_agent.id
       LEFT JOIN
         chat_room_participants AS p_customer ON cr.id = p_customer.chat_room_id AND p_customer.role = 'customer'
+      LEFT JOIN
+        users AS u_customer ON p_customer.user_id = u_customer.id
       WHERE
         p_agent.user_id = ? AND p_agent.role = 'agent'
       ORDER BY
         cr.updated_at DESC;
       `,
-      [agentId]
+      [agentId, agentId] // Truyền agentId 2 lần cho cả WHERE và subquery
     );
     return chats;
   } catch (error) {
@@ -236,15 +285,21 @@ async function getChatDetails(roomId) {
     }
     const roomInfo = roomRows[0];
 
-    // 2. Lấy danh sách những người tham gia trong phòng
+    // 2. Lấy danh sách những người tham gia trong phòng cùng với thông tin user
     const [participants] = await connection.query(
-      "SELECT user_id, role, joined_at FROM chat_room_participants WHERE chat_room_id = ?",
+      `SELECT crp.user_id, crp.role, crp.joined_at, u.username, u.avatar_url
+       FROM chat_room_participants crp
+       JOIN users u ON crp.user_id = u.id
+       WHERE crp.chat_room_id = ?`,
       [roomId]
     );
 
-    // 3. Lấy tất cả tin nhắn trong phòng, sắp xếp theo thời gian
+    // 3. Lấy tất cả tin nhắn trong phòng, sắp xếp theo thời gian, kèm thông tin người gửi
     const [messages] = await connection.query(
-      "SELECT * FROM messages WHERE chat_room_id = ? ORDER BY created_at ASC",
+      `SELECT m.*, u.username AS sender_name, u.avatar_url AS sender_avatar
+       FROM messages m
+       JOIN users u ON m.sender_id = u.id
+       WHERE m.chat_room_id = ? ORDER BY m.created_at ASC`,
       [roomId]
     );
 
@@ -261,6 +316,33 @@ async function getChatDetails(roomId) {
   }
 }
 
+/**
+ * Cập nhật tin nhắn cuối cùng đã đọc cho một người tham gia trong phòng chat.
+ * @param {number} roomId ID của phòng chat.
+ * @param {string} userId ID của người dùng.
+ * @param {number} messageId ID của tin nhắn cuối cùng đã đọc.
+ */
+async function updateLastReadMessage(roomId, userId, messageId) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.query(
+      `UPDATE chat_room_participants
+       SET last_read_message_id = ?
+       WHERE chat_room_id = ? AND user_id = ?`,
+      [messageId, roomId, userId]
+    );
+  } catch (error) {
+    console.error(
+      `Lỗi khi cập nhật last_read_message_id cho phòng ${roomId}, người dùng ${userId}:`,
+      error
+    );
+    throw new Error("Không thể cập nhật trạng thái đọc.");
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
 // Export tất cả các hàm, bao gồm cả các hàm mới
 export {
   findOrCreateChatRoomForCustomer,
@@ -268,4 +350,5 @@ export {
   saveMessageToDb,
   getChatsByAgent,
   getChatDetails,
+  updateLastReadMessage, // Export hàm mới
 };

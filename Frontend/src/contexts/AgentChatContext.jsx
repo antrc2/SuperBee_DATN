@@ -7,30 +7,35 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { getSocket, connectSocket, authenticateSocket } from "@utils/socket"; // [THAY ĐỔI] Thêm authenticateSocket
+import { getSocket, authenticateSocket } from "@utils/socket"; // [THAY ĐỔI] Thêm authenticateSocket
 import { useAuth } from "@contexts/AuthContext";
+import { decodeData } from "../utils/hook";
 
-export const AgentChatContext = createContext();
-export const useAgentChat = () => useContext(AgentChatContext);
+const AgentChatContext = createContext();
 
 export function AgentChatProvider({ children }) {
+  const refToken = useRef(null);
   const { token, user } = useAuth();
   const [chatList, setChatList] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
+  console.log("🚀 ~ AgentChatProvider ~ activeChatId:", activeChatId);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const socketRef = useRef(null);
 
   useEffect(() => {
-    if (!user?.id) return;
+    if (token) {
+      refToken.current = decodeData(token);
+    } else {
+      refToken.current = null; // Xóa refToken khi logout
+    }
+    if (!user?.name) return;
 
     const socket = getSocket();
     socketRef.current = socket;
 
     // Xác thực lại mỗi khi token thay đổi (quan trọng cho việc reload)
     authenticateSocket(token);
-
-    // --- Lắng nghe các sự kiện từ server ---
 
     // [LOGIC MỚI] Lắng nghe sự kiện khôi phục dashboard
     const handleRestoreDashboard = (data) => {
@@ -118,7 +123,7 @@ export function AgentChatProvider({ children }) {
       socket.off("new_chat_assigned", handleNewChatAssigned);
       socket.off("new_chat_message", handleNewMessage);
     };
-  }, [token, user?.id, activeChatId]);
+  }, [token, activeChatId, user?.name]);
 
   // --- PHẦN 2: CÁC HÀM HÀNH ĐỘNG ---
 
@@ -157,33 +162,20 @@ export function AgentChatProvider({ children }) {
   );
 
   // Khi agent gửi tin nhắn
+  // Hàm gửi tin nhắn
   const sendMessage = useCallback(
     (content) => {
-      if (!socketRef.current || !activeChatId || !content.trim()) {
-        return;
-      }
+      if (!activeChatId) return false;
+      if (!refToken.current) return false;
       const payload = {
         roomId: activeChatId,
-        senderId: user.id,
-        content: content.trim(),
+        content,
+        senderId: refToken.current?.user_id,
       };
-
-      // Gửi sự kiện lên server với một callback để nhận xác nhận
-      socketRef.current.emit("send_chat_message", payload, (ack) => {
-        if (ack && ack.status === "sent") {
-          // Tin nhắn đã được server nhận và lưu, không cần làm gì thêm
-          // vì sự kiện 'new_chat_message' sẽ cập nhật UI cho tất cả mọi người, bao gồm cả người gửi.
-          console.log(`Message sent successfully, ID: ${ack.messageId}`);
-        } else {
-          alert(
-            `Lỗi gửi tin nhắn: ${
-              ack?.message || "Không nhận được phản hồi từ server."
-            }`
-          );
-        }
-      });
+      socketRef.current.emit("send_chat_message", payload);
+      return true;
     },
-    [activeChatId, user?.id]
+    [activeChatId]
   );
 
   const value = {
@@ -193,6 +185,7 @@ export function AgentChatProvider({ children }) {
     isLoading,
     selectChat,
     sendMessage,
+    refToken,
   };
 
   return (
@@ -201,3 +194,4 @@ export function AgentChatProvider({ children }) {
     </AgentChatContext.Provider>
   );
 }
+export const useAgentChat = () => useContext(AgentChatContext);

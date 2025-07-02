@@ -117,6 +117,9 @@ const setupSocketEvents = (io) => {
     socket.on("send_chat_message", async (payload, callback) => {
       // [THAY ĐỔI] Thêm callback
       const { roomId, senderId, content } = payload;
+      console.log("🚀 ~ socket.on ~ roomId:", roomId);
+      console.log("🚀 ~ socket.on ~ content:", content);
+      console.log("🚀 ~ socket.on ~ senderId:", senderId);
 
       if (!roomId || !senderId || !content) {
         if (callback)

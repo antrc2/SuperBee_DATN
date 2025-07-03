@@ -153,8 +153,9 @@ class PartnerProductController extends Controller
             // Validate dữ liệu
             $validated = $request->validate([
                 'category_id' => 'nullable|integer|exists:categories,id',
-                'price' => 'nullable|numeric|min:0',
-                'sale' => 'nullable|numeric|min:0',
+                // 'price' => 'nullable|numeric|min:0',
+                'import_price' => "nullable|numeric|min:0",
+                // 'sale' => 'nullable|numeric|min:0',
                 'username' => 'nullable|string',
                 'password' => 'nullable|string',
                 'attributes' => 'nullable|array',
@@ -163,29 +164,54 @@ class PartnerProductController extends Controller
                 'images' => 'nullable|array',
                 'images.*' => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
-            if (isset($validated['sale']) && $validated['sale'] == 0) {
-                $validated['sale'] = null;
+            // if (isset($validated['sale']) && $validated['sale'] == 0) {
+            //     $validated['sale'] = null;
+            // }
+
+            if ($product->status === 1 ) {
+                if ($request->import_price !== $product->import_price) {
+                    return response()->json([
+                        "status"=>False,
+                        "message"=>"Bạn không thể sửa giá nhập"
+                    ],422);
+                }
+            } elseif ($product->status === 4) {
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Sản phẩm đã được bán"
+                ],422);
             }
+
+            // if (isset($validated['import_price']) && $product->status !== 1 && $product->status !== 4) {
+
+            // } else {
+            //     return response()->json([
+            //         "status"=>False,
+            //         "message"=>"Không được sửa giá muốn bán nữa"
+            //     ]);
+            // }
+
 
 
             // Kiểm tra sale < price
-            if (
-                isset($validated['sale'], $validated['price']) &&
-                $validated['sale'] >= $validated['price']
-            ) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Giá sale phải nhỏ hơn giá gốc',
-                ], 400);
-            }
+            // if (
+            //     isset($validated['sale'], $validated['price']) &&
+            //     $validated['sale'] >= $validated['price']
+            // ) {
+            //     return response()->json([
+            //         'status' => false,
+            //         'message' => 'Giá sale phải nhỏ hơn giá gốc',
+            //     ], 400);
+            // }
 
             DB::beginTransaction();
 
             // Cập nhật fields cơ bản
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
-                'price' => $validated['price'] ?? $product->price,
-                'sale' => $validated['sale'] ?? $product->sale,
+                "import_price" => $validated['import_price'],
+                // 'price' => $validated['price'] ?? $product->price,
+                // 'sale' => $validated['sale'] ?? $product->sale,
                 'updated_by' => $request->user_id,
                 "status" => 2, // Mặc định là 2 (chờ duyệt)
             ]);
@@ -204,30 +230,42 @@ class PartnerProductController extends Controller
             // Nếu có file mới upload, hoặc số ảnh giữ lại khác với số ảnh DB => cần xử lý lại
             if ($request->hasFile('images') || $keepCount !== $dbCount) {
                 // 1) Xóa những ảnh DB mà client không giữ lại
+                $delete_images = [];
                 foreach ($product->images as $img) {
                     if (!in_array($img->image_url, $keepList, true)) {
                         // Chuyển URL public về đường dẫn relative: "product_images/uuid.jpg"
                         $relative = ltrim(parse_url($img->image_url, PHP_URL_PATH), '/storage/');
-                        $this->deleteFile($relative);
+                        // $this->deleteFile($relative);
+                        $delete_images[] = $relative;
                         $img->delete();
                     }
                 }
+                $this->deleteFiles($delete_images);
 
                 // 2) Nếu có file mới, upload rồi lưu vào DB
                 if ($request->hasFile('images')) {
-                    foreach ($request->file('images') as $file) {
-                        $url = $this->uploadFile($file, 'product_images');
-                        if (is_null($url)) {
-                            DB::rollBack();
-                            return response()->json([
-                                'status' => false,
-                                'message' => 'Upload ảnh thất bại',
-                            ], 500);
-                        }
+                    // foreach ($request->file('images') as $file) {
+                    //     $url = $this->uploadFile($file, 'product_images');
+                    //     if (is_null($url)) {
+                    //         DB::rollBack();
+                    //         return response()->json([
+                    //             'status' => false,
+                    //             'message' => 'Upload ảnh thất bại',
+                    //         ], 500);
+                    //     }
+                    //     ProductImage::create([
+                    //         'product_id' => $product->id,
+                    //         'alt_text' => $file->getClientOriginalName(),
+                    //         'image_url' => $url,
+                    //     ]);
+                    // }
+                    $images = $request->file('images');
+                    $response = $this->uploadFiles($images,"product_images/".$product->sku);
+                    foreach ($response as $image){
                         ProductImage::create([
-                            'product_id' => $product->id,
-                            'alt_text' => $file->getClientOriginalName(),
-                            'image_url' => $url,
+                            "product_id"=>$product->id,
+                            "alt_text"=>$image['filename'],
+                            "image_url"=>$image['url']
                         ]);
                     }
                 }
@@ -325,8 +363,9 @@ class PartnerProductController extends Controller
             $validatedData = $request->validate([
                 'category_id' => 'required|integer|exists:categories,id',
                 // 'sku' => 'required|string|unique:products,sku',
-                'price' => 'required|numeric|min:0',
-                'sale' => 'nullable|numeric|min:0',
+                // 'price' => 'required|numeric|min:0',
+                // 'sale' => 'nullable|numeric|min:0',
+                "import_price" => "required|numberic|min:0",
                 'username' => 'required|string',
                 'password' => 'required|string',
                 'attributes' => 'required|array',
@@ -335,17 +374,17 @@ class PartnerProductController extends Controller
                 'images' => 'required|array',
                 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
-            if (isset($validatedData['sale']) && $validatedData['sale'] == 0) {
-                $validatedData['sale'] = null;
-            }
+            // if (isset($validatedData['sale']) && $validatedData['sale'] == 0) {
+            //     $validatedData['sale'] = null;
+            // }
 
             // Kiểm tra giá sale so với giá gốc
-            if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
-                return response()->json([
-                    "status" => false,
-                    "message" => "Giá sale phải nhỏ hơn giá gốc",
-                ], 400);
-            }
+            // if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
+            //     return response()->json([
+            //         "status" => false,
+            //         "message" => "Giá sale phải nhỏ hơn giá gốc",
+            //     ], 400);
+            // }
 
             // Bắt đầu transaction
             DB::beginTransaction();
@@ -356,8 +395,11 @@ class PartnerProductController extends Controller
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
-                "price" => $validatedData['price'],
-                "sale" => $validatedData['sale'] ?? null,
+                "import_price" => $validatedData['import_price'],
+                // "price" => $validatedData['price'],
+                "price"=>0,
+                // "sale" => $validatedData['sale'] ?? null,
+                'sale' => null,
                 "web_id" => $request->web_id,
                 'status' => 2, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,
@@ -366,21 +408,29 @@ class PartnerProductController extends Controller
 
             // Xử lý upload hình ảnh
             $images = $request->file('images'); // Lấy mảng các file
-            foreach ($images as $image) {
-                // Gọi uploadFile cho từng file riêng lẻ
-                $imageUrl = $this->uploadFile($image, 'product_images');
+            // foreach ($images as $image) {
+            //     // Gọi uploadFile cho từng file riêng lẻ
+            //     $imageUrl = $this->uploadFile($image, 'product_images');
 
-                if (is_null($imageUrl)) {
-                    // Rollback nếu upload thất bại
-                    DB::rollBack();
-                    return response()->json(['message' => 'Failed to upload product image.'], 500);
-                }
+            //     if (is_null($imageUrl)) {
+            //         // Rollback nếu upload thất bại
+            //         DB::rollBack();
+            //         return response()->json(['message' => 'Failed to upload product image.'], 500);
+            //     }
 
-                // Lưu thông tin hình ảnh vào bảng ProductImage
+            //     // Lưu thông tin hình ảnh vào bảng ProductImage
+            //     ProductImage::create([
+            //         'product_id' => $product->id,
+            //         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
+            //         'image_url' => $imageUrl, // Đường dẫn đã upload
+            //     ]);
+            // }
+            $response = $this->uploadFiles($images,'product_images/'.$product->sku);
+            foreach ($response as $image){
                 ProductImage::create([
-                    'product_id' => $product->id,
-                    'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
-                    'image_url' => $imageUrl, // Đường dẫn đã upload
+                    'product_id'=>$product->id,
+                    "alt_text" => $image['filename'],
+                    "image_url" => $image['url']
                 ]);
             }
 

@@ -20,9 +20,7 @@ const authSocketMiddleware = (socket, next) => {
   // không phải qua handshake query này nữa. `authSocketMiddleware` chỉ chạy 1 lần khi kết nối.
 
   if (token) {
-    // Sẽ KHÔNG chạy ở kết nối ban đầu sau thay đổi ở client
     const decoded = verifyToken(token);
-    console.log("🚀 ~ authSocketMiddleware ~ decoded:", decoded);
     if (decoded && decoded.user_id) {
       userId = decoded.user_id.toString();
       isLoggedIn = true;
@@ -46,7 +44,6 @@ const authSocketMiddleware = (socket, next) => {
       `[Middleware] Socket ${socket.id}: Đã kết nối với tư cách khách, ID: ${userId}`
     );
   } else {
-    // Chỉ chạy nếu không có cả token và guestId (rất hiếm)
     userId = `${ANONYMOUS_USER_ID_PREFIX}${uuidv4()}`;
     isLoggedIn = false;
     userRole = "customer";
@@ -57,9 +54,9 @@ const authSocketMiddleware = (socket, next) => {
 
   socket.userId = userId;
   socket.isLoggedIn = isLoggedIn;
-  socket.isAuthenticated = true; // Luôn là true vì socket luôn có một định danh
+  socket.isAuthenticated = true;
   socket.userRole = userRole;
-  connectionManager.addConnection(socket.userId, socket.id); // Liên kết userId (là guestId ban đầu) với socketId
+  connectionManager.addConnection(socket.userId, socket.id);
   console.log(
     `[Middleware] Kết nối Socket ${socket.id} đã khởi tạo: ID Người dùng=${socket.userId}, Đã đăng nhập=${socket.isLoggedIn}`
   );

@@ -373,11 +373,30 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id'); // Thông báo gửi cho ai
-            $table->string('title', 255); // Tiêu đề thông báo
+            $table->integer('type'); // Loại thông báo
             $table->text('content'); // Nội dung thông báo
             $table->string('link', 255)->nullable(); // Link liên quan (nếu có)
             $table->boolean('is_read')->default(0); // Đã đọc hay chưa
+            $table->timestamp('published_at')->useCurrent(); // Mặc định là thời gian hiện tại khi tạo
+            $table->timestamp('expires_at')->nullable(); // Có thể null
             $table->timestamps();
+        });
+
+        Schema::create('global_notifications', function (Blueprint $table) {
+            $table->id();
+            $table->integer('type'); // Loại thông báo
+            $table->text('content');
+            $table->timestamp('published_at')->useCurrent(); // Mặc định là thời gian hiện tại khi tạo
+            $table->string('link', 255)->nullable(); // Link liên quan (nếu có)
+            $table->timestamp('expires_at')->nullable(); // Có thể null
+            $table->timestamps(); // updated_at
+        });
+        Schema::create('user_global_notification_status', function (Blueprint $table) {
+            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('global_notification_id')->constrained('global_notifications')->onDelete('cascade');
+            $table->timestamp('read_at')->useCurrent(); // Thời điểm người dùng đánh dấu đã đọc
+            $table->primary(['user_id', 'global_notification_id']); // Khóa chính kép
+            // Không cần timestamps() ở đây vì chỉ cần read_at
         });
 
         // Bảng chat_rooms (Phòng chat)
@@ -487,6 +506,8 @@ return new class extends Migration
         Schema::dropIfExists('messages');
         Schema::dropIfExists('chat_rooms');
         Schema::dropIfExists('notifications');
+        Schema::dropIfExists('global_notifications');
+        Schema::dropIfExists('user_global_notification_status');
         Schema::dropIfExists('comments');
         Schema::dropIfExists('posts');
         Schema::dropIfExists('system_logs');

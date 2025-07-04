@@ -28,6 +28,7 @@ import NotificationDropdown from "./NotificationDropdown";
 import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContext";
+import { useHome } from "../../../contexts/HomeContext";
 
 export default function Header() {
   // State management
@@ -44,6 +45,8 @@ export default function Header() {
 
   const { user } = useAuth();
   const { cartItems } = useCart();
+  const { notifications } = useHome();
+  console.log("🚀 ~ Header ~ notifications:", notifications.count);
 
   const isLogin = user != null;
 
@@ -56,24 +59,6 @@ export default function Header() {
   const notificationMenuRef = useRef(null);
   const cartMenuRef = useRef(null);
   const userMenuRef = useRef(null);
-
-  const notifications = [
-    {
-      id: 1,
-      avatarUrl: "https://placehold.co/40x40/667eea/ffffff?text=🎮",
-      message:
-        "🎉 MEGA SALE! Giảm giá 50% tất cả acc Liên Quân Mobile. Cơ hội vàng không thể bỏ lỡ!",
-      timestamp: "2 phút trước",
-      type: "promotion",
-    },
-    {
-      id: 2,
-      avatarUrl: "https://placehold.co/40x40/f093fb/ffffff?text=⚡",
-      message: "⚡ Vừa cập nhật 100+ acc Free Fire rank Heroic giá siêu rẻ!",
-      timestamp: "15 phút trước",
-      type: "update",
-    },
-  ];
 
   const navLinks = [
     { name: " Trang chủ", href: "/", icon: Home },
@@ -313,9 +298,9 @@ export default function Header() {
                   aria-label="Notifications"
                 >
                   <Bell size={22} />
-                  {notifications.length > 0 && (
+                  {notifications.count > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-danger text-xs text-white font-bold animate-pulse shadow-lg">
-                      {notifications.length}
+                      {notifications.count}
                     </span>
                   )}
                 </button>

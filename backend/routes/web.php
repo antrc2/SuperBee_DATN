@@ -29,20 +29,37 @@ Route::get('/', function () {
 //             "verificationToken" => "sfdgsgsfgsfgsgr43562"
 //         ],
 //     ));
-    event(new SystemNotification(
-        'EMAIL_WELCOME', // Loại thông báo
-        [
-            'email' => "hairobet15092005@gmail.com",
-            "username" => "Trần Văn Long",
-            "loginUrl" => "http://localhost:5173/auth/login"
-        ],
-    ));
     // event(new SystemNotification(
-    //     'NOTIFICATION_ORDER_CONFIRMED', // Loại thông báo
+    //     'EMAIL_WELCOME', // Loại thông báo
     //     [
     //         'email' => "hairobet15092005@gmail.com",
     //         "username" => "Trần Văn Long",
-    //         "verificationToken" => "gh5466345635636"
+    //         "loginUrl" => "http://localhost:5173/auth/login"
+    //     ],
+    // ));
+    event(new SystemNotification(
+        'NOTIFICATION_PUBLIC', // Loại thông báo
+        [
+            "type"=>1,
+            "data"=>[
+            "id"=> 3,
+            "type"=> 1,
+            "message"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
+            "published_at"=> "2025-06-25T15:53:26.000000Z",
+            "link"=> null,
+            "expires_at"=> "2025-07-10T15:53:26.000000Z",
+            "created_at"=> "2025-07-03T15:53:26.000000Z",
+            "updated_at"=> "2025-07-03T15:53:26.000000Z",
+            "is_read"=> true
+            ]
+        ],
+    ));
+    // event(new SystemNotification(
+    //     'NOTIFICATION_PRIVATE', // Loại thông báo
+    //     [
+    //         "type"=>"cá nhân",
+    //         "user_id"=>1,
+    //         "data"=>['']
     //     ],
     // ));
 });

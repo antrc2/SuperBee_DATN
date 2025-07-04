@@ -1,7 +1,24 @@
 "use client";
 
-import { X, Flame, Gift, Zap } from "lucide-react";
+import {
+  X,
+  Flame,
+  Gift,
+  Zap,
+  CheckCircle,
+  Info,
+  AlertTriangle,
+  XCircle,
+  Dot,
+  Bell, // Thêm icon chuông cho thông báo chung
+} from "lucide-react";
 import { useEffect, useRef } from "react";
+import dayjs from "dayjs"; // Import dayjs
+import relativeTime from "dayjs/plugin/relativeTime"; // Import plugin relativeTime
+import "dayjs/locale/vi"; // Import locale tiếng Việt
+
+dayjs.extend(relativeTime); // Kích hoạt plugin relativeTime
+dayjs.locale("vi"); // Đặt locale mặc định là tiếng Việt
 
 export default function NotificationDropdown({
   notifications,
@@ -10,6 +27,57 @@ export default function NotificationDropdown({
   isMobile = false,
 }) {
   const dropdownRef = useRef(null);
+
+  // Ánh xạ các giá trị số nguyên của 'type' thành chuỗi mô tả
+  const getNotificationTypeString = (type) => {
+    switch (type) {
+      case 1:
+        return "system"; // Ví dụ: Thông báo hệ thống, cập nhật chung
+      case 2:
+        return "promotion"; // Ví dụ: Khuyến mãi, ưu đãi
+      case 3:
+        return "alert"; // Ví dụ: Cảnh báo, lỗi, khẩn cấp
+      default:
+        return "info"; // Mặc định là thông tin chung
+    }
+  };
+
+  // Hàm để lấy icon dựa trên loại thông báo (type là số nguyên)
+  const getNotificationIcon = (type, isRead) => {
+    const typeString = getNotificationTypeString(type); // Chuyển đổi số nguyên sang chuỗi
+
+    let iconComponent;
+
+    switch (typeString) {
+      case "system":
+        iconComponent = <Bell className="w-5 h-5 text-purple-400" />;
+        break;
+      case "promotion":
+        iconComponent = <Gift className="w-5 h-5 text-yellow-400" />;
+        break;
+      case "alert":
+        iconComponent = <AlertTriangle className="w-5 h-5 text-red-500" />;
+        break;
+      case "info":
+      default:
+        iconComponent = <Info className="w-5 h-5 text-blue-500" />;
+        break;
+    }
+
+    return <div className="relative">{iconComponent}</div>;
+  };
+
+  // Hàm định dạng ngày giờ bằng dayjs
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    try {
+      // dayjs có thể parse chuỗi ISO trực tiếp
+      return dayjs(dateString).fromNow(); // Định dạng "cách đây X"
+    } catch (error) {
+      console.error("Error formatting date with dayjs:", error);
+      return dateString; // Trả về nguyên bản nếu có lỗi
+    }
+  };
 
   useEffect(() => {
     if (!isMobile) {
@@ -28,17 +96,6 @@ export default function NotificationDropdown({
   }, [isOpen, onClose, isMobile]);
 
   if (!isOpen) return null;
-
-  const getNotificationIcon = (type) => {
-    switch (type) {
-      case "promotion":
-        return <Gift className="w-5 h-5 text-yellow-400" />;
-      case "update":
-        return <Zap className="w-5 h-5 text-blue-400" />;
-      default:
-        return <Flame className="w-5 h-5 text-red-400" />;
-    }
-  };
 
   return (
     <div
@@ -66,45 +123,54 @@ export default function NotificationDropdown({
 
       {/* Notifications List */}
       <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
-        {notifications.length > 0 ? (
-          notifications.map((notification) => (
+        {notifications.notifications &&
+        notifications.notifications.length > 0 ? (
+          notifications.notifications.map((notification, index) => (
             <div
-              key={notification.id}
-              className="flex gap-4 p-4 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-pink-600/10 transition-all duration-300 cursor-pointer group"
+              key={index}
+              className={`flex items-center gap-4 p-4 border-b border-purple-500/10 transition-all duration-300 cursor-pointer group
+                ${
+                  !notification.is_read // Kiểm tra boolean trực tiếp
+                    ? "bg-purple-800/20 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20"
+                    : "hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-pink-600/10"
+                }`}
             >
-              {/* Avatar with glow effect */}
+              {/* Icon thông báo */}
               <div className="relative flex-shrink-0">
-                <img
-                  src={notification.avatarUrl || "/placeholder.svg"}
-                  alt="Avatar"
-                  className="h-12 w-12 rounded-full object-cover border-2 border-purple-400/30 group-hover:border-purple-400/60 transition-colors duration-300"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src =
-                      "https://placehold.co/48x48/667eea/ffffff?text=🎮";
-                  }}
-                />
-                <div className="absolute -top-1 -right-1">
-                  {getNotificationIcon(notification.type)}
-                </div>
+                {getNotificationIcon(notification.type, !notification.is_read)}
               </div>
 
-              {/* Content */}
+              {/* Nội dung thông báo */}
               <div className="flex-grow min-w-0">
-                <p className="text-sm text-white/90 leading-relaxed group-hover:text-white transition-colors duration-300">
-                  {notification.message}
+                <p
+                  className={`text-sm leading-relaxed transition-colors duration-300
+                    ${
+                      !notification.is_read // Kiểm tra boolean trực tiếp
+                        ? "text-white font-semibold"
+                        : "text-white/90 group-hover:text-white"
+                    }`}
+                >
+                  {notification.content} {/* Đã đổi từ message sang content */}
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <p className="text-xs text-cyan-400 font-medium">
-                    {notification.timestamp}
+                    {formatDate(notification.published_at)}{" "}
+                    {/* Định dạng published_at */}
                   </p>
-                  {notification.type === "promotion" && (
+                  {notification.type === 2 && ( // Kiểm tra type là số nguyên 2 cho 'promotion'
                     <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/30">
                       HOT
                     </span>
                   )}
                 </div>
               </div>
+
+              {/* Chấm chưa đọc ở bên phải, nếu thông báo chưa đọc */}
+              {!notification.is_read && ( // Kiểm tra boolean trực tiếp
+                <div className="flex-shrink-0 ml-auto">
+                  <Dot className="w-8 h-8 text-red-500 fill-current animate-pulse" />
+                </div>
+              )}
             </div>
           ))
         ) : (
@@ -117,17 +183,20 @@ export default function NotificationDropdown({
         )}
       </div>
 
-      {/* Footer */}
-      {notifications.length > 0 && (
-        <div className="p-4 border-t border-purple-500/20">
-          <a
-            href="#"
-            className="block w-full text-center text-sm font-semibold text-cyan-400 hover:text-cyan-300 py-2 rounded-lg hover:bg-cyan-400/10 transition-all duration-300"
-          >
-            📱 Xem tất cả thông báo
-          </a>
-        </div>
-      )}
+      {/* Footer - Nút "Xem tất cả thông báo" được làm nổi bật */}
+      <div className="p-4 border-t border-purple-500/20 bg-purple-900/10 backdrop-blur-sm sticky bottom-0">
+        <a
+          href="#"
+          className="block w-full text-center text-sm font-semibold 
+                     bg-gradient-to-r from-purple-600 to-pink-600 
+                     text-white py-2.5 rounded-lg 
+                     shadow-lg hover:shadow-xl transition-all duration-300 
+                     hover:from-purple-700 hover:to-pink-700
+                     focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+        >
+          📱 Xem tất cả thông báo
+        </a>
+      </div>
     </div>
   );
 }

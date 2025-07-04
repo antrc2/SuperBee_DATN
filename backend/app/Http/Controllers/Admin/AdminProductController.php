@@ -333,6 +333,7 @@ class AdminProductController extends Controller
             $validatedData = $request->validate([
                 'category_id' => 'required|integer|exists:categories,id',
                 // 'sku' => 'required|string|unique:products,sku',
+                'import_price' => "required|numeric|min:0",
                 'price' => 'required|numeric|min:0',
                 'sale' => 'nullable|numeric|min:0',
                 'username' => 'required|string',
@@ -372,6 +373,7 @@ class AdminProductController extends Controller
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
+                "import_price" => $validatedData['import_price'], 
                 "price" => $validatedData['price'],
                 "sale" => $validatedData['sale'] ? $validatedData['sale'] != 0 & $validatedData['sale'] != null : null ,
                 "web_id" => $request->web_id,
@@ -499,9 +501,16 @@ class AdminProductController extends Controller
     {
         try {
             $password = $request->password;
+            $price = $request->price;
+            $sale = $request->sale;
+            if ($sale == 0) {
+                $sale = null;
+            }
             if ($this->check_isset_product_by_id($id)) {
                 $product = Product::where("id", $id)->where("status", 2)->update([
-                    "status" => $request->status
+                    "status" => $request->status,
+                    "price" => $price,
+                    "sale"=>$sale
                 ]);
 
 

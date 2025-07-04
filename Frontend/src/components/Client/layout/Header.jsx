@@ -47,6 +47,7 @@ export default function Header() {
   const { cartItems } = useCart();
   const { notifications } = useHome();
 
+
   const isLogin = user != null;
   // Refs
   const searchContainerRef = useRef(null);

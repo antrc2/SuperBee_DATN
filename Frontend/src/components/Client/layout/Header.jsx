@@ -46,10 +46,9 @@ export default function Header() {
   const { user } = useAuth();
   const { cartItems } = useCart();
   const { notifications } = useHome();
-  console.log("🚀 ~ Header ~ notifications:", notifications.count);
+
 
   const isLogin = user != null;
-
   // Refs
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);

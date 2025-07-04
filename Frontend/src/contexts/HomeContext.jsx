@@ -66,8 +66,6 @@ export function HomeProvider({ children }) {
       />
     );
   }
-
-  console.log("🚀 ~ HomeProvider ~ notifications:", notifications);
   return (
     <HomeContext.Provider value={{ homeData, notifications, setNotifications }}>
       {children}

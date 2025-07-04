@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
+use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
 use App\Http\Controllers\Partner\PartnerProductController;
 use App\Http\Controllers\Auth\AuthController;
@@ -42,6 +43,7 @@ Route::prefix("/callback")->group(function () {
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
 });
 
+
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
     // cấp lại token
@@ -80,6 +82,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/", [AdminDonatePromotionController::class, 'index']);
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
     });
+    Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsForUser']);
     //   đã đăng nhập 
     Route::middleware(['jwt'])->group(function () {
         // đăng xuất
@@ -138,6 +141,10 @@ Route::middleware('auth')->group(function () {
 
 
         });
+        Route::prefix("/notifications")->group(function () {
+            Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
+            Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
+        });
     });
 });
 
@@ -195,6 +202,14 @@ Route::middleware(['jwt'])->group(function () {
             Route::get("/",[AdminOrderController::class,'show']);
             // Route::get("/", [OrderController::class, 'index']);
             // Route::get("/{id}", [OrderController::class, 'show']);
+        });
+        Route::prefix("/notifications")->group(function () {
+            // thông báo cá nhân thêm
+            Route::post('/personal', [AdminNotificationController::class, 'addPersonalNotification']);
+            // thông báo chung thêm
+            Route::post('/global', [AdminNotificationController::class, 'addGlobalNotification']);
+            // sửa thông báo chung 
+            Route::put('/global/{id}', [AdminNotificationController::class, 'updateGlobalNotification']);
         });
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);

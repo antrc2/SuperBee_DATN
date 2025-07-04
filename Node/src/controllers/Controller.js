@@ -1,6 +1,6 @@
 // src/controllers/NotificationController.js
 import { sendEmail } from "./EmailControleer.js";
-import { formatNotificationMessage } from "./NotificationControler.js";
+import { sendNotification } from "./NotificationControler.js";
 // import { sendSocketNotification } from "./NotificationControler.js";
 
 const handleIncomingNotification = (io) => async (channel, message) => {
@@ -24,8 +24,7 @@ const handleIncomingNotification = (io) => async (channel, message) => {
       }
     } else if (type.startsWith("NOTIFICATION_")) {
       try {
-        console.log("type", type);
-        formatNotificationMessage(io, type, data);
+        sendNotification(io, type, data);
       } catch (emailError) {
         console.error(
           `[Handler] Lỗi khi chuyển tiếp yêu cầu NOTIFICATION_ loại '${type}':`,

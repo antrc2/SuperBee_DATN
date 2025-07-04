@@ -25,16 +25,12 @@ class HomeController extends Controller
         ->select('balance','user_id')->orderBy('balance', 'desc') 
         ->limit(5)
         ->get();
-    
-        $data = [
-            'banners' => $banner,
-            'categories' => $categories->data,
-            'top'=>$topNap
-        ];
         return response()->json([
             'status' => 200,
             'message' => 'thanh cong',
-            'data' => $data
-        ]);
+            'banners' => $banner,
+            'categories' => $categories->data,
+            'top'=>$topNap
+        ],200);
     }
 }

@@ -10,13 +10,16 @@ import React, {
 import { getSocket, connectSocket, authenticateSocket } from "@utils/socket";
 import { useAuth } from "@contexts/AuthContext";
 import { decodeData } from "../utils/hook";
+import { useNotification } from "./NotificationContext";
+import { useHome } from "./HomeContext";
 
 const ChatContext = createContext();
 
 export function ChatProvider({ children }) {
   const { token, isLoggedIn } = useAuth();
   const refToken = useRef(null);
-
+  const { pop } = useNotification();
+  const { setNotifications } = useHome();
   const [agentChatRoom, setAgentChatRoom] = useState(null); // Lưu trữ thông tin phòng chat với nhân viên
   const socketRef = useRef(null);
   // Khởi tạo và quản lý listeners
@@ -47,7 +50,6 @@ export function ChatProvider({ children }) {
     };
 
     const handleNewChatMessage = (message) => {
-      console.log("🚀 ~ handleNewChatMessage ~ message:", message);
       setAgentChatRoom((prev) => {
         if (prev && prev.roomId === message.chat_room_id) {
           // Cập nhật last_read_message_id khi nhận tin nhắn mới
@@ -100,16 +102,51 @@ export function ChatProvider({ children }) {
         }
       }
     };
+    const public_notifications = (data) => {
+      pop("Bạn có thông báo mới chung", "s");
+      setNotifications((prevNotifications) => {
+        const newNotificationsToAdd = data.data;
+        const updatedNotificationsArray = [
+          newNotificationsToAdd,
+          ...prevNotifications.notifications,
+        ];
+
+        const updatedCount = prevNotifications.count + 1;
+        return {
+          count: updatedCount,
+          notifications: updatedNotificationsArray,
+        };
+      });
+    };
+    const private_notifications = (data) => {
+      pop("Bạn có thông báo mới riêng", "s");
+      setNotifications((prevNotifications) => {
+        const newNotificationsToAdd = data.data;
+        const updatedNotificationsArray = [
+          newNotificationsToAdd,
+          ...prevNotifications.notifications,
+        ];
+        const updatedCount = prevNotifications.count + 1;
+        return {
+          count: updatedCount,
+          notifications: updatedNotificationsArray,
+        };
+      });
+    };
     socket.on("restore_customer_session", handleRestoreSession);
     socket.on("chat_room_joined", handleChatRoomJoined);
     socket.on("new_chat_message", handleNewChatMessage);
     socket.on("new_chat_assigned", handleNewChatAssigned);
+    socket.on("public_notifications", public_notifications);
+    socket.on("private_notifications", private_notifications);
 
     return () => {
       socket.off("restore_customer_session", handleRestoreSession);
       socket.off("chat_room_joined", handleChatRoomJoined);
       socket.off("new_chat_message", handleNewChatMessage);
       socket.off("new_chat_assigned", handleNewChatAssigned);
+      socket.off("public_notifications", public_notifications);
+      socket.off("private_notifications", private_notifications);
     };
   }, [token]); // Thay đổi dependency thành [token]
 

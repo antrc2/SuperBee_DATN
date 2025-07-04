@@ -145,7 +145,14 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
-
+  
+    /**
+     * Get the global notifications read by the user.
+     */
+    public function globalNotificationsReadStatus()
+    {
+        return $this->hasMany(UserGlobalNotificationStatus::class);
+    }
     public function agent()
     {
         return $this->hasOne(Agent::class, 'user_id');

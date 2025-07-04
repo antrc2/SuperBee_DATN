@@ -40,26 +40,25 @@ Route::get('/', function () {
     event(new SystemNotification(
         'NOTIFICATION_PUBLIC', // Loại thông báo
         [
-            "type"=>1,
-            "data"=>[
             "id"=> 3,
             "type"=> 1,
-            "message"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
+            "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
             "published_at"=> "2025-06-25T15:53:26.000000Z",
             "link"=> null,
-            "expires_at"=> "2025-07-10T15:53:26.000000Z",
-            "created_at"=> "2025-07-03T15:53:26.000000Z",
-            "updated_at"=> "2025-07-03T15:53:26.000000Z",
-            "is_read"=> true
-            ]
-        ],
+            "is_read"=> false,
+        
+        ]
     ));
-    // event(new SystemNotification(
-    //     'NOTIFICATION_PRIVATE', // Loại thông báo
-    //     [
-    //         "type"=>"cá nhân",
-    //         "user_id"=>1,
-    //         "data"=>['']
-    //     ],
-    // ));
+    event(new SystemNotification(
+        'NOTIFICATION_PRIVATE', // Loại thông báo
+        [
+            "id"=> 3,
+            "type"=> 1,
+            "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
+            "published_at"=> "2025-06-25T15:53:26.000000Z",
+            "link"=> null,
+            "is_read"=> false,
+            'user_id'=>1
+        ]
+    ));
 });

@@ -16,7 +16,7 @@ import { useEffect, useRef } from "react";
 import dayjs from "dayjs"; // Import dayjs
 import relativeTime from "dayjs/plugin/relativeTime"; // Import plugin relativeTime
 import "dayjs/locale/vi"; // Import locale tiếng Việt
-
+import { Link } from "react-router-dom";
 dayjs.extend(relativeTime); // Kích hoạt plugin relativeTime
 dayjs.locale("vi"); // Đặt locale mặc định là tiếng Việt
 
@@ -125,54 +125,63 @@ export default function NotificationDropdown({
       <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
         {notifications.notifications &&
         notifications.notifications.length > 0 ? (
-          notifications.notifications.map((notification, index) => (
-            <div
-              key={index}
-              className={`flex items-center gap-4 p-4 border-b border-purple-500/10 transition-all duration-300 cursor-pointer group
+          notifications.notifications.map((notification, index) => {
+            return (
+              <div
+                key={index}
+                className={`flex items-center gap-4 p-4 border-b border-purple-500/10 transition-all duration-300 cursor-pointer group
                 ${
                   !notification.is_read // Kiểm tra boolean trực tiếp
                     ? "bg-purple-800/20 hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20"
                     : "hover:bg-gradient-to-r hover:from-purple-600/10 hover:to-pink-600/10"
                 }`}
-            >
-              {/* Icon thông báo */}
-              <div className="relative flex-shrink-0">
-                {getNotificationIcon(notification.type, !notification.is_read)}
-              </div>
+              >
+                {/* Icon thông báo */}
+                <div className="relative flex-shrink-0">
+                  {getNotificationIcon(
+                    notification.type,
+                    !notification.is_read
+                  )}
+                </div>
 
-              {/* Nội dung thông báo */}
-              <div className="flex-grow min-w-0">
-                <p
-                  className={`text-sm leading-relaxed transition-colors duration-300
+                {/* Nội dung thông báo */}
+                <Link to={notification.link}>
+                  {" "}
+                  <div className="flex-grow min-w-0">
+                    <p
+                      className={`text-sm leading-relaxed transition-colors duration-300
                     ${
                       !notification.is_read // Kiểm tra boolean trực tiếp
                         ? "text-white font-semibold"
                         : "text-white/90 group-hover:text-white"
                     }`}
-                >
-                  {notification.content} {/* Đã đổi từ message sang content */}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <p className="text-xs text-cyan-400 font-medium">
-                    {formatDate(notification.published_at)}{" "}
-                    {/* Định dạng published_at */}
-                  </p>
-                  {notification.type === 2 && ( // Kiểm tra type là số nguyên 2 cho 'promotion'
-                    <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/30">
-                      HOT
-                    </span>
-                  )}
-                </div>
-              </div>
+                    >
+                      {notification.content}{" "}
+                      {/* Đã đổi từ message sang content */}
+                    </p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <p className="text-xs text-cyan-400 font-medium">
+                        {formatDate(notification.published_at)}{" "}
+                        {/* Định dạng published_at */}
+                      </p>
+                      {notification.type === 2 && ( // Kiểm tra type là số nguyên 2 cho 'promotion'
+                        <span className="px-2 py-0.5 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 text-yellow-400 text-xs font-semibold rounded-full border border-yellow-500/30">
+                          HOT
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
 
-              {/* Chấm chưa đọc ở bên phải, nếu thông báo chưa đọc */}
-              {!notification.is_read && ( // Kiểm tra boolean trực tiếp
-                <div className="flex-shrink-0 ml-auto">
-                  <Dot className="w-8 h-8 text-red-500 fill-current animate-pulse" />
-                </div>
-              )}
-            </div>
-          ))
+                {/* Chấm chưa đọc ở bên phải, nếu thông báo chưa đọc */}
+                {!notification.is_read && ( // Kiểm tra boolean trực tiếp
+                  <div className="flex-shrink-0 ml-auto">
+                    <Dot className="w-8 h-8 text-red-500 fill-current animate-pulse" />
+                  </div>
+                )}
+              </div>
+            );
+          })
         ) : (
           <div className="p-8 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-purple-600/20 to-pink-600/20 flex items-center justify-center">

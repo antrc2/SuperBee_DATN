@@ -104,30 +104,34 @@ export function ChatProvider({ children }) {
     };
     const public_notifications = (data) => {
       pop("Bạn có thông báo mới chung", "s");
-
       setNotifications((prevNotifications) => {
-        const newNotificationsToAdd = data.data.data;
+        const newNotificationsToAdd = data.data;
         const updatedNotificationsArray = [
           newNotificationsToAdd,
           ...prevNotifications.notifications,
         ];
-        console.log(
-          "🚀 ~ setNotifications ~ updatedNotificationsArray:",
-          updatedNotificationsArray
-        );
+
         const updatedCount = prevNotifications.count + 1;
-        console.log("🚀 ~ setNotifications ~ updatedCount:", updatedCount);
         return {
           count: updatedCount,
           notifications: updatedNotificationsArray,
         };
       });
-
-      console.log("message");
     };
     const private_notifications = (data) => {
-      pop("Bạn có thông báo mới", "s");
-      console.log("🚀 ~ c_notifications= ~ data:", data);
+      pop("Bạn có thông báo mới riêng", "s");
+      setNotifications((prevNotifications) => {
+        const newNotificationsToAdd = data.data;
+        const updatedNotificationsArray = [
+          newNotificationsToAdd,
+          ...prevNotifications.notifications,
+        ];
+        const updatedCount = prevNotifications.count + 1;
+        return {
+          count: updatedCount,
+          notifications: updatedNotificationsArray,
+        };
+      });
     };
     socket.on("restore_customer_session", handleRestoreSession);
     socket.on("chat_room_joined", handleChatRoomJoined);

@@ -5,19 +5,24 @@ import ListCategoryCon from "../../../sections/Home/ListCategoryCon";
 import { useHome } from "@contexts/HomeContext";
 
 export default function Home() {
-  const { data } = useHome();
+  const { homeData } = useHome();
   return (
     <div className="bg-gradient-header">
       <div>
-        <BannerAndCart top={data?.top ?? []} banner={data?.banners ?? []} />
+        <BannerAndCart
+          top={homeData?.top ?? []}
+          banner={homeData?.banners ?? []}
+        />
       </div>
       <div>
-        <ListCategoryCha categories={data?.categories?.onlyChildren ?? []} />
+        <ListCategoryCha
+          categories={homeData?.categories?.onlyChildren ?? []}
+        />
       </div>
       {/* LQ */}
       <div className="mt-8">
         <ListCategoryCon
-          items={data?.categories?.onlyChildren?.filter((e) => e.id == 18)}
+          items={homeData?.categories?.onlyChildren?.filter((e) => e.id == 18)}
           count={5}
           title="KHO NICK LIÊN QUÂN"
         />
@@ -25,7 +30,7 @@ export default function Home() {
       {/* {/* FF */}
       <div className="mt-8">
         <ListCategoryCon
-          items={data?.categories?.onlyChildren?.filter((e) => e.id == 7)}
+          items={homeData?.categories?.onlyChildren?.filter((e) => e.id == 7)}
           count={8}
           title="KHO NICK FREE FIRE"
         />

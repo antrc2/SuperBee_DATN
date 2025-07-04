@@ -43,7 +43,7 @@ export const clientModules = [
   // Trang danh sách category con
   {
     path: "/mua-acc",
-    view: ChatComponent,
+    view: ShopAccount,
     requiresAuth: false,
   },
   // Trang chi tiết của một category con gồm list sản phẩm

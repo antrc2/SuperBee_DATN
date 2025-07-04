@@ -48,7 +48,7 @@ export const SEND_NOTIFICATION_TYPE = {
  * @param {'personal'|'global'} type Loại thông báo: 'personal' cho cá nhân, 'global' cho tất cả.
  * @param {object} data Dữ liệu bổ sung cho thông báo (ví dụ: { message: "Đơn hàng #123 đã hoàn thành", orderId: "123" }).
  */
-export const sendNotification = (io, type, data = []) => {
+export const sendNotification = (io, type, data = {}) => {
   if (type === SEND_NOTIFICATION_TYPE.PERSONAL) {
     const userId = data?.user_id;
     if (!userId) {

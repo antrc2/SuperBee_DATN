@@ -366,7 +366,7 @@ class UserOrderController extends Controller
     public function checkout(Request $request)
     {
         try {
-
+            $tax = env("TAX");
             $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
             
             $wallet = Wallet::where('user_id',$request->user_id)->first();
@@ -385,15 +385,16 @@ class UserOrderController extends Controller
                 } elseif ($role == 'reseller'){
                     $total_price = $total_price - $total_price * 20 / 100;
                 } elseif ($role == 'admin') {
-                    
                 }
+                $total_price = $total_price + $total_price * $tax / 100;
                 return response()->json([
                     "status"=>True,
                     "message"=>"Thành công",
                     "carts"=>$carts,
                     "total_price"=>$total_price,
                     "promotion_codes"=>$promotion_codes,
-                    "balance"=>$wallet->balance
+                    "balance"=>$wallet->balance,
+                    "tax"=>$tax,
                 ],200);
             } else {
                 return response()->json([
@@ -403,6 +404,7 @@ class UserOrderController extends Controller
                     "total_price"=>0,
                     "promotion_codes" =>[],
                     "balance"=>0,
+                    "tax"=>10,
                 ],$cart['status_code']);
             }
         } catch (\Throwable $th) {
@@ -412,7 +414,8 @@ class UserOrderController extends Controller
                 "carts"=>[],
                 "total_price"=>0,
                 "promotion_codes" =>[],
-                "balance"=>0
+                "balance"=>0,
+                'tax'=>10
             ],500);
         }
     }
@@ -541,6 +544,8 @@ class UserOrderController extends Controller
                     }
 
                     $affiliate = Affiliate::where('user_id',$user_id)->first();
+                    $tax = env("TAX");
+                    $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
                     $wallet->balance -= $total_price;

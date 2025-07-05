@@ -5,8 +5,8 @@ import CategoryCha from "../Category/CategoryCha";
 
 export default function CategoryDropdown({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
-  const { data } = useHome();
-  const categories = data?.categories ?? [];
+  const { homeData } = useHome();
+  const categories = homeData?.categories ?? [];
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {

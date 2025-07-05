@@ -15,7 +15,7 @@ class UserProductController extends Controller
             $category = Category::where('slug', $slug)
                 ->where('status', 1)
                 ->first();
-        
+
             if (!$category) {
                 return response()->json(
                     [
@@ -26,13 +26,24 @@ class UserProductController extends Controller
                     404
                 );
             }
-            $products = Product::with("images")->with('category')->with("gameAttributes")->where('status', 1)->where('category_id', $category->id)->get();
+           $products=[];
+           $categories=[];
+           $type=null;
+            if ($category->parent_id !== null) {
+                $type=1;
+                $products = Product::with("images")->with('category')->with("gameAttributes")->where('status', 1)->where('category_id', $category->id)->get();
+            } else {
+                $type=2;
+                $categories = Category::where('parent_id', $category->id)->get();
+            }
             return response()->json(
                 [
                     "status" => True,
                     "message" => "Lấy danh sách sản phẩm thành công",
                     "data" => [
+                        "type"=>$type,
                         "category" => $category,
+                        "categories" => $categories,
                         "products" => $products
                     ]
                 ]

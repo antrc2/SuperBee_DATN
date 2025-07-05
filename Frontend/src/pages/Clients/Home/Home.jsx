@@ -19,22 +19,6 @@ export default function Home() {
           categories={homeData?.categories?.onlyChildren ?? []}
         />
       </div>
-      {/* LQ */}
-      <div className="mt-8">
-        <ListCategoryCon
-          items={homeData?.categories?.onlyChildren?.filter((e) => e.id == 18)}
-          count={5}
-          title="KHO NICK LIÊN QUÂN"
-        />
-      </div>
-      {/* {/* FF */}
-      <div className="mt-8">
-        <ListCategoryCon
-          items={homeData?.categories?.onlyChildren?.filter((e) => e.id == 7)}
-          count={8}
-          title="KHO NICK FREE FIRE"
-        />
-      </div>
     </div>
   );
 }

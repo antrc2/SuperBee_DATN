@@ -6,8 +6,8 @@ export default function ListCategoryCon({
   count = 5,
   title = null,
 }) {
-  if (!items.length || !items[0]?.children) return <NoProduct />;
-  const displayedItems = items[0]?.children.slice(0, count); // Chỉ lấy đúng số lượng
+  if (!items.length) return <NoProduct />;
+  const displayedItems = items?.slice(0, count); // Chỉ lấy đúng số lượng
 
   return (
     <div className="w-full  max-w-7xl mx-auto ">

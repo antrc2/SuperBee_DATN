@@ -212,8 +212,8 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('wallet_id'); // Giao dịch thuộc ví nào
-            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission', 'refund']);
-            //                     Nạp card         Nạp bank        Mua hàng    Rút         Hoa hồng      Hoàn tiền
+            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission', 'refund',    "sell"]);
+            //                     Nạp card         Nạp bank        Mua hàng     Rút         Hoa hồng      Hoàn tiền   Bán acc
             $table->decimal('amount', 15, 0); // Số tiền giao dịch, không null
             $table->unsignedBigInteger('related_id')->nullable(); // ID của giao dịch liên quan (nạp thẻ, bank, đơn hàng, rút tiền...)
             $table->string('related_type', 255)->nullable(); // Loại model liên quan (e.g., App\Models\RechargeCard)

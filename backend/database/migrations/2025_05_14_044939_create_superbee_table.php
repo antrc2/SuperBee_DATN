@@ -199,6 +199,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create("order_queues",function(Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('order_item_id');
+            $table->integer("amount");
+            $table->timestamp('recieved_at');
+            $table->integer('status')->default(0);
+            $table->timestamps();
+        });
+        // Sửa bảng order queue
+
         // Bảng wallets (Ví người dùng)
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();

@@ -2,10 +2,11 @@ from fastapi import FastAPI, UploadFile, File, Form, Request
 from typing import List
 import uvicorn
 from io import BytesIO
-from controller.S3Controller import S3Controller
+from threading import Thread
+from controller import S3Controller
+from cronjob import queue_money, event
 app = FastAPI()
 s3_client = S3Controller()
-
 
 @app.post("/upload_file")
 async def upload(image: UploadFile = File(...), folder: str = Form(...)):
@@ -46,6 +47,15 @@ async def deletes(request: Request):
     # print(data)
     s3_client.deletes(data['paths'])
     return {'status': True}
+
+@app.on_event("startup")
+def start_background_thread():
+    Thread(target=queue_money, args=(), daemon=True).start()
+
+@app.on_event("shutdown")
+def stop_background_thread():
+    print("Shutting down, stopping background thread...")
+    event.set()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

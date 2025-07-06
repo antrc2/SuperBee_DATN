@@ -21,9 +21,9 @@ class PartnerProductController extends Controller
         try {
             // Lọc theo danh mục sản phẩm (category_id)
             // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-            // if ($request->filled('category_id')) {
-            //     $query->where('category_id', $request->input('category_id'));
-            // }
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->input('category_id'));
+            }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
@@ -651,4 +651,5 @@ class PartnerProductController extends Controller
             ], 500);
         }
     }
+    
 }

@@ -11,11 +11,11 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\PartnerProductController as AdminPartnerProductController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
+use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\Partner\PartnerOrderController;
 use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
@@ -31,18 +31,17 @@ use Illuminate\Support\Facades\Route;
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
 
-Route::post('/upload', [AWSController::class, 'upload']);
+// Route::post('/upload', [AWSController::class, 'upload']);
+
 Route::prefix("/callback")->group(function () {
-
     Route::post("/card", [CardController::class, 'callback']);
-
-
-
     // Route::post("/bank2", [BankController::class,'callback2']);
     Route::post("/bank/donate", [BankController::class, 'donate']);
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
+    Route::post("/partner/money",[CallbackPartnerController::class,'recieve_money']);
 });
 
+Route::get("/partner/money/queue",[PartnerOrderController::class,'queue_money']);
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {

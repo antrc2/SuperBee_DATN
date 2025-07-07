@@ -16,6 +16,7 @@
         "laravel/reverb": "^1.5",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "league/commonmark": "^2.7",
         "league/flysystem-aws-s3-v3": "^3.0",
         "predis/predis": "*",
         "spatie/laravel-permission": "^6.19",

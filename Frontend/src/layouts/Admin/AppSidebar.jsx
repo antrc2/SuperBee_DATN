@@ -12,6 +12,8 @@ import {
   Calendar,
   ChevronDown,
   MoreHorizontal,
+  Newspaper
+  
 } from "lucide-react";
 import Logo from "@assets/icons/logo.png";
 import { useSidebar } from "@contexts/SidebarContext";
@@ -57,6 +59,11 @@ const navItems = [
     icon: <Calendar />,
     name: "agent",
     path: "/admin/agent",
+  },
+  {
+    icon: <Newspaper />,
+    name: "post",
+    path: "/admin/post",
   },
 ];
 

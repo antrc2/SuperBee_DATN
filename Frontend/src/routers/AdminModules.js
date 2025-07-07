@@ -16,19 +16,26 @@ import {
   CreateBanners,
   EditBanner,
   TrangDanhSachAccGame,
+
 } from "@pages";
 
 import {
+  CreatePostPage,
   CreateProducts,
+  EditPostPage,
   EditProducts,
   ListOrderPage,
   ProductDetailPage,
   ProductsBrowse,
   ShowOrderPage,
+  ShowPostPage,
+  TrangDanhSachPost,
 } from "../pages";
 import TrangDanhSachAccGameBrowse from "../pages/Admin/Products/TrangDanhSachAccGameBrowse";
 import UpdateProductBrowse from "../pages/Admin/Products/UpdateProductBrowse";
 import AgentDashboardPage from "../pages/AgentDashboard/AgentDashboardPage";
+
+
 export const adminModules = [
   {
     name: "discountcode",
@@ -49,6 +56,14 @@ export const adminModules = [
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "post",
+    list: TrangDanhSachPost,
+    show: ShowPostPage,
+    create: CreatePostPage,
+    edit: EditPostPage,
     allowedRoles: ["admin"],
   },
   {

@@ -9,6 +9,7 @@ use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderQueue;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Wallet;
@@ -495,6 +496,7 @@ class UserOrderController extends Controller
             $product_status = $this->check_status_product($user_id);
             if ($product_status['status'] == True) {
                 $cart_status = $this->get_cart_and_total_price($user_id);
+
                 if ($cart_status['status'] == True) {
                     $wallet = Wallet::where('user_id',$user_id)->first();
                     if (isset($request->promotion_code)){
@@ -565,7 +567,7 @@ class UserOrderController extends Controller
                         $order_code = $this->generateCode(16);
                     } while (Order::where('order_code',$order_code)->first() != null);
 
-
+                    
                     $order = Order::create([
                         "user_id"=>$user_id,
                         "order_code"=> $order_code,
@@ -578,11 +580,19 @@ class UserOrderController extends Controller
                     ]);
 
                     foreach($cart_status['carts'] as $cart){
-                        OrderItem::create([
+                        $order_item = OrderItem::create([
                             "order_id"=>$order->id,
                             "product_id"=>$cart->product_id,
                             "unit_price"=>$cart->unit_price,
                         ]);
+
+                        OrderQueue::create([
+                            'order_item_id'=>$order_item->id,
+                            "amount" => $cart->product->import_price,
+                            "recieved_at" => now()->addDays(3),
+                            'status'=>0
+                        ]);
+
                         Product::where('id',$cart->product_id)->update([
                             "status"=>4
                         ]);

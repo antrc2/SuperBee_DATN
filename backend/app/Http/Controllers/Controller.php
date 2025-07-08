@@ -45,7 +45,7 @@ abstract class Controller
                 if ($file instanceof \Illuminate\Http\UploadedFile) {
                     // attach dùng để thêm dữ liệu dạng multi part vào form
                     $request = $request->attach(
-                        'images',
+                        'files',
                         file_get_contents($file->getRealPath()),
                         $file->getClientOriginalName()
                     );
@@ -73,7 +73,7 @@ abstract class Controller
         try {
             $api_url = env('PYTHON_API');
             $response = Http::attach(
-                'image',
+                'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
             )->post("{$api_url}/upload_file", ["folder" => $directory]);

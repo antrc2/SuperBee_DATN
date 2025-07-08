@@ -36,14 +36,13 @@ class S3Controller:
         Thread(target=self.upload,args=(file_content,file_name)).start()
         file_url = f"{self.aws_url.rstrip('/')}/{file_name}"
         return file_url
-    def uploads(self,images,folder):
+    def uploads(self,files,folder):
         response = []
-        for image in images:
-            # print(image)
+        for file in files:
             path = folder+self.random_str()
-            filename = image['filename']
+            filename = file['filename']
             file_extention = filename.split(".")[-1]
-            Thread(target=self.upload,args=(image['image'],f"{path}.{file_extention}")).start()
+            Thread(target=self.upload,args=(file['file'],f"{path}.{file_extention}")).start()
             response.append(
                 {
                     "url": f"{self.aws_url.rstrip('/')}/{path}.{file_extention}",

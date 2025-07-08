@@ -13,6 +13,7 @@ class Post extends Model
         'title',
         'slug',
         'status',
+        'description', // Thêm trường mô tả
         'image_thumbnail_url',
         'content',
         'category_id',
@@ -21,7 +22,7 @@ class Post extends Model
 
     public function category()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Categorypost::class);
     }
 
     public function author()

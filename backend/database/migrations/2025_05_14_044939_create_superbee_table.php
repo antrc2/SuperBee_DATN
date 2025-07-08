@@ -199,7 +199,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        Schema::create("order_queues",function(Blueprint $table) {
+        Schema::create("order_queues", function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('order_item_id');
             $table->integer("amount");
@@ -361,6 +361,7 @@ return new class extends Migration
             $table->string('title', 255); // Tiêu đề bài viết
             $table->string('slug', 255)->unique(); // Slug duy nhất
             $table->longText('content'); // Sử dụng longText cho nội dung dài
+            $table->longText('description')->nullable(); // Mô tả ngắn về bài viết
             $table->unsignedBigInteger('category_id')->nullable(); // Bài viết có thể không thuộc danh mục nào
             $table->unsignedBigInteger('author_id'); // Tác giả bài viết
             $table->integer('status')->default(0); // Trạng thái (0: draft, 1: published, 2: archived)
@@ -463,7 +464,6 @@ return new class extends Migration
             $table->unique(['chat_room_id', 'user_id']);
             // Foreign key constraints
             $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
-
         });
         // Bảng banners (Banner tiêu đề)
         Schema::create('banners', function (Blueprint $table) {

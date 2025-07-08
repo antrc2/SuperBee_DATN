@@ -31,7 +31,10 @@ class AdminPostController extends Controller
                 "data" => $post
             ]);
         } catch (\Exception $e) {
-            return redirect()->back()->withErrors(['error' => $e->getMessage()]);
+            return response()->json([
+                "message" => "Lỗi khi lấy danh sách bài viết: " . $e->getMessage(),
+                "status" => false
+            ], 500);
         }
     }
     public function show($slug)
@@ -50,10 +53,10 @@ class AdminPostController extends Controller
             ], 500);
         }
     }
-    public function destroy($id)
+    public function destroy($slug)
     {
         try {
-            $post = Post::findOrFail($id);
+            $post = Post::where('slug', $slug)->firstOrFail();
             $post->delete();
             return response()->json([
                 "message" => "Xóa bài viết thành công",
@@ -74,8 +77,9 @@ class AdminPostController extends Controller
                 'title' => 'required|string|max:255',
                 'slug' => 'required|string|max:255|unique:posts,slug',
                 'status' => 'required|in:0,1,2',
-                'image_thumbnail_url' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'image_thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'content' => 'required|string',
+                'descriptionPost' => 'nullable|string|max:500',
                 'author_id' => 'required|exists:users,id',
                 'category_id' => 'nullable|exists:categories_post,id',
                 'category_name' => 'nullable|required_without:category_id|string|max:255',
@@ -112,8 +116,8 @@ class AdminPostController extends Controller
 
             // 3. Upload ảnh nếu có
             $imageUrl = null;
-            if ($request->hasFile('image_thumbnail_url')) {
-                $imageUrl = $this->uploadFile($request->file('image_thumbnail_url'), 'post_images');
+            if ($request->hasFile('image_thumbnail')) {
+                $imageUrl = $this->uploadFile($request->file('image_thumbnail'), 'post_images');
                 if (is_null($imageUrl)) {
                     return response()->json(['message' => 'Tải ảnh thất bại'], 500);
                 }
@@ -124,6 +128,7 @@ class AdminPostController extends Controller
                 'title' => $request->input('title'),
                 'slug' => $request->input('slug'),
                 'status' => $request->input('status'),
+                'description' => $request->input('descriptionPost'), // Thêm mô tả nếu có
                 'image_thumbnail_url' => $imageUrl,
                 'content' => $request->input('content'), // Sử dụng markdownContent thay vì content
                 'category_id' => $categoryId,
@@ -151,8 +156,9 @@ class AdminPostController extends Controller
                 'title' => 'required|string|max:255',
                 'slug' => 'required|string|max:255|unique:posts,slug,' . $post->id,
                 'status' => 'required|in:0,1,2',
-                'image_thumbnail_url' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
+                'image_thumbnail' => 'nullable|file|mimes:jpeg,png,jpg,gif,webp|max:2048',
                 'content' => 'required|string',
+                'descriptionPost' => 'nullable|string|max:500',
                 'author_id' => 'required|exists:users,id',
 
                 // Chỉ yêu cầu 1 trong 2: category_id hoặc category_name
@@ -188,8 +194,8 @@ class AdminPostController extends Controller
             }
             // 3. Upload ảnh nếu có
             $imageUrl = $post->image_thumbnail_url; // Giữ nguyên ảnh cũ nếu không có ảnh mới
-            if ($request->hasFile('image_thumbnail_url')) {
-                $imageUrl = $this->uploadFile($request->file('image_thumbnail_url'), 'post_images');
+            if ($request->hasFile('image_thumbnail')) {
+                $imageUrl = $this->uploadFile($request->file('image_thumbnail'), 'post_images');
                 if (is_null($imageUrl)) {
                     return response()->json(['message' => 'Tải ảnh thất bại'], 500);
                 }
@@ -201,6 +207,7 @@ class AdminPostController extends Controller
                 'status' => $request->input('status'),
                 'image_thumbnail_url' => $imageUrl,
                 'content' => $request->input('content'),
+                'description' => $request->input('descriptionPost'), // Thêm mô tả nếu có
                 'category_id' => $categoryId,
                 'author_id' => $request->input('author_id'),
             ]);
@@ -256,67 +263,6 @@ class AdminPostController extends Controller
             ], 500);
         }
     }
-    public function getCategoryPost()
-    {
-        try {
-            $categories = Categorypost::get();
-            if ($categories->isEmpty()) {
-                return response()->json([
-                    "message" => "Không có danh mục bài viết nào",
-                    "status" => false,
-                    "data" => []
-                ]);
-            }
-            return response()->json([
-                "message" => "Lấy danh mục bài viết thành công",
-                "status" => true,
-                "data" => $categories
-            ]);
-        } catch (\Exception $th) {
-            return response()->json([
-                "message" => "Lỗi khi lấy danh mục bài viết: " . $th->getMessage(),
-                "status" => false
-            ], 500);
-        }
-    }
-    public function createCategoryPost(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'name' => 'required|string|max:255',
-                'slug' => 'required|string|max:255|unique:categories_post,slug',
-                'description' => 'nullable|string',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    "message" => "Dữ liệu không hợp lệ",
-                    "status" => false,
-                    "errors" => $validator->errors()
-                ], 422);
-            }
-
-            $category = Categorypost::create([
-                'name' => $request->input('name'),
-                'slug' => $request->input('slug'),
-                'description' => $request->input('description', ''),
-            ]);
-
-            return response()->json([
-                "message" => "Tạo danh mục bài viết thành công",
-                "status" => true,
-                "data" => $category
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                "message" => "Lỗi khi tạo danh mục bài viết: " . $e->getMessage(),
-                "status" => false
-            ], 500);
-        }
-    }
-
-
-
 
     /**
      * Xử lý yêu cầu tải ảnh lên từ Froala Editor

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminCategoryPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -39,10 +40,10 @@ Route::prefix("/callback")->group(function () {
     // Route::post("/bank2", [BankController::class,'callback2']);
     Route::post("/bank/donate", [BankController::class, 'donate']);
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
-    Route::post("/partner/money",[CallbackPartnerController::class,'recieve_money']);
+    Route::post("/partner/money", [CallbackPartnerController::class, 'recieve_money']);
 });
 
-Route::get("/partner/money/queue",[PartnerOrderController::class,'queue_money']);
+Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money']);
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
@@ -235,8 +236,8 @@ Route::middleware(['jwt'])->group(function () {
             // Tùy chọn: Route để xóa ảnh từ Image Manager
         });
         Route::prefix('/categoryPost')->group(function () {
-            Route::get('/', [AdminPostController::class, 'getCategoryPost']);
-            Route::post('/new', [AdminPostController::class, 'createCategoryPost']);
+            Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
+            Route::post('/new', [AdminCategoryPostController::class, 'createCategoryPost']);
         });
     });
 });

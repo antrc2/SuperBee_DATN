@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@contexts/AuthContext";
-
+import Image from "../Image/Image";
 export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
   const dropdownRef = useRef(null);
   const { logout } = useAuth();
@@ -67,8 +67,8 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
       ref={dropdownRef}
       className={`${
         isMobile
-          ? "h-full flex flex-col bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl"
-          : "absolute right-0 top-full z-20 mt-3 w-80 rounded-2xl bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl shadow-2xl border border-purple-500/20"
+          ? "h-full flex flex-col bg-gradient-header  backdrop-blur-xl"
+          : "absolute right-0 top-full z-20 mt-3 w-80 rounded-2xl bg-gradient-header  backdrop-blur-xl shadow-2xl border border-purple-500/20"
       }`}
     >
       {/* Header */}
@@ -88,8 +88,8 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
         <div className="p-4 border-b border-purple-500/20">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <img
-                src="https://placehold.co/48x48/667eea/ffffff?text=👤"
+              <Image
+                url={user?.avatar}
                 alt="Avatar"
                 className="h-12 w-12 rounded-full border-2 border-purple-400/50"
                 onError={(e) => {

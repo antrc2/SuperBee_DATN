@@ -13,7 +13,7 @@ class Business_setting extends Model
     protected $table = 'business_settings';
 
     protected $fillable = [
-        'user_id',
+        'web_id',
         'shop_name',
         'slogan',
         'logo_url',
@@ -32,11 +32,6 @@ class Business_setting extends Model
         'header_settings' => 'array', // Tự động chuyển JSON sang array/object
         'footer_settings' => 'array', // Tự động chuyển JSON sang array/object
     ];
-
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
 
     public function webs()
     {

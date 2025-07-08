@@ -37,11 +37,23 @@ class AuthController extends Controller
     public function domain(Request $request)
     {
         // This method currently always returns an error.
-        // Implement actual domain validation logic here if needed.
-        return response()->json([
-            "error" => "WEB_ACTIVE",
-            "code" => "ACTIVE"
-        ], 200);
+        // Implement actual domain validation logic here if needed
+        $web = Web::where("id", $request->web_id)->first();
+        if ($web != null && $web->is_customized == 1) {
+            $style = Business_setting::where("web_id", $web->id)->first();
+            return response()->json([
+                "error" => "WEB_ACTIVE",
+                "code" => "ACTIVE",
+                "style" => $style
+            ], 200);
+        } else {
+            return response()->json([
+                "error" => "WEB_ACTIVE",
+                "code" => "ACTIVE",
+                "style" => "NOACTIVE"
+            ], 200);
+        }
+
     }
 
     /**
@@ -89,11 +101,11 @@ class AuthController extends Controller
     {
         $payload['exp'] = time() + $expireTime;
         if ($type === "acc") {
-            return JWT::encode($payload, (string)env('JWT_SECRET_KEY'), 'HS256');
+            return JWT::encode($payload, (string) env('JWT_SECRET_KEY'), 'HS256');
         }
 
         if ($type === "ref") {
-            return JWT::encode($payload, (string)env('JWT_SECRET'), 'HS256');
+            return JWT::encode($payload, (string) env('JWT_SECRET'), 'HS256');
         }
 
         // Fallback or error for unknown token type
@@ -114,11 +126,11 @@ class AuthController extends Controller
             'name' => $user->username,
             'user_id' => $user->id,
             'web_id' => $user->web_id,
-            'avatar' => $user->avatar_url, 
+            'avatar' => $user->avatar_url,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
             'money' => $wallet->balance ?? "0"
         ];
-        $expireTime = (int)env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
+        $expireTime = (int) env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
         // dd(time() + $expireTime, date('Y-m-d H:i:s'));
         return $this->encodeToken($payload, $expireTime, "acc");
     }
@@ -138,7 +150,7 @@ class AuthController extends Controller
             'web_id' => $user->web_id,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
         ];
-        $expireTime = (int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
+        $expireTime = (int) env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30); // Default to 30 days
 
         return $this->encodeToken($payload, $expireTime, "ref");
     }
@@ -158,21 +170,21 @@ class AuthController extends Controller
                     'string',
                     'unique:users,username,NULL,id,web_id,' . $request->web_id
                 ],
-                'password' => 'required|string|min:6', 
+                'password' => 'required|string|min:6',
                 'email' => [
                     'required',
                     'email',
-                    'unique:users,email,NULL,id,web_id,' . $request->web_id 
+                    'unique:users,email,NULL,id,web_id,' . $request->web_id
                 ],
                 'web_id' => 'required|exists:webs,id',
                 'aff' => 'nullable|exists:users,id',
             ], [
                 'username.required' => 'Tên đăng nhập không được để trống.',
                 'username.string' => 'Tên đăng nhập phải là chuỗi ký tự.',
-                'username.unique' => 'Tên đăng nhập đã tồn tại trên trang web này.', 
+                'username.unique' => 'Tên đăng nhập đã tồn tại trên trang web này.',
                 'password.required' => 'Mật khẩu không được để trống.',
                 'password.string' => 'Mật khẩu phải là chuỗi ký tự.',
-                'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.', 
+                'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
                 'email.required' => 'Email không được để trống.',
                 'email.email' => 'Email không đúng định dạng.',
                 'email.unique' => 'Email đã tồn tại trên trang web này.',
@@ -205,7 +217,7 @@ class AuthController extends Controller
             $tokenEmail = Str::random(60);
             $validatedData['email_verification_token'] = $tokenEmail;
 
-            $validatedData['email_verification_expires_at'] =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
+            $validatedData['email_verification_expires_at'] = now()->addSeconds((int) env('EMAIL_VERIFICATION_TTL', 3600));
             $user = User::create($validatedData);
             $user->assignRole('user'); // Assign 'user' role
 
@@ -290,7 +302,7 @@ class AuthController extends Controller
 
             // 7. Xóa Refresh Token cũ và tạo mới
             // Sử dụng config() thay vì env() trực tiếp trong code
-            $refreshTokenTTLSeconds = (int)config('jwt.refresh_token_ttl', 60 * 60 * 24 * 30); // Giả sử cấu hình JWT_REFRESH_TOKEN_TTL nằm trong config/jwt.php
+            $refreshTokenTTLSeconds = (int) config('jwt.refresh_token_ttl', 60 * 60 * 24 * 30); // Giả sử cấu hình JWT_REFRESH_TOKEN_TTL nằm trong config/jwt.php
 
             RefreshToken::where('user_id', $user->id)->delete();
             RefreshToken::create([
@@ -319,7 +331,7 @@ class AuthController extends Controller
             event(new SystemNotification(
                 'EMAIL_WELCOME', // Loại thông báo
                 [
-                    'email' =>$user->email,
+                    'email' => $user->email,
                     "username" => $user->username,
                     "loginUrl" => "http://localhost:5173/auth/login"
                 ],
@@ -330,7 +342,6 @@ class AuthController extends Controller
                 'access_token' => $accessToken,
                 'status' => true
             ], 200)->withCookie($cookie);
-
         } catch (Throwable $e) {
             DB::rollBack(); // Hoàn tác tất cả các thay đổi nếu có lỗi
             // Log lỗi để dễ dàng gỡ lỗi
@@ -338,7 +349,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'Đã có lỗi xảy ra trong quá trình xác thực email. Vui lòng thử lại sau.'], 500);
         }
     }
-    public function sendVerifyEmail(Request $request){
+    public function sendVerifyEmail(Request $request)
+    {
         try {
             $request->validate([
                 'email' => [
@@ -347,26 +359,26 @@ class AuthController extends Controller
                     'exists:users,email,web_id,' . $request->web_id
                 ],
             ]);
-            $user = User::where('email',$request->email)->where('web_id',$request->web_id)->first();
+            $user = User::where('email', $request->email)->where('web_id', $request->web_id)->first();
             if (!$user) {
                 return response()->json(['message' => 'Tài khoản của bạn không tồn tại'], 404);
             }
-            if($user->status == 1){
-                return response()->json(['message' => 'Tài khoản của bạn đã được kích hoạt'], 200);  
+            if ($user->status == 1) {
+                return response()->json(['message' => 'Tài khoản của bạn đã được kích hoạt'], 200);
             }
             $tokenEmail = Str::random(60);
             $user->email_verification_token = $tokenEmail;
-            $user->email_verification_expires_at =  now()->addSeconds((int)env('EMAIL_VERIFICATION_TTL', 3600));
+            $user->email_verification_expires_at = now()->addSeconds((int) env('EMAIL_VERIFICATION_TTL', 3600));
             $user->save();
-           // Gửi email xác minh tài khoản
-           event(new SystemNotification(
-            'EMAIL_ACTIVE_USER', // Loại thông báo
-            [
-                'email' => $user->email,
-                "username" => $user->username,
-                "verificationToken" => $tokenEmail
-            ],
-        ));
+            // Gửi email xác minh tài khoản
+            event(new SystemNotification(
+                'EMAIL_ACTIVE_USER', // Loại thông báo
+                [
+                    'email' => $user->email,
+                    "username" => $user->username,
+                    "verificationToken" => $tokenEmail
+                ],
+            ));
             return response()->json(['message' => 'Vui lòng kiểm tra email để kích hoạt tài khoản'], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => 'Không thể gửi email kích hoạt tài khoản lúc này. Vui lòng thử lại sau.'], 500);
@@ -380,7 +392,7 @@ class AuthController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        $user = User::where('email', $request->email)->where('web_id',$request->web_id)->first();
+        $user = User::where('email', $request->email)->where('web_id', $request->web_id)->first();
 
         if (!$user) {
             return response()->json(['message' => 'Tài khoản của bạn không tồn tại'], 200);
@@ -388,7 +400,7 @@ class AuthController extends Controller
 
         $token = $this->generateCode(20);
         $user->password_reset_token = $token;
-        $user->password_reset_expires_at = now()->addSeconds((int)env('PASSWORD_RESET_TTL', 3600));
+        $user->password_reset_expires_at = now()->addSeconds((int) env('PASSWORD_RESET_TTL', 3600));
         $user->save();
 
         try {
@@ -480,14 +492,14 @@ class AuthController extends Controller
                 'web_id.required' => 'Không xác định được trang web.',
                 'web_id.exists' => 'Web ID không hợp lệ.',
             ]);
-    
+
             $web = Web::findOrFail($validatedData['web_id']);
-    
+
             // Find user by username and web_id
             $user = User::where('username', $validatedData['username'])
                 ->where('web_id', $web->id)
                 ->first();
-    
+
             // Check if user exists
             if (!$user) {
                 return response()->json([
@@ -496,7 +508,7 @@ class AuthController extends Controller
                     'code' => 'INVALID_CREDENTIALS'
                 ], 200); // Use 200 for business logic errors
             }
-    
+
             // Check password
             if (!Hash::check($validatedData['password'], $user->password)) {
                 return response()->json([
@@ -505,7 +517,7 @@ class AuthController extends Controller
                     'code' => 'INVALID_CREDENTIALS'
                 ], 200);
             }
-    
+
             // Check account status
             switch ($user->status) {
                 case 0: // Inactive account
@@ -514,17 +526,17 @@ class AuthController extends Controller
                         'status' => false,
                         'code' => 'NO_ACTIVE'
                     ], 200);
-    
+
                 case 3: // Locked account
                     return response()->json([
                         'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
                         'status' => false,
                         'code' => 'LOCKED_ACCOUNT'
                     ], 200);
-    
+
                 case 1: // Active account - proceed with login
                     break;
-    
+
                 default: // Any other status
                     return response()->json([
                         'message' => 'Trạng thái tài khoản không hợp lệ.',
@@ -532,22 +544,22 @@ class AuthController extends Controller
                         'code' => 'INVALID_STATUS'
                     ], 200);
             }
-    
+
             // Generate tokens
             $accessToken = $this->generateAccessToken($user, $request);
             $refreshToken = $this->generateRefreshToken($user, $request);
-    
+
             // Clear old refresh tokens for this user
             RefreshToken::where('user_id', $user->id)->delete();
-    
+
             // Save new refresh token
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $refreshToken,
-                'expires_at' => Carbon::now()->addSeconds((int)env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
+                'expires_at' => Carbon::now()->addSeconds((int) env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30)),
                 'revoked' => false,
             ]);
-    
+
             // Set refresh token cookie
             $cookieExpirationMinutes = env('JWT_REFRESH_TOKEN_TTL', 60 * 60 * 24 * 30) / 60;
             $cookie = cookie(
@@ -561,13 +573,13 @@ class AuthController extends Controller
                 false, // Raw
                 'none' // SameSite
             );
-    
+
             // Update user's last login
             $user->update([
                 'last_login_at' => Carbon::now(),
                 'last_login_ip' => $request->ip(),
             ]);
-    
+
             // Success response
             return response()->json([
                 'message' => 'Đăng nhập thành công',
@@ -582,7 +594,6 @@ class AuthController extends Controller
                     'money' => $user->money,
                 ]
             ])->withCookie($cookie);
-    
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Dữ liệu không hợp lệ.',
@@ -590,11 +601,10 @@ class AuthController extends Controller
                 'errors' => $e->errors(),
                 'code' => 'VALIDATION_ERROR'
             ], 422);
-    
         } catch (\Exception $e) {
             // Log the actual error for debugging
             Log::error("Login error: " . $e->getMessage() . " on line " . $e->getLine() . " in file " . $e->getFile());
-            
+
             return response()->json([
                 'message' => 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
                 'status' => false,
@@ -642,11 +652,11 @@ class AuthController extends Controller
             RefreshToken::create([
                 'user_id' => $user->id,
                 'refresh_token' => $newRefreshToken,
-                'expires_at' => Carbon::now()->addSeconds((int)env(key: 'JWT_REFRESH_TOKEN_TTL')),
+                'expires_at' => Carbon::now()->addSeconds((int) env(key: 'JWT_REFRESH_TOKEN_TTL')),
                 'revoked' => false,
             ]);
 
-            $cookieExpirationMinutes = (int)env('JWT_REFRESH_TOKEN_TTL');
+            $cookieExpirationMinutes = (int) env('JWT_REFRESH_TOKEN_TTL');
 
             $cookie = cookie(
                 'refresh_token',

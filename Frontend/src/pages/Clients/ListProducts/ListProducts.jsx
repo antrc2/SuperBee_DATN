@@ -7,7 +7,6 @@ import NoProduct from "../../../components/Loading/NoProduct";
 import { useQuery } from "@tanstack/react-query";
 import ServerErrorDisplay from "../../../components/Loading/ServerErrorDisplay";
 import { getProductsBySlug } from "../../../services/productService.js";
-import CategoryCha from "../../../components/Client/Category/CategoryCha.jsx";
 import CategoryCon from "../../../components/Client/Category/CategoryCon.jsx";
 export default function ListProducts() {
   const { slug } = useParams();
@@ -20,30 +19,26 @@ export default function ListProducts() {
   } = useQuery({
     queryKey: ["listProducts", slug],
     queryFn: () => getProductsBySlug(slug),
-    enabled: !!slug, // Đảm bảo query chỉ chạy khi slug có giá trị (không phải undefined)
+    enabled: !!slug,
   });
   if (isLoadingProducts) {
     return <LoadingDomain />;
   }
-
-  // Xử lý trạng thái lỗi tổng thể
   if (isErrorProducts) {
     return (
       <ServerErrorDisplay statusCode={errorProducts.response?.status || 500} />
     );
   }
-
-  // Nếu không có sản phẩm hoặc data rỗng sau khi fetch
   if (!ListProducts?.data) {
     return <NoProduct />;
   }
 
   return (
     <>
-      <div className="max-w-7xl mx-auto mt-5">
+      <div className=" mt-5">
         <Breadcrumbs category={ListProducts?.data?.category} />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 ">
         {ListProducts?.data?.type == 1
           ? ListProducts?.data?.products.map((product, index) => (
               <Product key={product.id || index} product={product} /> // Ưu tiên dùng product.id làm key

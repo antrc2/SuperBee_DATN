@@ -100,7 +100,7 @@ export default function RechargeCard() {
     const fetchUserProfile = async () => {
       try {
         const response = await api.get("/user/profile");
-        setUser(response.data); 
+        setUser(response.data);
       } catch (error) {
         console.error("Lỗi khi lấy thông tin người dùng:", error);
       }
@@ -268,7 +268,7 @@ export default function RechargeCard() {
   return (
     <div className="bg-gray-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-800 mb-8">
+        <h1 className="text-3xl font-bold text-center text-main-title mb-8">
           Nạp Tiền Vào Tài Khoản
         </h1>
 
@@ -299,7 +299,7 @@ export default function RechargeCard() {
 
         {activeTab === "card" && (
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
-            <h2 className="text-xl font-semibold text-gray-700 mb-6">
+            <h2 className="text-xl font-semibold text-main-title mb-6">
               Chọn loại thẻ và mệnh giá
             </h2>
             <form onSubmit={handleCardSubmit} className="space-y-6">
@@ -462,7 +462,7 @@ export default function RechargeCard() {
           </div>
         )}
 
-        {activeTab === "bank"  && bankInfo && (
+        {activeTab === "bank" && bankInfo && (
           <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
             <div className="flex flex-col items-center">
               <img
@@ -532,7 +532,7 @@ export default function RechargeCard() {
         )}
 
         <div className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+          <h2 className="text-2xl font-semibold text-main-title mb-6 flex items-center">
             <History size={24} className="mr-3 text-blue-600" /> Lịch Sử Nạp
             Tiền
           </h2>

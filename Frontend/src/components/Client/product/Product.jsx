@@ -73,12 +73,9 @@ export default function Product({ product }) {
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           <div className="absolute inset-0 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Link
-              to={`/acc/${product.sku}`}
-              className="bg-purple-600 hover:bg-purple-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"
-            >
+            <span className="bg-purple-600 hover:bg-purple-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200">
               <Eye className="w-4 h-4" />
-            </Link>
+            </span>
             <button
               onClick={handleAdd}
               className="bg-pink-600 hover:bg-pink-700 text-white rounded-full w-10 h-10 flex items-center justify-center transition-colors duration-200"

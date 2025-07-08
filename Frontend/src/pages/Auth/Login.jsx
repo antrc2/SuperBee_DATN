@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ChevronLeft, EyeOff, Eye } from "lucide-react";
+import { ChevronLeft, EyeOff, Eye, EyeClosed } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 import { checkLocation } from "../../utils/hook";
@@ -60,36 +60,36 @@ export default function LoginForm() {
 
   return (
     <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
-      <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
+      <div className="w-full max-w-md mx-auto mb-5 sm:pt-10 ">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-50 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+          className="inline-flex items-center text-sm text-main-title transition-colors text-main-title shine-text  "
         >
           <ChevronLeft className="size-5" /> {/* Updated icon */}
           Back to dashboard
         </Link>
       </div>
 
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto ">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-white text-title-sm dark:text-white/90 sm:text-title-md">
+            <h1 className="mb-2 font-semibold text-white text-title-sm  sm:text-title-md text-main-title  ">
               Sign In
             </h1>
-            <p className="text-sm text-gray-50 dark:text-gray-400">
+            <p className="text-sm text-main-title text-main-title ">
               Enter your email and password to sign in!
             </p>
           </div>
           {/* 
           {error && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md dark:bg-red-900 dark:text-red-300 mb-5">
+            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md   mb-5">
               <p>{error.message}</p>
             </div>
           )} */}
 
           {user && (
-            <div className="p-4 bg-green-100 rounded-md dark:bg-green-900 dark:text-green-200 mb-5">
-              <h3 className="mb-2 text-lg font-semibold text-green-800 dark:text-green-100">
+            <div className="p-4 bg-green-100 rounded-md   mb-5">
+              <h3 className="mb-2 text-lg font-semibold text-green-800 ">
                 Đăng nhập thành công!
               </h3>
               <p className="text-sm">Chào mừng, {user.name || "Người dùng"}!</p>
@@ -102,27 +102,29 @@ export default function LoginForm() {
               <div className="sm:col-span-1">
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-main-title  mb-1"
                 >
                   User Name<span className="text-error-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="username"
-                  placeholder="Enter your username"
-                  className="block w-full px-4 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand-500 dark:focus:border-brand-500"
-                  {...register("username", {
-                    required: "Username is required",
-                    minLength: {
-                      value: 3,
-                      message: "Username must be at least 3 characters",
-                    },
-                  })}
-                  onChange={(e) => {
-                    clearErrors("username");
-                    register("username").onChange(e); // Ensure react-hook-form's onChange is still called
-                  }}
-                />
+                <div className="input-wrapper-gradient">
+                  <input
+                    type="text"
+                    id="username"
+                    placeholder="Enter your username"
+                    className="  min-w-[320px] block w-full px-4 py-[12px] text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 custom-input  "
+                    {...register("username", {
+                      required: "Username is required",
+                      minLength: {
+                        value: 3,
+                        message: "Username must be at least 3 characters",
+                      },
+                    })}
+                    onChange={(e) => {
+                      clearErrors("username");
+                      register("username").onChange(e); // Ensure react-hook-form's onChange is still called
+                    }}
+                  />
+                </div>
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
@@ -134,28 +136,31 @@ export default function LoginForm() {
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-50 dark:text-gray-200 mb-1"
+                  className="block text-sm font-medium text-main-title  mb-1"
                 >
                   Password<span className="text-error-500">*</span>
                 </label>
                 <div className="relative">
-                  <input
-                    type={passwordType}
-                    id="password"
-                    placeholder="Enter your password"
-                    className="block w-full px-4 py-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-brand-500 focus:border-brand-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-brand-500 dark:focus:border-brand-500 pr-10"
-                    {...register("password", {
-                      required: "Password is required",
-                      minLength: {
-                        value: 6,
-                        message: "Password must be at least 6 characters",
-                      },
-                    })}
-                    onChange={(e) => {
-                      clearErrors("password");
-                      register("password").onChange(e); // Ensure react-hook-form's onChange is still called
-                    }}
-                  />
+                  <div className="input-wrapper-gradient">
+                    <input
+                      type={passwordType}
+                      id="password"
+                      placeholder="Enter your password"
+                      // Giữ các class Tailwind ban đầu nhưng điều chỉnh focus
+                      className=" min-w-[320px] block w-full px-4 py-[12px] text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 pr-10 custom-input" // Thêm class custom cho input
+                      {...register("password", {
+                        required: "Password is required",
+                        minLength: {
+                          value: 6,
+                          message: "Password must be at least 6 characters",
+                        },
+                      })}
+                      onChange={(e) => {
+                        clearErrors("password");
+                        register("password").onChange(e);
+                      }}
+                    />
+                  </div>
                   <span
                     onClick={() =>
                       setPasswordType((prev) =>
@@ -165,9 +170,9 @@ export default function LoginForm() {
                     className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
                   >
                     {passwordType === "password" ? (
-                      <EyeOff className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
+                      <EyeClosed className=" size-5" /> // Updated icon
                     ) : (
-                      <Eye className="fill-gray-500 dark:fill-gray-400 size-5" /> // Updated icon
+                      <Eye className=" size-5" /> // Updated icon
                     )}
                   </span>
                 </div>
@@ -182,7 +187,7 @@ export default function LoginForm() {
               <div>
                 <button
                   type="submit"
-                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-w-[320px] flex container-div items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? (
@@ -218,14 +223,19 @@ export default function LoginForm() {
           </form>
 
           {/* Đăng ký */}
-          <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-50 dark:text-gray-100 sm:text-start">
+          <div className="mt-5 flex items-center justify-between flex-1/2 flex-wrap">
+            <p className="text-sm font-normal text-center text-main-title  sm:text-start h-5 ">
               Don&apos;t have an account?{" "}
               <Link
                 to="/auth/register"
-                className="text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                className=" font-[500] shine-text ml-1 shine-text "
               >
                 Sign Up
+              </Link>
+            </p>
+            <p className="text-sm font-normal text-center text-main-title  sm:text-start h-5">
+              <Link to="/forgot-password" className="font-[500] shine-text ">
+                Forgot Password?
               </Link>
             </p>
           </div>

@@ -190,6 +190,16 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        Schema::create("order_queues", function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('order_item_id');
+            $table->integer("amount");
+            $table->timestamp('recieved_at');
+            $table->integer('status')->default(0);
+            $table->timestamps();
+        });
+        // Sửa bảng order queue
+
         // Bảng wallets (Ví người dùng)
         Schema::create('wallets', function (Blueprint $table) {
             $table->id();
@@ -203,8 +213,8 @@ return new class extends Migration
         Schema::create('wallet_transactions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('wallet_id'); // Giao dịch thuộc ví nào
-            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission', 'refund']);
-            //                     Nạp card         Nạp bank        Mua hàng    Rút         Hoa hồng      Hoàn tiền
+            $table->enum('type', ['recharge_card', 'recharge_bank', 'purchase', 'withdraw', 'commission', 'refund',    "sell"]);
+            //                     Nạp card         Nạp bank        Mua hàng     Rút         Hoa hồng      Hoàn tiền   Bán acc
             $table->decimal('amount', 15, 0); // Số tiền giao dịch, không null
             $table->unsignedBigInteger('related_id')->nullable(); // ID của giao dịch liên quan (nạp thẻ, bank, đơn hàng, rút tiền...)
             $table->string('related_type', 255)->nullable(); // Loại model liên quan (e.g., App\Models\RechargeCard)
@@ -342,6 +352,7 @@ return new class extends Migration
             $table->string('title', 255); // Tiêu đề bài viết
             $table->string('slug', 255)->unique(); // Slug duy nhất
             $table->longText('content'); // Sử dụng longText cho nội dung dài
+            $table->longText('description')->nullable(); // Mô tả ngắn về bài viết
             $table->unsignedBigInteger('category_id')->nullable(); // Bài viết có thể không thuộc danh mục nào
             $table->unsignedBigInteger('author_id'); // Tác giả bài viết
             $table->integer('status')->default(0); // Trạng thái (0: draft, 1: published, 2: archived)
@@ -444,7 +455,6 @@ return new class extends Migration
             $table->unique(['chat_room_id', 'user_id']);
             // Foreign key constraints
             $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
-
         });
         // Bảng banners (Banner tiêu đề)
         Schema::create('banners', function (Blueprint $table) {

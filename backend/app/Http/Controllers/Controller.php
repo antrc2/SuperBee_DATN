@@ -31,52 +31,52 @@ abstract class Controller
      */
 
     public function uploadFiles(array $files, string $directory): array
-{
-    try {
-        $apiUrl = env('PYTHON_API');
+    {
+        try {
+            $apiUrl = env('PYTHON_API');
 
-        // Bắt đầu builder request
-        $request = Http::withHeaders([
-            'Accept' => 'application/json',
-        ]);
+            // Bắt đầu builder request
+            $request = Http::withHeaders([
+                'Accept' => 'application/json',
+            ]);
 
-        // Attach tất cả các file vào mảng images[]
-        foreach ($files as $file) {
-            if ($file instanceof \Illuminate\Http\UploadedFile) {
-                // attach dùng để thêm dữ liệu dạng multi part vào form
-                $request = $request->attach(
-                    'images',
-                    file_get_contents($file->getRealPath()),
-                    $file->getClientOriginalName()
-                );
+            // Attach tất cả các file vào mảng images[]
+            foreach ($files as $file) {
+                if ($file instanceof \Illuminate\Http\UploadedFile) {
+                    // attach dùng để thêm dữ liệu dạng multi part vào form
+                    $request = $request->attach(
+                        'files',
+                        file_get_contents($file->getRealPath()),
+                        $file->getClientOriginalName()
+                    );
+                }
             }
+
+            // Gửi 1 lần duy nhất
+            $response = $request->post("{$apiUrl}/upload_files", [
+                'folder' => $directory,
+            ]);
+
+            $response = $response->json();
+            // $response = json_encode($response);
+
+            // Giả sử API trả về key 'urls' là mảng đường dẫn
+            return $response;
+        } catch (\Throwable $e) {
+            // \Log::error('UploadFiles error: '.$e->getMessage());
+            return [];
         }
-
-        // Gửi 1 lần duy nhất
-        $response = $request->post("{$apiUrl}/upload_files", [
-            'folder' => $directory,
-        ]);
-
-        $response = $response->json();
-        // $response = json_encode($response);
-
-        // Giả sử API trả về key 'urls' là mảng đường dẫn
-        return $response;
-    } catch (\Throwable $e) {
-        // \Log::error('UploadFiles error: '.$e->getMessage());
-        return [];
     }
-}
 
     public function uploadFile(UploadedFile $file, string $directory): ?string
     {
         try {
             $api_url = env('PYTHON_API');
             $response = Http::attach(
-                'image',
+                'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
-            )->post("{$api_url}/upload_file",["folder"=>$directory]);
+            )->post("{$api_url}/upload_file", ["folder" => $directory]);
             $response = json_decode($response);
             return $response->url;
         } catch (\Throwable $th) {
@@ -117,10 +117,11 @@ abstract class Controller
         //     return null; // Trả về null nếu có lỗi
         // }
     }
-    public function  deleteFiles(array $paths){
+    public function  deleteFiles(array $paths)
+    {
         try {
             $api_url = env('PYTHON_API');
-            $response = Http::post("{$api_url}/delete_files",["paths"=>$paths]);
+            $response = Http::post("{$api_url}/delete_files", ["paths" => $paths]);
             $response = json_decode($response);
             return $response->status;
         } catch (\Throwable $th) {
@@ -128,10 +129,11 @@ abstract class Controller
             return false;
         }
     }
-    public function deleteFile(string $relativePath ){
+    public function deleteFile(string $relativePath)
+    {
         try {
             $api_url = env('PYTHON_API');
-            $response = Http::post("{$api_url}/delete_file",["path"=>$relativePath]);
+            $response = Http::post("{$api_url}/delete_file", ["path" => $relativePath]);
             $response = json_decode($response);
             return $response->status;
         } catch (\Throwable $th) {

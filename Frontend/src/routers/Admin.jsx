@@ -1,5 +1,3 @@
-/* eslint-disable no-unused-vars */
-// src/routers/Admin.jsx
 
 import { Navigate, Outlet, useLoaderData } from "react-router-dom";
 import { adminModules } from "@routers/adminModules";
@@ -7,6 +5,7 @@ import AppLayout from "@layouts/Admin/AppLayout";
 import Home from "@pages/Admin/Dashboard/Home";
 import ProtectedRoute from "@components/common/ProtectedRoute";
 import { NotFound } from "../pages";
+import React from "react";
 const adminRoutes = [
   {
     path: "/admin",

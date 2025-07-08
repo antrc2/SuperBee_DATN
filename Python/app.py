@@ -9,27 +9,26 @@ app = FastAPI()
 s3_client = S3Controller()
 
 @app.post("/upload_file")
-async def upload(image: UploadFile = File(...), folder: str = Form(...)):
-    print(image)
-    object_name = f"uploads/{folder}/{image.filename}"
+async def upload(file: UploadFile = File(...), folder: str = Form(...)):
+    object_name = f"uploads/{folder}/{file.filename}"
 
     # Đọc nội dung file vào bộ nhớ
-    file_content = BytesIO(await image.read())
+    file_content = BytesIO(await file.read())
 
     file_url = s3_client.add(file_content,object_name)
 
     return {"url": file_url}
 
 @app.post("/upload_files")
-async def uploads(images: List[UploadFile] = File(...),folder: str = Form(...)):
+async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...)):
     object_name = f"uploads/{folder}/"
-    image_contents = []
-    for image in images:
-        image_contents.append({
-            "image": BytesIO(await image.read()),
-            "filename": image.filename
+    file_contents = []
+    for file in files:
+        file_contents.append({
+            "file": BytesIO(await file.read()),
+            "filename": file.filename
         })
-    files = s3_client.uploads(image_contents,object_name)
+    files = s3_client.uploads(file_contents,object_name)
     return files
 
 

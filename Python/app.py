@@ -10,7 +10,7 @@ s3_client = S3Controller()
 
 @app.post("/upload_file")
 async def upload(image: UploadFile = File(...), folder: str = Form(...)):
-    
+    print(image)
     object_name = f"uploads/{folder}/{image.filename}"
 
     # Đọc nội dung file vào bộ nhớ

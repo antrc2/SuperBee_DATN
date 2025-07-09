@@ -27,16 +27,15 @@ export default function ProductDetailPagePartner() {
       try {
         const response = await api.get(`/partner/products/${id}`);
         const productData = response.data.data;
-        if (Array.isArray(productData) && productData.length > 0) {
-          // Lấy sản phẩm đầu tiên từ mảng data và chuẩn hóa game_attributes thành mảng nếu cần
-          const productItem = productData[0];
+        if (productData && productData.id) {
+          // Lấy sản phẩm và chuẩn hóa game_attributes thành mảng nếu cần
           if (
-            productItem.game_attributes &&
-            !Array.isArray(productItem.game_attributes)
+            productData.game_attributes &&
+            !Array.isArray(productData.game_attributes)
           ) {
-            productItem.game_attributes = [productItem.game_attributes];
+            productData.game_attributes = [productData.game_attributes];
           }
-          setProduct(productItem);
+          setProduct(productData);
         } else {
           setProduct(null);
           setError("Sản phẩm không tồn tại.");
@@ -110,8 +109,8 @@ export default function ProductDetailPagePartner() {
             value={product.category?.name || "Chưa phân loại"}
           />
           <DetailItem
-            label="Giá gốc"
-            value={`${product.price.toLocaleString()}đ`}
+            label="Giá Bán"
+            value={`${product.import_price.toLocaleString()}đ`}
           />
           <DetailItem
             label="Giá khuyến mãi"
@@ -119,20 +118,44 @@ export default function ProductDetailPagePartner() {
               product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"
             }
           />
-          <DetailItem
-            label="Trạng thái"
-            value={
-              <span
-                className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                  product.status === 1
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                {product.status === 1 ? "Đang bán" : "Ngừng bán"}
-              </span>
-            }
-          />
+             <DetailItem
+  label="Trạng thái"
+  value={
+    (() => {
+      let label = "";
+      let style = "";
+
+      switch (product.status) {
+        case 1:
+          label = "Đang bán";
+          style = "bg-green-100 text-green-800";
+          break;
+        case 2:
+          label = "Chờ kiểm duyệt";
+          style = "bg-yellow-100 text-yellow-800";
+          break;
+        case 3:
+          label = "Đã hủy bán";
+          style = "bg-red-100 text-red-800";
+          break;
+        case 4:
+          label = "Bán thành công";
+          style = "bg-blue-100 text-blue-800";
+          break;
+        default:
+          label = "Không xác định";
+          style = "bg-gray-100 text-gray-800";
+      }
+
+      return (
+        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${style}`}>
+          {label}
+        </span>
+      );
+    })()
+  }
+/>
+
         </dl>
       </div>
 
@@ -143,7 +166,7 @@ export default function ProductDetailPagePartner() {
         </h3>
         {product.credentials && product.credentials.length > 0 ? (
           <div>
-            {product.credentials.map((cred, index) => (
+            {product.credentials.map((cred) => (
               <div key={cred.id} className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700"></h4>
                 <dl>

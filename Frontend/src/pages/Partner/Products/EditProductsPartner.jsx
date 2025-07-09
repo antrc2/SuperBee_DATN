@@ -20,16 +20,19 @@ export default function EditProductsPartner() {
       try {
         const response = await api.get(`/partner/products/${id}`);
         const productData = response.data.data;
-        if (Array.isArray(productData) && productData.length > 0) {
-          // Lấy sản phẩm đầu tiên từ mảng data và chuẩn hóa game_attributes thành mảng nếu cần
-          const productItem = productData[0];
+        if (productData && productData.id) {
+          // Nếu có game_attributes mà không phải mảng, chuẩn hóa thành mảng
           if (
-            productItem.game_attributes &&
-            !Array.isArray(productItem.game_attributes)
+            productData.game_attributes &&
+            !Array.isArray(productData.game_attributes)
           ) {
-            productItem.game_attributes = [productItem.game_attributes];
+            productData.game_attributes = [productData.game_attributes];
           }
-          setProduct(productItem);
+          // Bổ sung các trường mặc định nếu thiếu
+          if (!productData.credentials) productData.credentials = [];
+          if (!productData.images) productData.images = [];
+          if (!productData.game_attributes) productData.game_attributes = [];
+          setProduct(productData);
         } else {
           setProduct(null);
           setError("Sản phẩm không tồn tại.");
@@ -101,6 +104,7 @@ export default function EditProductsPartner() {
           onSubmit={handleUpdateSubmit}
           isEditing={true}
           isLoading={isLoading}
+          mode="partner"
         />
       ) : (
         <p>{error || "Không có dữ liệu để hiển thị."}</p>

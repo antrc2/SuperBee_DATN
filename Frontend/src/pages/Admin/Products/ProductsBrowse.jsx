@@ -11,7 +11,7 @@ export default function ProductsBrowse({products, handleKey, handleLock }) {
           <tr>
             <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">SKU</th>
             <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Tên sản phẩm (Tạm)</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Giá</th>
+            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Giá bán</th>
             <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Trạng thái</th>
             <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Hành động</th>
           </tr>
@@ -22,7 +22,7 @@ export default function ProductsBrowse({products, handleKey, handleLock }) {
               <td className="py-3 px-4 text-sm text-gray-700">{product.sku}</td>
               <td className="py-3 px-4 text-sm text-gray-700">Sản phẩm #{product.id}</td>
               <td className="py-3 px-4 text-sm text-gray-700">
-                {product.price?.toLocaleString?.() || 0}đ
+                {product.import_price?.toLocaleString?.() || 0}đ
               </td>
               <td className="py-3 px-4 text-sm">
                 <span

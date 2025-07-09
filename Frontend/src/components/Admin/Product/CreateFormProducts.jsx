@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "../../../utils/http";
 import { ImagePlus, PlusCircle, X, Eye, EyeOff } from "lucide-react";
 
+
 const MAX_IMAGES = 15;
 
 export default function CreateFormProducts({
@@ -9,10 +10,12 @@ export default function CreateFormProducts({
   onSubmit,
   isEditing = false,
   isLoading = false,
+  mode = "admin",
 }) {
   const [formData, setFormData] = useState({
     category_id: "",
     price: 0,
+    import_price:0,
     sale: 0,
     username: "",
     password: "",
@@ -74,23 +77,28 @@ export default function CreateFormProducts({
   // Load initial data for editing
   useEffect(() => {
     if (initialData) {
-      setFormData({
+      setFormData(prev => ({
+        ...prev,
         category_id: initialData.category_id || "",
-        price: initialData.price || 0,
-        sale: initialData.sale || 0,
-        username: initialData.credentials[0]?.username || "",
-        password: initialData.credentials[0]?.password || "",
+        import_price: initialData.import_price || 0,
+        username: initialData.credentials?.[0]?.username || "",
+        password: initialData.credentials?.[0]?.password || "",
         attributes:
           initialData.game_attributes?.map((attr) => ({
             attribute_key: attr.attribute_key,
             attribute_value: attr.attribute_value,
           })) || [],
-      });
+        // Nếu là admin thì lấy thêm price, sale
+        ...(mode !== "partner" && {
+          price: initialData.price || 0,
+          sale: initialData.sale || 0,
+        })
+      }));
       setSelectedGame(initialData.game_code || "none");
       setExistingImages(initialData.images || []);
       setNewImages([]);
     }
-  }, [initialData]);
+  }, [initialData, mode]);
 
   useEffect(() => {
     // Bỏ qua nếu đang trong chế độ chỉnh sửa
@@ -187,21 +195,47 @@ export default function CreateFormProducts({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.category_id) return alert("Vui lòng chọn danh mục.");
-    if (!formData.price) return alert("Vui lòng nhập giá.");
+    if (mode === "partner") {
+      if (!formData.import_price) return alert("Vui lòng nhập giá bán.");
+      if(formData.import_price>999999999) return alert("Giá phải nhỏ hơn 999.999.999đ")
+    } else {
+      if (!formData.price) return alert("Vui lòng nhập giá bán.");
+      if (!formData.import_price) return alert("Vui lòng nhập giá nhập.");
+      // Nếu có sale thì phải nhỏ hơn price
+      if (formData.sale && Number(formData.sale) >= Number(formData.price)) {
+        return alert("Giá sale phải nhỏ hơn giá bán.");
+      }
+    }
     if (!formData.username) return alert("Vui lòng nhập username.");
     if (!isEditing && !formData.password)
       return alert("Vui lòng nhập password.");
 
     const data = new FormData();
-    Object.entries(formData).forEach(([k, v]) =>
-      data.append(k, typeof v === "object" ? JSON.stringify(v) : v)
-    );
-    newImages.forEach((f) => data.append("images[]", f));
-    if (isEditing)
-      data.append(
-        "existing_images",
-        JSON.stringify(existingImages.map((img) => img.image_url))
+    if (mode === "partner") {
+      // Partner chỉ gửi các trường cần thiết
+      data.append("category_id", formData.category_id);
+      data.append("import_price", formData.import_price);
+      data.append("username", formData.username);
+      data.append("password", formData.password);
+      data.append("attributes", JSON.stringify(formData.attributes));
+      newImages.forEach((f) => data.append("images[]", f));
+      if (isEditing)
+        data.append(
+          "existing_images",
+          JSON.stringify(existingImages.map((img) => img.image_url))
+        );
+    } else {
+      // Admin hoặc edit
+      Object.entries(formData).forEach(([k, v]) =>
+        data.append(k, typeof v === "object" ? JSON.stringify(v) : v)
       );
+      newImages.forEach((f) => data.append("images[]", f));
+      if (isEditing)
+        data.append(
+          "existing_images",
+          JSON.stringify(existingImages.map((img) => img.image_url))
+        );
+    }
     onSubmit(data);
   };
 
@@ -292,31 +326,68 @@ export default function CreateFormProducts({
                 : renderCategory(categories)}
             </select>
           </div>
-          <div>
-            <label htmlFor="price" className="block mb-1 text-sm">
-              Giá gốc
-            </label>
-            <input
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              className="w-full p-2 rounded border"
-            />
-          </div>
-          <div>
-            <label htmlFor="sale" className="block mb-1 text-sm">
-              Giá sale
-            </label>
-            <input
-              name="sale"
-              type="number"
-              value={formData.sale}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-            />
-          </div>
+          {/* Nếu là partner thì chỉ hiển thị ô nhập Giá Bán (import_price) */}
+          {mode === "partner" ? (
+            <div className="md:col-span-2">
+              <label htmlFor="import_price" className="block mb-1 text-sm">
+                Giá Bán
+              </label>
+              <input
+                name="import_price"
+                type="number"
+                value={formData.import_price}
+                onChange={handleChange}
+                required
+                className="w-full p-2 rounded border"
+                disabled={isEditing && (initialData?.status === 1 || initialData?.status === 4)}
+              />
+              {isEditing && (initialData?.status === 1 || initialData?.status === 4) && (
+                <p className="text-xs text-gray-500 mt-1">Không thể sửa giá khi sản phẩm đang bán hoặc đã bán.</p>
+              )}
+            </div>
+          ) : (
+            // Admin: hiển thị đủ các trường
+            <>
+              <div>
+                <label htmlFor="price" className="block mb-1 text-sm">
+                  Giá Bán
+                </label>
+                <input
+                  name="price"
+                  type="number"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 rounded border"
+                />
+              </div>
+              <div>
+                <label htmlFor="import_price" className="block mb-1 text-sm">
+                  Giá Nhập
+                </label>
+                <input
+                  name="import_price"
+                  type="number"
+                  value={formData.import_price}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-2 rounded border"
+                />
+              </div>
+              <div>
+                <label htmlFor="sale" className="block mb-1 text-sm">
+                  Giá sale
+                </label>
+                <input
+                  name="sale"
+                  type="number"
+                  value={formData.sale}
+                  onChange={handleChange}
+                  className="w-full p-2 rounded border"
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
       {/* Phần thông tin đăng nhập */}
@@ -442,11 +513,11 @@ export default function CreateFormProducts({
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
           {existingImages.map((img, index) => (
             <div
-              key={img.id || index}
+              key={index}
               className="relative aspect-square border rounded-md overflow-hidden"
             >
               <img
-                src={`${import.meta.env.VITE_BACKEND_IMG}${img.image_url}`}
+                src={`${img.image_url}`}
                 alt="Ảnh cũ"
                 className="w-full h-full object-cover"
               />

@@ -110,8 +110,12 @@ export default function ProductDetailPage() {
             value={product.category?.name || "Chưa phân loại"}
           />
           <DetailItem
-            label="Giá gốc"
+            label="Giá bán"
             value={`${product.price.toLocaleString()}đ`}
+          />
+          <DetailItem
+            label="Giá nhập"
+            value={`${product.import_price.toLocaleString()}đ`}
           />
           <DetailItem
             label="Giá khuyến mãi"
@@ -120,19 +124,43 @@ export default function ProductDetailPage() {
             }
           />
           <DetailItem
-            label="Trạng thái"
-            value={
-              <span
-                className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                  product.status === 1
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                }`}
-              >
-                {product.status === 1 ? "Đang bán" : "Ngừng bán"}
-              </span>
-            }
-          />
+  label="Trạng thái"
+  value={
+    (() => {
+      let label = "";
+      let style = "";
+
+      switch (product.status) {
+        case 1:
+          label = "Đang bán";
+          style = "bg-green-100 text-green-800";
+          break;
+        case 2:
+          label = "Chờ kiểm duyệt";
+          style = "bg-yellow-100 text-yellow-800";
+          break;
+        case 3:
+          label = "Đã hủy bán";
+          style = "bg-red-100 text-red-800";
+          break;
+        case 4:
+          label = "Bán thành công";
+          style = "bg-blue-100 text-blue-800";
+          break;
+        default:
+          label = "Không xác định";
+          style = "bg-gray-100 text-gray-800";
+      }
+
+      return (
+        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${style}`}>
+          {label}
+        </span>
+      );
+    })()
+  }
+/>
+
         </dl>
       </div>
 

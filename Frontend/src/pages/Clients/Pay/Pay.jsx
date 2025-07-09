@@ -120,7 +120,6 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-              quantity: 1,
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
@@ -305,7 +304,7 @@ export default function Pay() {
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-semibold text-red-600">
-                  {formatCurrency(item.price * item.quantity)}
+                  {formatCurrency(item.price)}
                 </span>
               </div>
             </div>

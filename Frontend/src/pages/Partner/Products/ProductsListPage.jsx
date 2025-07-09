@@ -34,7 +34,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                 Sản phẩm #{product.id}
               </td>
               <td className="py-3 px-4 text-sm text-gray-700">
-                {product.price.toLocaleString()}đ
+                {product.import_price.toLocaleString()}đ
               </td>
               <td className="py-3 px-4 text-sm">
                <span

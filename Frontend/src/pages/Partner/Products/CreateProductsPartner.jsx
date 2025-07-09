@@ -55,7 +55,7 @@ export default function CreateProductsPartner() {
           {error}
         </div>
       )}
-      <CreateFormProducts onSubmit={handleCreateSubmit} isLoading={isLoading} />
+      <CreateFormProducts onSubmit={handleCreateSubmit} isLoading={isLoading} mode="partner" />
     </div>
   );
 }

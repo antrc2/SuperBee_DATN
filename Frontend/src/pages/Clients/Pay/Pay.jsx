@@ -97,6 +97,8 @@ export default function Pay() {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(true);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [taxRate, setTaxRate] = useState(0);
   const navigate = useNavigate();
 
   // Lấy dữ liệu từ API /orders/checkout
@@ -122,6 +124,8 @@ export default function Pay() {
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
+          setTotalPrice(parseFloat(response.data.total_price) || 0);
+          setTaxRate(parseFloat(response.data.tax) || 0);
           setPromotionCodes(
             response.data.promotion_codes.map((promo) => ({
               id: promo.id,
@@ -156,15 +160,13 @@ export default function Pay() {
   }, [fetchCartItems, pop, navigate]);
 
   // Tính toán tổng tiền
-  const { subtotal, discountAmount, finalAmount } = useMemo(() => {
-    const subtotal = cartItemsPay.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
+  const { subtotal, taxAmount, discountAmount, finalAmount } = useMemo(() => {
+    const subtotal = totalPrice / (1 + taxRate / 100); // Tính subtotal trước thuế
+    const taxAmount = totalPrice - subtotal; // Thuế
     const discountAmount = appliedDiscount?.discount_amount || 0;
-    const finalAmount = Math.max(subtotal - discountAmount, 0);
-    return { subtotal, discountAmount, finalAmount };
-  }, [cartItemsPay, appliedDiscount]);
+    const finalAmount = Math.max(totalPrice - discountAmount, 0);
+    return { subtotal, taxAmount, discountAmount, finalAmount };
+  }, [totalPrice, taxRate, appliedDiscount]);
 
   // Kiểm tra và áp dụng mã giảm giá
   const handleApplyDiscountCode = async (codeToApply = discountCodeInput) => {
@@ -188,6 +190,7 @@ export default function Pay() {
           total_price_after_discount:
             parseFloat(response.data.total_price_after_discount) || 0,
         });
+        setTotalPrice(parseFloat(response.data.total_price_after_discount) || 0);
         pop(response.data.message, "s");
         setDiscountCodeInput("");
       } else {
@@ -206,7 +209,15 @@ export default function Pay() {
   const handleRemoveDiscount = async () => {
     if (!(await conFim("Bạn có chắc chắn muốn xóa mã giảm giá?"))) return;
     setAppliedDiscount(null);
-    pop("Đã xóa mã giảm giá.", "s");
+    try {
+      const response = await api.get("/orders/checkout");
+      if (response.data.status) {
+        setTotalPrice(parseFloat(response.data.total_price) || 0);
+      }
+      pop("Đã xóa mã giảm giá.", "s");
+    } catch (error) {
+      pop("Lỗi khi xóa mã giảm giá.", "e");
+    }
   };
 
   // Xử lý thanh toán
@@ -313,6 +324,12 @@ export default function Pay() {
               <span>Tạm tính:</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
+            {taxRate > 0 && (
+              <div className="flex justify-between text-yellow-600">
+                <span>Thuế ({taxRate}%):</span>
+                <span>{formatCurrency(taxAmount)}</span>
+              </div>
+            )}
             {appliedDiscount && (
               <div className="flex justify-between text-green-600">
                 <span>Giảm giá ({appliedDiscount.code}):</span>

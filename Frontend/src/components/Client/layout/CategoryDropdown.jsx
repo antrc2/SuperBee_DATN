@@ -22,15 +22,9 @@ export default function CategoryDropdown({ isOpen, onClose }) {
   return (
     <div
       ref={dropdownRef}
-      className="absolute left-0 md:left-auto top-full z-20 mt-3 w-full md:w-[700px] lg:w-[800px] rounded-2xl bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl p-6 shadow-2xl border border-purple-500/20"
+      className="absolute left-0 md:left-auto top-full z-20 mt-3 w-full md:w-[700px] lg:w-[800px] rounded-2xl bg-gradient-header  backdrop-blur-xl p-6 shadow-2xl border border-purple-500/20"
     >
       {/* Header */}
-      <div className="mb-4">
-        <h3 className="text-lg font-bold text-white mb-1">
-          🎮 Danh mục game hot
-        </h3>
-        <p className="text-sm text-white/60">Chọn loại acc game bạn muốn mua</p>
-      </div>
 
       {/* Categories Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Models\Product;
 use App\Models\Wallet;
 use Illuminate\Http\Request;
 
@@ -25,12 +26,14 @@ class HomeController extends Controller
         ->select('balance','user_id')->orderBy('balance', 'desc') 
         ->limit(5)
         ->get();
+        $topProduct =Product::with("images")->with('category')->with("gameAttributes")->where('status', 1)->orderBy('price', 'asc')->get();
         return response()->json([
             'status' => 200,
             'message' => 'thanh cong',
             'banners' => $banner,
             'categories' => $categories->data,
-            'top'=>$topNap
+            'top'=>$topNap,
+            'products'=>$topProduct
         ],200);
     }
 }

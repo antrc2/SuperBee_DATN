@@ -143,6 +143,9 @@ const checkLocation = () => {
     return null;
   }
 };
+const formatCurrencyVND = (amount) => {
+  return new Intl.NumberFormat("vi-VN").format(amount);
+};
 
 // export default MyComponent;
 export {
@@ -158,4 +161,5 @@ export {
   useSessionStorage,
   decodeData,
   checkLocation,
+  formatCurrencyVND,
 };

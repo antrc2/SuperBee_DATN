@@ -5,11 +5,36 @@ import { useQuery } from "@tanstack/react-query";
 import LoadingDomain from "../components/Loading/LoadingDomain";
 import ServerErrorDisplay from "../components/Loading/ServerErrorDisplay";
 import { useAuth } from "./AuthContext";
+import { useAppStatus } from "./AppStatusContext";
 
 const HomeContext = createContext();
 
 export function HomeProvider({ children }) {
   const { isLoggedIn } = useAuth();
+  const { style } = useAppStatus();
+  useEffect(() => {
+    if (style != "def") {
+      document.title = style?.shop_name || "Cửa Hàng Của Bạn";
+      let link = document.querySelector("link[rel~='icon']");
+      if (!link) {
+        link = document.createElement("link");
+        link.rel = "icon";
+        document.head.appendChild(link);
+      }
+      link.href =
+        style?.favicon_url ||
+        "https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/SuperBee.png";
+      link.type = "image/png"; // Giả định là png, bạn có thể cần kiểm tra định dạng thực tế
+    } else {
+      document.title = "Ứng Dụng Web";
+      let link = document.querySelector("link[rel~='icon']");
+      if (link) {
+        link.href =
+          "https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/SuperBee.png"; // Hoặc đường dẫn favicon gốc của ứng dụng
+      }
+    }
+  }, [style]);
+
   const [notifications, setNotifications] = useState({
     count: 0,
     notifications: [],

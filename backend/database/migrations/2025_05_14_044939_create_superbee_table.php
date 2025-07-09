@@ -45,7 +45,7 @@ return new class extends Migration
         // cấu hình các thông số của web 
         Schema::create('business_settings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('web_id')->constrained()->on('webs')->onDelete('cascade');
             $table->string('shop_name');
             $table->string('slogan')->nullable();
             $table->string('logo_url')->nullable();
@@ -60,16 +60,7 @@ return new class extends Migration
             $table->json('footer_settings')->nullable();
             $table->timestamps();
         });
-        Schema::table('webs', function (Blueprint $table) {
-            // Thêm cột business_settings_id
-            $table->unsignedBigInteger('business_settings_id')->nullable()->after('is_customized'); // hoặc vị trí nào bạn muốn
 
-            // Định nghĩa khóa ngoại
-            $table->foreign('business_settings_id')
-                ->references('id')
-                ->on('business_settings')
-                ->onDelete('cascade');
-        });
         // Bảng categories (Danh mục của web mẹ)
         Schema::create('categories', function (Blueprint $table) {
             $table->id();

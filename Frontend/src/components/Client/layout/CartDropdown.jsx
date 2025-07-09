@@ -3,6 +3,7 @@
 import { X, ShoppingBag } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Image from "../Image/Image";
 
 export default function CartDropdown({
   cartItems,
@@ -35,15 +36,15 @@ export default function CartDropdown({
       ref={dropdownRef}
       className={`${
         isMobile
-          ? "h-full flex flex-col bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl"
-          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl shadow-2xl border border-purple-500/20"
+          ? "h-full flex flex-col custom-scrollbar-notification  backdrop-blur-xl bg-gradient-header "
+          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl  bg-gradient-header custom-scrollbar-notification  backdrop-blur-xl shadow-2xl"
       }`}
     >
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-purple-500/20">
         <div className="flex items-center gap-2">
           <ShoppingBag className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-lg font-bold text-white">🛒 Giỏ hàng</h3>
+          <h3 className="text-lg font-bold text-white"> Giỏ hàng</h3>
           {cartItems.length > 0 && (
             <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">
               {cartItems.length}
@@ -60,7 +61,11 @@ export default function CartDropdown({
       </div>
 
       {/* Cart Items */}
-      <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
+      <div
+        className={`overflow-y-auto ${
+          isMobile ? "flex-grow" : "max-h-80"
+        } custom-scrollbar-notification`}
+      >
         {cartItems.length > 0 ? (
           cartItems.map((item, index) => (
             <Link
@@ -71,10 +76,8 @@ export default function CartDropdown({
             >
               {/* Product Image */}
               <div className="relative flex-shrink-0">
-                <img
-                  src={`${import.meta.env.VITE_BACKEND_IMG}${
-                    item?.product?.images[0]?.image_url
-                  }`}
+                <Image
+                  url={`${item?.product?.images[0]?.image_url}`}
                   alt={item?.name}
                   className="h-16 w-16 rounded-xl object-cover border-2 border-purple-400/30 group-hover:border-cyan-400/60 transition-colors duration-300"
                   onError={(e) => {
@@ -91,7 +94,7 @@ export default function CartDropdown({
               {/* Product Info */}
               <div className="flex-grow min-w-0">
                 <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors duration-300 truncate">
-                  🎮 {item?.product?.category?.name}
+                  {item?.product?.category?.name}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
                   {item?.product?.sale ? (

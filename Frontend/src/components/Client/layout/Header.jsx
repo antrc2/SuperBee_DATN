@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; // Import useNavigate
 import {
   ChevronDown,
   Search,
@@ -29,8 +29,11 @@ import CartDropdown from "./CartDropdown";
 import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContext";
 import { useHome } from "../../../contexts/HomeContext";
+import SearchBar from "./Search";
 
 export default function Header() {
+  const navigate = useNavigate(); // Initialize useNavigate hook
+
   // State management
   const [dropdownStates, setDropdownStates] = useState({
     category: false,
@@ -42,12 +45,13 @@ export default function Header() {
   });
 
   const [mobileOverlayType, setMobileOverlayType] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
 
   const { user } = useAuth();
   const { cartItems } = useCart();
   const { notifications } = useHome();
-
-
+  const { homeData } = useHome();
+  const categories = homeData?.categories ?? [];
   const isLogin = user != null;
   // Refs
   const searchContainerRef = useRef(null);
@@ -153,6 +157,27 @@ export default function Header() {
     }
   }, []);
 
+  // Handler for search submission
+  const handleSearchSubmit = useCallback(() => {
+    if (searchQuery.trim()) {
+      navigate(`/search?key=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery(""); // Clear search input after submission
+      closeDropdown("search"); // Close search dropdown if expanded (desktop)
+      handleMobileLinkClick(); // Close mobile menu/overlay if open
+    }
+  }, [searchQuery, navigate, closeDropdown]);
+
+  // Handle Enter key press in search input (desktop)
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault(); // Prevent default form submission if any
+        handleSearchSubmit();
+      }
+    },
+    [handleSearchSubmit]
+  );
+
   // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -200,10 +225,11 @@ export default function Header() {
         setMobileOverlayType(null);
       }
 
-      // Search
+      // Search (only close if clicked outside and not on the search button)
       if (
         searchContainerRef.current &&
         !searchContainerRef.current.contains(event.target) &&
+        !event.target.closest(".search-button-desktop") && // Exclude desktop search button
         dropdownStates.searchExpanded
       ) {
         closeDropdown("search");
@@ -229,32 +255,17 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-50 w-full bg-gradient-header shadow-2xl">
-        {/* Animated background pattern */}
-        <div className='absolute inset-0 bg-[url(&apos;data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fillRule="evenodd"%3E%3Cg fill="%23bf00ff" fillOpacity="0.05"%3E%3Ccircle cx="30" cy="30" r="2"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E&apos;)] animate-pulse'></div>
-
         {/* TOP ROW - Logo, Search, Actions */}
-        <div className="relative border-b border-[var(--color-secondary-500)]/20">
-          <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4 sm:px-6 lg:px-8">
+        <div className="relative">
+          <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4">
             {/* Left: Logo & Mobile Menu */}
             <div className="flex items-center gap-3">
-              <button
-                id="mobile-menu-button"
-                onClick={() => toggleDropdown("mobileMain")}
-                className="md:hidden rounded-lg p-2 text-white/80 hover:bg-white/10 hover:text-white transition-all duration-300 backdrop-blur-sm"
-                aria-label="Toggle mobile menu"
-              >
-                {dropdownStates.mobileMenu ? (
-                  <X size={24} />
-                ) : (
-                  <MenuIcon size={24} />
-                )}
-              </button>
               <Link to={`/`} className="flex items-center">
                 <SuperBeeLogo />
               </Link>
             </div>
 
-            {/* Center: Search Bar */}
+            {/* Center: Search Bar (Desktop) */}
             <div
               ref={searchContainerRef}
               className="hidden md:flex flex-grow items-center justify-center max-w-2xl mx-8"
@@ -263,27 +274,34 @@ export default function Header() {
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="🔍 Tìm kiếm acc game, dịch vụ, tin tức..."
-                  className="w-full rounded-full border-2 border-[var(--color-secondary-500)]/30 bg-black/20 backdrop-blur-md py-3.5 pl-6 pr-14 text-sm text-white placeholder-white/60 shadow-lg outline-none transition-all duration-300 focus:border-[var(--color-neon-cyan)] focus:ring-2 focus:ring-[var(--color-neon-cyan)]/50 hover:border-[var(--color-secondary-400)]/50"
+                  placeholder=" Tìm kiếm acc game, dịch vụ, tin tức..."
+                  className="w-full rounded-full border-hover bg-black/20 backdrop-blur-md py-3.5 pl-6 pr-14 text-sm text-main-title placeholder-white/60 shadow-lg outline-none transition-all duration-300  "
+                  value={searchQuery} // Bind value to state
+                  onChange={(e) => setSearchQuery(e.target.value)} // Update state on change
+                  onKeyDown={handleKeyDown} // Listen for Enter key
                 />
-                <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-button p-2.5 text-white hover:scale-105 transition-all duration-300 shadow-lg glow-neon-blue">
+                <button
+                  onClick={handleSearchSubmit} // Call handleSearchSubmit on click
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-button p-2.5 text-main-title hover:scale-105 transition-all duration-300 shadow-lg glow-neon-blue search-button-desktop" // Add a class for click outside exclusion
+                  aria-label="Tìm kiếm"
+                >
                   <Search size={18} />
                 </button>
               </div>
             </div>
 
             {/* Right: Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative">
               <Link
                 to="/recharge-atm"
-                className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-warning px-4 py-2.5 lg:px-5 lg:py-3 text-sm font-bold text-white shadow-lg hover:shadow-orange-400/25 transition-all duration-300 transform hover:scale-105"
+                className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-warning px-4 py-2.5 lg:px-5 lg:py-3 text-sm font-bold text-main-title shadow-lg hover:shadow-orange-400/25 transition-all duration-300 transform hover:scale-105 border-hover"
               >
                 <CreditCard size={18} />
                 <span className="hidden lg:inline"> Nạp Tiền</span>
               </Link>
 
               {/* Notification */}
-              <div ref={notificationMenuRef} className="relative">
+              <div ref={notificationMenuRef} className="">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -293,12 +311,12 @@ export default function Header() {
                       toggleDropdown("notification");
                     }
                   }}
-                  className="relative rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mobile-overlay-trigger"
+                  className=" rounded-full p-2.5 text-main-title/80 border-hover transition-all duration-300 backdrop-blur-sm  mobile-overlay-trigger"
                   aria-label="Notifications"
                 >
                   <Bell size={22} />
                   {notifications.count > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-danger text-xs text-white font-bold animate-pulse shadow-lg">
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-danger text-xs text-main-title font-bold animate-pulse shadow-lg">
                       {notifications.count}
                     </span>
                   )}
@@ -311,7 +329,7 @@ export default function Header() {
               </div>
 
               {/* Cart */}
-              <div ref={cartMenuRef} className="relative">
+              <div ref={cartMenuRef} className="">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -321,12 +339,12 @@ export default function Header() {
                       toggleDropdown("cart");
                     }
                   }}
-                  className="relative rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-primary-600)]/20 hover:to-[var(--color-neon-cyan)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-neon-cyan)]/50 mobile-overlay-trigger"
+                  className=" rounded-full p-2.5 text-main-title/80 border-hover transition-all duration-300 backdrop-blur-sm mobile-overlay-trigger"
                   aria-label="Cart"
                 >
                   <ShoppingCart size={22} />
                   {cartItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-success text-xs text-white font-bold animate-bounce shadow-lg">
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-success text-xs text-main-title font-bold animate-bounce shadow-lg">
                       {cartItems.length}
                     </span>
                   )}
@@ -340,7 +358,7 @@ export default function Header() {
 
               {/* User Menu */}
               {isLogin ? (
-                <div ref={userMenuRef} className="relative">
+                <div ref={userMenuRef} className="">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -350,19 +368,18 @@ export default function Header() {
                         toggleDropdown("user");
                       }
                     }}
-                    className="flex items-center gap-2 rounded-full p-1.5 text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mobile-overlay-trigger"
+                    className="flex items-center gap-2 rounded-full p-1.5 border-hover transition-all duration-300 backdrop-blur-sm  mobile-overlay-trigger"
                     aria-label="User menu"
                   >
-                    <div className="relative">
+                    <div className="">
                       <img
                         src={user?.avatar}
                         alt="Avatar"
                         className="h-8 w-8 rounded-full object-cover border-2 border-[var(--color-secondary-400)]/50"
                       />
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[var(--color-accent-green)] rounded-full border-2 border-[var(--color-dark-surface)]"></div>
                     </div>
                     <div className="hidden lg:block text-left">
-                      <p className="text-xs font-semibold text-white">
+                      <p className="text-xs font-semibold text-main-title">
                         {user?.name || "Gamer"}
                       </p>
                       <p className="text-xs text-neon-blue font-medium">
@@ -384,7 +401,7 @@ export default function Header() {
                 </div>
               ) : (
                 <Link to="/auth/login" className="ml-2">
-                  <div className="rounded-full p-2.5 text-white/80 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50">
+                  <div className="rounded-full p-2.5 border-hover transition-all duration-300 backdrop-blur-sm ">
                     <User size={22} />
                   </div>
                 </Link>
@@ -394,11 +411,11 @@ export default function Header() {
         </div>
 
         {/* BOTTOM ROW - Navigation Menu */}
-        <div className="relative">
-          <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
-            <div className="flex h-14 items-center justify-between">
+        <div className="relative ">
+          <div className="mx-auto max-w-screen-xl px-4 ">
+            <div className=" hidden md:flex h-14 items-center justify-between">
               {/* Left: Category Dropdown */}
-              <div ref={categoryMenuRef} className="relative">
+              <div ref={categoryMenuRef} className="relative ">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -408,7 +425,7 @@ export default function Header() {
                       toggleDropdown("category");
                     }
                   }}
-                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50"
+                  className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-medium  border-hover transition-all duration-300 backdrop-blur-sm  "
                 >
                   <MenuIcon size={18} className="text-neon-blue" />
                   <span className="font-semibold"> Danh mục game</span>
@@ -431,7 +448,7 @@ export default function Header() {
                   <Link
                     key={link.name}
                     to={link.href}
-                    className="relative rounded-lg px-4 py-2.5 text-sm font-medium text-white/90 hover:text-white transition-all duration-300 group overflow-hidden"
+                    className="relative rounded-lg px-4 py-2.5 text-sm font-medium text-main-title/90 link-style transition-all duration-300 group overflow-hidden"
                   >
                     <div className="absolute inset-0 bg-gradient-button opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-lg"></div>
                     <span className="relative flex items-center gap-2">
@@ -443,8 +460,8 @@ export default function Header() {
               </nav>
 
               {/* Right: Quick Actions */}
-              <div className="hidden md:flex items-center gap-2">
-                <div className="flex items-center gap-1 text-xs text-white/60">
+              {/* <div className="hidden md:flex items-center gap-2">
+                <div className="flex items-center gap-1 text-xs text-main-title/60">
                   <div className="w-2 h-2 bg-[var(--color-accent-green)] rounded-full animate-pulse"></div>
                   <span>Online: 1,234</span>
                 </div>
@@ -452,22 +469,27 @@ export default function Header() {
                 <div className="text-xs text-neon-blue font-medium">
                   🔥 Hot Sale: -50%
                 </div>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
 
         {/* Mobile Search Bar */}
-        <div className="md:hidden border-t border-[var(--color-secondary-500)]/20 p-3">
+        <div className="md:hidden  p-3 flex gap-4">
+          <button
+            id="mobile-menu-button"
+            onClick={() => toggleDropdown("mobileMain")}
+            className="md:hidden rounded-lg p-2 text-main-title/80 hover:bg-white/10 hover:text-main-title transition-all duration-300 backdrop-blur-sm"
+            aria-label="Toggle mobile menu"
+          >
+            {dropdownStates.mobileMenu ? (
+              <X size={24} />
+            ) : (
+              <MenuIcon size={24} />
+            )}
+          </button>
           <div className="relative w-full group">
-            <input
-              type="text"
-              placeholder="🔍 Tìm acc game..."
-              className="w-full rounded-full border-2 border-[var(--color-secondary-500)]/30 bg-black/20 backdrop-blur-md py-3 pl-6 pr-14 text-sm text-white placeholder-white/60 shadow-lg outline-none transition-all duration-300 focus:border-[var(--color-neon-cyan)] focus:ring-2 focus:ring-[var(--color-neon-cyan)]/50"
-            />
-            <button className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-button p-2.5 text-white">
-              <Search size={18} />
-            </button>
+            <SearchBar />
           </div>
         </div>
 
@@ -482,7 +504,7 @@ export default function Header() {
               <Link
                 to="/recharge-atm"
                 onClick={handleMobileLinkClick}
-                className="flex items-center justify-center gap-3 w-full rounded-xl bg-gradient-warning px-4 py-4 text-sm font-bold text-white shadow-lg hover:shadow-orange-400/25 transition-all duration-300"
+                className="flex items-center justify-center gap-3 w-full rounded-xl bg-gradient-warning px-4 py-4 text-sm font-bold text-main-title shadow-lg hover:shadow-orange-400/25 transition-all duration-300"
               >
                 <CreditCard size={20} />
                 Nạp Tiền Ngay
@@ -494,7 +516,7 @@ export default function Header() {
                   key={link.name}
                   to={link.href}
                   onClick={handleMobileLinkClick}
-                  className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50"
+                  className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-main-title/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-main-title transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50"
                 >
                   <link.icon size={22} className="text-neon-blue" />
                   {link.name}
@@ -506,14 +528,14 @@ export default function Header() {
                 <h3 className="px-4 text-sm font-bold text-neon-blue uppercase mb-3 tracking-wider">
                   Danh mục hot
                 </h3>
-                {categories.map((category) => (
+                {categories.treeCategories.map((category, index) => (
                   <Link
-                    key={category.name}
-                    to={category.href}
+                    key={index}
+                    to={`mua-acc/${category.slug}`}
                     onClick={handleMobileLinkClick}
-                    className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-white/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-white transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mb-2"
+                    className="flex items-center gap-4 rounded-xl px-4 py-3.5 text-base font-medium text-main-title/90 hover:bg-gradient-to-r hover:from-[var(--color-secondary-600)]/20 hover:to-[var(--color-accent-pink)]/20 hover:text-main-title transition-all duration-300 backdrop-blur-sm border border-white/10 hover:border-[var(--color-secondary-400)]/50 mb-2"
                   >
-                    <category.icon size={22} className="text-neon-purple" />
+                    {/* <category.icon size={22} className="text-neon-purple" /> */}
                     {category.name}
                   </Link>
                 ))}

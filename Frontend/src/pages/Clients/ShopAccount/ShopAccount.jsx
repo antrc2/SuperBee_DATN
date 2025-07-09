@@ -5,6 +5,7 @@ import { useHome } from "@contexts/HomeContext";
 
 export default function ShopAccount() {
   const { homeData } = useHome();
+  console.log("🚀 ~ ShopAccount ~ homeData:", homeData);
   return (
     <div>
       <div className="max-w-7xl mx-auto mt-3">

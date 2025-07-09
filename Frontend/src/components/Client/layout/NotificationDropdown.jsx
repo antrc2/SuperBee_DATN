@@ -102,12 +102,12 @@ export default function NotificationDropdown({
       ref={dropdownRef}
       className={`${
         isMobile
-          ? "h-full flex flex-col bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl"
-          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl shadow-2xl border border-purple-500/20"
+          ? "h-full flex flex-col bg-gradient-header "
+          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl  shadow-2xl border bg-gradient-header  "
       }`}
     >
       {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-purple-500/20">
+      <div className="flex justify-between items-center p-4 ">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
           <h3 className="text-lg font-bold text-white">🔔 Thông báo</h3>
@@ -122,7 +122,11 @@ export default function NotificationDropdown({
       </div>
 
       {/* Notifications List */}
-      <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
+      <div
+        className={`overflow-y-auto ${
+          isMobile ? "flex-grow" : "max-h-80"
+        } custom-scrollbar-notification`}
+      >
         {notifications.notifications &&
         notifications.notifications.length > 0 ? (
           notifications.notifications.map((notification, index) => {
@@ -193,7 +197,7 @@ export default function NotificationDropdown({
       </div>
 
       {/* Footer - Nút "Xem tất cả thông báo" được làm nổi bật */}
-      <div className="p-4 border-t border-purple-500/20 bg-purple-900/10 backdrop-blur-sm sticky bottom-0">
+      <div className="p-4 border-t rounded-b-2xl  border-purple-500/20 bg-purple-900/10 backdrop-blur-sm sticky bottom-0">
         <a
           href="#"
           className="block w-full text-center text-sm font-semibold 
@@ -203,7 +207,7 @@ export default function NotificationDropdown({
                      hover:from-purple-700 hover:to-pink-700
                      focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
         >
-          📱 Xem tất cả thông báo
+          Xem tất cả thông báo
         </a>
       </div>
     </div>

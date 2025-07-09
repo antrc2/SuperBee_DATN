@@ -1,60 +1,31 @@
-import React, { useState, useEffect } from "react";
-import GridShape from "@components/Admin/common/GridShape";
-import { Link, Outlet } from "react-router";
+// src/layouts/AuthLayout.jsx
+
+import { Outlet } from "react-router-dom";
+import chi from "@assets/tn/chitos.png"; // Điều chỉnh đường dẫn nếu cần
 import ThemeTogglerTwo from "@components/Admin/common/ThemeTogglerTwo";
-import chi from "@assets/tn/chitos.png";
-
 export default function AuthLayout() {
-  const textToType = "Chào Bạn Yêu";
-  const [displayedText, setDisplayedText] = useState("");
-  const [typingComplete, setTypingComplete] = useState(false); // Thêm state này
-
-  useEffect(() => {
-    let charIndex = 0;
-    const typingInterval = setInterval(() => {
-      if (charIndex < textToType.length) {
-        setDisplayedText((prev) => prev + textToType.charAt(charIndex));
-        charIndex++;
-      } else {
-        clearInterval(typingInterval);
-        setTypingComplete(true); // Đặt là true khi gõ xong
-      }
-    }, 150); // Tốc độ xuất hiện từng chữ cái (miligiây)
-
-    return () => clearInterval(typingInterval);
-  }, []);
-
   return (
-    <div className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0 object-fit-contain serene-dawn">
-      <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
-        <Outlet />
+    // Thẻ body hoặc html là nơi bạn sẽ thêm data-theme="light" để đổi chế độ
+    <div className="serene-dawn">
+      <div className="relative flex min-h-screen w-full flex-col justify-center lg:flex-row">
+        {/* Phần bên trái chứa Form, chiếm 1/2 màn hình trên desktop */}
+        <div className="relative flex w-full items-center justify-center p-8 lg:w-1/2">
+          {/* Outlet sẽ render component con, ví dụ như LoginForm */}
+          <Outlet />
+        </div>
 
-        <div className="relative items-center hidden w-full h-full lg:w-1/2 lg:grid">
+        {/* Phần bên phải chứa ảnh, chỉ hiển thị trên desktop */}
+        <div className="relative hidden items-center justify-center lg:flex lg:w-1/2">
           <img
             src={chi}
-            alt="Chitoge"
-            className="w-full h-full object-contain overflow-hidden " // Hoặc object-cover
+            alt="Chitoge Kirisaki"
+            className="h-full max-h-screen w-full object-contain"
+            loading="eager"
           />
-          <div className=" flex items-center justify-center z-1">
-            {/* Lớp phủ (giữ nguyên hoặc bỏ nếu không cần) */}
-            {/* <div className="absolute inset-0 bg-blue-500 opacity-20"></div>{" "} */}
-
-            {/* Lớp chữ xuất hiện lại */}
-            <div
-              className={`absolute top-1/3 -left-1/4 translate-y-16 transform text-6xl font-extrabold font-outline-2 ${
-                typingComplete ? "animate-fade-in-out" : "" // Áp dụng animation mới
-              }`}
-              style={{
-                color: "magenta", // Đổi màu chữ sang magenta (màu hồng tím sáng)
-                textShadow:
-                  "3px 3px 6px rgba(0, 0, 0, 0.8), 0 0 15px rgba(255, 0, 255, 0.7)", // Đổ bóng đậm hơn và thêm glow
-                letterSpacing: "2px", // Khoảng cách giữa các chữ cái
-              }}
-            >
-              {displayedText}
-            </div>
-          </div>
         </div>
+      </div>
+      <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
+        <ThemeTogglerTwo />
       </div>
     </div>
   );

@@ -144,8 +144,7 @@ body {
 }
 
 .text-main-title {
-  color: var(--text-primary);
-=======
+  color: var(--text-primary);}
 /* Import color variables */
 :root {
   /* Primary Colors */

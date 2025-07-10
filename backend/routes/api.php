@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminCategoryPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -11,11 +12,12 @@ use App\Http\Controllers\User\UserCategoryController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminOrderController;
-use App\Http\Controllers\Admin\OrderController;
-use App\Http\Controllers\Admin\PartnerProductController as AdminPartnerProductController;
+use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
+use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
+use App\Http\Controllers\Partner\PartnerOrderController;
 use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
@@ -31,18 +33,17 @@ use Illuminate\Support\Facades\Route;
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
 
-Route::post('/upload', [AWSController::class, 'upload']);
+// Route::post('/upload', [AWSController::class, 'upload']);
+
 Route::prefix("/callback")->group(function () {
-
     Route::post("/card", [CardController::class, 'callback']);
-
-
-
     // Route::post("/bank2", [BankController::class,'callback2']);
     Route::post("/bank/donate", [BankController::class, 'donate']);
     Route::post("/bank/withdraw", [BankController::class, "withdraw"]);
+    Route::post("/partner/money", [CallbackPartnerController::class, 'recieve_money']);
 });
 
+Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money']);
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
@@ -184,7 +185,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
             Route::put('/{id}/role', [UserController::class, 'updateRoles']); // Cập nhật roles cho user
         });
-        
+
 
         Route::prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
@@ -198,8 +199,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminProductController::class, 'update']);
         });
         Route::prefix("/orders")->group(function () {
-            Route::get("/",[AdminOrderController::class,'index']);
-            Route::get("/",[AdminOrderController::class,'show']);
+            Route::get("/", [AdminOrderController::class, 'index']);
+            Route::get("/", [AdminOrderController::class, 'show']);
             // Route::get("/", [OrderController::class, 'index']);
             // Route::get("/{id}", [OrderController::class, 'show']);
         });
@@ -213,10 +214,30 @@ Route::middleware(['jwt'])->group(function () {
         });
         Route::prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);
-            Route::get('/{id}', [AdminBannerController::class, 'show']);
+            Route::get('/{slug}', [AdminBannerController::class, 'show']);
             Route::post('/', [AdminBannerController::class, 'store']);
             Route::put('/{id}', [AdminBannerController::class, 'update']);
             Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
+        });
+        Route::prefix('/post')->group(function () {
+            Route::get('/', [AdminPostController::class, 'index']);
+            Route::post('/upload', [AdminPostController::class, 'upload']);
+            Route::get('/load-images', [AdminPostController::class, 'loadImages']);
+            Route::post('/delete-image', [AdminPostController::class, 'deleteImage']);
+            Route::get('/{id}', [AdminPostController::class, 'show']);
+            Route::post('/', [AdminPostController::class, 'store']);
+            Route::post('/{id}', [AdminPostController::class, 'update']);
+            Route::delete('/{id}', [AdminPostController::class, 'destroy']);
+            Route::patch('/{id}/publish', [AdminPostController::class, 'publish']);
+            Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish']);
+
+            // ---- THÊM CÁC ROUTE UPLOAD ẢNH CHO FROALA EDITOR VÀO ĐÂY ----
+            // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)
+            // Tùy chọn: Route để xóa ảnh từ Image Manager
+        });
+        Route::prefix('/categoryPost')->group(function () {
+            Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
+            Route::post('/new', [AdminCategoryPostController::class, 'createCategoryPost']);
         });
     });
 });

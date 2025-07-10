@@ -32,8 +32,9 @@ const Banner3D = ({ banner }) => {
   };
 
   return (
-    <div className="relative w-full h-full">
-      <div className="relative h-full w-full overflow-hidden rounded-lg bg-slate-800 border border-slate-700">
+    <div className="relative">
+      {/* Main Banner */}
+      <div className="relative h-48 md:min-h-[20rem] w-full overflow-hidden rounded-lg bg-slate-800 border border-slate-700">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentIndex}
@@ -47,7 +48,8 @@ const Banner3D = ({ banner }) => {
             <img
               src={`${banner[currentIndex]?.image_url}`}
               alt={`Banner ${currentIndex + 1}`}
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-full block"
+              loading="eager"
             />
           </motion.div>
         </AnimatePresence>
@@ -104,6 +106,30 @@ const Banner3D = ({ banner }) => {
               />
             </button>
           ))}
+        </div>
+      </div>
+
+      {/* 2 ảnh phụ bên dưới banner */}
+      <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="relative h-32 md:h-40 overflow-hidden rounded-lg bg-slate-800 border border-slate-700">
+          <img
+            src={`${banner[1]?.image_url || banner[0]?.image_url}`}
+            alt="Sub Banner 1"
+            className="object-cover w-full h-full block"
+            loading="lazy"
+          />
+        </div>
+        <div className="relative h-32 md:h-40 overflow-hidden rounded-lg bg-slate-800 border border-slate-700">
+          <img
+            src={`${
+              banner[2]?.image_url ||
+              banner[1]?.image_url ||
+              banner[0]?.image_url
+            }`}
+            alt="Sub Banner 2"
+            className="object-cover w-full h-full block"
+            loading="lazy"
+          />
         </div>
       </div>
     </div>

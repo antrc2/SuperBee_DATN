@@ -35,6 +35,10 @@ export function AppStatusProvider({ children }) {
   // isLoading: Trạng thái boolean chung cho biết ứng dụng có đang trong quá trình khởi tạo/kiểm tra hay không
   const [isLoading, setIsLoading] = useState(true);
 
+  const [style, setStyle] = useState(() => {
+    const storedSetting = sessionStorage.getItem("setting");
+    return storedSetting ? JSON.parse(storedSetting) : null;
+  });
   useEffect(() => {
     // Logic cập nhật appInitStatus và isLoading dựa trên keyStatus và domainStatus
     let newAppInitStatus = "loading_initial";
@@ -102,6 +106,8 @@ export function AppStatusProvider({ children }) {
     enterKey, // Hàm nhập key thủ công
     retryDomain, // Hàm thử lại kiểm tra domain
     isLoading, // Trạng thái loading tổng quan của AppStatusContext
+    setStyle,
+    style,
   };
 
   return (

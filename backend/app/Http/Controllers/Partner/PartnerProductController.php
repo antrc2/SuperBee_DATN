@@ -21,9 +21,9 @@ class PartnerProductController extends Controller
         try {
             // Lọc theo danh mục sản phẩm (category_id)
             // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-            // if ($request->filled('category_id')) {
-            //     $query->where('category_id', $request->input('category_id'));
-            // }
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->input('category_id'));
+            }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
@@ -353,6 +353,8 @@ class PartnerProductController extends Controller
     public function store(Request $request)
     {
         try {
+            $data = $request->json()->all();
+
             // Nếu attributes là chuỗi JSON, chuyển nó thành mảng
             $attributes = is_string($request->input('attributes'))
                 ? json_decode($request->input('attributes'), true)
@@ -363,45 +365,40 @@ class PartnerProductController extends Controller
             $validatedData = $request->validate([
                 'category_id' => 'required|integer|exists:categories,id',
                 // 'sku' => 'required|string|unique:products,sku',
-                // 'price' => 'required|numeric|min:0',
-                // 'sale' => 'nullable|numeric|min:0',
-                "import_price" => "required|numberic|min:0",
+                'import_price' => "required|numeric|min:0",
                 'username' => 'required|string',
                 'password' => 'required|string',
                 'attributes' => 'required|array',
                 'attributes.*.attribute_key' => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
-                'images' => 'required|array',
+                'images' => 'required',
                 'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
-            ]);
-            // if (isset($validatedData['sale']) && $validatedData['sale'] == 0) {
-            //     $validatedData['sale'] = null;
-            // }
-
-            // Kiểm tra giá sale so với giá gốc
-            // if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
-            //     return response()->json([
-            //         "status" => false,
-            //         "message" => "Giá sale phải nhỏ hơn giá gốc",
-            //     ], 400);
-            // }
-
+            ]);     
             // Bắt đầu transaction
             DB::beginTransaction();
+            function generate_sku($length = 20)
+            {
+                $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                $code = '';
+                for ($i = 0; $i < $length; $i++) {
+                    $code .= $characters[random_int(0, strlen($characters) - 1)];
+                }
+                return $code;
+            }
 
-            $sku = $this->generateUniqueSku(8);
+            $sku = "";
 
+            do {
+                $sku = generate_sku(8);
+            } while (Product::where('sku', $sku)->first() !== NULL);
             // Tạo sản phẩm
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
-                "import_price" => $validatedData['import_price'],
-                // "price" => $validatedData['price'],
                 "price"=>0,
-                // "sale" => $validatedData['sale'] ?? null,
-                'sale' => null,
+                "import_price" => $validatedData['import_price'], 
                 "web_id" => $request->web_id,
-                'status' => 2, // Mặc định là 1 (có sẵn)
+                'status' => 2,
                 "created_by" => $request->user_id,
                 "updated_by" => $request->user_id,
             ]);
@@ -410,7 +407,7 @@ class PartnerProductController extends Controller
             $images = $request->file('images'); // Lấy mảng các file
             // foreach ($images as $image) {
             //     // Gọi uploadFile cho từng file riêng lẻ
-            //     $imageUrl = $this->uploadFile($image, 'product_images');
+            //     $imageUrl = $this->uploadFile($image, 'product_images/'.$sku);
 
             //     if (is_null($imageUrl)) {
             //         // Rollback nếu upload thất bại
@@ -421,17 +418,23 @@ class PartnerProductController extends Controller
             //     // Lưu thông tin hình ảnh vào bảng ProductImage
             //     ProductImage::create([
             //         'product_id' => $product->id,
-            //         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
+//         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
             //         'image_url' => $imageUrl, // Đường dẫn đã upload
             //     ]);
             // }
-            $response = $this->uploadFiles($images,'product_images/'.$product->sku);
+            $response = $this->uploadFiles($images,'product_images/'.$sku);
             foreach ($response as $image){
+                if (is_null($image['url'])){
+                    DB::rollBack();
+                    return response()->json(['message' => 'Failed to upload product image.'], 500);
+                }
+
                 ProductImage::create([
                     'product_id'=>$product->id,
-                    "alt_text" => $image['filename'],
-                    "image_url" => $image['url']
+                    "alt_text"=>$image['filename'],
+                    "image_url"=>$image['url']
                 ]);
+                
             }
 
             // Lưu thông tin đăng nhập
@@ -470,10 +473,10 @@ class PartnerProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Đã có lỗi xảy ra",
+                "error" => $th->getMessage(),
             ], 500);
         }
     }
-
     private function check_isset_product_by_id($id)
     {
         return Product::where("id", $id)->exists();
@@ -651,4 +654,5 @@ class PartnerProductController extends Controller
             ], 500);
         }
     }
+    
 }

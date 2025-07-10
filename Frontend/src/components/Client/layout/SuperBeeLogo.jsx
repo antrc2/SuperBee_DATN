@@ -2,7 +2,7 @@ export default function SuperBeeLogo() {
   return (
     <div className="flex items-center gap-2 group">
       <div className="relative">
-        <svg
+        {/* <svg
           width="40"
           height="40"
           viewBox="0 0 40 40"
@@ -10,7 +10,7 @@ export default function SuperBeeLogo() {
           xmlns="http://www.w3.org/2000/svg"
           className="h-10 w-10 transition-all duration-300 group-hover:scale-110"
         >
-          {/* Glow effect background */}
+          
           <defs>
             <filter id="glow">
               <feGaussianBlur stdDeviation="3" result="coloredBlur" />
@@ -32,7 +32,6 @@ export default function SuperBeeLogo() {
             </linearGradient>
           </defs>
 
-          {/* Bee body with gradient */}
           <ellipse
             cx="20"
             cy="25"
@@ -42,7 +41,7 @@ export default function SuperBeeLogo() {
             filter="url(#glow)"
           />
 
-          {/* Wings */}
+   
           <ellipse
             cx="15"
             cy="18"
@@ -60,7 +59,6 @@ export default function SuperBeeLogo() {
             opacity="0.9"
           />
 
-          {/* Stripes */}
           <rect
             x="14"
             y="20"
@@ -89,19 +87,18 @@ export default function SuperBeeLogo() {
             rx="1"
           />
 
-          {/* Eyes */}
           <circle cx="17" cy="15" r="2" fill="#fff" />
           <circle cx="23" cy="15" r="2" fill="#fff" />
           <circle cx="17" cy="15" r="1" fill="#000" />
           <circle cx="23" cy="15" r="1" fill="#000" />
-        </svg>
+        </svg> */}
 
         {/* Animated glow ring */}
         <div className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 opacity-0 group-hover:opacity-30 transition-opacity duration-300 animate-pulse blur-md"></div>
       </div>
 
       <div className="flex flex-col">
-        <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent font-gaming">
+        <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 bg-clip-text text-transparent font-gaming">
           SuperBee
         </span>
         <span className="text-xs text-gray-400 font-medium tracking-wider">

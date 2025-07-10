@@ -8,7 +8,6 @@ layer(base);
 @theme {
   --font-*: initial;
   --font-outfit: Outfit, sans-serif;
-
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
   --breakpoint-xsm: 425px;

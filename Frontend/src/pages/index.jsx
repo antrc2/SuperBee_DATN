@@ -24,6 +24,11 @@ import HistoryOrder from "./Clients/Profile/HistoryOrder";
 import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
 import ProductDetailPage from "./Admin/Products/ProductDetailPage";
 import ProductsBrowse from "./Admin/Products/ProductsBrowse";
+import TrangDanhSachPost from "./Admin/Post/TrangDanhSachPost";
+import ShowPostPage from "./Admin/Post/ShowPostPage";
+import CreatePostPage from "./Admin/Post/CreatePostPage";
+import EditPostPage from "./Admin/Post/EditPostPage";
+
 
 import TrangDanhSachAccGamePartner from "./Partner/Products/TrangDanhSachAccGame";
 import ProductDetailPagePartner from "./Partner/Products/ProductDetailPagePartner";
@@ -105,6 +110,10 @@ export {
   ProductDetailPagePartner,
   EditProductsPartner,
   CreateProductsPartner,
-  ProductsBrowse
+  ProductsBrowse,
+  TrangDanhSachPost,
+  ShowPostPage,
+  CreatePostPage,
+  EditPostPage
 
 };

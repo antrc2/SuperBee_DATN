@@ -15,7 +15,6 @@ class UserCategoryController extends Controller
     {
         try {
             $categories = Category::where('status', 1)->get();
-
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
 
@@ -29,6 +28,7 @@ class UserCategoryController extends Controller
                             'image' => $category->image_url,
                             'parent_id' => $category->parent_id,
                             'slug' => $category->slug,
+                            'count'=>$category->count,
                             'children' => $children
                         ];
                     }
@@ -69,6 +69,7 @@ class UserCategoryController extends Controller
                 'name' => $category->name,
                 'image' => $category->image_url,
                 'parent_id' => $category->parent_id,
+                'count' => $category->count,
                 'slug' => $category->slug,
             ];
         })->values();

@@ -30,6 +30,7 @@ import UserMenu from "./UserMenu";
 import { useCart } from "../../../contexts/CartContext";
 import { useHome } from "../../../contexts/HomeContext";
 import SearchBar from "./Search";
+import { formatCurrencyVND } from "../../../utils/hook";
 
 export default function Header() {
   const navigate = useNavigate(); // Initialize useNavigate hook
@@ -383,7 +384,7 @@ export default function Header() {
                         {user?.name || "Gamer"}
                       </p>
                       <p className="text-xs text-neon-blue font-medium">
-                        💰 {user?.money || "0"}đ
+                        {formatCurrencyVND(user?.money) || "0"} VND
                       </p>
                     </div>
                     <ChevronDown

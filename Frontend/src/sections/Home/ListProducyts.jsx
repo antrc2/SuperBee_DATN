@@ -3,7 +3,6 @@ import Product from "../../components/Client/product/Product";
 // Mock data for demonstration
 
 export default function ListProductsHome({ ListProducts }) {
-  console.log("🚀 ~ ListProductsHome ~ ListProducts:", ListProducts);
   return (
     <div className="">
       <div className="">
@@ -26,7 +25,7 @@ export default function ListProductsHome({ ListProducts }) {
         </div>
 
         {/* Slider Container */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 ">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4  ">
           {ListProducts?.map((product, index) => (
             <Product key={index} product={product} />
           ))}

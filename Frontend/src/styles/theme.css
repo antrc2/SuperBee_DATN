@@ -1,4 +1,3 @@
-
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
 
 @import "tailwindcss";
@@ -13,7 +12,7 @@
 }
 /* Chế độ Sáng (Light Mode) - Mặc định */
 :root {
-  --background-start: #9aa6b2; /*  Nền (trái form) - Xanh trời rất nhạt */
+  --background-start: #9aa6b2; /* Nền (trái form) - Xanh trời rất nhạt */
   --background-end: #f8fafc; /* Nền (phải nhân vật) - Hồng rất nhạt */
 
   --background-start-in: #f8aaaa; /* Nền (trái form) - Xanh trời rất nhạt */
@@ -65,6 +64,17 @@
   --bg-content-900: #101828;
   --bg-content-800: #1d2939;
   --bg-content-700: #344054;
+
+  /* Biến màu mới cho các trạng thái */
+  --status-success-text: #22c55e;
+  --status-success-bg: rgba(34, 197, 94, 0.1);
+  --status-success-border: rgba(34, 197, 94, 0.2);
+  --status-processing-text: #f59e0b;
+  --status-processing-bg: rgba(245, 158, 11, 0.1);
+  --status-processing-border: rgba(245, 158, 11, 0.2);
+  --status-cancelled-text: #ef4444;
+  --status-cancelled-bg: rgba(239, 68, 68, 0.1);
+  --status-cancelled-border: rgba(239, 68, 68, 0.2);
 }
 
 /* --- CÀI ĐẶT CHUNG --- */
@@ -144,155 +154,9 @@ body {
 }
 
 .text-main-title {
-  color: var(--text-primary);}
-/* Import color variables */
-:root {
-  /* Primary Colors */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
-
-  /* Secondary Colors */
-  --color-secondary-50: #fdf4ff;
-  --color-secondary-100: #fae8ff;
-  --color-secondary-200: #f5d0fe;
-  --color-secondary-300: #f0abfc;
-  --color-secondary-400: #e879f9;
-  --color-secondary-500: #d946ef;
-  --color-secondary-600: #c026d3;
-  --color-secondary-700: #a21caf;
-  --color-secondary-800: #86198f;
-  --color-secondary-900: #701a75;
-
-  /* Accent Colors */
-  --color-accent-orange: #f97316;
-  --color-accent-yellow: #eab308;
-  --color-accent-green: #22c55e;
-  --color-accent-red: #ef4444;
-  --color-accent-pink: #ec4899;
-
-  /* Neon Colors */
-  --color-neon-blue: #00f5ff;
-  --color-neon-purple: #bf00ff;
-  --color-neon-pink: #ff1493;
-  --color-neon-green: #00ff41;
-  --color-neon-yellow: #ffff00;
-  --color-neon-cyan: #00ffff;
-
-  /* Dark Theme */
-  --color-dark-bg: #0a0a0f;
-  --color-dark-surface: #1a1a2e;
-  --color-dark-card: #16213e;
-  --color-dark-border: #2d3748;
-  --color-dark-text: #e2e8f0;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-neon: linear-gradient(135deg, #00f5ff 0%, #bf00ff 100%);
-  --gradient-gaming: linear-gradient(
-    135deg,
-    #ff1493 0%,
-    #00f5ff 50%,
-    #bf00ff 100%
-  );
-  --gradient-dark: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-  --gradient-header: linear-gradient(
-    135deg,
-    #1e293b 0%,
-    #2a3345 50%,
-    #1e293b 100%
-  );
-  --gradient-button: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-
-  /* Fonts */
-  --font-primary: "Inter", "Noto Sans", sans-serif;
-  --font-heading: "Poppins", "Inter", sans-serif;
-  --font-gaming: "Orbitron", "Roboto Mono", monospace;
-  --font-japanese: "Noto Sans JP", sans-serif;
-  /* color text */
-  --text-color: "font-bold bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent";
+  color: var(--text-primary);
 }
-
-/* Utility classes using CSS variables */
-.bg-gradient-header {
-  background: var(--gradient-header);
-}
-
-.bg-gradient-button {
-  background: var(--gradient-button);
-}
-
-.bg-gradient-neon {
-  background: var(--gradient-neon);
-}
-
-.text-neon-blue {
-  color: var(--color-neon-blue);
-}
-
-.text-neon-purple {
-  color: var(--color-neon-purple);
-}
-
-.border-neon-blue {
-  border-color: var(--color-neon-blue);
-}
-
-.glow-neon-blue {
-  box-shadow: 0 0 20px var(--color-neon-blue);
-}
-
-.glow-neon-purple {
-  box-shadow: 0 0 20px var(--color-neon-purple);
-}
-
-.font-gaming {
-  font-family: var(--font-gaming);
-}
-
-.font-heading {
-  font-family: var(--font-heading);
-}
-
-.font-primary {
-  font-family: var(--font-primary);
-}
-
-.text-color {
-  color: var(--text-color);
-}
-
-/* Custom animations */
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px var(--color-neon-blue);
-  }
-  50% {
-    box-shadow: 0 0 20px var(--color-neon-blue), 0 0 30px var(--color-neon-blue);
-  }
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-
-}
-
-.text-subtitle {
-  color: var(--text-secondary);
-}
-/*  */
+/* */
 .container-div {
   position: relative; /* Quan trọng: để pseudo-element định vị tương đối */
   background: linear-gradient(
@@ -324,6 +188,7 @@ body {
   transition: left 0.7s ease; /* Hiệu ứng di chuyển cho gradient */
   z-index: 1; /* Đảm bảo gradient nằm trên nền nhưng dưới text nếu có */
   opacity: 0;
+  pointer-events: none; /* Thêm dòng này */
 }
 
 .container-div:hover::before {
@@ -335,8 +200,7 @@ body {
   position: relative;
   z-index: 2; /* Đảm bảo text nằm trên gradient */
 }
-/* 
- */
+/* */
 .shine-text {
   position: relative;
   overflow: hidden;
@@ -352,7 +216,7 @@ body {
   -webkit-background-clip: text; /* Dành cho trình duyệt Webkit */
   color: transparent; /* Ẩn màu chữ gốc để gradient hiển thị */
 }
-/*  */
+/* */
 .bg-gradient-header {
   background-image: linear-gradient(
     to bottom,
@@ -379,7 +243,7 @@ body {
 .border-hover:focus {
   border: 1px solid #ccc; /* Border mặc định, có thể là màu solid */
 }
-/*  */
+/* */
 
 ::-webkit-scrollbar-track {
   background-color: var(--background-start); /* Màu nền rãnh */

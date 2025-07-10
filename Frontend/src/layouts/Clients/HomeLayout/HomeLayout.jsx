@@ -51,7 +51,7 @@ export default function HomeLayout() {
         </div> */}
 
         {/* Nội dung chính, giới hạn chiều rộng */}
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto ">
           <Outlet />
         </div>
 

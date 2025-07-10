@@ -266,7 +266,7 @@ export default function RechargeCard() {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <div className="bg-background min-h-screen py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
         <h1 className="text-3xl font-bold text-center text-main-title mb-8">
           Nạp Tiền Vào Tài Khoản
@@ -278,7 +278,7 @@ export default function RechargeCard() {
             className={`py-3 px-6 font-medium text-sm sm:text-base transition-colors duration-150
               ${
                 activeTab === "card"
-                  ? "border-b-2 border-blue-600 text-blue-600"
+                  ? "border-b-2 border-primary text-primary"
                   : "text-gray-500 hover:text-gray-700"
               }`}
           >
@@ -289,7 +289,7 @@ export default function RechargeCard() {
             className={`py-3 px-6 font-medium text-sm sm:text-base transition-colors duration-150
               ${
                 activeTab === "bank"
-                  ? "border-b-2 border-blue-600 text-blue-600"
+                  ? "border-b-2 border-primary text-primary"
                   : "text-gray-500 hover:text-gray-700"
               }`}
           >
@@ -298,7 +298,7 @@ export default function RechargeCard() {
         </div>
 
         {activeTab === "card" && (
-          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
+          <div className="bg-content p-6 sm:p-8 rounded-lg shadow-lg">
             <h2 className="text-xl font-semibold text-main-title mb-6">
               Chọn loại thẻ và mệnh giá
             </h2>
@@ -306,7 +306,7 @@ export default function RechargeCard() {
               <div>
                 <label
                   htmlFor="telco"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-main-title mb-1"
                 >
                   Loại thẻ
                 </label>
@@ -314,7 +314,7 @@ export default function RechargeCard() {
                   id="telco"
                   value={selectedCardType}
                   onChange={handleCardTypeChange}
-                  className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                  className={`custom-input w-full p-3 border rounded-md shadow-sm focus:ring-primary focus:border-primary text-sm ${
                     cardFormErrors.cardType
                       ? "border-red-500"
                       : "border-gray-300"
@@ -336,7 +336,7 @@ export default function RechargeCard() {
               <div>
                 <label
                   htmlFor="serial"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-main-title mb-1"
                 >
                   Số Serial
                 </label>
@@ -349,7 +349,7 @@ export default function RechargeCard() {
                     setCardFormErrors((prev) => ({ ...prev, serial: "" }));
                   }}
                   placeholder="Nhập số serial trên thẻ"
-                  className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                  className={`custom-input w-full p-3 border rounded-md shadow-sm focus:ring-primary focus:border-primary text-sm ${
                     cardFormErrors.serial ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -363,7 +363,7 @@ export default function RechargeCard() {
               <div>
                 <label
                   htmlFor="code"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-main-title mb-1"
                 >
                   Mã PIN
                 </label>
@@ -376,7 +376,7 @@ export default function RechargeCard() {
                     setCardFormErrors((prev) => ({ ...prev, pin: "" }));
                   }}
                   placeholder="Nhập mã PIN của thẻ"
-                  className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                  className={`custom-input w-full p-3 border rounded-md shadow-sm focus:ring-primary focus:border-primary text-sm ${
                     cardFormErrors.pin ? "border-red-500" : "border-gray-300"
                   }`}
                 />
@@ -390,7 +390,7 @@ export default function RechargeCard() {
               <div>
                 <label
                   htmlFor="amount"
-                  className="block text-sm font-medium text-gray-700 mb-1"
+                  className="block text-sm font-medium text-main-title mb-1"
                 >
                   Mệnh giá thẻ
                 </label>
@@ -398,7 +398,7 @@ export default function RechargeCard() {
                   id="amount"
                   value={selectedDenomination}
                   onChange={handleDenominationChange}
-                  className={`w-full p-3 border rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 text-sm ${
+                  className={`custom-input w-full p-3 border rounded-md shadow-sm focus:ring-primary focus:border-primary text-sm ${
                     cardFormErrors.denomination
                       ? "border-red-500"
                       : "border-gray-300"
@@ -446,24 +446,26 @@ export default function RechargeCard() {
                 </div>
               )}
 
-              <button
-                type="submit"
-                disabled={cardSubmissionStatus?.type === "loading"}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors duration-150 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
-              >
-                {cardSubmissionStatus?.type === "loading" ? (
-                  <Clock size={20} className="mr-2 animate-spin" />
-                ) : (
-                  <CreditCard size={20} className="mr-2" />
-                )}
-                Nạp Thẻ
-              </button>
+              <div className="container-div">
+                <button
+                  type="submit"
+                  disabled={cardSubmissionStatus?.type === "loading"}
+                  className="w-full bg-primary hover:bg-primary-dark text-white font-semibold py-3 px-4 rounded-lg shadow-md transition-colors duration-150 flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {cardSubmissionStatus?.type === "loading" ? (
+                    <Clock size={20} className="mr-2 animate-spin" />
+                  ) : (
+                    <CreditCard size={20} className="mr-2" />
+                  )}
+                  Nạp Thẻ
+                </button>
+              </div>
             </form>
           </div>
         )}
 
         {activeTab === "bank" && bankInfo && (
-          <div className="bg-white p-6 sm:p-8 rounded-lg shadow-lg">
+          <div className="bg-content p-6 sm:p-8 rounded-lg shadow-lg">
             <div className="flex flex-col items-center">
               <img
                 src={bankInfo.qrCodeUrl}
@@ -476,21 +478,21 @@ export default function RechargeCard() {
               <a
                 href={bankInfo.qrCodeUrl}
                 download="Ma_QR_SuperBee.png"
-                className="mt-3 inline-flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="mt-3 inline-flex items-center text-primary hover:text-primary-dark text-sm font-medium"
               >
                 <Download size={16} className="mr-1" /> Tải mã QR
               </a>
               <div className="mt-6 w-full max-w-md text-sm text-gray-700">
-                <p className="mb-2">
+                <p className="mb-2 text-main-title">
                   <strong>Ngân hàng:</strong> {bankInfo.bankName}
                 </p>
-                <p className="mb-2 flex items-center">
+                <p className="mb-2 flex items-center text-main-title">
                   <strong>Số tài khoản:</strong> {bankInfo.accountNumber}
                   <button
                     onClick={() =>
                       copyToClipboard(bankInfo.accountNumber, "accountNumber")
                     }
-                    className="ml-2 text-blue-600 hover:text-blue-700"
+                    className="ml-2 text-primary hover:text-primary-dark"
                   >
                     <Copy size={16} />
                   </button>
@@ -500,13 +502,13 @@ export default function RechargeCard() {
                     </span>
                   )}
                 </p>
-                <p className="mb-2">
+                <p className="mb-2 text-main-title">
                   <strong>Chủ tài khoản:</strong> {bankInfo.accountHolder}
                 </p>
-                <p className="mb-2">
+                <p className="mb-2 text-main-title">
                   <strong>Chi nhánh:</strong> {bankInfo.branch}
                 </p>
-                <p className="mb-2 flex items-center">
+                <p className="mb-2 flex items-center text-main-title">
                   <strong>Nội dung chuyển khoản:</strong>{" "}
                   {bankInfo.transferContentPrefix}
                   <button
@@ -516,7 +518,7 @@ export default function RechargeCard() {
                         "transferContent"
                       )
                     }
-                    className="ml-2 text-blue-600 hover:text-blue-700"
+                    className="ml-2 text-primary hover:text-primary-dark"
                   >
                     <Copy size={16} />
                   </button>
@@ -533,10 +535,9 @@ export default function RechargeCard() {
 
         <div className="mt-12">
           <h2 className="text-2xl font-semibold text-main-title mb-6 flex items-center">
-            <History size={24} className="mr-3 text-blue-600" /> Lịch Sử Nạp
-            Tiền
+            <History size={24} className="mr-3 text-primary" /> Lịch Sử Nạp Tiền
           </h2>
-          <div className="bg-white rounded-lg shadow-lg overflow-x-auto">
+          <div className="bg-content rounded-lg shadow-lg overflow-x-auto">
             {rechargeHistory.length > 0 ? (
               <table className="w-full min-w-[600px] text-sm">
                 <thead className="bg-gray-50">

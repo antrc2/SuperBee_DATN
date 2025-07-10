@@ -7,65 +7,9 @@ import {
   Gamepad2,
   Sparkles,
 } from "lucide-react";
-// Mock data for demonstration
-const mockCategories = [
-  {
-    id: 1,
-    name: "Thung Lũng Gió",
-    slug: "thung-lung-gio",
-    image:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=300&fit=crop",
-    description:
-      "Khám phá một thế giới kỳ diệu và bình yên với những tài khoản chất lượng cao.",
-    count: 85,
-  },
-  {
-    id: 2,
-    name: "Liên Quân Mobile",
-    slug: "lien-quan-mobile",
-    image:
-      "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=300&fit=crop",
-    description: "Tham gia chiến trường MOBA hấp dẫn nhất trên mobile.",
-    count: 124,
-  },
-  {
-    id: 3,
-    name: "PUBG Mobile",
-    slug: "pubg-mobile",
-    image:
-      "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&h=300&fit=crop",
-    description: "Trải nghiệm battle royale đỉnh cao với đồ họa tuyệt đẹp.",
-    count: 98,
-  },
-  {
-    id: 4,
-    name: "Free Fire",
-    slug: "free-fire",
-    image:
-      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=300&fit=crop",
-    description: "Game bắn súng sinh tồn nhanh gọn, phù hợp mọi thiết bị.",
-    count: 156,
-  },
-  {
-    id: 5,
-    name: "Genshin Impact",
-    slug: "genshin-impact",
-    image:
-      "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=300&fit=crop",
-    description: "Thế giới mở phiêu lưu với đồ họa anime tuyệt đẹp.",
-    count: 67,
-  },
-  {
-    id: 6,
-    name: "Valorant",
-    slug: "valorant",
-    image:
-      "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=300&fit=crop",
-    description: "FPS chiến thuật đỉnh cao với gameplay căng thẳng.",
-    count: 89,
-  },
-];
-export default function CategorySlider({ categories = mockCategories }) {
+
+export default function CategorySlider({ categories }) {
+  console.log("🚀 ~ CategorySlider ~ categories:", categories);
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
@@ -177,7 +121,7 @@ export default function CategorySlider({ categories = mockCategories }) {
           </div>
         </div>
 
-        {!canScrollRight && (
+        {!canScrollRight && categories.length > 5 && (
           <div className="mt-8 sm:mt-12 text-center">
             <button
               onClick={() => console.log("Navigate to all categories")}

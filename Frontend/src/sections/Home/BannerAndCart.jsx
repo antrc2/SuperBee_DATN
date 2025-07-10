@@ -18,7 +18,7 @@ export default function BannerAndCart({ top, banner }) {
           </div>
         </div>
       ) : (
-        <div className="w-full h-[60vh] md:h-[80vh]">
+        <div className="w-full h-[60vh]">
           <Banner3D banner={banner} />
         </div>
       )}

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 export default function CategoryCard({ item, onClick }) {
+  console.log("🚀 ~ CategoryCard ~ item:", item);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const navigator = useNavigate();

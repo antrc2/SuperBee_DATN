@@ -6,6 +6,7 @@ import { useAuth } from "@contexts/AuthContext";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -17,129 +18,103 @@ export default function Sidebar() {
     await logout();
   };
 
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+      isActive
+        ? "bg-blue-600/20 text-blue-400 font-semibold"
+        : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
+    }`;
+
   return (
     <aside
-      className="w-64 flex flex-col h-full border-r shadow-lg"
+      className="w-64 flex-shrink-0 flex flex-col h-full rounded-xl"
       style={{
-        background: "var(--color-dark-surface)",
-        borderColor: "var(--color-dark-border)",
+        backgroundColor: "var(--bg-content-900)",
+        border: "1px solid var(--bg-content-800)",
       }}
     >
-      {/* User Profile Section */}
       <div
-        className="p-6 border-b"
-        style={{ borderColor: "var(--color-dark-border)" }}
+        className="p-6 text-center border-b"
+        style={{ borderColor: "var(--bg-content-800)" }}
       >
-        <div className="flex items-end justify-start gap-2">
-          <div className="relative mb-4">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-3 border-blue-500/30 shadow-lg">
-              <img
-                src={user?.avatar}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-slate-800"></div>
+        <div className="relative inline-block mb-4">
+          <img
+            src={user?.avatar || "/default-avatar.png"}
+            alt="Avatar"
+            className="w-20 h-20 rounded-full object-cover border-2"
+            style={{ borderColor: "var(--accent-primary)" }}
+          />
+          <div
+            className="absolute bottom-0 right-0 w-5 h-5 bg-green-500 rounded-full border-2"
+            style={{ borderColor: "var(--bg-content-900)" }}
+          ></div>
+        </div>
+        <h3 className="font-semibold" style={{ color: "var(--text-primary)" }}>
+          {user?.name || "username"}
+        </h3>
+        <div
+          className="mt-4 bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-lg p-3 border"
+          style={{ borderColor: "var(--bg-content-700)" }}
+        >
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Coins
+              className="h-4 w-4"
+              style={{ color: "var(--accent-primary)" }}
+            />
+            <span
+              className="text-xs font-medium"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Số dư
+            </span>
           </div>
-
-          <div className="text-center">
-            <p className="text-slate-400 text-sm mb-3">
-              {user?.name || "username"}
-            </p>
-          </div>
+          <p
+            className="font-bold text-lg text-center"
+            style={{ color: "var(--text-primary)" }}
+          >
+            {formatCurrency(user?.money)}
+          </p>
         </div>
       </div>
-      {/* Balance Card */}
-      <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-lg p-3 border border-blue-500/30">
-        <div className="flex items-center justify-center gap-2 mb-1">
-          <Coins className="h-4 w-4 text-yellow-400" />
-          <span className="text-slate-300 text-xs font-medium">Số dư</span>
-        </div>
-        <p className="text-white font-bold text-lg text-center">
-          {formatCurrency(user?.money)}
-        </p>
-      </div>
 
-      {/* Navigation Menu */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {/* Account Menu */}
-        <div className="mb-6">
-          <h3 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3 px-2">
-            Tài Khoản
-          </h3>
-          <nav className="space-y-1">
-            <NavLink
-              to="/info"
-              end
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                }`
-              }
-            >
-              <User className="h-5 w-5" />
-              <span className="font-medium">Thông tin tài khoản</span>
-            </NavLink>
-
-            <NavLink
-              to="/info/change-password"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                }`
-              }
-            >
-              <Lock className="h-5 w-5" />
-              <span className="font-medium">Đổi mật khẩu</span>
-            </NavLink>
-          </nav>
-        </div>
-
-        {/* Transaction Menu */}
+      <nav className="flex-1 p-4 space-y-6">
         <div>
-          <h3 className="text-slate-300 font-semibold text-sm uppercase tracking-wider mb-3 px-2">
-            Giao Dịch
-          </h3>
-          <nav className="space-y-1">
-            <NavLink
-              to="/info/transactions"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                }`
-              }
-            >
-              <Wallet className="h-5 w-5" />
-              <span className="font-medium">Lịch sử giao dịch</span>
-            </NavLink>
-
-            <NavLink
-              to="/info/orders"
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-blue-600/20 text-blue-400 border border-blue-500/30"
-                    : "text-slate-300 hover:bg-slate-700/50 hover:text-white"
-                }`
-              }
-            >
-              <Package className="h-5 w-5" />
-              <span className="font-medium">Lịch sử đơn hàng</span>
-            </NavLink>
-          </nav>
+          <h4
+            className="px-3 mb-2 text-xs font-semibold uppercase"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Tài Khoản
+          </h4>
+          <NavLink to="/info" end className={navLinkClass}>
+            <User className="h-5 w-5" />
+            <span>Thông tin</span>
+          </NavLink>
+          <NavLink to="/info/change-password" className={navLinkClass}>
+            <Lock className="h-5 w-5" />
+            <span>Đổi mật khẩu</span>
+          </NavLink>
         </div>
-      </div>
+        <div>
+          <h4
+            className="px-3 mb-2 text-xs font-semibold uppercase"
+            style={{ color: "var(--text-secondary)" }}
+          >
+            Giao Dịch
+          </h4>
+          <NavLink to="/info/transactions" className={navLinkClass}>
+            <Wallet className="h-5 w-5" />
+            <span>Lịch sử giao dịch</span>
+          </NavLink>
+          <NavLink to="/info/orders" className={navLinkClass}>
+            <Package className="h-5 w-5" />
+            <span>Lịch sử đơn hàng</span>
+          </NavLink>
+        </div>
+      </nav>
 
-      {/* Logout Button */}
       <div
         className="p-4 border-t"
-        style={{ borderColor: "var(--color-dark-border)" }}
+        style={{ borderColor: "var(--bg-content-800)" }}
       >
         <button
           onClick={handleLogout}

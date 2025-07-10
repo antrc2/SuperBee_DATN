@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect, useRef } from "react";
 import { User, Mail, Phone, Camera, Edit3, Save, X } from "lucide-react";
 import api from "@utils/http";
@@ -8,7 +6,7 @@ import { toast } from "react-toastify";
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    username: "hikariuisu",
+    username: "...",
     email: "",
     phone: "",
     avatar: "",
@@ -119,150 +117,183 @@ export default function Profile() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto ">
-      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 border-b border-slate-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-700 rounded-lg">
-                <User className="h-6 w-6 text-blue-400" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Thông tin tài khoản
-                </h1>
-                <p className="text-slate-400 text-sm">
-                  Quản lý thông tin cá nhân của bạn
-                </p>
-              </div>
+    <div
+      className="p-6 rounded-xl"
+      style={{ backgroundColor: "var(--bg-content-900)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex items-center justify-between pb-6 border-b"
+        style={{ borderColor: "var(--bg-content-800)" }}
+      >
+        <div>
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: "var(--text-primary)" }}
+          >
+            Thông tin tài khoản
+          </h1>
+          <p style={{ color: "var(--text-secondary)" }}>
+            Quản lý thông tin cá nhân của bạn
+          </p>
+        </div>
+        {!isEditing && (
+          <button
+            onClick={() => setIsEditing(true)}
+            className="flex items-center gap-2 px-4 py-2 text-white rounded-lg transition-colors"
+            style={{
+              backgroundColor: "var(--accent-primary)",
+              color: "var(--button-text)",
+            }}
+          >
+            <Edit3 className="h-4 w-4" />
+            Chỉnh sửa
+          </button>
+        )}
+      </div>
+
+      <div className="p-6">
+        {/* Avatar Section */}
+        <div className="flex flex-col items-center mb-8">
+          <div className="relative group">
+            <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-600 shadow-lg">
+              <img
+                src={avatarFile ? editData.avatar : userData.avatar}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
             </div>
-            {!isEditing && (
-              <button
-                onClick={handleEditClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <Edit3 className="h-4 w-4" />
-                Chỉnh sửa
-              </button>
+            {isEditing && (
+              <>
+                <div
+                  className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                  onClick={triggerFileInput}
+                >
+                  <div className="text-center">
+                    <Camera className="h-6 w-6 text-white mx-auto mb-1" />
+                    <span className="text-white text-xs font-medium">
+                      Đổi ảnh
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleAvatarFileChange}
+                />
+              </>
             )}
           </div>
         </div>
 
-        <div className="p-6">
-          {/* Avatar Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-600 shadow-lg">
-                <img
-                  src={avatarFile ? editData.avatar : userData.avatar}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {isEditing && (
-                <>
-                  <div
-                    className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    onClick={triggerFileInput}
-                  >
-                    <div className="text-center">
-                      <Camera className="h-6 w-6 text-white mx-auto mb-1" />
-                      <span className="text-white text-xs font-medium">
-                        Đổi ảnh
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleAvatarFileChange}
-                  />
-                </>
-              )}
-            </div>
+        {/* Form Fields */}
+        <div className="space-y-6">
+          <div>
+            <label
+              className="text-sm font-medium mb-2 block"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Username
+            </label>
+            <input
+              type="text"
+              value={userData.username}
+              readOnly
+              className="w-full rounded-lg px-4 py-3 cursor-not-allowed"
+              style={{
+                backgroundColor: "var(--bg-content-800)",
+                border: "1px solid var(--bg-content-700)",
+                color: "var(--text-secondary)",
+              }}
+            />
           </div>
 
-          {/* Form Fields */}
-          <div className="space-y-6">
-            {/* Username - Read-only */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <User className="h-4 w-4" />
-                Username
-              </label>
-              <input
-                type="text"
-                value={userData.username}
-                readOnly
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-300 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <Mail className="h-4 w-4" />
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={isEditing ? editData.email : userData.email}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border rounded-lg px-4 py-3 transition-colors ${
-                  isEditing
-                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    : "bg-slate-700/50 border-slate-600 text-slate-300 cursor-not-allowed"
-                }`}
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <Phone className="h-4 w-4" />
-                Số điện thoại
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={isEditing ? editData.phone : userData.phone}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border rounded-lg px-4 py-3 transition-colors ${
-                  isEditing
-                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    : "bg-slate-700/50 border-slate-600 text-slate-300 cursor-not-allowed"
-                }`}
-              />
-            </div>
+          <div>
+            <label
+              className="text-sm font-medium mb-2 block"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={isEditing ? editData.email : userData.email}
+              onChange={(e) =>
+                setEditData({ ...editData, email: e.target.value })
+              }
+              readOnly={!isEditing}
+              className={`w-full rounded-lg px-4 py-3 transition-colors`}
+              style={{
+                backgroundColor: isEditing
+                  ? "var(--input-bg)"
+                  : "var(--bg-content-800)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-primary)",
+              }}
+            />
           </div>
 
-          {/* Action Buttons */}
-          {isEditing && (
-            <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-700">
-              <button
-                onClick={handleCancelClick}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
-              >
-                <X className="h-4 w-4" />
-                Hủy
-              </button>
-              <button
-                onClick={handleSaveClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <Save className="h-4 w-4" />
-                Lưu
-              </button>
-            </div>
-          )}
+          <div>
+            <label
+              className="text-sm font-medium mb-2 block"
+              style={{ color: "var(--text-secondary)" }}
+            >
+              Số điện thoại
+            </label>
+            <input
+              type="tel"
+              name="phone"
+              value={isEditing ? editData.phone : userData.phone}
+              onChange={(e) =>
+                setEditData({ ...editData, phone: e.target.value })
+              }
+              readOnly={!isEditing}
+              className={`w-full rounded-lg px-4 py-3 transition-colors`}
+              style={{
+                backgroundColor: isEditing
+                  ? "var(--input-bg)"
+                  : "var(--bg-content-800)",
+                border: "1px solid var(--input-border)",
+                color: "var(--text-primary)",
+              }}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Action Buttons */}
+      {isEditing && (
+        <div
+          className="flex justify-end gap-3 mt-8 pt-6 border-t"
+          style={{ borderColor: "var(--bg-content-800)" }}
+        >
+          <button
+            onClick={() => setIsEditing(false)}
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor: "var(--bg-content-700)",
+              color: "var(--text-primary)",
+            }}
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => {
+              /* save logic */
+            }}
+            className="px-4 py-2 rounded-lg"
+            style={{
+              backgroundColor: "var(--accent-primary)",
+              color: "var(--button-text)",
+            }}
+          >
+            Lưu thay đổi
+          </button>
+        </div>
+      )}
     </div>
   );
 }

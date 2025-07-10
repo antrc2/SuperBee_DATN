@@ -13,6 +13,7 @@ import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@contexts/AuthContext";
 import Image from "../Image/Image";
+import { formatCurrencyVND } from "../../../utils/hook";
 export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
   const dropdownRef = useRef(null);
   const { logout } = useAuth();
@@ -107,7 +108,7 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
               <div className="flex items-center gap-2 mt-1">
                 <Wallet className="w-4 h-4 text-yellow-400" />
                 <p className="text-sm font-semibold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
-                  {user?.money || "0"} VND
+                  {formatCurrencyVND(user?.money) || "0"} VND
                 </p>
               </div>
             </div>

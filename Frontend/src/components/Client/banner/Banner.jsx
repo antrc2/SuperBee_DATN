@@ -110,7 +110,7 @@ const Banner3D = ({ banner }) => {
       </div>
 
       {/* 2 ảnh phụ bên dưới banner */}
-      <div className="grid grid-cols-2 gap-4 mt-4">
+      <div className="grid md:grid-cols-2  gap-4 mt-4">
         <div className="relative h-32 md:h-40 overflow-hidden rounded-lg bg-slate-800 border border-slate-700">
           <img
             src={`${banner[1]?.image_url || banner[0]?.image_url}`}

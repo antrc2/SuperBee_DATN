@@ -11,10 +11,14 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   ShoppingBag,
+  AlertCircle,
+  Loader,
 } from "lucide-react";
 import api from "@utils/http";
 
+// Utility Functions
 const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
   const date = new Date(dateString);
   const day = String(date.getDate()).padStart(2, "0");
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -26,7 +30,7 @@ const formatCurrency = (amount) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-  }).format(amount);
+  }).format(amount || 0);
 };
 
 const translateTransactionType = (type) => {
@@ -61,18 +65,33 @@ const getTransactionIcon = (type) => {
 const renderStatus = (status) => {
   if (status === 1) {
     return (
-      <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+      <span
+        className="px-3 py-1 text-xs font-medium rounded-full"
+        style={{
+          backgroundColor: "var(--status-success-bg)",
+          color: "var(--status-success-text)",
+          border: "1px solid var(--status-success-border)",
+        }}
+      >
         Thành công
       </span>
     );
   }
   return (
-    <span className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+    <span
+      className="px-3 py-1 text-xs font-medium rounded-full"
+      style={{
+        backgroundColor: "var(--status-processing-bg)",
+        color: "var(--status-processing-text)",
+        border: "1px solid var(--status-processing-border)",
+      }}
+    >
       Đang xử lý
     </span>
   );
 };
 
+// Transaction Detail Modal Component
 const TransactionDetailModal = ({ transaction, onClose }) => {
   if (!transaction) return null;
 
@@ -96,114 +115,6 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
                     {formatCurrency(transaction.order.total_amount)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Mã giảm giá:</span>
-                  <span className="text-white">
-                    {transaction.order.promo_code || "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Số tiền giảm:</span>
-                  <span className="text-red-400">
-                    {formatCurrency(transaction.order.discount_amount)}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-slate-400">Không có thông tin chi tiết.</p>
-            )}
-          </div>
-        );
-      case "recharge_card":
-        return (
-          <div className="space-y-3">
-            <h4 className="font-bold text-white">Chi tiết nạp thẻ</h4>
-            {transaction.recharge_card ? (
-              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Nhà mạng:</span>
-                  <span className="text-white">
-                    {transaction.recharge_card.telco}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Mệnh giá:</span>
-                  <span className="text-white font-medium">
-                    {formatCurrency(transaction.recharge_card.value)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Serial:</span>
-                  <span className="text-white font-mono">
-                    {transaction.recharge_card.serial}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Mã thẻ:</span>
-                  <span className="text-white font-mono">
-                    {transaction.recharge_card.code}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Trạng thái:</span>
-                  <span className="text-green-400">
-                    {transaction.recharge_card.message}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-slate-400">Không có thông tin chi tiết.</p>
-            )}
-          </div>
-        );
-      case "recharge_bank":
-        return (
-          <div className="space-y-3">
-            <h4 className="font-bold text-white">Chi tiết nạp qua ngân hàng</h4>
-            {transaction.recharge_bank ? (
-              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Mã giao dịch:</span>
-                  <span className="text-white font-mono">
-                    {transaction.recharge_bank.transaction_reference}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-slate-400">Không có thông tin chi tiết.</p>
-            )}
-          </div>
-        );
-      case "withdraw":
-        return (
-          <div className="space-y-3">
-            <h4 className="font-bold text-white">Chi tiết rút tiền</h4>
-            {transaction.withdraw ? (
-              <div className="bg-slate-700/50 p-4 rounded-lg space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Ngân hàng:</span>
-                  <span className="text-white">
-                    {transaction.withdraw.bank_name}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Số tài khoản:</span>
-                  <span className="text-white font-mono">
-                    {transaction.withdraw.bank_account_number}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Mã rút tiền:</span>
-                  <span className="text-white font-mono">
-                    {transaction.withdraw.withdraw_code}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Ghi chú:</span>
-                  <span className="text-white">
-                    {transaction.withdraw.note}
-                  </span>
-                </div>
               </div>
             ) : (
               <p className="text-slate-400">Không có thông tin chi tiết.</p>
@@ -220,7 +131,7 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black/60 z-50 flex justify-center items-center p-4">
       <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-xl w-full max-w-md">
         <div className="flex justify-between items-center p-6 border-b border-slate-700">
           <div className="flex items-center gap-3">
@@ -267,7 +178,7 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
                   : "text-red-400"
               }`}
             >
-              {transaction.type.includes("recharge") ? "+" : "-"}{" "}
+              {transaction.type.includes("recharge") ? "+ " : "- "}
               {formatCurrency(transaction.amount)}
             </p>
           </div>
@@ -282,7 +193,7 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
           {renderDetails()}
         </div>
 
-        <div className="p-6 border-t border-slate-700 bg-slate-800/50">
+        <div className="p-6 border-t border-slate-700 bg-slate-800/50 text-right">
           <button
             onClick={onClose}
             className="px-6 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
@@ -295,7 +206,8 @@ const TransactionDetailModal = ({ transaction, onClose }) => {
   );
 };
 
-export default function TransactionHistoryPage() {
+// Main Page Component
+const TransactionHistoryPage = () => {
   const [allTransactions, setAllTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [filters, setFilters] = useState({
@@ -305,21 +217,26 @@ export default function TransactionHistoryPage() {
     endDate: "",
   });
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const getTransactions = async () => {
+      setLoading(true);
+      setError(null);
       try {
         const res = await api.get("/user/history-trans");
         const transactionsData = res?.data[0]?.wallet?.transactions || [];
-
         const sortedTransactions = transactionsData.sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
         );
-
         setAllTransactions(sortedTransactions);
         setFilteredTransactions(sortedTransactions);
-      } catch (error) {
-        console.log(error);
+      } catch (err) {
+        setError("Không thể tải lịch sử giao dịch. Vui lòng thử lại sau.");
+        console.error(err);
+      } finally {
+        setLoading(false);
       }
     };
     getTransactions();
@@ -327,27 +244,22 @@ export default function TransactionHistoryPage() {
 
   useEffect(() => {
     let result = [...allTransactions];
-
     if (filters.type !== "all") {
       result = result.filter((t) => t.type === filters.type);
     }
-
     if (filters.status !== "all") {
       result = result.filter((t) => t.status.toString() === filters.status);
     }
-
     if (filters.startDate) {
       result = result.filter(
         (t) => new Date(t.created_at) >= new Date(filters.startDate)
       );
     }
-
     if (filters.endDate) {
       const endDate = new Date(filters.endDate);
       endDate.setDate(endDate.getDate() + 1);
       result = result.filter((t) => new Date(t.created_at) < endDate);
     }
-
     setFilteredTransactions(result);
   }, [filters, allTransactions]);
 
@@ -364,37 +276,159 @@ export default function TransactionHistoryPage() {
     setSelectedTransaction(null);
   };
 
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-10">
+          <Loader
+            className="w-12 h-12 animate-spin mb-4"
+            style={{ color: "var(--accent-primary)" }}
+          />
+          <p style={{ color: "var(--text-secondary)" }}>Đang tải dữ liệu...</p>
+        </div>
+      );
+    }
+
+    if (error) {
+      return (
+        <div className="flex flex-col items-center justify-center text-center p-10 bg-red-500/10 rounded-lg">
+          <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+          <p className="text-red-400">{error}</p>
+        </div>
+      );
+    }
+
+    if (filteredTransactions.length === 0) {
+      return (
+        <p
+          className="text-center p-10"
+          style={{ color: "var(--text-secondary)" }}
+        >
+          Không tìm thấy giao dịch nào.
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredTransactions.map((transaction) => (
+          <div
+            key={transaction.id}
+            className="p-4 rounded-lg border border-transparent transition-all duration-300"
+            style={{
+              backgroundColor: "var(--bg-content-800)",
+              ":hover": { borderColor: "var(--accent-primary)" },
+            }}
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: "var(--bg-content-700)" }}
+                >
+                  {getTransactionIcon(transaction.type)}
+                </div>
+                <div>
+                  <p
+                    className="font-semibold"
+                    style={{ color: "var(--text-primary)" }}
+                  >
+                    {translateTransactionType(transaction.type)}
+                  </p>
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--text-secondary)" }}
+                  >
+                    {formatDate(transaction.created_at)}
+                  </p>
+                </div>
+              </div>
+              {renderStatus(transaction.status)}
+            </div>
+            <div className="mt-4 flex justify-between items-end">
+              <div>
+                <p
+                  className="text-sm"
+                  style={{ color: "var(--text-secondary)" }}
+                >
+                  Số tiền
+                </p>
+                <p
+                  className={`text-lg font-bold ${
+                    transaction.type.includes("recharge")
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {transaction.type.includes("recharge") ? "+ " : "- "}{" "}
+                  {formatCurrency(transaction.amount)}
+                </p>
+              </div>
+              <button
+                onClick={() => handleViewDetails(transaction)}
+                className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium transition-colors"
+              >
+                <Eye className="h-4 w-4" />
+                Xem
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
-    <div className="container mx-auto p-6">
+    <div>
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-2 bg-slate-700 rounded-lg">
+          <div
+            className="p-2 rounded-lg"
+            style={{ backgroundColor: "var(--bg-content-800)" }}
+          >
             <Wallet className="h-6 w-6 text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-white">Lịch sử giao dịch</h1>
-            <p className="text-slate-400">Theo dõi các giao dịch ví của bạn</p>
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: "var(--text-primary)" }}
+            >
+              Lịch sử giao dịch
+            </h1>
+            <p style={{ color: "var(--text-secondary)" }}>
+              Theo dõi các giao dịch ví của bạn
+            </p>
           </div>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Filter className="h-5 w-5 text-slate-400" />
-          <h3 className="font-medium text-white">Bộ lọc</h3>
-        </div>
+      <div
+        className="p-6 rounded-xl border mb-6"
+        style={{
+          backgroundColor: "var(--bg-content-800)",
+          borderColor: "var(--bg-content-700)",
+        }}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-secondary)" }}
+            >
               Loại giao dịch
             </label>
             <select
               name="type"
               value={filters.type}
               onChange={handleFilterChange}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              style={{
+                backgroundColor: "var(--bg-content-700)",
+                borderColor: "var(--bg-content-700)",
+                color: "var(--text-primary)",
+              }}
             >
               <option value="all">Tất cả</option>
               <option value="recharge_bank">Nạp tiền (Ngân hàng)</option>
@@ -404,14 +438,22 @@ export default function TransactionHistoryPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-secondary)" }}
+            >
               Trạng thái
             </label>
             <select
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              style={{
+                backgroundColor: "var(--bg-content-700)",
+                borderColor: "var(--bg-content-700)",
+                color: "var(--text-primary)",
+              }}
             >
               <option value="all">Tất cả</option>
               <option value="1">Thành công</option>
@@ -419,7 +461,10 @@ export default function TransactionHistoryPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-secondary)" }}
+            >
               <Calendar className="h-4 w-4 inline mr-1" />
               Từ ngày
             </label>
@@ -428,11 +473,19 @@ export default function TransactionHistoryPage() {
               name="startDate"
               value={filters.startDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              style={{
+                backgroundColor: "var(--bg-content-700)",
+                borderColor: "var(--bg-content-700)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-secondary)" }}
+            >
               <Calendar className="h-4 w-4 inline mr-1" />
               Đến ngày
             </label>
@@ -441,88 +494,19 @@ export default function TransactionHistoryPage() {
               name="endDate"
               value={filters.endDate}
               onChange={handleFilterChange}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              className="w-full border rounded-lg px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+              style={{
+                backgroundColor: "var(--bg-content-700)",
+                borderColor: "var(--bg-content-700)",
+                color: "var(--text-primary)",
+              }}
             />
           </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full">
-            <thead className="bg-slate-700/50 border-b border-slate-700">
-              <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Ngày
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Loại
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Số tiền
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-slate-300 uppercase tracking-wider">
-                  Chi tiết
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-700">
-              {filteredTransactions.length > 0 ? (
-                filteredTransactions.map((transaction) => (
-                  <tr
-                    key={transaction.id}
-                    className="hover:bg-slate-700/30 transition-colors"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-300">
-                      {formatDate(transaction.created_at)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        {getTransactionIcon(transaction.type)}
-                        <span className="text-white">
-                          {translateTransactionType(transaction.type)}
-                        </span>
-                      </div>
-                    </td>
-                    <td
-                      className={`px-6 py-4 whitespace-nowrap font-semibold ${
-                        transaction.type.includes("recharge")
-                          ? "text-green-400"
-                          : "text-red-400"
-                      }`}
-                    >
-                      {transaction.type.includes("recharge") ? "+" : "-"}{" "}
-                      {formatCurrency(transaction.amount)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {renderStatus(transaction.status)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleViewDetails(transaction)}
-                        className="flex items-center gap-2 text-blue-400 hover:text-blue-300 font-medium transition-colors"
-                      >
-                        <Eye className="h-4 w-4" />
-                        Xem
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="5" className="text-center py-10 text-slate-400">
-                    Không tìm thấy giao dịch nào.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {/* Content */}
+      {renderContent()}
 
       <TransactionDetailModal
         transaction={selectedTransaction}
@@ -530,4 +514,6 @@ export default function TransactionHistoryPage() {
       />
     </div>
   );
-}
+};
+
+export default TransactionHistoryPage;

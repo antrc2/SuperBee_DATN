@@ -69,6 +69,8 @@ return new class extends Migration
             $table->string('slug', 255)->unique(); // Slug phải duy nhất, không null
             $table->text('image_url')->nullable();
             $table->integer('status')->default(1); // Mặc định hoạt động
+            $table->integer('count')->default(0); // Mặc định hoạt động
+            $table->string('description', 255)->nullable();
             $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
             $table->unsignedBigInteger('updated_by'); // Có thể null
             $table->timestamps();

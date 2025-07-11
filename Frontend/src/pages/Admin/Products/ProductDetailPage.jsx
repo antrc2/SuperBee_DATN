@@ -88,13 +88,13 @@ export default function ProductDetailPage() {
           <ArrowLeft size={20} />
           Quay lại danh sách
         </Link>
-        <Link
+        {/* <Link
           to={`/admin/products/${product.id}/edit`}
           className="flex items-center gap-2 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors"
         >
           <Edit size={18} />
           Chỉnh sửa
-        </Link>
+        </Link> */}
       </div>
 
       <h1 className="text-2xl font-bold text-gray-900 mb-4">
@@ -176,7 +176,7 @@ export default function ProductDetailPage() {
                 <h4 className="text-sm font-medium text-gray-700"></h4>
                 <dl>
                   <DetailItem label="Tài khoản" value={cred.username} />
-                  <DetailItem label="Mật khẩu" value="****** (Bảo mật)" />
+                  <DetailItem label="Mật khẩu" value={cred.password} />
                 </dl>
               </div>
             ))}

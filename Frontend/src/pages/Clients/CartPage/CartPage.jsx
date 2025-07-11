@@ -24,7 +24,6 @@ const formatCurrency = (amount) => {
   }).format(numberAmount);
 };
 
-// --- LOGIC MỚI: Sửa lại hàm tính giá cuối cùng ---
 // Hàm này sẽ trả về giá sale nếu hợp lệ, nếu không thì trả về giá gốc.
 const calculateFinalPrice = (product) => {
   if (!product || !product.price) return 0;
@@ -58,7 +57,8 @@ export default function CartPage() {
     if (cartItems && cartItems.length > 0) {
       const selected = {};
       cartItems.forEach((item) => {
-        if (item.status === 1) {
+        // Only pre-select items with product.status === 1
+        if (item.product && item.product.status === 1) {
           selected[item.id] = true;
         }
       });
@@ -66,8 +66,11 @@ export default function CartPage() {
     }
   }, [cartItems]);
 
-  const handleSelectItem = (itemId) => {
-    setSelectedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+  const handleSelectItem = (itemId, productStatus) => {
+    // Only allow selection if productStatus is 1
+    if (productStatus === 1) {
+      setSelectedItems((prev) => ({ ...prev, [itemId]: !prev[itemId] }));
+    }
   };
 
   const handleSelectAll = (e) => {
@@ -75,7 +78,10 @@ export default function CartPage() {
     const newSelectedItems = {};
     if (isChecked) {
       cartItems.forEach((item) => {
-        newSelectedItems[item.id] = true;
+        // Only select all if product.status is 1
+        if (item.product && item.product.status === 1) {
+          newSelectedItems[item.id] = true;
+        }
       });
     }
     setSelectedItems(newSelectedItems);
@@ -89,11 +95,11 @@ export default function CartPage() {
     }
   };
 
-  // `useMemo` này sẽ tự động tính đúng vì `calculateFinalPrice` đã được sửa
   const { totalSelectedCount, subtotalPrice, totalPrice, isAllSelected } =
     useMemo(() => {
       const itemsToCheckout = cartItems.filter(
-        (item) => selectedItems[item.id]
+        (item) =>
+          selectedItems[item.id] && item.product && item.product.status === 1
       );
       const totalSelectedCount = itemsToCheckout.length;
 
@@ -106,7 +112,9 @@ export default function CartPage() {
       const totalPrice = subtotalPrice + shippingFee;
       const isAllSelected =
         cartItems.length > 0 &&
-        cartItems.every((item) => selectedItems[item.id]);
+        cartItems.every(
+          (item) => selectedItems[item.id] || item.product.status !== 1
+        ); // Consider items not eligible for selection as "selected" for "select all" visual state
 
       return {
         totalSelectedCount,
@@ -201,7 +209,13 @@ export default function CartPage() {
                     </div>
                   </div>
                   <span className="ml-3 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent font-medium">
-                    Chọn tất cả ({cartItems.length} sản phẩm)
+                    Chọn tất cả (
+                    {
+                      cartItems.filter(
+                        (item) => item.product && item.product.status === 1
+                      ).length
+                    }{" "}
+                    sản phẩm có sẵn)
                   </span>
                 </label>
               </div>
@@ -223,10 +237,27 @@ export default function CartPage() {
                     );
                   }
 
+                  // Determine if the item should be greyed out and the message
+                  const isGreyedOut = product.status !== 1;
+                  let statusMessage = "";
+                  if (product.status === 2) {
+                    statusMessage = "Sản phẩm đang duyệt";
+                  } else if (product.status === 3) {
+                    statusMessage = "Sản phẩm không bán";
+                  } else if (product.status === 4) {
+                    statusMessage = "Sản phẩm đã bán";
+                  } else {
+                    statusMessage = "Trạng thái không xác định";
+                  }
+
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-4 rounded-xl bg-slate-700/30 border border-slate-600/30 hover:bg-slate-700/50 transition-all duration-200"
+                      className={`flex items-center justify-between p-4 rounded-xl border transition-all duration-200 ${
+                        isGreyedOut
+                          ? "bg-slate-700/10 border-slate-600/10 opacity-50 cursor-not-allowed"
+                          : "bg-slate-700/30 border-slate-600/30 hover:bg-slate-700/50"
+                      }`}
                     >
                       <div className="flex items-center flex-1">
                         {/* Checkbox */}
@@ -234,18 +265,23 @@ export default function CartPage() {
                           <div className="relative">
                             <input
                               type="checkbox"
-                              checked={!!selectedItems[item.id]}
-                              onChange={() => handleSelectItem(item.id)}
+                              checked={!!selectedItems[item.id] && !isGreyedOut}
+                              onChange={() =>
+                                handleSelectItem(item.id, product.status)
+                              }
                               className="sr-only"
+                              disabled={isGreyedOut}
                             />
                             <div
                               className={`w-5 h-5 rounded border-2 transition-all duration-200 ${
-                                selectedItems[item.id]
+                                selectedItems[item.id] && !isGreyedOut
                                   ? "bg-blue-500 border-blue-500 flex items-center justify-center"
+                                  : isGreyedOut
+                                  ? "bg-slate-500/20 border-slate-500/20"
                                   : "border-slate-500 group-hover:border-blue-400"
                               }`}
                             >
-                              {selectedItems[item.id] && (
+                              {selectedItems[item.id] && !isGreyedOut && (
                                 <svg
                                   className="w-3 h-3 text-white flex items-center justify-center"
                                   fill="currentColor"
@@ -272,12 +308,6 @@ export default function CartPage() {
                             alt={product?.category?.name || "Sản phẩm"}
                             className="w-20 h-20 object-cover rounded-lg border-2 border-slate-600/50"
                           />
-                          {/* Hiển thị % đã tính toán */}
-                          {/* {discountPercent > 0 && (
-                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                              -{discountPercent}%
-                            </div>
-                          )} */}
                         </div>
 
                         {/* Product Info */}
@@ -291,6 +321,11 @@ export default function CartPage() {
                               {product?.sku}
                             </span>
                           </p>
+                          {isGreyedOut && (
+                            <p className="text-sm text-red-400 mt-1">
+                              {statusMessage}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -298,10 +333,8 @@ export default function CartPage() {
                       <div className="flex items-center gap-6">
                         <div className="text-right">
                           <div className="text-xl font-bold text-red-400">
-                            {/* Hàm này giờ đã tính đúng giá cuối cùng */}
                             {formatCurrency(calculateFinalPrice(product))}
                           </div>
-                          {/* Hiển thị giá gốc khi có giảm giá */}
                           {discountPercent > 0 && (
                             <div className="text-sm text-slate-500 line-through">
                               {formatCurrency(originalPrice)}

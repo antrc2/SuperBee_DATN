@@ -238,7 +238,10 @@ Route::middleware(['jwt'])->group(function () {
         });
         Route::prefix('/categoryPost')->group(function () {
             Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
-            Route::post('/new', [AdminCategoryPostController::class, 'createCategoryPost']);
+            Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost']);
+            Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug']);
+            Route::Post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost']);
+            Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost']);
         });
     });
 });

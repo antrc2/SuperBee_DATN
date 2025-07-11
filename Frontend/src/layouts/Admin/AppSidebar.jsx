@@ -12,7 +12,8 @@ import {
   Calendar,
   ChevronDown,
   MoreHorizontal,
-  Newspaper
+  Newspaper,
+  Folders 
   
 } from "lucide-react";
 import Logo from "@assets/icons/logo.png";
@@ -61,8 +62,13 @@ const navItems = [
     path: "/admin/agent",
   },
   {
+    icon: <Folders />,
+    name: "CategoryPost",
+    path: "/admin/categoryPost",
+  },
+  {
     icon: <Newspaper />,
-    name: "post",
+    name: "Post",
     path: "/admin/post",
   },
 ];

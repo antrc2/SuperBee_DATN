@@ -36,21 +36,18 @@ export function AuthProvider({ children }) {
       const decoded = getDecodedToken();
       if (decoded) {
         setUser({
-          // Set user object nếu token hợp lệ
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
         });
       } else {
-        // Token không hợp lệ, xóa khỏi sessionStorage và set user về null
         sessionStorage.removeItem("access_token");
         setUser(null);
       }
     } else {
-      // Không có token trong sessionStorage, set user về null
       setUser(null);
     }
-  }, []); // Chạy một lần khi component mount
+  }, []);
 
   const login = async (credentials) => {
     setLoading(true); // Bắt đầu loading cho thao tác login
@@ -63,8 +60,32 @@ export function AuthProvider({ children }) {
       });
 
       if (!res?.data?.status) {
-        await handleLoginError(res.data);
-        return { success: false };
+        const { message, code, errors: validationErrors } = res.data;
+        switch (code) {
+          case "NO_ACTIVE": {
+            const shouldActivate = await conFim(
+              message ||
+                "Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?"
+            );
+            if (shouldActivate) {
+              navigate("/activeAcc");
+            }
+            break;
+          }
+          case "LOCKED_ACCOUNT":
+            pop(message || "Tài khoản của bạn đã bị khóa.", "e");
+            break;
+          case "INVALID_CREDENTIALS":
+            pop(message || "Tên đăng nhập hoặc mật khẩu không đúng.", "e");
+            break;
+          case "VALIDATION_ERROR":
+            pop(message || "Lỗi xác thực dữ liệu. Vui lòng kiểm tra lại.", "e");
+            break;
+          default:
+            pop(message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
+            break;
+        }
+        return { success: false, validationErrors: validationErrors || null };
       }
 
       if (!res?.data?.access_token) {
@@ -95,38 +116,12 @@ export function AuthProvider({ children }) {
         err.response?.data?.message ||
         err.message ||
         "Đăng nhập thất bại. Vui lòng thử lại.";
+      const validationErrors = err.response?.data?.errors || null;
       pop(errorMessage, "e");
       setError({ message: errorMessage, code: err.response?.status || 500 });
-      return { success: false };
+      return { success: false, validationErrors: validationErrors };
     } finally {
       setLoading(false); // Kết thúc loading
-    }
-  };
-
-  const handleLoginError = async (errorData) => {
-    const { message, code } = errorData;
-    switch (code) {
-      case "NO_ACTIVE": {
-        const shouldActivate = await conFim(
-          message ||
-            "Tài khoản của bạn chưa được kích hoạt. Bạn có muốn kích hoạt tài khoản ngay bây giờ không?"
-        );
-        if (shouldActivate) {
-          navigate("/activeAcc");
-        }
-        break;
-      }
-      case "LOCKED_ACCOUNT":
-        pop(message || "Tài khoản của bạn đã bị khóa.", "e");
-        break;
-      case "INVALID_CREDENTIALS":
-        pop(message || "Tên đăng nhập hoặc mật khẩu không đúng.", "e");
-        break;
-      case "VALIDATION_ERROR":
-        break;
-      default:
-        pop(message || "Đăng nhập thất bại. Vui lòng thử lại.", "e");
-        break;
     }
   };
 
@@ -140,9 +135,19 @@ export function AuthProvider({ children }) {
         aff: credentials.aff,
         password: credentials.password,
       });
-      if (res?.data?.status === false) {
-        throw new Error(res.data.message || "Đăng ký không thành công.");
+
+      if (!res?.data?.status) {
+        const errorMessage = res.data.message || "Đăng ký không thành công.";
+        const validationErrors = res.data.errors || null; // Capture validation errors
+        pop(errorMessage, "e");
+        setError({ message: errorMessage, code: res.status });
+        return {
+          success: false,
+          message: errorMessage,
+          validationErrors: validationErrors,
+        };
       }
+
       pop("Đăng Ký thành công", "s");
       navigate("/auth/login");
       await showAlert(
@@ -151,13 +156,17 @@ export function AuthProvider({ children }) {
       return { success: true, data: res.data };
     } catch (err) {
       const errorMessage =
-        err.response?.data?.errors ||
         err.response?.data?.message ||
         err.message ||
         "Đăng ký thất bại. Vui lòng thử lại.";
+      const validationErrors = err.response?.data?.errors || null;
       setError({ message: errorMessage, code: err.response?.status || 500 });
       pop(errorMessage, "e");
-      return { success: false, message: errorMessage };
+      return {
+        success: false,
+        message: errorMessage,
+        validationErrors: validationErrors,
+      };
     } finally {
       setLoading(false); // Kết thúc loading
     }
@@ -182,7 +191,25 @@ export function AuthProvider({ children }) {
   }, [navigate, pop]);
 
   const isLoggedIn = !!user;
-
+  const fetchUserMoney = useCallback(async () => {
+    if (!token && !user) return;
+    setLoading(true);
+    try {
+      const res = await api.get("/user/money");
+      if (res.data && res.data.status) {
+        setUser((prevUser) => ({
+          ...prevUser,
+          money: res.data.money,
+        }));
+      } else {
+        console.error("Failed to fetch user money:", res.data.message);
+      }
+    } catch (err) {
+      console.error("Error fetching user money:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token, user]);
   return (
     <AuthContext.Provider
       value={{
@@ -195,6 +222,7 @@ export function AuthProvider({ children }) {
         register,
         logout,
         setUser,
+        fetchUserMoney,
       }}
     >
       {children}

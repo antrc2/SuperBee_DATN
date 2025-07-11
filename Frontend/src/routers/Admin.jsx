@@ -1,11 +1,18 @@
+/* eslint-disable no-unused-vars */
+// src/routers/Admin.jsx
 
+import React, { Suspense } from "react"; // <-- Thêm React và Suspense
 import { Navigate, Outlet, useLoaderData } from "react-router-dom";
 import { adminModules } from "@routers/adminModules";
 import AppLayout from "@layouts/Admin/AppLayout";
-import Home from "@pages/Admin/Dashboard/Home";
+// import Home from "@pages/Admin/Dashboard/Home"; // <-- Xóa dòng này
 import ProtectedRoute from "@components/common/ProtectedRoute";
-import { NotFound } from "../pages";
-import React from "react";
+// import { NotFound } from "../pages"; // <-- Xóa dòng này
+
+// Lazy load Home và NotFound
+const Home = React.lazy(() => import("@pages/Admin/Dashboard/Home"));
+const NotFound = React.lazy(() => import("../pages/NotFound/NotFound"));
+
 const adminRoutes = [
   {
     path: "/admin",
@@ -17,12 +24,17 @@ const adminRoutes = [
     children: [
       {
         index: true,
-        element: <Home />,
+        element: (
+          <Suspense fallback={<div>Đang tải Dashboard Admin...</div>}>
+            {" "}
+            {/* Suspense cho Home */}
+            <Home />
+          </Suspense>
+        ),
       },
       // cho mỗi module
 
       ...adminModules.map(
-        // Lấy thêm `allowedRoles` từ mỗi module
         ({
           name,
           list: List,
@@ -34,26 +46,80 @@ const adminRoutes = [
           allowedRoles,
         }) => ({
           path: name,
-          // Bọc Outlet bằng ProtectedRoute và truyền `allowedRoles` vào
           element: (
             <ProtectedRoute allowedRoles={allowedRoles}>
               <Outlet />
             </ProtectedRoute>
           ),
-          // Các route con bên trong sẽ được bảo vệ bởi Outlet ở trên
           children: [
-            { index: true, element: <List /> },
-            { path: "new", element: <Create /> },
-            { path: "browse", element: <Browse /> },
-            { path: ":id", element: <Show /> },
-            { path: ":id/edit", element: <Edit /> },
-            { path: ":id/update", element: <Update /> },
-            { path: "*", element: <NotFound /> },
+            {
+              index: true,
+              element: (
+                <Suspense fallback={<div>Đang tải danh sách...</div>}>
+                  <List />
+                </Suspense>
+              ),
+            },
+            {
+              path: "new",
+              element: (
+                <Suspense fallback={<div>Đang tải trang tạo mới...</div>}>
+                  <Create />
+                </Suspense>
+              ),
+            },
+            {
+              path: "browse",
+              element: (
+                <Suspense fallback={<div>Đang tải trang duyệt...</div>}>
+                  <Browse />
+                </Suspense>
+              ),
+            },
+            {
+              path: ":id",
+              element: (
+                <Suspense fallback={<div>Đang tải chi tiết...</div>}>
+                  <Show />
+                </Suspense>
+              ),
+            },
+            {
+              path: ":id/edit",
+              element: (
+                <Suspense fallback={<div>Đang tải trang chỉnh sửa...</div>}>
+                  <Edit />
+                </Suspense>
+              ),
+            },
+            {
+              path: ":id/update",
+              element: (
+                <Suspense fallback={<div>Đang tải trang cập nhật...</div>}>
+                  <Update />
+                </Suspense>
+              ),
+            },
+            {
+              path: "*",
+              element: (
+                <Suspense fallback={<div>Đang tải trang lỗi...</div>}>
+                  <NotFound />
+                </Suspense>
+              ),
+            },
           ],
         })
       ),
       // catch-all /admin/*
-      { path: "*", element: <NotFound /> },
+      {
+        path: "*",
+        element: (
+          <Suspense fallback={<div>Đang tải trang lỗi...</div>}>
+            <NotFound />
+          </Suspense>
+        ),
+      },
     ],
   },
 ];

@@ -5,7 +5,6 @@ import { useNotification } from "../../../contexts/NotificationContext";
 import { useCart } from "@contexts/CartContext";
 
 export default function Product({ product }) {
-  console.log("🚀 ~ Product ~ product:", product);
   const formatPrice = (num) =>
     num.toLocaleString("vi-VN", { style: "currency", currency: "VND" });
   const { pop } = useNotification();

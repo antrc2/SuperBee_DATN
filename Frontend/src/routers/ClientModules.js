@@ -1,26 +1,54 @@
-import {
-  Home,
-  RechargeCard,
-  ShopAccount,
-  ListProducts,
-  ProductDetail,
-  HistoryProducts,
-  Profile,
-  ChangePassword,
-  TransactionHistoryPage,
-  CartPage,
-  Pay,
-} from "@pages";
-import {
-  ActivateWebPage,
-  ActiveAcc,
-  ChatComponent,
-  EmailVerification,
-  ForgotPassword,
-  HistoryOrder,
-  ResetPassword,
-} from "../pages";
-import UnauthorizedPage from "../pages/Error/UnauthorizedPage";
+import React from "react";
+
+// Thay đổi các import trực tiếp thành React.lazy
+const Home = React.lazy(() => import("@pages/Clients/Home/Home"));
+const RechargeCard = React.lazy(() =>
+  import("@pages/Clients/RechargeCard/RechargeCard")
+);
+const ShopAccount = React.lazy(() =>
+  import("@pages/Clients/ShopAccount/ShopAccount")
+);
+const ListProducts = React.lazy(() =>
+  import("@pages/Clients/ListProducts/ListProducts")
+);
+const ProductDetail = React.lazy(() =>
+  import("@pages/Clients/ProductDetail/ProductDetail")
+);
+const HistoryProducts = React.lazy(() =>
+  import("@pages/Clients/HistoryProducts/HistoryProducts")
+);
+const Profile = React.lazy(() => import("@pages/Clients/Profile/Profile"));
+const ChangePassword = React.lazy(() =>
+  import("@pages/Clients/Profile/ChangePassword")
+);
+const TransactionHistoryPage = React.lazy(() =>
+  import("@pages/Clients/Profile/TransactionHistoryPage")
+);
+const CartPage = React.lazy(() => import("@pages/Clients/CartPage/CartPage"));
+const Pay = React.lazy(() => import("@pages/Clients/Pay/Pay"));
+
+const ActivateWebPage = React.lazy(() =>
+  import("../pages/Clients/ActiveDomain/ActivateWebPage")
+);
+const ActiveAcc = React.lazy(() =>
+  import("../pages/Clients/ResetPassword/ActiveAcc")
+);
+const ChatComponent = React.lazy(() => import("../pages/Chat/Chat"));
+const EmailVerification = React.lazy(() =>
+  import("../pages/Clients/EmailVerification/EmailVerification")
+);
+const ForgotPassword = React.lazy(() =>
+  import("../pages/Clients/ForgotPassword/ForgotPassword")
+);
+const HistoryOrder = React.lazy(() =>
+  import("../pages/Clients/Profile/HistoryOrder")
+);
+const ResetPassword = React.lazy(() =>
+  import("../pages/Clients/ResetPassword/ResetPassword")
+);
+const UnauthorizedPage = React.lazy(() =>
+  import("../pages/Error/UnauthorizedPage")
+);
 
 export const clientModules = [
   {
@@ -96,6 +124,12 @@ export const clientModules = [
   {
     path: "/activeWeb",
     view: ActivateWebPage,
+  },
+  // Thêm ChatComponent nếu nó là một route độc lập
+  {
+    path: "/chat",
+    view: ChatComponent,
+    requiresAuth: true, // Hoặc false tùy vào yêu cầu của bạn
   },
 ];
 

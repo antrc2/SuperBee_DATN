@@ -10,7 +10,7 @@ import { useAppStatus } from "./AppStatusContext";
 const HomeContext = createContext();
 
 export function HomeProvider({ children }) {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, fetchUserMoney } = useAuth();
   const { style } = useAppStatus();
   useEffect(() => {
     if (style != "def") {
@@ -34,6 +34,9 @@ export function HomeProvider({ children }) {
       }
     }
   }, [style]);
+  useEffect(() => {
+    fetchUserMoney();
+  }, []);
 
   const [notifications, setNotifications] = useState({
     count: 0,

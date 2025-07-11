@@ -12,6 +12,7 @@ import { useNotification } from "@contexts/NotificationContext";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";
+import { useAuth } from "../../../contexts/AuthContext";
 
 // Hàm định dạng tiền tệ
 const formatCurrency = (amount) => {
@@ -166,7 +167,7 @@ export default function Pay() {
     const finalAmount = Math.max(totalPrice - discountAmount, 0);
     return { subtotal, taxAmount, discountAmount, finalAmount };
   }, [totalPrice, taxRate, appliedDiscount]);
-
+  const { fetchUserMoney } = useAuth();
   // Kiểm tra và áp dụng mã giảm giá
   const handleApplyDiscountCode = async (codeToApply = discountCodeInput) => {
     const code = codeToApply.trim().toUpperCase();
@@ -189,7 +190,9 @@ export default function Pay() {
           total_price_after_discount:
             parseFloat(response.data.total_price_after_discount) || 0,
         });
-        setTotalPrice(parseFloat(response.data.total_price_after_discount) || 0);
+        setTotalPrice(
+          parseFloat(response.data.total_price_after_discount) || 0
+        );
         pop(response.data.message, "s");
         setDiscountCodeInput("");
       } else {
@@ -243,6 +246,7 @@ export default function Pay() {
         setAppliedDiscount(null);
         pop(response.data.message, "s");
         await fetchCartItems();
+        await fetchUserMoney();
         navigate("/info/orders");
       } else {
         pop(response.data.message, "e");

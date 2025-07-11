@@ -485,16 +485,29 @@ class PartnerProductController extends Controller
     public function cancel(Request $request, $id)
     {
         try {
-            if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)
+            $product = Product::where("id", $id)
+                ->where("created_by", $request->user_id)
+                ->first();
+            if (!$product) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Sản phẩm không tồn tại",
+                ], 404);
+            }
+            if (in_array($product->status, [1, 4])) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Sản phẩm đang được giao bán hoặc đã bán, không thể hủy bán!",
+                ], 400);
+            }
+            if (in_array($product->status, [2, 3])) {
+                $updated = Product::where("id", $id)
                     ->where("created_by", $request->user_id)
-                    ->whereIn("status", [1, 2])
+                    ->whereIn("status", [2, 3])
                     ->update([
                         "status" => 3
                     ]);
-
-
-                if ($product) {
+                if ($updated) {
                     return response()->json([
                         "status" => true,
                         "message" => "Đã hủy bán sản phẩm",
@@ -505,11 +518,6 @@ class PartnerProductController extends Controller
                         "message" => "Không thể hủy bán sản phẩm",
                     ], 400);
                 }
-            } else {
-                return response()->json([
-                    "status" => False,
-                    "message" => "Sản phẩm không tồn tại",
-                ], 404);
             }
         } catch (\Throwable $th) {
             //throw $th;
@@ -581,16 +589,29 @@ class PartnerProductController extends Controller
     public function restore(Request $request, $id)
     {
         try {
-            if ($this->check_isset_product_by_id($id)) {
-                $product = Product::where("id", $id)
+            $product = Product::where("id", $id)
+                ->where("created_by", $request->user_id)
+                ->first();
+            if (!$product) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Sản phẩm không tồn tại",
+                ], 404);
+            }
+            if (in_array($product->status, [1, 4])) {
+                return response()->json([
+                    "status" => false,
+                    "message" => "Sản phẩm đang được giao bán hoặc đã bán, không thể khôi phục!",
+                ], 400);
+            }
+            if ($product->status === 3) {
+                $updated = Product::where("id", $id)
                     ->where("created_by", $request->user_id)
                     ->where("status", 3)
                     ->update([
                         "status" => 2
                     ]);
-
-
-                if ($product) {
+                if ($updated) {
                     return response()->json([
                         "status" => true,
                         "message" => "Khôi phục sản phẩm thành công",
@@ -601,11 +622,6 @@ class PartnerProductController extends Controller
                         "message" => "Không thể Khôi phục sản phẩm",
                     ], 400);
                 }
-            } else {
-                return response()->json([
-                    "status" => False,
-                    "message" => "Sản phẩm không tồn tại",
-                ], 404);
             }
         } catch (\Throwable $th) {
             //throw $th;

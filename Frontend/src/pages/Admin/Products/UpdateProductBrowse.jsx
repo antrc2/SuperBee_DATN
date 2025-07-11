@@ -16,6 +16,7 @@ export default function UpdateProductBrowse() {
     category_id: "",
     category_name: "",
     price: "",
+    import_price: "",
     sale: "",
     username: "",
     password: "",
@@ -23,6 +24,7 @@ export default function UpdateProductBrowse() {
     images: [],
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [formError, setFormError] = useState({});
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -38,6 +40,7 @@ export default function UpdateProductBrowse() {
             category_id: productItem.category_id || "",
             category_name: productItem.category?.name || "",
             price: productItem.price || "",
+            import_price:productItem.import_price||"",
             sale: productItem.sale || "",
             username: productItem.credentials[0]?.username || "",
             password: productItem.credentials[0]?.password || "",
@@ -59,24 +62,64 @@ export default function UpdateProductBrowse() {
     fetchProduct();
   }, [id]);
 
-  const handleUpdateSubmit = async (formData) => {
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    if (Number(formData.price) <= Number(formData.import_price)) {
+      errors.price = "Giá bán phải lớn hơn giá gốc.";
+    }
+    if (formData.sale && Number(formData.sale) >= Number(formData.price)) {
+      errors.sale = "Giá sale phải nhỏ hơn giá bán.";
+    }
+    return errors;
+  };
+
+  const handleAccept = async () => {
     setIsLoading(true);
     setError(null);
-
+    setFormError({});
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormError(errors);
+      setIsLoading(false);
+      return;
+    }
     try {
-      formData.append("status", "1");
-      const response = await api.post(`/admin/products/${id}/accept`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+      const payload = new FormData();
+      payload.append("price", formData.price);
+      payload.append("sale", formData.sale);
+      payload.append("status", "1");
+      payload.append("password", newPassword ? newPassword : formData.password);
+      const response = await api.post(`/admin/products/${id}/accept`, payload, {
+        headers: { "Content-Type": "multipart/form-data" },
       });
       if (response.status === 201 || response.status === 200) {
         navigate("/admin/products");
       }
     } catch (err) {
-      console.error(err);
       setError(
-        err.response?.data?.message || "Cập nhật mật khẩu thất bại, vui lòng thử lại."
+        err.response?.data?.message || "Cập nhật sản phẩm thất bại, vui lòng thử lại."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await api.post(`/admin/products/${id}/deny`);
+      if (response.status === 201 || response.status === 200) {
+        navigate("/admin/products");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Từ chối sản phẩm thất bại, vui lòng thử lại."
       );
     } finally {
       setIsLoading(false);
@@ -85,11 +128,7 @@ export default function UpdateProductBrowse() {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    const formData = new FormData();
-    if (newPassword) {
-      formData.append("password", newPassword);
-    }
-    handleUpdateSubmit(formData);
+    handleAccept();
   };
 
   if (isFetching) {
@@ -128,16 +167,31 @@ export default function UpdateProductBrowse() {
                 />
               </div>
               <div>
-                <label htmlFor="price" className="block mb-1 text-sm">
+                <label htmlFor="import_price" className="block mb-1 text-sm">
                   Giá gốc
+                </label>
+                <input
+                  name="import_price"
+                  type="number"
+                  value={formData.import_price}
+                  readOnly
+                  className="w-full p-2 rounded border bg-gray-100"
+                />
+              </div>
+              <div>
+                <label htmlFor="price" className="block mb-1 text-sm">
+                  Giá Bán
                 </label>
                 <input
                   name="price"
                   type="number"
                   value={formData.price}
-                  readOnly
-                  className="w-full p-2 rounded border bg-gray-100"
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded border"
                 />
+                {formError.price && (
+                  <div className="text-red-500 text-xs mt-1">{formError.price}</div>
+                )}
               </div>
               <div>
                 <label htmlFor="sale" className="block mb-1 text-sm">
@@ -147,9 +201,12 @@ export default function UpdateProductBrowse() {
                   name="sale"
                   type="number"
                   value={formData.sale}
-                  readOnly
-                  className="w-full p-2 rounded border bg-gray-100"
+                  onChange={handleInputChange}
+                  className="w-full p-2 rounded border"
                 />
+                {formError.sale && (
+                  <div className="text-red-500 text-xs mt-1">{formError.sale}</div>
+                )}
               </div>
             </div>
           </div>
@@ -270,13 +327,21 @@ export default function UpdateProductBrowse() {
             </div>
           </div>
 
-          <div className="pt-6 flex justify-end">
+          <div className="pt-6 flex gap-4 justify-end">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className="bg-red-600 text-white py-2 px-4 rounded-md hover:bg-red-700 disabled:bg-red-400"
+            >
+              {isLoading ? "Đang xử lý..." : "Từ chối sản phẩm"}
+            </button>
             <button
               type="submit"
-              disabled={isLoading || !newPassword}
+              disabled={isLoading}
               className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
             >
-              {isLoading ? "Đang lưu..." : "Cập Nhật Mật Khẩu"}
+              {isLoading ? "Đang lưu..." : "Duyệt sản phẩm"}
             </button>
           </div>
         </form>

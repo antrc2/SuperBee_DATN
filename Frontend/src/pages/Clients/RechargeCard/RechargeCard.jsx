@@ -81,7 +81,7 @@ const formatCurrency = (amount) => {
     currency: "VND",
   }).format(amount);
 };
-
+import { useAuth } from "../../../contexts/AuthContext";
 export default function RechargeCard() {
   const [activeTab, setActiveTab] = useState("card");
   const [selectedCardType, setSelectedCardType] = useState(cardTypes[0].id);
@@ -95,7 +95,7 @@ export default function RechargeCard() {
   const [rechargeHistory, setRechargeHistory] = useState([]);
   const [showCopiedMessage, setShowCopiedMessage] = useState("");
   const [user, setUser] = useState(null);
-
+  const { fetchUserMoney } = useAuth();
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
@@ -210,6 +210,7 @@ export default function RechargeCard() {
               : message || "Nạp thẻ thất bại. Vui lòng thử lại.",
         });
       }
+      await fetchUserMoney();
     } catch (error) {
       console.error("Error:", error.response?.data);
 

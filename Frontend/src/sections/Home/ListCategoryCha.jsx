@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 
 export default function CategorySlider({ categories }) {
-  console.log("🚀 ~ CategorySlider ~ categories:", categories);
   const scrollContainerRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);

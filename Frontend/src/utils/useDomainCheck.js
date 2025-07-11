@@ -38,14 +38,13 @@ export function useDomainCheck(apiKey) {
       }
       const code = response.data?.code;
       const style = response.data?.style;
-      // console.log("🚀 ~ checkDomain ~ code:", code);
 
       if (code === "ACTIVE") {
         setDomainStatus("active");
         sessionStorage.setItem("code", "active");
 
         setErrorMessage(null);
-        if (style !== "NOACTIVE") {
+        if (style !== "NOACTIVE" && style != null) {
           const { template_name, favicon_url, logo_url, shop_name, slogan } =
             style;
           const settingToStore = {
@@ -57,7 +56,8 @@ export function useDomainCheck(apiKey) {
           };
           sessionStorage.setItem("setting", JSON.stringify(settingToStore));
         } else {
-          sessionStorage.setItem("setting", "def");
+          const def = "def";
+          sessionStorage.setItem("setting", JSON.stringify(def));
         }
       } else if (code === "NO_ACTIVE") {
         setDomainStatus("inactive");

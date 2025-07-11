@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, EyeOff, Eye, EyeClosed } from "lucide-react";
+import { ChevronLeft, Eye, EyeClosed } from "lucide-react"; // Only keep Eye and EyeClosed
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false);
-
-  const { register: authRegister, loading, error: errorBE, user } = useAuth();
+  const { register: authRegister, loading } = useAuth();
   const location = useLocation();
 
   const {
@@ -28,26 +27,15 @@ export default function SignUpForm() {
   const onSubmit = async (data) => {
     clearErrors();
     const affiliateId = getAffiliateId();
-    try {
-      await authRegister({ ...data, aff: affiliateId });
-    } catch (err) {
-      console.error("Register form submission error:", err);
-      // Assuming errorBE.message contains server-side validation errors
-      // in an object format like { username: ["message"], email: ["message"] }
-      if (err.message && typeof err.message === "object") {
-        Object.entries(err.message).forEach(([field, messages]) => {
-          setFormError(field, {
-            type: "server",
-            message: messages[0],
-          });
+    const result = await authRegister({ ...data, aff: affiliateId });
+
+    if (!result.success && result.validationErrors) {
+      Object.entries(result.validationErrors).forEach(([field, messages]) => {
+        setFormError(field, {
+          type: "server",
+          message: Array.isArray(messages) ? messages[0] : messages,
         });
-      } else {
-        setFormError("general", {
-          type: "manual",
-          message:
-            err.message || "Đã xảy ra lỗi không xác định. Vui lòng thử lại.",
-        });
-      }
+      });
     }
   };
 
@@ -76,8 +64,8 @@ export default function SignUpForm() {
               Enter your email and password to sign up!
             </p>
           </div>
-          {/* Display User Data on Success (using user from import { useAuth } from "@contexts/AuthContext";) - This will likely be handled by a redirect */}
-          {user && (
+          {/* Removed direct user success message and general backend error display */}
+          {/* {user && (
             <div className="p-4 bg-green-100 rounded-md text-green-800 mb-5">
               <h3 className="mb-2 text-lg font-semibold text-green-800">
                 Đăng ký thành công!
@@ -87,10 +75,10 @@ export default function SignUpForm() {
                 hướng.
               </p>
             </div>
-          )}
+          )} */}
 
-          {/* Display general backend errors */}
-          {errorBE && !errors.username && !errors.email && !errors.password && (
+          {/* Removed general backend errors */}
+          {/* {errorBE && !errors.username && !errors.email && !errors.password && (
             <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md mb-5">
               <p>
                 {errorBE.message && typeof errorBE.message === "string"
@@ -103,7 +91,7 @@ export default function SignUpForm() {
             <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md mb-5">
               <p>{errors.general.message}</p>
             </div>
-          )}
+          )} */}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
@@ -130,19 +118,16 @@ export default function SignUpForm() {
                       },
                     })}
                     // Clear errors for this field when user starts typing again
-                    onChange={() => clearErrors("username")}
+                    onChange={(e) => {
+                      clearErrors("username"); // Clear error when typing
+                      register("username").onChange(e);
+                    }}
                   />
                 </div>
-                {/* Display react-hook-form validation errors */}
+                {/* Display react-hook-form validation errors (including server-side ones set by setFormError) */}
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
-                  </p>
-                )}
-                {/* Display specific backend username error if any and no client error */}
-                {errorBE?.message?.username && !errors.username && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errorBE.message.username[0]}
                   </p>
                 )}
               </div>
@@ -169,7 +154,11 @@ export default function SignUpForm() {
                       },
                     })}
                     // Clear errors for this field when user starts typing again
-                    onChange={() => clearErrors("email")}
+
+                    onChange={(e) => {
+                      clearErrors("email"); // Clear error when typing
+                      register("email").onChange(e);
+                    }}
                   />
                 </div>
                 {/* Display react-hook-form validation errors */}
@@ -178,12 +167,6 @@ export default function SignUpForm() {
                     {errors.email.message}
                   </p>
                 )}{" "}
-                {/* Display specific backend email error if any and no client error */}
-                {errorBE?.message?.email && !errors.email && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errorBE.message.email[0]}
-                  </p>
-                )}
               </div>
 
               {/* Password Field */}
@@ -208,7 +191,10 @@ export default function SignUpForm() {
                       },
                     })}
                     // Clear errors for this field when user starts typing again
-                    onChange={() => clearErrors("password")}
+                    onChange={(e) => {
+                      clearErrors("password"); // Clear error when typing
+                      register("password").onChange(e);
+                    }}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
@@ -225,12 +211,6 @@ export default function SignUpForm() {
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.password.message}
-                  </p>
-                )}
-                {/* Display specific backend password error if any and no client error */}
-                {errorBE?.message?.password && !errors.password && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errorBE.message.password[0]}
                   </p>
                 )}
               </div>

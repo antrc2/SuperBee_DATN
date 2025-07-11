@@ -8,6 +8,7 @@ use App\Mail\ResetPassword;
 use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
 use App\Models\Business_setting;
+use App\Models\Notification;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Web;
@@ -53,7 +54,6 @@ class AuthController extends Controller
                 "style" => "NOACTIVE"
             ], 200);
         }
-
     }
 
     /**
@@ -336,6 +336,15 @@ class AuthController extends Controller
                     "loginUrl" => "http://localhost:5173/auth/login"
                 ],
             ));
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 1,
+                'content' => "Chào mừng bạn đã đến với tôi hi hi hi hi hi",
+                'link' => null,
+                "published_at" => now(),
+                'is_read' => false,
+                "expires_at" => now()->addDays(3),
+            ]);
             // 9. Trả về phản hồi thành công
             return response()->json([
                 "message" => "Tài khoản của bạn đã được kích hoạt thành công!",

@@ -1,5 +1,5 @@
 // src/pages/EmailVerification.js
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import api from "@utils/http"; // Ensure this path is correct
 
@@ -7,87 +7,95 @@ import { getDecodedToken } from "../../../utils/tokenUtils"; // Ensure this path
 import { useAuth } from "@contexts/AuthContext";
 
 const EmailVerification = () => {
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(""); // Chỉ giữ lại state cho lỗi
   const [token, setToken] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // Vẫn giữ isLoading để ẩn nút nếu có
   const location = useLocation();
   const navigate = useNavigate();
   const { setUser } = useAuth();
+
+  // Sử dụng useRef để lưu trữ trạng thái đã gửi yêu cầu hay chưa
+  const isVerificationAttempted = useRef(false);
+
+  const handleVerifyEmail = useCallback(
+    async (verificationToken) => {
+      // Kiểm tra xem đã cố gắng xác minh trước đó chưa
+      if (isVerificationAttempted.current) {
+        console.log("Xác minh đã được thử, bỏ qua yêu cầu trùng lặp.");
+        return;
+      }
+
+      if (!verificationToken) {
+        setError("Không có mã xác minh để thực hiện. Vui lòng tải lại trang.");
+        return;
+      }
+
+      // Đánh dấu là đã bắt đầu cố gắng xác minh
+      isVerificationAttempted.current = true;
+      setIsLoading(true);
+      setError(""); // Clear any previous error before starting
+
+      try {
+        const response = await api.get(
+          `/verify-email?token=${verificationToken}`
+        );
+
+        if (response?.data?.status === false) {
+          throw new Error(
+            response.data.message ||
+              "Không nhận được access_token từ server email."
+          );
+        }
+
+        const accessToken = response.data.access_token;
+        sessionStorage.setItem("access_token", accessToken);
+
+        const decoded = getDecodedToken();
+        if (decoded) {
+          setUser({
+            name: decoded.name,
+            money: decoded.money,
+            avatar: decoded.avatar,
+          });
+          navigate("/");
+        } else {
+          throw new Error(
+            "Không thể giải mã token từ phản hồi server. Vui lòng thử lại."
+          );
+        }
+      } catch (err) {
+        console.log("🚀 ~ verifyEmail ~ err:", err);
+        if (err.response && err.response.data) {
+          setError(
+            err.response.data.message || "Đã xảy ra lỗi khi xác minh email."
+          );
+        } else {
+          setError(
+            "Không thể kết nối đến máy chủ để xác minh email. Vui lòng kiểm tra kết nối của bạn."
+          );
+        }
+      } finally {
+        setIsLoading(false); // Stop loading regardless of success/failure
+      }
+    },
+    [navigate, setUser]
+  );
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const receivedToken = queryParams.get("token");
     if (receivedToken) {
       setToken(receivedToken);
-      setMessage(
-        "Chào mừng! Nhấn nút bên dưới để kích hoạt tài khoản của bạn."
-      );
+      // Gọi hàm xác minh email chỉ khi chưa được gọi trước đó
+      if (!isVerificationAttempted.current) {
+        handleVerifyEmail(receivedToken);
+      }
     } else {
       setError(
         "Không tìm thấy mã xác minh trong liên kết. Vui lòng kiểm tra lại đường dẫn."
       );
     }
-  }, [location.search]);
-
-  const handleVerifyEmail = useCallback(async () => {
-    if (!token) {
-      setError("Không có mã xác minh để thực hiện. Vui lòng tải lại trang.");
-      return;
-    }
-
-    setIsLoading(true);
-    setMessage("Đang xác minh tài khoản của bạn... ⏳"); // Animated text for processing
-    setError("");
-
-    try {
-      const response = await api.get(`/verify-email?token=${token}`);
-      console.log("🚀 ~ verifyEmail ~ response:", response);
-
-      if (response?.data?.status === false) {
-        throw new Error(
-          response.data.message ||
-            "Không nhận được access_token từ server email."
-        );
-      }
-
-      // alert(response?.data?.message); // Removed alert for smoother UX
-      const accessToken = response.data.access_token;
-
-      sessionStorage.setItem("access_token", accessToken);
-
-      const decoded = getDecodedToken();
-      if (decoded) {
-        setUser({ name: decoded.name, money: decoded.money });
-        setMessage("Tài khoản của bạn đã được kích hoạt thành công! 🎉");
-        setError(""); // Clear error message on success
-
-        // Wait 3 seconds, then redirect
-        setTimeout(() => {
-          navigate("/"); // Redirect to home page
-        }, 3000); // Wait 3 seconds
-      } else {
-        throw new Error(
-          "Không thể giải mã token từ phản hồi server. Vui lòng thử lại."
-        );
-      }
-    } catch (err) {
-      console.log("🚀 ~ verifyEmail ~ err:", err);
-      if (err.response && err.response.data) {
-        setError(
-          err.response.data.message || "Đã xảy ra lỗi khi xác minh email."
-        );
-      } else {
-        setError(
-          "Không thể kết nối đến máy chủ để xác minh email. Vui lòng kiểm tra kết nối của bạn."
-        );
-      }
-      setMessage(""); // Clear success message if there's an error
-      // No redirection on error, keep user on page to see error
-    } finally {
-      setIsLoading(false); // Stop loading regardless of success/failure
-    }
-  }, [token, navigate, setUser]);
+  }, [location.search, handleVerifyEmail]);
 
   return (
     <div
@@ -100,59 +108,41 @@ const EmailVerification = () => {
         Xác Minh Email Của Bạn 💌
       </h2>
 
-      {/* Message and Error Display */}
-      {message && (
-        <p className="bg-blue-100 border border-blue-400 text-blue-700 px-6 py-4 rounded-lg relative mb-6 font-semibold text-lg animate-fade-in">
-          {message}
-        </p>
-      )}
+      {/* Message removed, only error display */}
       {error && (
         <p className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg relative mb-6 font-semibold text-lg animate-shake">
           {error}
         </p>
       )}
 
-      {/* Verification Button */}
-      {token && !error && (
-        <button
-          onClick={handleVerifyEmail}
-          disabled={isLoading}
-          className={`w-full py-4 px-6 mt-8 rounded-lg font-bold text-white text-xl 
-                     transition duration-300 ease-in-out transform 
-                     ${
-                       isLoading
-                         ? "bg-purple-300 cursor-not-allowed flex items-center justify-center space-x-3"
-                         : "bg-purple-500 hover:bg-purple-600 hover:scale-105 shadow-md hover:shadow-lg"
-                     }`}
-        >
-          {isLoading ? (
-            <>
-              <svg
-                className="animate-spin h-6 w-6 text-white"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                ></circle>
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                ></path>
-              </svg>
-              <span>Đang xử lý...</span>
-            </>
-          ) : (
-            "Kích Hoạt Tài Khoản Ngay! ✨"
-          )}
-        </button>
+      {/* Loading state indicator - simplified */}
+      {isLoading && !error && (
+        <div className="flex items-center justify-center space-x-3 mt-8">
+          <svg
+            className="animate-spin h-8 w-8 text-purple-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            ></path>
+          </svg>
+          <span className="text-xl font-semibold text-gray-700">
+            Đang kiểm tra...
+          </span>{" "}
+          {/* Text changed */}
+        </div>
       )}
 
       {/* Guidance message for errors */}

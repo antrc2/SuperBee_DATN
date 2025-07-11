@@ -20,25 +20,34 @@ const queryClient = new QueryClient({
     queries: {
       // Dữ liệu được coi là "stale" sau 5 phút. Sau thời gian này, React Query
       // sẽ fetch lại trong nền nếu có component nào yêu cầu dữ liệu đó.
+      // Thời gian này hợp lý cho hầu hết các ứng dụng CRUD.
       staleTime: 1000 * 60 * 5, // 5 phút
 
-      // Dữ liệu sẽ bị xóa khỏi cache sau 1 giờ nếu không có component nào đang sử dụng nó (observer = 0)
+      // Dữ liệu sẽ bị xóa khỏi cache sau 1 giờ nếu không có component nào đang sử dụng nó.
+      // Giúp giải phóng bộ nhớ nhưng vẫn giữ dữ liệu đủ lâu để tái sử dụng.
       cacheTime: 1000 * 60 * 60, // 1 giờ
 
-      // Mặc định, React Query sẽ tự động fetch lại dữ liệu khi cửa sổ trình duyệt được focus
+      // Mặc định, React Query sẽ tự động fetch lại dữ liệu khi cửa sổ trình duyệt được focus.
+      // Rất hữu ích để đảm bảo dữ liệu luôn cập nhật khi người dùng quay lại ứng dụng.
       refetchOnWindowFocus: true,
 
-      // Mặc định, React Query sẽ tự động fetch lại dữ liệu khi component được mount (render lần đầu)
-      refetchOnMount: true,
+      // KHÔNG tự động fetch lại khi component được mount.
+      // Đây là thay đổi quan trọng nhất để tránh các cuộc gọi API không cần thiết
+      // khi người dùng điều hướng giữa các trang hoặc các component được render lại.
+      refetchOnMount: false,
 
-      // Mặc định, React Query sẽ tự động fetch lại dữ liệu khi mạng được kết nối lại
+      // Mặc định, React Query sẽ tự động fetch lại dữ liệu khi mạng được kết nối lại.
+      // Giúp ứng dụng phục hồi mượt mà sau khi mất kết nối.
       refetchOnReconnect: true,
 
-      // Nếu một query bị lỗi, nó sẽ được thử lại 3 lần theo mặc định (với khoảng thời gian tăng dần)
-      retry: 1,
+      // Nếu một query bị lỗi, nó sẽ được thử lại 3 lần.
+      // Giá trị mặc định này cung cấp khả năng phục hồi tốt hơn trước các lỗi mạng hoặc API tạm thời,
+      // so với việc chỉ thử lại 1 lần.
+      retry: 3,
     },
     mutations: {
       // Các tùy chọn mặc định cho mutation (ví dụ: xử lý lỗi chung)
+      // Có thể thêm onError, onSuccess tại đây nếu cần xử lý chung cho tất cả mutation.
     },
   },
 });

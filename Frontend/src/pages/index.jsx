@@ -28,7 +28,7 @@ import TrangDanhSachPost from "./Admin/Post/TrangDanhSachPost";
 import ShowPostPage from "./Admin/Post/ShowPostPage";
 import CreatePostPage from "./Admin/Post/CreatePostPage";
 import EditPostPage from "./Admin/Post/EditPostPage";
-
+import TrangDanhSachCategoryPost from "./Admin/CategoryPost/TrangDanhSachCategoryPost";
 
 import TrangDanhSachAccGamePartner from "./Partner/Products/TrangDanhSachAccGame";
 import ProductDetailPagePartner from "./Partner/Products/ProductDetailPagePartner";
@@ -114,6 +114,7 @@ export {
   TrangDanhSachPost,
   ShowPostPage,
   CreatePostPage,
-  EditPostPage
+  EditPostPage,
+  TrangDanhSachCategoryPost,
 
 };

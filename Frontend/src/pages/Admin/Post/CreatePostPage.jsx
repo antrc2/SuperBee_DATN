@@ -303,7 +303,6 @@ export default function CreatePostPage() {
                 setNewCategoryDescription('');
             }
         } catch (err) {
-            console.error("Lỗi khi gửi bài viết:", err.response?.data || err.message);
             setGlobalError(
                 err.response?.data?.message || "Có lỗi xảy ra khi tạo bài viết, vui lòng thử lại."
             );

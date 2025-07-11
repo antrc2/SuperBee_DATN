@@ -24,6 +24,7 @@ const Layout = ({
   activeFilterCount,
   initialFilters,
   filterConfig,
+  showfilter = true,
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -60,6 +61,7 @@ const Layout = ({
                   className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
               </div>
+              {showfilter && (
 
               <div className="relative">
                 <button
@@ -76,6 +78,8 @@ const Layout = ({
                   )}
                 </button>
               </div>
+              )
+              }
 
               {showAddButton && (
               

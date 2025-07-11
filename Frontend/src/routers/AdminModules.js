@@ -1,4 +1,5 @@
 import React from "react"; // <-- Thêm dòng này
+import EditCategoryPost from "../pages/Admin/CategoryPost/EditCategoryPostPage";
 
 // Thay đổi các import trực tiếp thành React.lazy
 const CategoryPage = React.lazy(() =>
@@ -7,6 +8,7 @@ const CategoryPage = React.lazy(() =>
 const CreateCategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/CreateCategoryPage")
 );
+const CreateCategoryPostPage = React.lazy(() => import("@pages/Admin/CategoryPost/CreateCategoryPostPage.jsx"));
 const EditCategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/EditCategoryPage")
 );
@@ -49,6 +51,9 @@ const CreateBanners = React.lazy(() =>
 const EditBanner = React.lazy(() => import("@pages/Admin/Banners/EditBanner"));
 const TrangDanhSachAccGame = React.lazy(() =>
   import("@pages/Admin/Products/TrangDanhSachAccGame")
+);
+const TrangDanhSachCategoryPost = React.lazy(() =>
+  import("@pages/Admin/CategoryPost/TrangDanhSachCategoryPost")
 );
 
 const CreatePostPage = React.lazy(() =>
@@ -152,4 +157,11 @@ export const adminModules = [
     show: ShowOrderPage,
     allowedRoles: ["admin"],
   },
+  {
+    name: 'categoryPost',
+    list: TrangDanhSachCategoryPost,
+    create: CreateCategoryPostPage,
+    edit: EditCategoryPost,
+    allowedRoles: ['admin'],
+  }
 ];

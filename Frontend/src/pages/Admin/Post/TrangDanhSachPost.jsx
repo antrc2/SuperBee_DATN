@@ -99,7 +99,7 @@ const TrangDanhSachBaiViet = () => {
 
   // Hàm xử lý tìm kiếm cục bộ
   const displayedPosts = useMemo(() => {
-    console.log("Tính toán displayedPosts, posts:", posts, "searchTermLocal:", searchTermLocal, "filters:", filters); // Debug
+
     if (!searchTermLocal && !filters.status) return posts || [];
     let filteredPosts = Array.isArray(posts) ? posts : [];
     if (filters.status) {
@@ -113,7 +113,6 @@ const TrangDanhSachBaiViet = () => {
         )
       );
     }
-    console.log("displayedPosts:", filteredPosts); // Debug
     return filteredPosts;
   }, [posts, searchTermLocal, filters]);
 

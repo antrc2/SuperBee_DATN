@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router-dom";
-import { ChevronLeft, EyeOff, Eye, EyeClosed } from "lucide-react";
+import { ChevronLeft, Eye, EyeClosed } from "lucide-react"; // Only keep Eye and EyeClosed
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 import { checkLocation } from "../../utils/hook";
@@ -51,9 +51,8 @@ export default function LoginForm() {
       } else {
         navigate("/");
       }
-    } else {
-      console.log("Login failed");
     }
+    // No else block needed here for error messages, as AuthContext handles `pop` notifications
   };
 
   if (loading) return <LoadingDomain />;
@@ -80,21 +79,22 @@ export default function LoginForm() {
               Enter your email and password to sign in!
             </p>
           </div>
-          {/* 
-          {error && (
+          {/* We remove the local error display for general errors here as AuthContext's pop handles it */}
+          {/* {error && (
             <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md   mb-5">
               <p>{error.message}</p>
             </div>
           )} */}
 
-          {user && (
+          {/* Remove user success message here as navigation/pop handles it */}
+          {/* {user && (
             <div className="p-4 bg-green-100 rounded-md   mb-5">
               <h3 className="mb-2 text-lg font-semibold text-green-800 ">
                 Đăng nhập thành công!
               </h3>
               <p className="text-sm">Chào mừng, {user.name || "Người dùng"}!</p>
             </div>
-          )}
+          )} */}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
@@ -120,7 +120,7 @@ export default function LoginForm() {
                       },
                     })}
                     onChange={(e) => {
-                      clearErrors("username");
+                      clearErrors("username"); // Clear error when typing
                       register("username").onChange(e); // Ensure react-hook-form's onChange is still called
                     }}
                   />
@@ -156,7 +156,7 @@ export default function LoginForm() {
                         },
                       })}
                       onChange={(e) => {
-                        clearErrors("password");
+                        clearErrors("password"); // Clear error when typing
                         register("password").onChange(e);
                       }}
                     />

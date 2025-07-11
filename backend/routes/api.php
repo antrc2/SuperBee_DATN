@@ -91,6 +91,7 @@ Route::middleware('auth')->group(function () {
         // info
         Route::prefix('/user')->group(function () {
             Route::get('/profile', [UserProfileController::class, 'show']);
+            Route::get('/money', [UserProfileController::class, 'money']);
             Route::get('/history-trans', [UserProfileController::class, 'history']);
             Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);

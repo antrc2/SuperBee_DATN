@@ -1,15 +1,21 @@
-import {
+import React from "react"; // <-- Thêm dòng này
 
-  TrangDanhSachAccGame,
-} from "@pages";
+// TrangDanhSachAccGame không còn được import ở đây vì nó thuộc admin
+// const TrangDanhSachAccGame = React.lazy(() => import("@pages/Admin/Products/TrangDanhSachAccGame")); // Xóa dòng này
 
-import {
-  CreateProductsPartner,
-  EditProductsPartner,
+const CreateProductsPartner = React.lazy(() =>
+  import("../pages/Partner/Products/CreateProductsPartner")
+);
+const EditProductsPartner = React.lazy(() =>
+  import("../pages/Partner/Products/EditProductsPartner")
+);
+const ProductDetailPagePartner = React.lazy(() =>
+  import("../pages/Partner/Products/ProductDetailPagePartner")
+);
+const TrangDanhSachAccGamePartner = React.lazy(() =>
+  import("../pages/Partner/Products/TrangDanhSachAccGame")
+);
 
-  ProductDetailPagePartner,
-  TrangDanhSachAccGamePartner,
-} from "../pages";
 export const partnerModules = [
   {
     name: "products",

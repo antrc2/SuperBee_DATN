@@ -200,7 +200,7 @@ Route::middleware(['jwt'])->group(function () {
         });
         Route::prefix("/orders")->group(function () {
             Route::get("/", [AdminOrderController::class, 'index']);
-            Route::get("/", [AdminOrderController::class, 'show']);
+            Route::get("/{id}", [AdminOrderController::class, 'show']);
             // Route::get("/", [OrderController::class, 'index']);
             // Route::get("/{id}", [OrderController::class, 'show']);
         });

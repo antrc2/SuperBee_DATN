@@ -69,6 +69,7 @@ class UserOrderController extends Controller
     private function get_cart_and_total_price($user_id)
     {
         try {
+            
             $cart = Cart::where("user_id", $user_id)->with('items')->with('items.product.gameAttributes')->with('items.product.images')->first();
             if ($cart == null) {
                 return [
@@ -150,20 +151,41 @@ class UserOrderController extends Controller
     }
 
 
-    private function check_promotion_from_cart($user_id, $promotion_code)
+    private function check_promotion_from_cart($user_id, $promotion_code,$role)
     {
         try {
+            $tax_amount = env('TAX');
             $cart = $this->get_cart_and_total_price($user_id);
             $total_price = $cart['total_price'];
+            $total_price_clone = $total_price;
+            $discount_value = 0;
+            if ($role == 'user'){
 
+            } elseif ($role == 'partner'){
+                $discount_value = 10;
+                // $total_price = $total_price - $total_price * 10 / 100;
+            } elseif ($role == 'reseller'){
+                $discount_value = 20;
+                // $total_price = $total_price - $total_price * 20 / 100;
+            } elseif ($role == 'admin') {
+
+            }
+            $tax_value = $total_price * $tax_amount / 100;
+            $total_price = $total_price + $tax_value ;
+
+            $discount_amount = $total_price * $discount_value / 100;
+            $total_price = $total_price - $discount_amount;
+             
             if (!$cart['status']) {
                 return [
                     "status" => false,
                     "message" => "Giỏ hàng không hợp lệ",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                     "status_code" => 400
                 ];
             }
@@ -174,10 +196,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Vui lòng nhập mã giảm giá",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 400
+                    "status_code" => 400,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -188,10 +212,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Mã giảm giá {$promotion_code} không tồn tại",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 404
+                    "status_code" => 404,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -200,10 +226,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Mã giảm giá {$promotion_code} không tồn tại",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 404
+                    "status_code" => 404,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -212,10 +240,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     'message' => "Chưa đến hạn sử dụng mã giảm giá {$promotion_code}",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 400
+                    "status_code" => 400,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -224,10 +254,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     'message' => "Đã quá hạn sử dụng mã giảm giá {$promotion_code}",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 400
+                    "status_code" => 400,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -237,10 +269,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Mã giảm giá {$promotion_code} không tồn tại",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 404
+                    "status_code" => 404,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
             if ($total_used_user >= $promotion->per_user_limit & $promotion->per_user_limit != -1) {
@@ -248,10 +282,12 @@ class UserOrderController extends Controller
                     'status' => false,
                     "message" => "Bạn đã hết số lần sử dụng mã giảm giá {$promotion_code}",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 400
+                    "status_code" => 400,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -260,14 +296,21 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Mã giảm giá {$promotion_code} đã hết số lần sử dụng",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount,
+                    "discount_value" => $discount_value,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 400
+                    "status_code" => 400,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
+            $discount_amount_clone = $discount_amount;
+            $discount_value_clone = $discount_value;
+
+
             $discount_value = $promotion->discount_value / 100;
+            // $discount_value = $promotion->discount_value;
             // $discount_amount = $promotion_code->discount_value;
             $discount_amount = 0;
 
@@ -278,10 +321,12 @@ class UserOrderController extends Controller
                         "status" => false,
                         "message" => "Số tiền chưa đạt đến mức được giảm giá",
                         "promotion_code" => $promotion_code,
-                        "discount_amount" => 0,
-                        "discount_value" => 0,
+                        "discount_amount" => $discount_amount,
+                        "discount_value" => $discount_value,
                         "total_price_after_discount" => $total_price,
-                        "status_code" => 400
+                        "status_code" => 400,
+                        "tax_amount"=>$tax_amount,
+                        "tax_value"=>$tax_value,
                     ];
                 } elseif ($total_price >= $promotion->min_discount_amount && $total_price <= $promotion->max_discount_amount) {
                     $discount_amount = $total_price * $discount_value;
@@ -302,10 +347,12 @@ class UserOrderController extends Controller
                         "status" => false,
                         "message" => "Số tiền chưa đạt đến mức được giảm giá",
                         "promotion_code" => $promotion_code,
-                        "discount_amount" => 0,
-                        "discount_value" => 0,
+                        "discount_amount" => $discount_amount_clone,
+                    "discount_value" => $discount_value_clone,
                         "total_price_after_discount" => $total_price,
-                        "status_code" => 400
+                        "status_code" => 400,
+                        "tax_amount"=>$tax_amount,
+                        "tax_value"=>$tax_value,
                     ];
                 } else {
                     $discount_amount = $total_price * $discount_value;
@@ -315,10 +362,12 @@ class UserOrderController extends Controller
                     "status" => false,
                     "message" => "Đã có lỗi xảy ra",
                     "promotion_code" => $promotion_code,
-                    "discount_amount" => 0,
-                    "discount_value" => 0,
+                    "discount_amount" => $discount_amount_clone,
+                    "discount_value" => $discount_value_clone,
                     "total_price_after_discount" => $total_price,
-                    "status_code" => 500
+                    "status_code" => 500,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
                 ];
             }
 
@@ -326,10 +375,13 @@ class UserOrderController extends Controller
                 "status" => true,
                 'message' => "Áp dụng mã giảm giá {$promotion_code} thành công",
                 "promotion_code" => $promotion_code,
-                "discount_amount" => $discount_amount,
-                "discount_value" => $discount_value * 100,
+                "discount_amount" => $discount_amount + $discount_amount_clone,
+                "discount_value" => $discount_value * 100 + $discount_value_clone,
+                "total_price"=>$total_price_clone,
                 "total_price_after_discount" => $total_price - $discount_amount,
                 "status_code" => 200,
+                "tax_amount"=>$tax_amount,
+                "tax_value"=>$tax_value,
             ];
         } catch (\Throwable $th) {
             // Lưu ý: nếu lỗi, không biết promotion_code, discount_value... => để default
@@ -337,10 +389,12 @@ class UserOrderController extends Controller
                 "status" => false,
                 "message" => "Đã xảy ra lỗi hệ thống",
                 "promotion_code" => $promotion_code,
-                "discount_amount" => 0,
-                "discount_value" => 0,
+                "discount_amount" => $discount_amount,
+                "discount_value" => $discount_value,
                 "total_price_after_discount" => 0,
-                "status_code" => 500
+                "status_code" => 500,
+                "tax_amount"=>$tax_amount,
+                "tax_value"=>$tax_value,
             ];
         }
     }
@@ -349,7 +403,7 @@ class UserOrderController extends Controller
     public function check_promotion(Request $request)
     {
         try {
-            return response()->json($this->check_promotion_from_cart($request->user_id, $request->promotion_code));
+            return response()->json($this->check_promotion_from_cart($request->user_id, $request->promotion_code,$request->role));
         } catch (\Throwable $th) {
             return response()->json(
                 [
@@ -367,7 +421,7 @@ class UserOrderController extends Controller
     public function checkout(Request $request)
     {
         try {
-            $tax = env("TAX");
+            $tax_value = env("TAX");
             $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
             
             $wallet = Wallet::where('user_id',$request->user_id)->first();
@@ -375,27 +429,45 @@ class UserOrderController extends Controller
                 $balance = 0;
             }
             $cart = $this->get_cart_and_total_price($request->user_id);
+            $tax_amount = 0;
             if ($cart['status'] == True){
                 $carts = $cart['carts'];
                 $total_price = $cart['total_price'];
+                $total_price_clone = $total_price;
+                $tax_amount = $total_price * $tax_value / 100;
+                $total_price = $total_price + $tax_amount;
                 $role = $request->role;
+                $discount_value = 0;
                 if ($role == 'user'){
 
                 } elseif ($role == 'partner'){
-                    $total_price = $total_price - $total_price * 10 / 100;
+                    $discount_value = 10;
+                    // $total_price = $total_price - $total_price * 10 / 100;
                 } elseif ($role == 'reseller'){
-                    $total_price = $total_price - $total_price * 20 / 100;
+                    $discount_value = 20;
+                    // $total_price = $totals_price - $total_price * 20 / 100;
                 } elseif ($role == 'admin') {
                 }
-                $total_price = $total_price + $total_price * $tax / 100;
+                $discount_amount = $total_price * $discount_value / 100;
+                // $total_price = $total_price + $total_price * $tax / 100;
+
+                
+                $total_price = $total_price - $discount_amount;
+
+
                 return response()->json([
                     "status"=>True,
                     "message"=>"Thành công",
                     "carts"=>$carts,
-                    "total_price"=>$total_price,
+                    "total_price"=>$total_price_clone,
+                    "total_price_after_discount"=>$total_price,
                     "promotion_codes"=>$promotion_codes,
                     "balance"=>$wallet->balance,
-                    "tax"=>$tax,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
+                    "discount_amount"=>$discount_amount,
+                    "discount_value"=>$discount_value,
+                    // "tax"=>$tax,
                 ],200);
             } else {
                 return response()->json([
@@ -405,7 +477,10 @@ class UserOrderController extends Controller
                     "total_price"=>0,
                     "promotion_codes" =>[],
                     "balance"=>0,
-                    "tax"=>10,
+                    "tax_amount"=>$tax_amount,
+                    "tax_value"=>$tax_value,
+                    "discount_amount"=>0,
+                    "discount_value"=>0,
                 ],$cart['status_code']);
             }
         } catch (\Throwable $th) {
@@ -416,7 +491,10 @@ class UserOrderController extends Controller
                 "total_price"=>0,
                 "promotion_codes" =>[],
                 "balance"=>0,
-                'tax'=>10
+                "tax_amount"=>0,
+                    "tax_value"=>$tax_value,
+                    "discount_amount"=>0,
+                    "discount_value"=>0,
             ],500);
         }
     }
@@ -500,7 +578,7 @@ class UserOrderController extends Controller
                 if ($cart_status['status'] == True) {
                     $wallet = Wallet::where('user_id',$user_id)->first();
                     if (isset($request->promotion_code)){
-                        $promotion_status = $this->check_promotion_from_cart($user_id,$request->promotion_code);
+                        $promotion_status = $this->check_promotion_from_cart($user_id,$request->promotion_code,$request->role);
                         if ($promotion_status['status'] == True) {
                             $total_price = $promotion_status['total_price_after_discount'];
                             $promotion_code = $promotion_status['promotion_code'];
@@ -535,19 +613,19 @@ class UserOrderController extends Controller
                     }
 
                     $role = $request->role;
-                    if ($role == 'user'){
+                    // if ($role == 'user'){
 
-                    } elseif ($role == 'partner'){
-                        $total_price = $total_price - $total_price * 10 / 100;
-                    } elseif ($role == 'reseller'){
-                        $total_price = $total_price - $total_price * 20 / 100;
-                    } elseif ($role == 'admin') {
+                    // } elseif ($role == 'partner'){
+                    //     $total_price = $total_price - $total_price * 10 / 100;
+                    // } elseif ($role == 'reseller'){
+                    //     $total_price = $total_price - $total_price * 20 / 100;
+                    // } elseif ($role == 'admin') {
 
-                    }
+                    // }
 
                     $affiliate = Affiliate::where('user_id',$user_id)->first();
-                    $tax = env("TAX");
-                    $total_price = $total_price + $total_price * $tax / 100;
+                    // $tax = env("TAX");
+                    // $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
                     $wallet->balance -= $total_price;

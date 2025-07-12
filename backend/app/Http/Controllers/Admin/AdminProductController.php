@@ -199,7 +199,7 @@ class AdminProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'price'       => $validated['price'] ?? $product->price,
-                'sale'        => $validated['sale'] ? $validated['sale'] != 0 & $validated['sale'] != null : null,
+                'sale' => isset($validated['sale']) && $validated['sale'] !== '' ? (float) $validated['sale'] : 0,
                 'updated_by'  => $request->user_id,
             ]);
 

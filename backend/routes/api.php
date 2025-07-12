@@ -60,6 +60,7 @@ Route::middleware('auth')->group(function () {
     // chưa đăng nhập
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
+        Route::get('/products', [HomeController::class, 'products']);
     });
     Route::prefix("/categories")->group(function () {
         Route::get("/", [UserCategoryController::class, 'index']);

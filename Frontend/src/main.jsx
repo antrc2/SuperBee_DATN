@@ -56,15 +56,13 @@ createRoot(document.getElementById("root")).render(
   <StrictMode>
     <BrowserRouter>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <NotificationProvider>
-            <AppStatusProvider>
-              <AuthProvider>
-                <App />
-              </AuthProvider>
-            </AppStatusProvider>
-          </NotificationProvider>
-        </ThemeProvider>
+        <NotificationProvider>
+          <AppStatusProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </AppStatusProvider>
+        </NotificationProvider>
       </QueryClientProvider>
     </BrowserRouter>
   </StrictMode>

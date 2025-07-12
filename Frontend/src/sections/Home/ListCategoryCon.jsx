@@ -1,4 +1,4 @@
-import CategoryCon from "../../components/Client/Category/CategoryCon";
+import CategoryCard from "../../components/Client/Category/CategoryCon";
 import NoProduct from "../../components/Loading/NoProduct";
 
 export default function ListCategoryCon({
@@ -18,7 +18,7 @@ export default function ListCategoryCon({
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {displayedItems.map((item, index) => (
-          <CategoryCon key={index} item={item} />
+          <CategoryCard key={index} item={item} />
         ))}
       </div>
     </div>

@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "@contexts/AuthContext";
 import Image from "../Image/Image";
 import { formatCurrencyVND } from "../../../utils/hook";
+
 export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
   const dropdownRef = useRef(null);
   const { logout } = useAuth();
@@ -36,30 +37,31 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
 
   if (!isOpen) return null;
 
+  // Sử dụng các lớp màu ngữ nghĩa
   const menuItems = [
     {
       label: " Thông tin tài khoản",
       icon: Info,
       href: "/info",
-      color: "text-blue-400",
+      color: "text-info", // Thay vì text-blue-400
     },
     {
       label: " Đổi mật khẩu",
       icon: Lock,
       href: "/info/change-password",
-      color: "text-purple-400",
+      color: "text-accent", // Thay vì text-purple-400
     },
     {
       label: " Lịch sử giao dịch",
       icon: HistoryIcon,
       href: "/info/transactions",
-      color: "text-green-400",
+      color: "text-tertiary", // Thay vì text-green-400
     },
     {
       label: "Cài đặt",
       icon: Settings,
       href: "/settings",
-      color: "text-orange-400",
+      color: "text-highlight", // Thay vì text-orange-400
     },
   ];
 
@@ -68,46 +70,55 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
       ref={dropdownRef}
       className={`${
         isMobile
-          ? "h-full flex flex-col bg-gradient-header  backdrop-blur-xl"
-          : "absolute right-0 top-full z-20 mt-3 w-80 rounded-2xl bg-gradient-header  backdrop-blur-xl shadow-2xl border border-purple-500/20"
+          ? "h-full flex flex-col bg-gradient-header backdrop-blur-xl"
+          : "absolute right-0 top-full z-20 mt-3 w-80 rounded-2xl bg-dropdown backdrop-blur-xl shadow-2xl border-themed"
       }`}
     >
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-purple-500/20 md:hidden">
-        <h3 className="text-lg font-bold text-white"> Tài khoản</h3>
+      {/* Mobile Header */}
+      <div className="flex justify-between items-center p-4 border-b border-themed md:hidden">
+        <h3 className="text-lg font-bold text-primary"> Tài khoản</h3>
         <button
           onClick={onClose}
-          className="text-white/60 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-all duration-300"
+          className="text-secondary hover:text-primary hover:bg-primary/10 rounded-lg p-1.5 transition-colors"
           aria-label="Close user menu"
         >
           <X size={18} />
         </button>
       </div>
 
-      <div className={`${isMobile ? "flex-grow overflow-y-auto" : ""}`}>
+      <div
+        className={`${
+          isMobile
+            ? "flex-grow overflow-y-auto custom-scrollbar-notification"
+            : ""
+        }`}
+      >
         {/* User Info */}
-        <div className="p-4 border-b border-purple-500/20">
+        <div className="p-4 border-b border-themed">
           <div className="flex items-center gap-4">
             <div className="relative">
               <Image
                 url={user?.avatar}
                 alt="Avatar"
-                className="h-12 w-12 rounded-full border-2 border-purple-400/50"
+                className="h-12 w-12 rounded-full border-2 border-highlight/50"
                 onError={(e) => {
                   e.target.onerror = null;
                   e.target.src =
                     "https://placehold.co/48x48/667eea/ffffff?text=👤";
                 }}
               />
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-400 rounded-full border-2 border-slate-900"></div>
+              <div
+                className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-tertiary rounded-full border-2"
+                style={{ borderColor: "var(--color-background)" }}
+              ></div>
             </div>
             <div className="flex-grow">
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-bold text-primary">
                 {user?.name || "Gamer Pro"}
               </p>
               <div className="flex items-center gap-2 mt-1">
-                <Wallet className="w-4 h-4 text-yellow-400" />
-                <p className="text-sm font-semibold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
+                <Wallet className="w-4 h-4 text-highlight" />
+                <p className="text-sm font-semibold text-transparent text-primary">
                   {formatCurrencyVND(user?.money) || "0"} VND
                 </p>
               </div>
@@ -121,12 +132,12 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
             <Link
               key={item.label}
               to={item.href}
-              className="flex items-center gap-3 px-4 py-3 text-sm text-white/90 hover:text-white hover:bg-gradient-to-r hover:from-purple-600/20 hover:to-pink-600/20 transition-all duration-300 group"
+              className="flex items-center gap-3 px-4 py-3 text-sm text-secondary hover:text-primary hover:bg-primary/5 transition-colors group"
               onClick={onClose}
             >
               <item.icon
                 size={18}
-                className={`${item.color} group-hover:scale-110 transition-transform duration-300`}
+                className={`${item.color} group-hover:scale-110 transition-transform`}
               />
               <span className="font-medium">{item.label}</span>
             </Link>
@@ -134,9 +145,9 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
         </div>
 
         {/* Logout */}
-        <div className="border-t border-purple-500/20 p-2">
+        <div className="border-t border-themed p-2">
           <button
-            className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-all duration-300 group"
+            className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-red-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors group"
             onClick={() => {
               logout();
               onClose();
@@ -144,7 +155,7 @@ export default function UserMenu({ user, isOpen, onClose, isMobile = false }) {
           >
             <LogOut
               size={18}
-              className="group-hover:scale-110 transition-transform duration-300"
+              className="group-hover:scale-110 transition-transform"
             />
             <span className="font-medium"> Đăng xuất</span>
           </button>

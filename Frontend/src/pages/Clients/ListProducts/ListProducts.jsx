@@ -32,13 +32,19 @@ export default function ListProducts() {
   if (!ListProducts?.data) {
     return <NoProduct />;
   }
-
+  const breadcrumbItems = ListProducts
+    ? [
+        { label: "Trang chủ", href: "/" },
+        { label: "Mua Acc", href: "/mua-acc" },
+        { label: `${slug}` },
+      ]
+    : [];
   return (
     <>
       <div className=" mt-5">
-        <Breadcrumbs category={ListProducts?.data?.category} />
+        <Breadcrumbs items={breadcrumbItems} />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4 ">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-4 ">
         {ListProducts?.data?.type == 1
           ? ListProducts?.data?.products.map((product, index) => (
               <Product key={product.id || index} product={product} /> // Ưu tiên dùng product.id làm key

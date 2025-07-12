@@ -7,6 +7,8 @@ import time
 import hashlib
 import string
 import random
+from botocore.config import Config
+
 class S3Controller:
     def __init__(self):
         self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
@@ -14,12 +16,16 @@ class S3Controller:
         self.aws_default_region = os.getenv("AWS_DEFAULT_REGION", "ap-southeast-2")
         self.aws_bucket = os.getenv("AWS_BUCKET")
         self.aws_url = os.getenv("AWS_URL")
-
+        s3_config = Config(
+            region_name=self.aws_default_region,
+            max_pool_connections=50  # default là 10
+        )
         self.s3_client = boto3.session.Session(
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
-            region_name=self.aws_default_region
-        ).client('s3')
+            region_name=self.aws_default_region,
+            
+        ).client('s3', config=s3_config)
     def upload(self,file_content,file_name):
         self.s3_client.upload_fileobj(file_content, self.aws_bucket, file_name)
     def random_str(self,rand_len=8):

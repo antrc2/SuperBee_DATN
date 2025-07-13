@@ -1,273 +1,481 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
+/* =====================================================================
+  GOOGLE FONTS & TAILWIND
+===================================================================== */
+/* --- THAY ĐỔI 1: Cập nhật link import để lấy cả 2 font --- */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Outfit:wght@500;700;900&display=swap");
 
 @import "tailwindcss";
-@layer utilities {
-  .scrollbar-hide::-webkit-scrollbar {
-    display: none;
-  }
-  .scrollbar-hide {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
-}
-/* Chế độ Sáng (Light Mode) - Mặc định */
+
+/* =====================================================================
+  THEME DEFINITIONS (COLOR VARIABLES)
+===================================================================== */
 :root {
-  --background-start: #9aa6b2; /* Nền (trái form) - Xanh trời rất nhạt */
-  --background-end: #f8fafc; /* Nền (phải nhân vật) - Hồng rất nhạt */
+  /* --- THAY ĐỔI 2: Thêm biến cho font chữ --- */
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
 
-  --background-start-in: #f8aaaa; /* Nền (trái form) - Xanh trời rất nhạt */
-  --background-end-in: #fcceaf; /*Nền (phải nhân vật) - Hồng rất nhạt */
-
-  --background-start-in-text: #fc8080; /* Nền (trái form) - Xanh trời rất nhạt */
-  --background-end-in-text: #e99156; /*Nền (phải nhân vật) - Hồng rất nhạt */
-
-  --text-primary: #1e293b; /* Chữ chính - Xanh đen */
-  --text-secondary: #475569; /* Chữ phụ - Xám */
-  --text-placeholder: #94a3b8; /* Chữ mờ trong input */
-
-  --accent-primary: #f59e0b; /* Vàng hổ phách */
-  --accent-secondary: #e53935; /* Đỏ */
-
-  --button-text: #ffffff; /* Chữ trên button - Trắng */
-  --input-bg: #ffffff; /* Nền ô input - Trắng */
-  --input-border: #cbd5e1; /* Viền ô input */
-
-  --background-end-rgb: 83, 92, 145;
-  --background-rgb: 0, 0, 0, 0.1;
+  /* ... (giữ nguyên tất cả các biến màu của bạn) ... */
+  --color-background: #fffffe;
+  --color-text-primary: #272343;
+  --color-text-secondary: #2d334a;
+  --color-text-placeholder: #2d334a;
+  --color-accent: #ffd803;
+  --color-accent-text: #272343;
+  --color-highlight: #ffd803;
+  --color-secondary: #e3f6f5;
+  --color-tertiary: #bae8e8;
+  --color-stroke: #272343;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #e3f6f5, #fffffe);
+  --gradient-button: linear-gradient(to right, #ffd803, #ffc300);
+  --gradient-logo: linear-gradient(to right, #ffd803, #272343);
+  --gradient-danger: linear-gradient(to right, #f85032, #e73827);
+  --gradient-success: linear-gradient(to right, #56ab2f, #a8e063);
+  --gradient-warning: linear-gradient(to right, #ffd803, #ffc300);
+  --gradient-info: linear-gradient(to right, #2193b0, #6dd5ed);
+  --color-input-bg: #fdfdfd;
+  --color-input-text: #272343;
+  --color-border: #e3f6f5;
+  --color-border-hover: #ffd803;
+  --color-dropdown-bg: rgba(255, 255, 254, 0.9);
+  --color-notification-unread-bg: #e3f6f5;
+  --color-scrollbar-thumb: #bae8e8;
+  --color-scrollbar-thumb-hover: #ffd803;
 }
 
-/* Chế độ Tối (Dark Mode) - Kích hoạt bằng class="dark" của Tailwind */
+/* ... (giữ nguyên các theme .dark và .theme-pink) ... */
 .dark {
-  --background-start: #070f2b; /* Nền (trái form) - Xanh Navy Đậm */
-  --background-end: #535c91; /* Nền (phải nhân vật) - Hồng đậm */
-
-  --background-start-in: #2d418a; /* Nền (trái form) - Xanh Navy Đậm */
-  --background-end-in: #53418a; /* Nền (phải nhân vật) - Hồng đậm */
-
-  --background-start-in-text: #7593ff; /* Nền (trái form) - Xanh Navy Đậm */
-  --background-end-in-text: #8157ff; /* Nền (phải nhân vật) - Hồng đậm */
-
-  --text-primary: #f1f5f9; /* Chữ chính - Trắng xám */
-  --text-secondary: #94a3b8; /* Chữ phụ - Xám nhạt */
-  --text-placeholder: #64748b; /* Chữ mờ trong input */
-
-  --accent-primary: #ffd600; /* Vàng (tóc) cho button, viền */
-  --accent-secondary: #f44336; /* Đỏ (nơ) cho link hover */
-
-  --button-text: #0f172a; /* Chữ trên button - Xanh Navy Đậm */
-  --input-bg: #1e293b; /* Nền ô input - Xanh xám */
-  --input-border: #475569; /* Viền ô input */
-
-  --background-rgb: 255, 255, 255, 0.1;
-
-  --bg-body: #070f2b;
-  --bg-content-900: #101828;
-  --bg-content-800: #1d2939;
-  --bg-content-700: #344054;
-
-  /* Biến màu mới cho các trạng thái */
-  --status-success-text: #22c55e;
-  --status-success-bg: rgba(34, 197, 94, 0.1);
-  --status-success-border: rgba(34, 197, 94, 0.2);
-  --status-processing-text: #f59e0b;
-  --status-processing-bg: rgba(245, 158, 11, 0.1);
-  --status-processing-border: rgba(245, 158, 11, 0.2);
-  --status-cancelled-text: #ef4444;
-  --status-cancelled-bg: rgba(239, 68, 68, 0.1);
-  --status-cancelled-border: rgba(239, 68, 68, 0.2);
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #16161a;
+  --color-text-primary: #fffffe;
+  --color-text-secondary: #94a1b2;
+  --color-text-placeholder: #94a1b2;
+  --color-accent: #7f5af0;
+  --color-accent-text: #fffffe;
+  --color-highlight: #7f5af0;
+  --color-secondary: #72757e;
+  --color-tertiary: #2cb67d;
+  --color-stroke: #010101;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #1a1a1f, #101014);
+  --gradient-button: linear-gradient(to right, #7f5af0, #9d7bf5);
+  --gradient-logo: linear-gradient(to right, #7f5af0, #2cb67d, #fffffe);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #2cb67d, #34d399);
+  --gradient-warning: linear-gradient(to right, #f59e0b, #fbbf24);
+  --gradient-info: linear-gradient(to right, #38bdf8, #7dd3fc);
+  --color-input-bg: #1f1f24;
+  --color-input-text: #fffffe;
+  --color-border: #2a2a30;
+  --color-border-hover: #7f5af0;
+  --color-dropdown-bg: rgba(22, 22, 26, 0.85);
+  --color-notification-unread-bg: rgba(127, 90, 240, 0.2);
+  --color-scrollbar-thumb: #2a2a30;
+  --color-scrollbar-thumb-hover: #7f5af0;
+}
+.theme-pink {
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #faeee7;
+  --color-text-primary: #33272a;
+  --color-text-secondary: #594a4e;
+  --color-text-placeholder: #594a4e;
+  --color-accent: #ff8ba7;
+  --color-accent-text: #33272a;
+  --color-highlight: #ff8ba7;
+  --color-secondary: #ffc6c7;
+  --color-tertiary: #c3f0ca;
+  --color-stroke: #33272a;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #ffc6c7, #faeee7);
+  --gradient-button: linear-gradient(to right, #ff8ba7, #ffc6c7);
+  --gradient-logo: linear-gradient(to right, #ff8ba7, #33272a);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #c3f0ca, #a1e2a6);
+  --gradient-warning: linear-gradient(to right, #ffb199, #fa9a85);
+  --gradient-info: linear-gradient(to right, #a2d2ff, #bde0fe);
+  --color-input-bg: #fefbf9;
+  --color-input-text: #33272a;
+  --color-border: #ffc6c7;
+  --color-border-hover: #ff8ba7;
+  --color-dropdown-bg: rgba(250, 238, 231, 0.9);
+  --color-notification-unread-bg: #ffc6c7;
+  --color-scrollbar-thumb: #ffc6c7;
+  --color-scrollbar-thumb-hover: #ff8ba7;
 }
 
-/* --- CÀI ĐẶT CHUNG --- */
-body {
-  font-family: "Outfit", sans-serif;
-  color: var(--text-primary);
-  background-color: var(--bg-body);
-  transition: background-color 0.3s ease, color 0.3s ease;
+/* =====================================================================
+  GLOBAL STYLES & UTILITY CLASSES
+===================================================================== */
+@layer base {
+  body {
+    /* --- THAY ĐỔI 3: Đặt font mặc định là font nội dung --- */
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
 
-.bg-content {
-  background: var(--bg-content-900);
-  border: 1px solid var(--bg-content-800);
-  border-radius: 8px;
-  overflow: hidden;
-}
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+  /* Text Colors */
+  .text-primary {
+    color: var(--color-text-primary);
+  }
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .text-accent-contrast {
+    color: var(--color-accent-text);
+  }
+  .text-highlight {
+    color: var(--color-highlight);
+  }
+  .text-tertiary {
+    color: var(--color-tertiary);
+  }
+  .text-info {
+    color: var(--color-info, #38bdf8);
+  }
+  .placeholder-theme::placeholder {
+    color: var(--color-text-placeholder);
+    opacity: 0.7;
+  }
 
-/* --- LAYOUT & BACKGROUNDS --- */
-.serene-dawn {
-  background: linear-gradient(
-    to right,
-    var(--background-start) 45%,
-    var(--background-end) 100%
-  );
-}
+  /* Background Colors & Gradients */
+  .bg-gradient-header {
+    background: var(--gradient-header);
+  }
+  .bg-gradient-button {
+    background: var(--gradient-button);
+  }
+  .bg-gradient-logo {
+    background: var(--gradient-logo);
+  }
+  .bg-gradient-danger {
+    background: var(--gradient-danger);
+  }
+  .bg-gradient-success {
+    background: var(--gradient-success);
+  }
+  .bg-gradient-warning {
+    background: var(--gradient-warning);
+  }
+  .bg-gradient-info {
+    background: var(--gradient-info);
+  }
 
-/* --- COMPONENTS --- */
-.custom-input {
-  background-color: var(--input-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--input-border);
-  border-radius: 0.5rem;
-  padding: 0.625rem 1rem;
-  width: 100%;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  font-size: 1rem;
-}
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .bg-tertiary {
+    background-color: var(--color-tertiary);
+  }
+  .bg-dropdown {
+    background-color: var(--color-dropdown-bg);
+  }
+  .bg-notification-unread {
+    background-color: var(--color-notification-unread-bg);
+  }
 
-.custom-input:focus {
-  outline: none;
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 3px
-    color-mix(in srgb, var(--accent-primary) 20%, transparent);
-}
+  /* Border Colors */
+  .border-themed {
+    border-color: var(--color-border);
+  }
+  .border-hover {
+    border: 1px solid var(--color-border);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .border-hover:hover {
+    border-color: var(--color-border-hover);
+  }
 
-.custom-input::placeholder {
-  color: var(--text-placeholder);
-}
+  .border-hover:focus {
+    outline: none;
+    border-color: var(--color-border-hover);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
 
-.gradient-bg-hover {
-  background-color: var(--accent-primary);
-  transition: all 0.2s ease-in-out;
-  padding: 0.75rem 2rem;
-  border-radius: 0.375rem;
-  color: var(--button-text);
-  text-align: center;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
-}
+  /* Scrollbar */
+  .custom-scrollbar-notification::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-thumb {
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-scrollbar-thumb-hover);
+  }
+  .bg-input {
+    background-color: var(--color-input-bg);
+  }
+  .text-input {
+    color: var(--color-input-text);
+  }
+  /*  */
+  /* Dành cho khu vực section lớn */
+  .section-bg {
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 95%,
+      var(--color-text-primary) 5%
+    );
+    border-radius: 1rem;
+    padding: 1rem;
+  }
 
-.gradient-bg-hover:hover {
-  filter: brightness(1.1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px
-    color-mix(in srgb, var(--accent-primary) 25%, transparent);
-}
+  /* Dành cho các nút Tab (Nạp tiền, Top nạp) */
+  .tab-button {
+    padding: 0.625rem 1rem; /* Tương đương px-4 py-2.5 */
+    font-size: 0.875rem; /* Tương đương text-sm */
+    line-height: 1.25rem;
+    font-weight: 700; /* Tương đương font-bold */
+    border-radius: 0.5rem; /* Tương đương rounded-lg */
+    transition: all 300ms ease;
+    flex: 1;
+    text-align: center;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+  }
 
-.link-style {
-  color: var(--text-primary);
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
+  .tab-button-active {
+    color: var(--color-accent-text);
+    background: var(--gradient-button);
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
 
-.link-style:hover {
-  color: var(--accent-secondary);
-}
+  /* Dành cho các lựa chọn thẻ cào, mệnh giá */
+  .selection-grid-item {
+    padding: 0.5rem; /* Tương đương p-2 */
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem; /* Tương đương rounded-lg */
+    cursor: pointer;
+    transition: all 200ms ease;
+    text-align: center;
+    background-color: var(--color-input-bg);
+  }
 
-.text-main-title {
-  color: var(--text-primary);
-}
-/* */
-.container-div {
-  position: relative; /* Quan trọng: để pseudo-element định vị tương đối */
-  background: linear-gradient(
-    to right,
-    var(--background-start-in) 0%,
-    var(--background-end-in) 100%
-  );
-  overflow: hidden; /* Quan trọng: để ẩn phần gradient ban đầu */
-  transition: all 0.3s ease; /* Hiệu ứng chuyển động mượt mà cho div */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  color: var(--text-main-title);
-}
+  .selection-grid-item:hover {
+    border-color: var(--color-border-hover);
+    transform: translateY(-2px);
+  }
 
-.container-div::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: -150%; /* Bắt đầu gradient từ bên ngoài trái */
-  width: 250%; /* Kích thước gradient lớn hơn để đủ rộng */
-  height: 100%;
-  background: linear-gradient(
-    to right,
-    rgba(255, 255, 255, 0) 0%,
-    /* Trong suốt ở đầu */ rgba(255, 255, 255, 0.7) 50%,
-    /* Phần sáng loáng */ rgba(255, 255, 255, 0) 70% /* Trong suốt ở cuối */
-  );
-  transition: left 0.7s ease; /* Hiệu ứng di chuyển cho gradient */
-  z-index: 1; /* Đảm bảo gradient nằm trên nền nhưng dưới text nếu có */
-  opacity: 0;
-  pointer-events: none; /* Thêm dòng này */
-}
+  .selection-grid-item-selected {
+    border-color: var(--color-accent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-accent) 15%,
+      var(--color-input-bg)
+    );
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+  /*  */
+  .tab-button-slanted {
+    position: relative;
+    padding: 0.625rem 1.5rem; /* Tăng padding ngang một chút */
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    transition: all 300ms ease;
+    flex: 1;
+    text-align: center;
+    color: var(--color-text-secondary);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 80%,
+      var(--color-text-primary) 10%
+    );
+    transform: skewX(-20deg); /* Hiệu ứng nghiêng */
+    border: 1px solid var(--color-border);
+  }
 
-.container-div:hover::before {
-  left: -25%; /* Di chuyển gradient từ trái sang phải */
-  opacity: 0.8;
-}
+  .tab-button-slanted-active {
+    color: var(--color-accent-text);
+    background: var(--gradient-button);
+    border-color: transparent;
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
 
-.container-div span {
-  position: relative;
-  z-index: 2; /* Đảm bảo text nằm trên gradient */
-}
-/* */
-.shine-text {
-  position: relative;
-  overflow: hidden;
-}
+  /* Phần nội dung bên trong tab để làm thẳng chữ lại */
+  .tab-button-slanted .content {
+    display: flex;
+    transform: skewX(20deg); /* Hiệu ứng ngược lại để chữ thẳng */
+    transition: transform 300ms ease;
+  }
 
-.shine-text:hover {
-  background-image: linear-gradient(
-    to right,
-    var(--background-start-in-text) 0%,
-    var(--background-end-in-text) 100%
-  );
-  background-clip: text;
-  -webkit-background-clip: text; /* Dành cho trình duyệt Webkit */
-  color: transparent; /* Ẩn màu chữ gốc để gradient hiển thị */
-}
-/* */
-.bg-gradient-header {
-  background-image: linear-gradient(
-    to bottom,
-    /* var(--background-start) 50%, */ var(--background-start) 100%
-  );
-  background-blend-mode: overlay;
-  border-width: 1px; /* Tương đương với 'border' (mặc định là 1px) */
-  border-style: solid; /* Tương đương với 'border' */
-  border-color: rgba(
-    128,
-    90,
-    213,
-    0.2
-  ); /* Tương đương với 'border-purple-500/20' */
-}
-.border-hover {
-  border: 1px solid rgba(var(--background-rgb)); /* Border mặc định, có thể là màu solid */
-  transition: all 0.3s ease; /* Thêm transition để hiệu ứng hover mượt mà */
-}
+  .tab-button-slanted:hover .content {
+    transform: skewX(20deg) scale(1.05); /* Phóng to nhẹ khi hover */
+  }
+  /*  */
+  /* --- Dành cho các hộp thông báo --- */
+  .alert {
+    padding: 1rem; /* p-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    border-left-width: 4px; /* border-l-4 */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+  }
+  .alert-warning {
+    background-color: color-mix(
+      in srgb,
+      var(--color-highlight) 10%,
+      var(--color-background)
+    );
+    border-color: var(--color-highlight);
+    color: color-mix(
+      in srgb,
+      var(--color-text-primary) 80%,
+      var(--color-highlight)
+    );
+  }
+  .alert-success {
+    background-color: color-mix(
+      in srgb,
+      var(--color-tertiary) 15%,
+      var(--color-background)
+    );
+    border-color: var(--color-tertiary);
+    color: color-mix(
+      in srgb,
+      var(--color-text-primary) 80%,
+      var(--color-tertiary)
+    );
+  }
+  .alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+  .alert-info {
+    background-color: color-mix(
+      in srgb,
+      var(--color-info) 15%,
+      var(--color-background)
+    );
+    border-color: var(--color-info);
+    color: var(--color-info);
+  }
+  /*  */
+  .category-card-glow {
+    /* Thêm box-shadow vào transition để hiệu ứng mượt mà */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .category-card-glow:hover {
+    /* Hiệu ứng nâng card lên một chút */
+    transform: translateY(-8px);
+    /* Hiệu ứng tỏa sáng với màu nhấn của chủ đề */
+    box-shadow: 0 15px 30px -5px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+  /*  */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Dành cho Chrome, Safari, và Opera */
+  }
 
-.border-hover:hover {
-  border: 1px solid #ccc; /* Border mặc định, có thể là màu solid */
-}
-.border-hover:focus {
-  border: 1px solid #ccc; /* Border mặc định, có thể là màu solid */
-}
-/* */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* Dành cho IE và Edge */
+    scrollbar-width: none; /* Dành cho Firefox */
+  }
+  /*  */
 
-::-webkit-scrollbar-track {
-  background-color: var(--background-start); /* Màu nền rãnh */
-  border-radius: 5px;
-}
+  /* --- Breadcrumbs --- */
+  .breadcrumbs-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem; /* 8px */
+    font-size: 0.875rem; /* 14px */
+    color: var(--color-text-secondary);
+  }
+  .breadcrumb-link {
+    transition: color 0.2s ease;
+  }
+  .breadcrumb-link:hover {
+    color: var(--color-text-primary);
+  }
+  .breadcrumb-separator {
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+  }
 
-::-webkit-scrollbar-thumb {
-  background-color: var(--text-primary); /* Màu tay nắm */
-  border-radius: 5px;
-}
+  /* --- Image Gallery --- */
+  .thumbnail-button {
+    border: 2px solid transparent;
+    border-radius: 0.75rem; /* rounded-xl */
+    overflow: hidden;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+  }
+  .thumbnail-button:hover {
+    border-color: var(--color-border-hover);
+    opacity: 1;
+  }
+  .thumbnail-button-active {
+    border-color: var(--color-accent);
+    opacity: 1;
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #555; /* Màu tay nắm khi hover */
-}
+  /* --- Feature Box --- */
+  .feature-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+  }
 
-/* Nếu bạn muốn tùy chỉnh thanh cuộn cho một phần tử cụ thể, hãy thêm một lớp CSS */
-.custom-scrollbar-notification::-webkit-scrollbar {
-  /* Các thuộc tính Webkit */
-  overflow: auto; /* Đảm bảo phần tử có thanh cuộn */
-  /* Các thuộc tính Firefox */
-  scrollbar-width: thin;
-  scrollbar-color: var(--text-primary) var(--background-start);
-  width: 6px; /* Độ rộng của thanh cuộn dọc */
-  height: 6px; /* Chiều cao của thanh cuộn ngang */
+  /* --- Action Buttons --- */
+  .action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600; /* semibold */
+    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem; /* py-3 px-6 */
+    width: 100%;
+  }
+  .action-button-primary {
+    background: var(--gradient-button);
+    color: var(--color-accent-text);
+  }
+  .action-button-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+  .action-button-secondary {
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .action-button-secondary:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
 }
-
-/* ===================================================================== */

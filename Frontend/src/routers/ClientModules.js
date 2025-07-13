@@ -49,6 +49,9 @@ const ResetPassword = React.lazy(() =>
 const UnauthorizedPage = React.lazy(() =>
   import("../pages/Error/UnauthorizedPage")
 );
+const SearchPage = React.lazy(() =>
+  import("../pages/Clients/SearchPage/SearchPage ")
+);
 
 export const clientModules = [
   {
@@ -130,6 +133,11 @@ export const clientModules = [
     path: "/chat",
     view: ChatComponent,
     requiresAuth: true, // Hoặc false tùy vào yêu cầu của bạn
+  },
+  {
+    path: "/search",
+    view: SearchPage,
+    requiresAuth: false, // Hoặc false tùy vào yêu cầu của bạn
   },
 ];
 

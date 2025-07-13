@@ -1,9 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Eye, EyeOff } from "lucide-react";
+import { Lock, Eye, EyeOff, Save } from "lucide-react";
 import api from "@utils/http";
 import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
+
+// Component con cho input mật khẩu
+const PasswordInput = ({
+  value,
+  onChange,
+  name,
+  placeholder,
+  error,
+  show,
+  onToggle,
+}) => (
+  <div>
+    <div className="relative">
+      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
+        <Lock size={18} />
+      </span>
+      <input
+        type={show ? "text" : "password"}
+        name={name}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        className="w-full rounded-lg px-4 py-3 pl-12 pr-12 bg-input text-input border-themed border-hover placeholder-theme"
+        required
+      />
+      <button
+        type="button"
+        onClick={onToggle}
+        className="absolute right-4 top-1/2 -translate-y-1/2 text-secondary hover:text-primary"
+      >
+        {show ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+    {error && <p className="mt-1.5 text-sm text-red-500">{error[0]}</p>}
+  </div>
+);
 
 export default function ChangePassword() {
   const [formData, setFormData] = useState({
@@ -13,17 +50,7 @@ export default function ChangePassword() {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-
-  const inputStyle = {
-    backgroundColor: "var(--input-bg)",
-    border: "1px solid var(--input-border)",
-    color: "var(--text-primary)",
-  };
+  const [showPasswords, setShowPasswords] = useState({});
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -33,13 +60,6 @@ export default function ChangePassword() {
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
-    }));
-  };
-
-  const togglePasswordVisibility = (field) => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [field]: !prev[field],
     }));
   };
 
@@ -86,153 +106,86 @@ export default function ChangePassword() {
     }
   };
 
+  const togglePasswordVisibility = (field) => {
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
   return (
-    <div
-      className="p-6 rounded-xl"
-      style={{ backgroundColor: "var(--bg-content-900)" }}
-    >
-      {/* Header */}
-      <div
-        className="pb-6 border-b"
-        style={{ borderColor: "var(--bg-content-800)" }}
-      >
-        <h1
-          className="text-2xl font-bold"
-          style={{ color: "var(--text-primary)" }}
-        >
+    <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
+      {/* Header Section */}
+      <div className="pb-6 border-b border-themed">
+        <h1 className="font-heading text-2xl md:text-3xl font-bold text-primary">
           Đổi mật khẩu
         </h1>
-        <p style={{ color: "var(--text-secondary)" }}>
-          Cập nhật mật khẩu để tăng cường bảo mật cho tài khoản.
+        <p className="text-secondary mt-1">
+          Để đảm bảo an toàn, hãy sử dụng mật khẩu mạnh và không chia sẻ cho bất
+          kỳ ai.
         </p>
       </div>
 
-      <form
-        onSubmit={() => {
-          /* Handle submit */
-        }}
-        className="space-y-6 pt-6"
-      >
-        {/* Current Password */}
+      {/* Form Section */}
+      <form onSubmit={handleSubmit} className="mt-8 max-w-lg mx-auto space-y-6">
         <div>
-          <label
-            className="text-sm font-medium text-slate-300 mb-2 block"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <label className="block text-sm font-semibold text-secondary mb-2">
             Mật khẩu hiện tại
           </label>
-          <div className="relative">
-            <input
-              type={"password"}
-              name="current_password"
-              placeholder="Nhập mật khẩu hiện tại"
-              className={`w-full rounded-lg px-4 py-3 pr-12`}
-              style={inputStyle}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => togglePasswordVisibility("current")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-            >
-              {showPasswords.current ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-          {errors.current_password && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.current_password[0]}
-            </p>
-          )}
+          <PasswordInput
+            name="current_password"
+            value={formData.current_password}
+            onChange={handleChange}
+            placeholder="Nhập mật khẩu hiện tại"
+            error={errors.current_password}
+            show={showPasswords.current}
+            onToggle={() => togglePasswordVisibility("current")}
+          />
         </div>
-
-        {/* New Password */}
         <div>
-          <label
-            className="text-sm font-medium text-slate-300 mb-2 block"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <label className="block text-sm font-semibold text-secondary mb-2">
             Mật khẩu mới
           </label>
-          <div className="relative">
-            <input
-              type={"password"}
-              name="new_password"
-              placeholder="Nhập mật khẩu mới"
-              className={`w-full rounded-lg px-4 py-3 pr-12`}
-              style={inputStyle}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => togglePasswordVisibility("new")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-            >
-              {showPasswords.new ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-          {errors.new_password && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.new_password[0]}
-            </p>
-          )}
+          <PasswordInput
+            name="new_password"
+            value={formData.new_password}
+            onChange={handleChange}
+            placeholder="Ít nhất 8 ký tự"
+            error={errors.new_password}
+            show={showPasswords.new}
+            onToggle={() => togglePasswordVisibility("new")}
+          />
         </div>
-
-        {/* Confirm Password */}
         <div>
-          <label
-            className="text-sm font-medium text-slate-300 mb-2 block"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <label className="block text-sm font-semibold text-secondary mb-2">
             Xác nhận mật khẩu mới
           </label>
-          <div className="relative">
-            <input
-              type={"password"}
-              name="new_password_confirmation"
-              placeholder="Xác nhận mật khẩu mới"
-              className={`w-full rounded-lg px-4 py-3 pr-12`}
-              style={inputStyle}
-              required
-            />
-            <button
-              type="button"
-              onClick={() => togglePasswordVisibility("confirm")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-            >
-              {showPasswords.confirm ? (
-                <EyeOff className="h-5 w-5" />
-              ) : (
-                <Eye className="h-5 w-5" />
-              )}
-            </button>
-          </div>
-          {errors.new_password_confirmation && (
-            <p className="mt-1 text-sm text-red-400">
-              {errors.new_password_confirmation[0]}
-            </p>
-          )}
+          <PasswordInput
+            name="new_password_confirmation"
+            value={formData.new_password_confirmation}
+            onChange={handleChange}
+            placeholder="Nhập lại mật khẩu mới"
+            error={errors.new_password_confirmation}
+            show={showPasswords.confirm}
+            onToggle={() => togglePasswordVisibility("confirm")}
+          />
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full font-medium px-4 py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-          style={{
-            backgroundColor: "var(--accent-primary)",
-            color: "var(--button-text)",
-          }}
-        >
-          {loading ? "Đang lưu..." : "Cập nhật mật khẩu"}
-        </button>
+        <div className="pt-2">
+          <button
+            type="submit"
+            disabled={loading}
+            className="action-button action-button-primary"
+          >
+            <Save className="h-5 w-5 mr-2" />
+            {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
+          </button>
+        </div>{" "}
+        <p className="text-sm font-normal">
+          <Link
+            to="/forgot-password"
+            className="font-heading font-semibold transition-colors text-secondary hover:text-highlight"
+          >
+            Quên mật khẩu?
+          </Link>
+        </p>
       </form>
-    </div>
+    </section>
   );
 }

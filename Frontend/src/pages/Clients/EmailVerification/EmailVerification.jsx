@@ -5,6 +5,8 @@ import api from "@utils/http"; // Ensure this path is correct
 
 import { getDecodedToken } from "../../../utils/tokenUtils"; // Ensure this path is correct
 import { useAuth } from "@contexts/AuthContext";
+import { MailCheck, MailWarning } from "lucide-react";
+import AuthCardLayout from "../../../layouts/AuthCardLayout";
 
 const EmailVerification = () => {
   const [error, setError] = useState(""); // Chỉ giữ lại state cho lỗi
@@ -56,6 +58,7 @@ const EmailVerification = () => {
             name: decoded.name,
             money: decoded.money,
             avatar: decoded.avatar,
+            donate_code: decoded.donate_code,
           });
           navigate("/");
         } else {
@@ -98,66 +101,36 @@ const EmailVerification = () => {
   }, [location.search, handleVerifyEmail]);
 
   return (
-    <div
-      className="max-w-xl mx-auto my-16 p-10 rounded-2xl shadow-xl 
-                 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 
-                 border border-gray-200 text-center 
-                 transform transition duration-300 ease-in-out hover:scale-105"
+    <AuthCardLayout
+      title="Xác minh Email"
+      icon={isLoading ? MailCheck : MailWarning}
     >
-      <h2 className="text-4xl font-extrabold text-purple-700 mb-8 font-sans-serif tracking-wide drop-shadow-sm">
-        Xác Minh Email Của Bạn 💌
-      </h2>
-
-      {/* Message removed, only error display */}
-      {error && (
-        <p className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg relative mb-6 font-semibold text-lg animate-shake">
-          {error}
-        </p>
-      )}
-
-      {/* Loading state indicator - simplified */}
-      {isLoading && !error && (
-        <div className="flex items-center justify-center space-x-3 mt-8">
-          <svg
-            className="animate-spin h-8 w-8 text-purple-500"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            ></circle>
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            ></path>
-          </svg>
-          <span className="text-xl font-semibold text-gray-700">
-            Đang kiểm tra...
-          </span>{" "}
-          {/* Text changed */}
-        </div>
-      )}
-
-      {/* Guidance message for errors */}
-      {error && (
-        <p className="mt-8 text-md text-gray-600">
-          Vui lòng kiểm tra lại liên kết hoặc{" "}
-          <Link to={"/activeAcc"}>
-            <span className="text-purple-500 font-semibold cursor-pointer hover:underline">
-              thử yêu cầu gửi lại email xác minh
+      <div className="text-center">
+        {isLoading && !error && (
+          <div className="flex flex-col items-center justify-center space-y-4 my-4">
+            <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-lg font-semibold text-secondary">
+              Đang kiểm tra...
             </span>
-          </Link>
-          nếu bạn gặp vấn đề.
-        </p>
-      )}
-    </div>
+          </div>
+        )}
+        {error && (
+          <>
+            <div className="alert alert-danger">{error}</div>
+            <p className="mt-6 text-sm text-secondary">
+              Vui lòng kiểm tra lại liên kết hoặc{" "}
+              <Link
+                to="/activeAcc"
+                className="font-semibold text-accent hover:underline"
+              >
+                yêu cầu gửi lại email xác minh
+              </Link>
+              .
+            </p>
+          </>
+        )}
+      </div>
+    </AuthCardLayout>
   );
 };
 

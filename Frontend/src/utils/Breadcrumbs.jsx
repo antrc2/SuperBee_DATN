@@ -1,47 +1,36 @@
-import { Link } from "react-router-dom";
-import { ChevronRight, Home, ShoppingCart } from "lucide-react"; // Assuming you have these or similar icons
+// src/components/common/Breadcrumbs.jsx
 
-export default function Breadcrumbs({ category }) {
+import React from "react";
+import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
+
+export default function Breadcrumbs({ items }) {
+  if (!items || items.length === 0) return null;
+
   return (
-    <div className="p-4">
-      <nav
-        aria-label="breadcrumb"
-        className="flex items-center flex-wrap text-base text-gray-300" // Increased base font size
-      >
-        {/* Trang chủ */}
-        <Link
-          to="/"
-          className="flex items-center gap-1 hover:text-purple-400 transition-colors duration-200"
-        >
-          <Home className="w-5 h-5" /> {/* Larger, cute home icon */}
-          <span className="font-medium">Trang chủ</span>{" "}
-          {/* Slightly bolder text */}
-        </Link>
-        <ChevronRight className="w-5 h-5 mx-2 text-gray-500" />{" "}
-        {/* Larger, slightly darker chevron */}
-        {/* Mua ACC */}
-        <Link
-          to="/mua-acc"
-          className="flex items-center gap-1 hover:text-purple-400 transition-colors duration-200"
-        >
-          <ShoppingCart className="w-5 h-5" />{" "}
-          {/* Larger, cute shopping cart icon */}
-          <span className="font-medium">Mua ACC</span>{" "}
-          {/* Slightly bolder text */}
-        </Link>
-        {category && (
-          <>
-            <ChevronRight className="w-5 h-5 mx-2 text-gray-500" />{" "}
-            {/* Larger, slightly darker chevron */}
-            <Link
-              to={`/mua-acc/${category.slug}`}
-              className="font-semibold text-purple-400" // Highlight current category
-            >
-              {category.name}
-            </Link>
-          </>
-        )}
-      </nav>
-    </div>
+    <nav
+      aria-label="Breadcrumb"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4"
+    >
+      <div className="breadcrumbs-container">
+        {items.map((item, index) => (
+          <React.Fragment key={index}>
+            {/* Nếu là phần tử cuối cùng, chỉ hiển thị text, không có link */}
+            {index === items.length - 1 ? (
+              <span className="font-semibold text-primary">{item.label}</span>
+            ) : (
+              <Link to={item.href} className="breadcrumb-link">
+                {item.label}
+              </Link>
+            )}
+
+            {/* Hiển thị dấu phân cách nếu không phải là phần tử cuối */}
+            {index < items.length - 1 && (
+              <ChevronRight size={16} className="breadcrumb-separator" />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </nav>
   );
 }

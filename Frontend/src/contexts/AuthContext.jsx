@@ -5,9 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
 import { useNotification } from "@contexts/NotificationContext";
 import { useContext } from "react";
+import { checkLocation } from "../utils/hook";
 
 // AuthContext sẽ chỉ quản lý thông tin xác thực người dùng (login, register, logout, user data)
-// eslint-disable-next-line react-refresh/only-export-components
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -19,6 +19,7 @@ export function AuthProvider({ children }) {
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
+          donate_code: decoded.donate_code,
         }
       : null;
   });
@@ -39,6 +40,7 @@ export function AuthProvider({ children }) {
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
+          donate_code: decoded.donate_code,
         });
       } else {
         sessionStorage.removeItem("access_token");
@@ -97,14 +99,22 @@ export function AuthProvider({ children }) {
       sessionStorage.setItem("access_token", accessToken);
       setToken(accessToken);
       const decoded = getDecodedToken();
-
       if (decoded) {
         setUser({
           name: decoded.name,
           money: decoded.money,
           avatar: decoded.avatar,
+          donate_code: decoded.donate_code,
         });
         pop("Đăng nhập thành công", "s");
+        const savedLocation = await checkLocation();
+        console.log("🚀 ~ login ~ savedLocation:", savedLocation);
+        if (savedLocation) {
+          localStorage.removeItem("location");
+          window.location.href = `${savedLocation}`;
+        } else {
+          navigate("/");
+        }
         return { success: true };
       } else {
         sessionStorage.removeItem("access_token");
@@ -192,7 +202,7 @@ export function AuthProvider({ children }) {
 
   const isLoggedIn = !!user;
   const fetchUserMoney = useCallback(async () => {
-    if (!token && !user) return;
+    if (!token) return;
     setLoading(true);
     try {
       const res = await api.get("/user/money");
@@ -209,7 +219,7 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [token, user]);
+  }, [token]);
   return (
     <AuthContext.Provider
       value={{

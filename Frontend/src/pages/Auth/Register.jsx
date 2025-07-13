@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, Eye, EyeClosed } from "lucide-react"; // Only keep Eye and EyeClosed
+import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 
@@ -18,7 +18,6 @@ export default function SignUpForm() {
     setError: setFormError,
   } = useForm({});
 
-  // Function to extract 'aff' parameter from URL
   const getAffiliateId = () => {
     const params = new URLSearchParams(location.search);
     return params.get("aff") || null;
@@ -44,87 +43,54 @@ export default function SignUpForm() {
   }
 
   return (
-    <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar">
+    <div className="flex flex-col flex-1 w-full overflow-y-auto lg:w-1/2 no-scrollbar ">
       <div className="w-full max-w-md mx-auto mb-5 sm:pt-10">
         <Link
           to="/"
-          className="inline-flex items-center text-sm text-gray-50 transition-colors text-gradient-on-hover"
+          className="inline-flex items-center text-sm text-secondary hover:text-primary transition-colors"
         >
           <ChevronLeft className="size-5" />
-          Back to dashboard
+          Quay lại trang chủ
         </Link>
       </div>
-      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto">
+      <div className="flex flex-col justify-center flex-1 w-full max-w-md mx-auto px-4">
         <div>
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-white text-title-sm sm:text-title-md">
-              Sign Up
+            <h1 className="font-heading mb-2 font-semibold text-primary text-title-sm sm:text-title-md">
+              Đăng Ký
             </h1>
-            <p className="text-sm text-gray-50">
-              Enter your email and password to sign up!
+            <p className="text-sm text-secondary">
+              Nhập thông tin của bạn để tạo tài khoản mới!
             </p>
           </div>
-          {/* Removed direct user success message and general backend error display */}
-          {/* {user && (
-            <div className="p-4 bg-green-100 rounded-md text-green-800 mb-5">
-              <h3 className="mb-2 text-lg font-semibold text-green-800">
-                Đăng ký thành công!
-              </h3>
-              <p className="text-sm">
-                Chào mừng, {user.name || "Người dùng"}! Bạn sẽ được chuyển
-                hướng.
-              </p>
-            </div>
-          )} */}
-
-          {/* Removed general backend errors */}
-          {/* {errorBE && !errors.username && !errors.email && !errors.password && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md mb-5">
-              <p>
-                {errorBE.message && typeof errorBE.message === "string"
-                  ? errorBE.message
-                  : "Đã xảy ra lỗi khi đăng ký."}
-              </p>
-            </div>
-          )}
-          {errors.general && (
-            <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md mb-5">
-              <p>{errors.general.message}</p>
-            </div>
-          )} */}
 
           <form onSubmit={handleSubmit(onSubmit)}>
             <div className="space-y-5">
               {/* Username Field */}
-              <div className="sm:col-span-1">
+              <div>
                 <label
                   htmlFor="username"
-                  className="block text-sm font-medium text-gray-50 mb-1"
+                  className="block text-sm font-medium text-primary mb-1"
                 >
-                  User Name<span className="text-error-500">*</span>
+                  Tên đăng nhập<span className="text-red-500">*</span>
                 </label>
-
-                <div className="input-wrapper-gradient">
-                  <input
-                    type="text"
-                    id="username"
-                    placeholder="Enter your username"
-                    className="block w-full px-4 py-[12px]  text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 input-no-border-on-focus "
-                    {...register("username", {
-                      required: "Username is required",
-                      minLength: {
-                        value: 3,
-                        message: "Username must be at least 3 characters",
-                      },
-                    })}
-                    // Clear errors for this field when user starts typing again
-                    onChange={(e) => {
-                      clearErrors("username"); // Clear error when typing
-                      register("username").onChange(e);
-                    }}
-                  />
-                </div>
-                {/* Display react-hook-form validation errors (including server-side ones set by setFormError) */}
+                <input
+                  type="text"
+                  id="username"
+                  placeholder="Nhập tên đăng nhập"
+                  className="block w-full px-4 py-[12px] text-sm rounded-lg border-hover placeholder-theme bg-input text-input"
+                  {...register("username", {
+                    required: "Tên đăng nhập là bắt buộc",
+                    minLength: {
+                      value: 3,
+                      message: "Tên đăng nhập phải có ít nhất 3 ký tự",
+                    },
+                  })}
+                  onChange={(e) => {
+                    clearErrors("username");
+                    register("username").onChange(e);
+                  }}
+                />
                 {errors.username && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.username.message}
@@ -136,78 +102,71 @@ export default function SignUpForm() {
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-50 mb-1"
+                  className="block text-sm font-medium text-primary mb-1"
                 >
-                  Email<span className="text-error-500">*</span>
+                  Email<span className="text-red-500">*</span>
                 </label>
-                <div className="input-wrapper-gradient">
-                  <input
-                    type="email"
-                    id="email"
-                    placeholder="Enter your email"
-                    className="block w-full px-4 py-[12px] text-sm text-gray-900 border border-gray-300 bg-gray-50 rounded-lg bg-gray-50input-no-border-on-focus "
-                    {...register("email", {
-                      required: "Email is required",
-                      pattern: {
-                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
-                        message: "Invalid email address",
-                      },
-                    })}
-                    // Clear errors for this field when user starts typing again
-
-                    onChange={(e) => {
-                      clearErrors("email"); // Clear error when typing
-                      register("email").onChange(e);
-                    }}
-                  />
-                </div>
-                {/* Display react-hook-form validation errors */}
+                <input
+                  type="email"
+                  id="email"
+                  placeholder="Nhập email của bạn"
+                  className="block w-full px-4 py-[12px] text-sm rounded-lg border-hover placeholder-theme bg-input text-input"
+                  {...register("email", {
+                    required: "Email là bắt buộc",
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i,
+                      message: "Địa chỉ email không hợp lệ",
+                    },
+                  })}
+                  onChange={(e) => {
+                    clearErrors("email");
+                    register("email").onChange(e);
+                  }}
+                />
                 {errors.email && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.email.message}
                   </p>
-                )}{" "}
+                )}
               </div>
 
               {/* Password Field */}
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-50 mb-1"
+                  className="block text-sm font-medium text-primary mb-1"
                 >
-                  Password<span className="text-error-500">*</span>
+                  Mật khẩu<span className="text-red-500">*</span>
                 </label>
-                <div className="relative input-wrapper-gradient ">
+                <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     id="password"
-                    placeholder="Enter your password"
-                    className="block w-full px-4 py-[12px] text-sm text-gray-900 border border-gray-300 bg-gray-50 rounded-lg bg-gray-50input-no-border-on-focus  pr-10"
+                    placeholder="Nhập mật khẩu"
+                    className="block w-full px-4 py-[12px] text-sm rounded-lg border-hover placeholder-theme pr-10 bg-input text-input"
                     {...register("password", {
-                      required: "Password is required",
+                      required: "Mật khẩu là bắt buộc",
                       minLength: {
                         value: 6,
-                        message: "Password must be at least 6 characters",
+                        message: "Mật khẩu phải có ít nhất 6 ký tự",
                       },
                     })}
-                    // Clear errors for this field when user starts typing again
                     onChange={(e) => {
-                      clearErrors("password"); // Clear error when typing
+                      clearErrors("password");
                       register("password").onChange(e);
                     }}
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                    className="absolute z-10 -translate-y-1/2 cursor-pointer right-4 top-1/2 text-secondary"
                   >
                     {showPassword ? (
-                      <Eye className=" size-5" />
+                      <Eye className="size-5" />
                     ) : (
-                      <EyeClosed className="size-5" />
+                      <EyeOff className="size-5" />
                     )}
                   </span>
                 </div>
-                {/* Display react-hook-form validation errors */}
                 {errors.password && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.password.message}
@@ -219,49 +178,23 @@ export default function SignUpForm() {
               <div>
                 <button
                   type="submit"
-                  className="flex gradient-bg-hover items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading} // Disable if loading
+                  className="font-heading flex items-center justify-center w-full px-4 py-3 text-sm font-bold rounded-lg transition-all text-accent-contrast bg-gradient-button hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
                 >
-                  {loading ? (
-                    <span className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Đang đăng ký...
-                    </span>
-                  ) : (
-                    "Sign Up"
-                  )}
+                  {loading ? "Đang xử lý..." : "Đăng Ký"}
                 </button>
               </div>
             </div>
           </form>
 
           <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-50 sm:text-start">
-              Already have an account?{" "}
+            <p className="text-sm font-normal text-center text-secondary sm:text-start">
+              Đã có tài khoản?{" "}
               <Link
                 to="/auth/login"
-                className=" color-chitoge-skirt gradient-text font-[500] text-gradient-on-hover"
+                className="font-heading font-semibold transition-colors text-highlight hover:brightness-125"
               >
-                Sign In
+                Đăng nhập ngay
               </Link>
             </p>
           </div>

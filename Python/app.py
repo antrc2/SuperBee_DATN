@@ -15,7 +15,7 @@ async def upload(file: UploadFile = File(...), folder: str = Form(...)):
     # # Đọc nội dung file vào bộ nhớ
     # file_content = BytesIO(await file.read())
 
-    response = s3_client.add(file,object_name)
+    response = await s3_client.add(file,object_name)
 
     return response
 

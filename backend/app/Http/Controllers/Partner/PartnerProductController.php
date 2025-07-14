@@ -262,6 +262,10 @@ class PartnerProductController extends Controller
                     $images = $request->file('images');
                     $response = $this->uploadFiles($images,"product_images/".$product->sku);
                     foreach ($response as $image){
+                        if (is_null($image['url'])){
+                            DB::rollBack();
+                            return response()->json(['message' => $image['messsage'],'status'=>False], 500);
+                        }
                         ProductImage::create([
                             "product_id"=>$product->id,
                             "alt_text"=>$image['filename'],
@@ -424,6 +428,7 @@ class PartnerProductController extends Controller
             // }
             $response = $this->uploadFiles($images,'product_images/'.$sku);
             foreach ($response as $image){
+                
                 if (is_null($image['url'])){
                     DB::rollBack();
                     return response()->json(['message' => 'Failed to upload product image.'], 500);

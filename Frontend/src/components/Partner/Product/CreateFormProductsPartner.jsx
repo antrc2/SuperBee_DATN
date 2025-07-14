@@ -2,10 +2,9 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "../../../utils/http";
 import { ImagePlus, PlusCircle, X, Eye, EyeOff } from "lucide-react";
 
-
 const MAX_IMAGES = 15;
 
-export default function CreateFormProducts({
+export default function CreateFormProductsPartner({
   initialData,
   onSubmit,
   isEditing = false,
@@ -13,20 +12,15 @@ export default function CreateFormProducts({
 }) {
   const [formData, setFormData] = useState({
     category_id: "",
-    price: "",
-    import_price:"",
-    sale: "",
+    import_price: "",
     username: "",
     password: "",
     attributes: [],
   });
 
-  const [selectedGame, setSelectedGame] = useState("");
-  const [availableGames, setAvailableGames] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [newImages, setNewImages] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [categoriesSelect, setCategoriesSelect] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -43,36 +37,6 @@ export default function CreateFormProducts({
     fetchCategories();
   }, []);
 
-  // Mock available games with their attributes
-  useEffect(() => {
-    setAvailableGames([
-      {
-        id: 1,
-        code: "LQ",
-        name: "Liên Quân",
-        category_id: 18,
-        attributes: [
-          { key: "Mức Rank", label: "Mức Rank (LQ)" },
-          { key: "Đẳng Ký", label: "Đẳng Ký (LQ)" },
-          { key: "Số tướng", label: "Số tướng (LQ)" },
-          { key: "Số Skin", label: "Số Skin (LQ)" },
-        ],
-      },
-      {
-        id: 2,
-        code: "FF",
-        name: "Free Fire",
-        category_id: 7,
-        attributes: [
-          { key: "Thẻ Võ Cực", label: "Thẻ Võ Cực (FF)" },
-          { key: "Skin Súng", label: "Skin Súng (FF)" },
-          { key: "Đăng Ký", label: "Đăng Ký (FF)" },
-          { key: "Mức Rank", label: "Mức Rank (FF)" },
-        ],
-      },
-    ]);
-  }, []);
-
   // Load initial data for editing
   useEffect(() => {
     if (initialData) {
@@ -87,55 +51,11 @@ export default function CreateFormProducts({
             attribute_key: attr.attribute_key,
             attribute_value: attr.attribute_value,
           })) || [],
-        price: initialData.price || 0,
-        sale: initialData.sale || "",
       }));
-      setSelectedGame(initialData.game_code || "none");
       setExistingImages(initialData.images || []);
       setNewImages([]);
     }
   }, [initialData]);
-
-  useEffect(() => {
-    // Bỏ qua nếu đang trong chế độ chỉnh sửa
-    if (isEditing) return;
-
-    // Tìm game được chọn trong danh sách
-    const selected = availableGames.find((g) => g.code === selectedGame);
-
-    // TRƯỜNG HỢP 1: Người dùng đã chọn một game cụ thể
-    if (selected) {
-      // Tìm danh mục cha của game đó
-      const parentCategory = categories.find(
-        (c) => c.id === selected.category_id
-      );
-
-      // Cập nhật danh sách select chỉ với các danh mục con
-      setCategoriesSelect(parentCategory?.children || []);
-
-      // Tự động điền các thuộc tính của game vào form
-      setFormData((prev) => ({
-        ...prev,
-        category_id: "", // Reset lại lựa chọn danh mục con
-        attributes: selected.attributes.map((a) => ({
-          attribute_key: a.label,
-          attribute_value: "",
-        })),
-      }));
-    }
-    // TRƯỜNG HỢP 2: Người dùng chọn "Không chọn" hoặc trạng thái ban đầu
-    else {
-      // Đưa danh sách select về mảng rỗng để render lại toàn bộ
-      setCategoriesSelect([]);
-
-      // Xóa các thuộc tính đã điền tự động
-      setFormData((prev) => ({
-        ...prev,
-        attributes: [],
-        category_id: "", // Reset lại lựa chọn danh mục
-      }));
-    }
-  }, [selectedGame, categories, availableGames, isEditing]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -206,26 +126,25 @@ export default function CreateFormProducts({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.category_id) return alert("Vui lòng chọn danh mục.");
-    if (!formData.price) return alert("Vui lòng nhập giá bán.");
-    if (!formData.import_price) return alert("Vui lòng nhập giá nhập.");
-    // Nếu có sale thì phải nhỏ hơn price
-    if (formData.sale && Number(formData.sale) >= Number(formData.price)) {
-      return alert("Giá sale phải nhỏ hơn giá bán.");
-    }
+    if (!formData.import_price) return alert("Vui lòng nhập giá bán.");
+    if(formData.import_price > 999999999) return alert("Giá phải nhỏ hơn 999.999.999đ");
     if (!formData.username) return alert("Vui lòng nhập username.");
     if (!isEditing && !formData.password)
       return alert("Vui lòng nhập password.");
 
     const data = new FormData();
-    Object.entries(formData).forEach(([k, v]) =>
-      data.append(k, typeof v === "object" ? JSON.stringify(v) : v)
-    );
+    data.append("category_id", formData.category_id);
+    data.append("import_price", formData.import_price);
+    data.append("username", formData.username);
+    data.append("password", formData.password);
+    data.append("attributes", JSON.stringify(formData.attributes));
     newImages.forEach((f) => data.append("images[]", f));
     if (isEditing)
       data.append(
         "existing_images",
         JSON.stringify(existingImages.map((img) => img.image_url))
       );
+    
     onSubmit(data);
   };
 
@@ -233,68 +152,29 @@ export default function CreateFormProducts({
   const renderCategory = (cats, lvl = 0) =>
     cats.flatMap((cat) => [
       <option key={cat.id} value={cat.id}>
-        {" ".repeat(lvl * 4)}
+        {" ".repeat(lvl * 4)}
         {cat.name}
       </option>,
       ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
     ]);
 
+  // Định nghĩa className tái sử dụng cho form dark mode
+  const inputClass =
+    "w-full p-2 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1c1c1c] text-gray-900 dark:text-gray-200 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 transition";
+  const blockClass =
+    "p-6 border bg-white dark:bg-[#121212] rounded-lg shadow-md transition";
+  const buttonClass =
+    "flex items-center gap-2 text-sm text-white bg-blue-600 dark:bg-blue-500 hover:bg-blue-700 dark:hover:bg-blue-400 py-2 px-4 rounded-lg transition";
+  const iconClass = "text-gray-500 dark:text-gray-400";
+
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Game selection optional, FE-only */}
-      {!isEditing && (
-        <div className="p-6 border bg-white rounded shadow-sm">
-          <h3 className="mb-4 font-medium text-gray-900">
-            Chọn trò chơi (tuỳ chọn)
-          </h3>
-          <div className="flex gap-4">
-            {availableGames.map((g) => (
-              <label key={g.id}>
-                <input
-                  type="radio"
-                  name="game"
-                  value={g.code}
-                  checked={selectedGame === g.code}
-                  onChange={() => setSelectedGame(g.code)}
-                  className="mr-2"
-                />
-                {g.name}
-              </label>
-            ))}
-            <label>
-              <input
-                type="radio"
-                name="game"
-                value=""
-                checked={selectedGame == "none"}
-                onChange={() => setSelectedGame("none")}
-                className="mr-2"
-              />
-              Không chọn
-            </label>
-          </div>
-        </div>
-      )}
-
       {/* Basic info */}
-      <div className="p-6 border bg-white rounded shadow-sm">
-        <h3 className="mb-4 font-medium text-gray-900">Thông tin cơ bản</h3>
+      <div className={blockClass}>
+        <h3 className="mb-4 font-medium text-gray-900 dark:text-white">Thông tin cơ bản</h3>
         <div className="grid md:grid-cols-2 gap-6">
-          {/* <div>
-            <label htmlFor="sku" className="block mb-1 text-sm">
-              SKU
-            </label>
-            <input
-              name="sku"
-              id="sku"
-              value={formData.sku}
-              onChange={handleChange}
-              readOnly
-              className="w-full p-2 bg-gray-100 rounded border"
-            />
-          </div> */}
           <div>
-            <label htmlFor="category_id" className="block mb-1 text-sm">
+            <label htmlFor="category_id" className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
               Danh mục
             </label>
             <select
@@ -303,23 +183,15 @@ export default function CreateFormProducts({
               value={formData.category_id}
               onChange={handleChange}
               required
-              className="w-full p-2 rounded border"
+              className={inputClass}
             >
               <option value="">-- Chọn --</option>
-
-              {categoriesSelect.length > 0
-                ? categoriesSelect.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))
-                : renderCategory(categories)}
+              {renderCategory(categories)}
             </select>
           </div>
-          {/* Admin: hiển thị đủ các trường */}
           <div>
-            <label htmlFor="import_price" className="block mb-1 text-sm">
-              Giá Nhập
+            <label htmlFor="import_price" className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+              Giá Bán
             </label>
             <input
               name="import_price"
@@ -327,48 +199,24 @@ export default function CreateFormProducts({
               value={formData.import_price}
               onChange={handleChange}
               required
-              className="w-full p-2 rounded border"
+              className={inputClass}
+              disabled={isEditing && (initialData?.status === 1 || initialData?.status === 4)}
+              placeholder="Nhập giá bán"
             />
-          </div>
-          <div>
-            <label htmlFor="price" className="block mb-1 text-sm">
-              Giá Bán
-            </label>
-            <input
-              name="price"
-              type="number"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              className="w-full p-2 rounded border"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="sale" className="block mb-1 text-sm">
-              Giá sale
-            </label>
-            <input
-              name="sale"
-              type="number"
-              value={formData.sale}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-            />
+            {isEditing && (initialData?.status === 1 || initialData?.status === 4) && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Không thể sửa giá khi sản phẩm đang bán hoặc đã bán.</p>
+            )}
           </div>
         </div>
       </div>
       {/* Phần thông tin đăng nhập */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className={blockClass}>
+        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
           Thông tin đăng nhập
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Tài khoản đăng nhập
             </label>
             <input
@@ -378,14 +226,12 @@ export default function CreateFormProducts({
               value={formData.username}
               onChange={handleChange}
               required
-              className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+              className={inputClass}
+              placeholder="Nhập tài khoản"
             />
           </div>
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
               Mật khẩu {isEditing && "(Bỏ trống nếu không đổi)"}
             </label>
             <div className="relative">
@@ -396,12 +242,14 @@ export default function CreateFormProducts({
                 value={formData.password}
                 onChange={handleChange}
                 required={!isEditing}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                className={inputClass}
+                placeholder="Nhập mật khẩu"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${iconClass}`}
+                tabIndex={-1}
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -409,10 +257,9 @@ export default function CreateFormProducts({
           </div>
         </div>
       </div>
-
       {/* Phần thuộc tính sản phẩm */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className={blockClass}>
+        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
           Thuộc tính sản phẩm
         </h3>
         <div className="space-y-4">
@@ -424,7 +271,7 @@ export default function CreateFormProducts({
                 placeholder="Tên thuộc tính"
                 value={attr.attribute_key}
                 onChange={(e) => handleAttributeChange(index, e)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                className={inputClass}
               />
               <input
                 type="text"
@@ -432,12 +279,13 @@ export default function CreateFormProducts({
                 placeholder="Giá trị"
                 value={attr.attribute_value}
                 onChange={(e) => handleAttributeChange(index, e)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                className={inputClass}
               />
               <button
                 type="button"
                 onClick={() => removeAttribute(index)}
-                className="text-red-500 hover:text-red-700"
+                className={`text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-200 ${iconClass}`}
+                tabIndex={-1}
               >
                 <X size={18} />
               </button>
@@ -447,15 +295,14 @@ export default function CreateFormProducts({
         <button
           type="button"
           onClick={addAttribute}
-          className="mt-4 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+          className="mt-4 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 transition"
         >
-          <PlusCircle size={18} /> Thêm thuộc tính
+          <PlusCircle size={18} className={iconClass} /> Thêm thuộc tính
         </button>
       </div>
-
       {/* Phần hình ảnh sản phẩm */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className={blockClass}>
+        <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
           Hình ảnh minh họa
         </h3>
         <input
@@ -469,20 +316,19 @@ export default function CreateFormProducts({
         <button
           type="button"
           onClick={() => fileInputRef.current.click()}
-          className="mb-4 flex items-center gap-2 text-sm text-white bg-gray-700 hover:bg-gray-800 py-2 px-3 rounded-md"
+          className="mb-4 flex items-center gap-2 text-sm text-white bg-gray-700 dark:bg-[#2d2d2d] hover:bg-gray-800 dark:hover:bg-[#3a3a3a] py-2 px-3 rounded-lg transition"
           disabled={existingImages.length + newImages.length >= MAX_IMAGES}
         >
-          <ImagePlus size={18} /> Chọn ảnh từ máy tính
+          <ImagePlus size={18} className={iconClass} /> Chọn ảnh từ máy tính
         </button>
-        <p className="text-sm text-gray-500 mb-4">
-          Đã chọn: {existingImages.length + newImages.length} / {MAX_IMAGES}{" "}
-          ảnh.
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+          Đã chọn: {existingImages.length + newImages.length} / {MAX_IMAGES} ảnh.
         </p>
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
           {existingImages.map((img, index) => (
             <div
               key={index}
-              className="relative aspect-square border rounded-md overflow-hidden"
+              className="relative aspect-square border rounded-md overflow-hidden border-gray-300 dark:border-[#333]"
             >
               <img
                 src={`${img.image_url}`}
@@ -492,7 +338,8 @@ export default function CreateFormProducts({
               <button
                 type="button"
                 onClick={() => removeExistingImage(index)}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
+                className={`absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 ${iconClass}`}
+                tabIndex={-1}
               >
                 <X size={14} />
               </button>
@@ -501,7 +348,7 @@ export default function CreateFormProducts({
           {newImages.map((file, index) => (
             <div
               key={file.name + index}
-              className="relative aspect-square border rounded-md overflow-hidden"
+              className="relative aspect-square border rounded-md overflow-hidden border-gray-300 dark:border-[#333]"
             >
               <img
                 src={file.preview}
@@ -511,7 +358,8 @@ export default function CreateFormProducts({
               <button
                 type="button"
                 onClick={() => removeNewImage(index)}
-                className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
+                className={`absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5 ${iconClass}`}
+                tabIndex={-1}
               >
                 <X size={14} />
               </button>
@@ -519,17 +367,16 @@ export default function CreateFormProducts({
           ))}
         </div>
       </div>
-
       {/* Nút Submit */}
       <div className="pt-6 flex justify-end">
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+          className={buttonClass}
         >
           {isLoading ? "Đang lưu..." : isEditing ? "Cập Nhật" : "Tạo Sản Phẩm"}
         </button>
       </div>
     </form>
   );
-}
+} 

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { FilePenLine, Eye, Lock, Key,ShieldCheck  } from "lucide-react";
-import api from "../../../utils/http";
 
-export default function ProductsBrowse({products, handleKey, handleLock }) {
+export default function ProductsBrowse({products }) {
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-white">
@@ -46,7 +45,7 @@ export default function ProductsBrowse({products, handleKey, handleLock }) {
                     ? "Đã hủy"
                     : product.status === 4
                     ? "Bán thành công"
-                    : "Không xác định"}
+                    : "Bị từ chối"}
                 </span>
               </td>
               <td className="py-3 px-4 text-center">

@@ -9,6 +9,7 @@ import adminRoutes from "@routers/Admin";
 import { clientRoutes, profileRoutes } from "@routers/Client";
 import authRoutes from "@routers/Auth";
 import partnerRoutes from "./routers/Partner.jsx";
+import ChatWidget from "./pages/Clients/Chatbot/ChatWidget";
 
 import { ScrollToTop } from "@components/Admin/common/ScrollToTop";
 import { useAppStatus } from "@contexts/AppStatusContext";
@@ -62,6 +63,7 @@ function AppRoutes() {
             <CartProvider>
               <div>
                 <ScrollToTop />
+                <ChatWidget />
                 {appRoutes}
               </div>
             </CartProvider>

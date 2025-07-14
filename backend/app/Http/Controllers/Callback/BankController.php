@@ -41,6 +41,7 @@ class BankController extends Controller
                         $donate_promotion_amount = 0;
                     }
                     $amount = $request->transferAmount;
+                    $donate_amount = $amount;
                     $bonus = $amount * ($donate_promotion_amount / 100);
                     $amount += $bonus;
                     $wallet_transaction = WalletTransaction::create([
@@ -59,7 +60,8 @@ class BankController extends Controller
                         'amount'=>$amount,
                         "transaction_reference"=>$request->referenceCode,
                         "status"=>1,
-                        "donate_promotion_id"=>$donate_promotion_id
+                        "donate_promotion_id"=>$donate_promotion_id,
+                        "donate_amount"=>$donate_amount
                     ]);
                     WalletTransaction::where("id",$wallet_transaction_id)->update(
                         [

@@ -1,8 +1,7 @@
-// @pages/Admin/Products/EditProducts.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
-import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; // Điều chỉnh đường dẫn
+import CreateFormProductsPartner from "@components/Partner/Product/CreateFormProductsPartner";
 import { LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";
 
@@ -59,7 +58,7 @@ export default function EditProductsPartner() {
 
     try {
       formData.append("_method", "put");
-      const response = await api.post(`/partner/products/${id}`, formData, {
+      await api.post(`/partner/products/${id}`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -89,26 +88,37 @@ export default function EditProductsPartner() {
   }
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-        Chỉnh sửa sản phẩm: #{product?.sku}
-      </h2>
+    <div className="max-w-3xl mx-auto mt-8">
+      <div className="flex items-center gap-4 mb-6">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-lg transition border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+          <span className="font-medium">Quay lại</span>
+        </button>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-2">Chỉnh sửa sản phẩm: #{product?.sku}</h2>
+      </div>
       {error && (
-        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
+        <div className="rounded-lg p-3 mb-4 border bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700">
           {error}
         </div>
       )}
-      {product ? (
-        <CreateFormProducts
-          initialData={product}
-          onSubmit={handleUpdateSubmit}
-          isEditing={true}
-          isLoading={isLoading}
-          mode="partner"
-        />
-      ) : (
-        <p>{error || "Không có dữ liệu để hiển thị."}</p>
-      )}
+      <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6">
+        {product ? (
+          <CreateFormProductsPartner
+            initialData={product}
+            onSubmit={handleUpdateSubmit}
+            isEditing={true}
+            isLoading={isLoading}
+          />
+        ) : (
+          <p>{error || "Không có dữ liệu để hiển thị."}</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,43 +1,56 @@
 from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
 from io import BytesIO
 from threading import Thread
-from controller import S3Controller,NSFWController
+from controller import S3Controller
 from cronjob import queue_money, event
 app = FastAPI()
 s3_client = S3Controller()
-nsfw = NSFWController()
+from controller.ChatAssistance import router as chat_router
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(chat_router, prefix="/chat", tags=["Chat"])
+
 @app.post("/upload_file")
 async def upload(file: UploadFile = File(...), folder: str = Form(...)):
-    object_name = f"uploads/{folder}/{file.filename}"
+    object_name = f"uploads/{folder}/"
 
-    # Đọc nội dung file vào bộ nhớ
-    file_content = BytesIO(await file.read())
+    # # Đọc nội dung file vào bộ nhớ
+    # file_content = BytesIO(await file.read())
 
-    file_url = s3_client.add(file_content,object_name)
+    response = await s3_client.add(file,object_name)
 
-    return {"url": file_url}
+    return response
 
 @app.post("/upload_files")
 async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...)):
-    print(files)
-    for file in files:
-        print(f"Name: {file.filename}, Type: {file.content_type}")
     object_name = f"uploads/{folder}/"
-    file_contents = []
-    for file in files:
-        byte_file = BytesIO(await file.read())
-        if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
-            print(f"{file.filename}: {nsfw.detect(byte_file)}")
-        file_contents.append({
-            "file": byte_file,
-            "filename": file.filename
-        })
+    # print(files)
+    # for file in files:
+    #     print(f"Name: {file.filename}, Type: {file.content_type}")
+    
+    # file_contents = []
+    # for file in files:
+        # print(file.)
+    #     byte_file = BytesIO(await file.read())
+    #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+    #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
+    #     file_contents.append({
+    #         "file": byte_file,
+    #         "filename": file.filename
+    #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
-    files = s3_client.uploads(file_contents,object_name)
-    return files
+    response = await s3_client.uploads(files,object_name)
+    return response
     # return "Xong"
 
 

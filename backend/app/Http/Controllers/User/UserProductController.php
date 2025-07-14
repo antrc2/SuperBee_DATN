@@ -26,14 +26,14 @@ class UserProductController extends Controller
                     404
                 );
             }
-           $products=[];
-           $categories=[];
-           $type=null;
+            $products = [];
+            $categories = [];
+            $type = null;
             if ($category->parent_id !== null) {
-                $type=1;
+                $type = 1;
                 $products = Product::with("images")->with('category')->with("gameAttributes")->where('status', 1)->where('category_id', $category->id)->get();
             } else {
-                $type=2;
+                $type = 2;
                 $categories = Category::where('parent_id', $category->id)->get();
             }
             return response()->json(
@@ -41,7 +41,7 @@ class UserProductController extends Controller
                     "status" => True,
                     "message" => "Lấy danh sách sản phẩm thành công",
                     "data" => [
-                        "type"=>$type,
+                        "type" => $type,
                         "category" => $category,
                         "categories" => $categories,
                         "products" => $products
@@ -87,5 +87,40 @@ class UserProductController extends Controller
                 'data' => []
             ], 500);
         }
+    }
+    public function search(Request $request)
+    {
+        $keyword = $request->input('keyword');
+
+        $products = Product::with(['category.parent', 'images', 'gameAttributes'])
+            ->where('products.status', 1)
+            ->where(function ($query) use ($keyword) {
+                // SKU hoặc mô tả
+                $query->where('products.sku', 'LIKE', "%{$keyword}%")
+                    ->orWhere('products.description', 'LIKE', "%{$keyword}%");
+
+                // Game attributes
+                $query->orWhereHas('gameAttributes', function ($q) use ($keyword) {
+                    $q->where('attribute_key', 'LIKE', "%{$keyword}%")
+                        ->orWhere('attribute_value', 'LIKE', "%{$keyword}%");
+                });
+
+                // Tên danh mục con (category hiện tại)
+                $query->orWhereHas('category', function ($q) use ($keyword) {
+                    $q->where('name', 'LIKE', "%{$keyword}%");
+                });
+
+                // Tên danh mục cha
+                $query->orWhereHas('category.parent', function ($q) use ($keyword) {
+                    $q->where('name', 'LIKE', "%{$keyword}%");
+                });
+            })
+            ->get();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Tìm kiếm sản phẩm thành công',
+            'data' => $products
+        ]);
     }
 }

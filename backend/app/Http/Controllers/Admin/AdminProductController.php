@@ -176,8 +176,8 @@ class AdminProductController extends Controller
                 'username'                    => 'nullable|string',
                 'password'                    => 'nullable|string',
                 'attributes'                  => 'nullable|array',
-                'attributes.*.attribute_key'  => 'required_with:attributes|string',
-                'attributes.*.attribute_value' => 'required_with:attributes|string',
+                'attributes.*.attribute_key'  => 'nullable:attributes|string',
+                'attributes.*.attribute_value' => 'nullable:attributes|string',
                 'images'                      => 'nullable|array',
                 'images.*'                    => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
@@ -251,7 +251,8 @@ class AdminProductController extends Controller
                 foreach ($response as $image){
                     if (is_null($image['url'])){
                         DB::rollBack();
-                        return response()->json(['message' => 'Failed to upload product image.'], 500);
+                        return response()->json(['message' => $image['message'],
+                    "status"=>False], 500);
                     }
 
                     ProductImage::create([
@@ -405,7 +406,7 @@ class AdminProductController extends Controller
             foreach ($response as $image){
                 if (is_null($image['url'])){
                     DB::rollBack();
-                    return response()->json(['message' => 'Failed to upload product image.'], 500);
+                    return response()->json(['message' => $image['messsage'],'status'=>False], 500);
                 }
 
                 ProductImage::create([

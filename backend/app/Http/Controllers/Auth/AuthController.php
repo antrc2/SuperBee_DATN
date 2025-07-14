@@ -8,6 +8,8 @@ use App\Mail\ResetPassword;
 use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
 use App\Models\Business_setting;
+use App\Models\ChatRoom;
+use App\Models\ChatRoomParticipant;
 use App\Models\Notification;
 use App\Models\User;
 use App\Models\Wallet;
@@ -122,14 +124,23 @@ class AuthController extends Controller
     protected function generateAccessToken(User $user, Request $request): string
     {
         $wallet = Wallet::where('user_id', $user->id)->first();
+        $userId = $user->id;
+        $chatRoom = ChatRoom::whereHas('participants', function ($query) use ($userId) {
+            $query->where('user_id', $userId)->where('role', 'customer');
+        })->first();
+        $roomId = null;
+        if ($chatRoom) {
+            $roomId = $chatRoom->id;
+        }
         $payload = [
             'name' => $user->username,
             'user_id' => $user->id,
             'web_id' => $user->web_id,
             'avatar' => $user->avatar_url,
-            'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
+            'role_ids' => $user->getRoleNames()->toArray(),
             'money' => $wallet->balance ?? "0",
             'donate_code' => $user->donate_code,
+            'roomId'=>$roomId
         ];
         $expireTime = (int) env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
         // dd(time() + $expireTime, date('Y-m-d H:i:s'));

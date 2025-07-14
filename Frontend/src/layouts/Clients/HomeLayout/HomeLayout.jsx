@@ -1,127 +1,70 @@
-import React, { useState } from "react"; // Import useState
+import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "@components/Client/layout/Header";
 import Footer from "@components/Client/layout/Footer";
-import { ChatComponent } from "../../../pages";
+import ChatComponent from "../../../pages/Chat/Chat";
 import { useChat } from "../../../contexts/ChatContext";
-import Left from "@assets/tn/left.png";
-import Right from "@assets/tn/right.png";
 import { ClientThemeProvider } from "../../../contexts/ClientThemeContext";
+import { MessageSquareText, X } from "lucide-react"; // Import icon
+
 export default function HomeLayout() {
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const { isLoggedIn, requestAgentChat } = useChat();
-
-  const handleRequestAgentChat = async () => {
-    try {
-      await requestAgentChat();
-    } catch (error) {
-      console.error("Không thể tạo cuộc trò chuyện với agent:", error);
-    }
-  };
-
+  const {
+    isLoggedIn,
+    requestAgentChat,
+    agentChatRoom,
+    markChatAsRead,
+    unreadCount,
+  } = useChat();
+  console.log("🚀 ~ HomeLayout ~ unreadCount:", unreadCount);
   const toggleChat = async () => {
-    if (isLoggedIn) {
-      await handleRequestAgentChat();
+    if (!isChatOpen) {
+      if (isLoggedIn && !agentChatRoom) {
+        await requestAgentChat();
+      }
+      markChatAsRead();
     }
     setIsChatOpen(!isChatOpen);
   };
 
   return (
     <ClientThemeProvider>
-      <div className="">
-        <header className="sticky -top-[65px] z-999">
-          <Header />
-        </header>
-        <main
-          className="pb-5 min-h-[80svh]" // Sử dụng flexbox, căn giữa và kéo dài các item
-          // style={{
-          //   backgroundImage:
-          //     "url('https://i.pinimg.com/736x/67/84/55/67845596e2b37a0b5bc6c8048623bfc4.jpg')",
-          //   backgroundSize: "cover",
-          //   backgroundPosition: "center",
-          //   backgroundRepeat: "no-repeat",
-          //   backgroundAttachment: "fixed",
-          // }}
-        >
-          {/* Hình ảnh bên trái, chỉ hiển thị ở màn hình lớn hơn 1900px */}
-          {/* <div className="w-[330px] h-full hidden 2xl:block flex-shrink-0">
-          <img
-            src={`${Left}`}
-            className="h-full w-full object-contain"
-            alt="Left decorative image"
-          />
-        </div> */}
-
-          {/* Nội dung chính, giới hạn chiều rộng */}
-          <div className="max-w-7xl mx-auto ">
-            <Outlet />
-          </div>
-
-          {/* Hình ảnh bên phải, chỉ hiển thị ở màn hình lớn hơn 1900px */}
-          {/* <div className="w-[330px] h-full hidden 2xl:block flex-shrink-0">
-          <img
-            src={`${Right}`}
-            className="h-full w-full object-contain"
-            alt="Right decorative image"
-          />
-        </div> */}
-
-          {/* Phần chat box vẫn giữ nguyên */}
-          <div className="fixed bottom-4 right-4">
-            <button
-              onClick={toggleChat}
-              className="bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 ease-in-out"
-              style={{
-                width: "60px",
-                height: "60px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              {isChatOpen ? (
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M6 18L18 6M6 6l12 12"
-                  ></path>
-                </svg>
-              ) : (
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
-                  ></path>
-                </svg>
-              )}
-            </button>
-
-            {isChatOpen && (
-              <div className="absolute bottom-[70px] right-0 w-[30rem] max-h-[600px] bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
-                <ChatComponent />
-              </div>
-            )}
-          </div>
+      <div className="bg-background">
+        <Header />
+        <main className="pb-5 min-h-[80svh] max-w-screen-xl mx-auto px-4">
+          <Outlet />
         </main>
-        <footer>
-          <Footer />
-        </footer>
+        <Footer />
+
+        <div className="fixed bottom-5 right-5 z-[1000]">
+          {isChatOpen && (
+            <div className="absolute bottom-[75px] right-0 w-[24rem] min-h-[450px] max-h-[80vh] animate-fade-in-up">
+              <ChatComponent
+                agent={agentChatRoom?.agentDetails}
+                onClose={toggleChat}
+              />
+            </div>
+          )}
+          <button
+            onClick={toggleChat}
+            className="relative w-16 h-16 rounded-full flex items-center justify-center bg-gradient-button text-accent-contrast shadow-lg transition-all duration-300 ease-in-out transform hover:scale-110 hover:shadow-xl"
+            aria-label={isChatOpen ? "Đóng chat" : "Mở chat"}
+          >
+            {/* Icon thay đổi theo trạng thái */}
+            {isChatOpen ? (
+              <X className="w-8 h-8" />
+            ) : (
+              <MessageSquareText className="w-8 h-8" />
+            )}
+
+            {/* Số tin nhắn chưa đọc */}
+            {!isChatOpen && unreadCount.current > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-gradient-danger text-xs text-white font-bold animate-pulse shadow-lg">
+                {unreadCount.current > 9 ? "9+" : unreadCount.current}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </ClientThemeProvider>
   );

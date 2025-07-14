@@ -50,6 +50,16 @@ async function findOrCreateChatRoomForCustomer(customerId) {
     if (existingRooms.length > 0) {
       // 2a. Nếu đã có, tải lại thông tin phòng và lịch sử tin nhắn
       const roomId = existingRooms[0].id;
+      const [unreadResult] = await connection.query(
+        `SELECT COUNT(m.id) AS unreadCount
+     FROM messages AS m
+     LEFT JOIN chat_room_participants p ON m.chat_room_id = p.chat_room_id AND p.user_id = ?
+     WHERE m.chat_room_id = ?
+       AND m.id > COALESCE(p.last_read_message_id, 0)
+       AND m.sender_id != ?`, // Không đếm tin nhắn của chính họ
+        [customerId, roomId, customerId]
+      );
+      const unreadCount = unreadResult[0].unreadCount;
       const [messages] = await connection.query(
         `SELECT m.*, u.username AS sender_name, u.avatar_url AS sender_avatar
          FROM messages m
@@ -87,6 +97,7 @@ async function findOrCreateChatRoomForCustomer(customerId) {
         message: "Đã tìm thấy phòng chat hiện có.",
         assignedAgentUserId,
         agentDetails, // Thêm thông tin agent vào đây
+        unreadCount: unreadCount,
         customerName: customerInfo[0]?.username,
         customerAvatar: customerInfo[0]?.avatar_url,
       };
@@ -154,6 +165,7 @@ async function findOrCreateChatRoomForCustomer(customerId) {
         message: statusMessage,
         assignedAgentUserId,
         agentDetails, // Thêm thông tin agent vào đây
+        unreadCount: 0,
         customerName: customerInfo[0]?.username,
         customerAvatar: customerInfo[0]?.avatar_url,
       };
@@ -323,6 +335,28 @@ async function getChatDetails(roomId) {
  * @param {number} messageId ID của tin nhắn cuối cùng đã đọc.
  */
 async function updateLastReadMessage(roomId, userId, messageId) {
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    await connection.query(
+      `UPDATE chat_room_participants
+       SET last_read_message_id = ?
+       WHERE chat_room_id = ? AND user_id = ?`,
+      [messageId, roomId, userId]
+    );
+  } catch (error) {
+    console.error(
+      `Lỗi khi cập nhật last_read_message_id cho phòng ${roomId}, người dùng ${userId}:`,
+      error
+    );
+    throw new Error("Không thể cập nhật trạng thái đọc.");
+  } finally {
+    if (connection) connection.release();
+  }
+}
+
+// đánh dấu thông báo đã đọc
+async function updateLastReadNotification(type, id) {
   let connection;
   try {
     connection = await pool.getConnection();

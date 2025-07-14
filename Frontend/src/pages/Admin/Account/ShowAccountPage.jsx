@@ -67,14 +67,14 @@ const getTransactionTypeLabel = (type) => {
 // Helper để map tên quyền
 const getRoleDisplayName = (roleName) => {
   switch (roleName) {
-    case 'admin':
-      return 'Admin';
-    case 'user':
-      return 'Người dùng';
-    case 'partner':
-      return 'Đối tác';
-    case 'reseller':
-      return 'Đại lý';
+    case "admin":
+      return "Admin";
+    case "user":
+      return "Người dùng";
+    case "partner":
+      return "Đối tác";
+    case "reseller":
+      return "Đại lý";
     default:
       return roleName;
   }
@@ -116,7 +116,7 @@ const ShowAccountPage = () => {
       setCurrentUser({
         id: decoded.user_id,
         name: decoded.name,
-        roles: decoded.role_ids || []
+        roles: decoded.role_ids || [],
       });
     }
   }, []);
@@ -124,24 +124,24 @@ const ShowAccountPage = () => {
   // Hàm cập nhật quyền
   const handleUpdateRole = async () => {
     if (!currentUser) {
-      alert('Không tìm thấy thông tin người dùng hiện tại');
+      alert("Không tìm thấy thông tin người dùng hiện tại");
       return;
     }
 
     if (!selectedRole) {
-      alert('Vui lòng chọn quyền');
+      alert("Vui lòng chọn quyền");
       return;
     }
 
     // Kiểm tra nếu user hiện tại là reseller thì không cho cập nhật
-    if (account.roles?.[0]?.name === 'reseller') {
-      alert('Không thể cập nhật quyền của đại lý');
+    if (account.roles?.[0]?.name === "reseller") {
+      alert("Không thể cập nhật quyền của đại lý");
       return;
     }
 
     // Kiểm tra nếu user hiện tại là admin và user bị cập nhật cũng là admin
-    if (account.roles?.[0]?.name === 'admin') {
-      alert('Không thể cập nhật quyền của admin');
+    if (account.roles?.[0]?.name === "admin") {
+      alert("Không thể cập nhật quyền của admin");
       return;
     }
 
@@ -149,7 +149,7 @@ const ShowAccountPage = () => {
     try {
       const response = await api.put(`/admin/accounts/${id}/role`, {
         roles: selectedRole,
-        user_id: currentUser.id
+        user_id: currentUser.id,
       });
 
       if (response.data.status) {
@@ -160,11 +160,10 @@ const ShowAccountPage = () => {
         setAccount(userData);
         setSelectedRole(userData.roles?.[0]?.name || "");
       } else {
-       console.log("Cập nhật thất bại");
-       
+        console.log("Cập nhật thất bại");
       }
     } catch (err) {
-      console.error('Lỗi cập nhật quyền:', err);
+      console.error("Lỗi cập nhật quyền:", err);
     } finally {
       setUpdatingRole(false);
     }
@@ -173,8 +172,8 @@ const ShowAccountPage = () => {
   // Kiểm tra xem có thể cập nhật quyền hay không
   const canUpdateRole = () => {
     if (!currentUser) return false;
-    if (account?.roles?.[0]?.name === 'reseller') return false;
-    if (account?.roles?.[0]?.name === 'admin') return false;
+    if (account?.roles?.[0]?.name === "reseller") return false;
+    if (account?.roles?.[0]?.name === "admin") return false;
     return true;
   };
 
@@ -204,7 +203,7 @@ const ShowAccountPage = () => {
     account.orders?.reduce((sum, order) => sum + order.total_amount, 0) || 0;
 
   return (
-    <div className="p-6 max-w-7xl w-full mx-auto bg-gray-50 min-h-screen">
+    <div className="p-6 max-w-screen-xl w-full mx-auto bg-gray-50 min-h-screen">
       <button
         className="mb-6 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-md flex items-center gap-2 text-gray-700 font-medium shadow-sm transition duration-200"
         onClick={() => navigate(-1)}
@@ -236,7 +235,7 @@ const ShowAccountPage = () => {
               {account.username}
             </h2>
             <p className="text-blue-600 text-lg">{account.email}</p>
-            
+
             {/* Phần quyền với select */}
             <div className="mt-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -259,7 +258,7 @@ const ShowAccountPage = () => {
                     disabled={updatingRole || !selectedRole}
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium transition duration-200"
                   >
-                    {updatingRole ? 'Đang cập nhật...' : 'Cập nhật quyền'}
+                    {updatingRole ? "Đang cập nhật..." : "Cập nhật quyền"}
                   </button>
                 </div>
               ) : (
@@ -267,10 +266,10 @@ const ShowAccountPage = () => {
                   <span className="font-semibold text-gray-700">
                     {getRoleDisplayName(account.roles?.[0]?.name || "Không rõ")}
                   </span>
-                  {account.roles?.[0]?.name === 'reseller' && (
+                  {account.roles?.[0]?.name === "reseller" && (
                     <span className="text-xs text-gray-500"></span>
                   )}
-                  {account.roles?.[0]?.name === 'admin' && (
+                  {account.roles?.[0]?.name === "admin" && (
                     <span className="text-xs text-gray-500"></span>
                   )}
                 </div>

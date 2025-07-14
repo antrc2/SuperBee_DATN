@@ -10,7 +10,7 @@ export default function Breadcrumbs({ items }) {
   return (
     <nav
       aria-label="Breadcrumb"
-      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4"
+      className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mb-4"
     >
       <div className="breadcrumbs-container">
         {items.map((item, index) => (

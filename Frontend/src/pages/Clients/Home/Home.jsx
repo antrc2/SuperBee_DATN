@@ -17,11 +17,9 @@ export default function Home() {
   }
 
   return (
-    <div className="p-4 space-y-9">
+    <div className="space-y-9">
       <BannerAndCart top={top_users ?? []} banner={banners ?? []} />
       <CategorySlider categories={categories?.onlyChildren ?? []} />
-
-      {/* Sản phẩm nổi bật */}
       <ListProducts
         title="Sản Phẩm Nổi Bật"
         subtitle="Khám phá những tài khoản được yêu thích và mua nhiều nhất"

@@ -44,8 +44,6 @@ const adminRoutes = [
           create: Create,
           edit: Edit,
           show: Show,
-          browse: Browse,
-          update: Update,
           allowedRoles,
         }) => ({
           path: name,
@@ -72,14 +70,6 @@ const adminRoutes = [
               ),
             },
             {
-              path: "browse",
-              element: (
-                <Suspense fallback={<div>Đang tải trang duyệt...</div>}>
-                  <Browse />
-                </Suspense>
-              ),
-            },
-            {
               path: ":id",
               element: (
                 <Suspense fallback={<div>Đang tải chi tiết...</div>}>
@@ -92,14 +82,6 @@ const adminRoutes = [
               element: (
                 <Suspense fallback={<div>Đang tải trang chỉnh sửa...</div>}>
                   <Edit />
-                </Suspense>
-              ),
-            },
-            {
-              path: ":id/update",
-              element: (
-                <Suspense fallback={<div>Đang tải trang cập nhật...</div>}>
-                  <Update />
                 </Suspense>
               ),
             },

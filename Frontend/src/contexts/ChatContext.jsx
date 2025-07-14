@@ -12,6 +12,7 @@ import { useAuth } from "@contexts/AuthContext";
 import { decodeData } from "../utils/hook";
 import { useNotification } from "./NotificationContext";
 import { useHome } from "./HomeContext";
+import api from "../utils/http";
 
 const ChatContext = createContext();
 
@@ -19,9 +20,10 @@ export function ChatProvider({ children }) {
   const { token, isLoggedIn } = useAuth();
   const refToken = useRef(null);
   const { pop } = useNotification();
-  const { setNotifications } = useHome();
+  const { setNotifications, notifications } = useHome();
   const [agentChatRoom, setAgentChatRoom] = useState(null); // Lưu trữ thông tin phòng chat với nhân viên
   const socketRef = useRef(null);
+  const unreadCount = useRef(0);
   // Khởi tạo và quản lý listeners
   useEffect(() => {
     // Di chuyển việc gán refToken vào trong effect để nó luôn được cập nhật khi token thay đổi
@@ -51,24 +53,35 @@ export function ChatProvider({ children }) {
 
     const handleNewChatMessage = (message) => {
       setAgentChatRoom((prev) => {
+        // Chỉ xử lý nếu tin nhắn thuộc phòng chat hiện tại
         if (prev && prev.roomId === message.chat_room_id) {
-          // Cập nhật last_read_message_id khi nhận tin nhắn mới
-          if (
-            socketRef.current &&
-            refToken.current?.user_id === message.sender_id
-          ) {
-            // Nếu là tin nhắn của chính mình gửi, đánh dấu là đã đọc
+          const isOwnMessage = refToken.current?.user_id === message.sender_id;
+
+          // Chỉ tăng số tin chưa đọc nếu tin nhắn này KHÔNG PHẢI của mình
+          const newUnreadCount = isOwnMessage
+            ? prev.unreadCount // Giữ nguyên nếu là tin của mình
+            : (unreadCount.current += 1);
+          +1; // Tăng lên nếu là tin của người khác
+
+          // Nếu là tin nhắn của chính mình gửi, vẫn đánh dấu là đã đọc trên server
+          if (isOwnMessage) {
             socketRef.current.emit("mark_chat_as_read", {
               roomId: message.chat_room_id,
               messageId: message.id,
             });
           }
-          return { ...prev, messages: [...prev.messages, message] };
+
+          return {
+            ...prev,
+            messages: [...prev.messages, message],
+            unreadCount: newUnreadCount, // Cập nhật state với số đếm đúng
+          };
         }
+
+        // Nếu không khớp phòng chat, không làm gì cả
         return prev;
       });
     };
-
     const handleNewChatAssigned = (data) => {
       const roles = refToken.current?.role_ids || [];
       if (roles.includes("agent") || roles.includes("admin")) {
@@ -86,6 +99,7 @@ export function ChatProvider({ children }) {
           agentDetails: chatDetails.agentDetails, // Thêm thông tin agent
           customerName: chatDetails.customerName, // Thêm thông tin customer
           customerAvatar: chatDetails.customerAvatar, // Thêm thông tin customer
+          unreadCount: chatDetails.unreadCount || 0,
         });
         // Khi khôi phục phiên, đánh dấu tất cả tin nhắn là đã đọc
         if (
@@ -159,15 +173,46 @@ export function ChatProvider({ children }) {
         }`
       ); // [LOG MỚI]
       authenticateSocket(token);
+      handleGetChat();
     }
   }, [token]);
 
-  // [LOG MỚI] Kiểm tra trạng thái isLoggedIn hiện tại
-  console.log(
-    "ChatContext: Current isLoggedIn state from useAuth:",
-    isLoggedIn
-  );
+  const handleGetChat = async () => {
+    if (isLoggedIn) {
+      try {
+        const res = await api.get("/messages");
+        const status = res?.data?.status;
+        const chatData = res?.data?.data;
+        // Nếu status là false hoặc không có chatData thì dừng lại
+        if (!status || !chatData) {
+          // Cân nhắc đặt agentChatRoom thành null ở đây nếu muốn reset state khi không có phòng chat
+          // setAgentChatRoom(null);
+          return;
+        }
 
+        // Cập nhật state với dữ liệu từ chatData
+        setAgentChatRoom({
+          roomId: chatData.roomInfo?.id,
+          messages: chatData.messages || [],
+          participants: chatData.roomInfo?.participants || [],
+          info: chatData.roomInfo || {},
+          agentDetails: chatData.agentDetails,
+          // Lấy thông tin customer từ object customerDetails
+          customerName: chatData.customerDetails?.username,
+          customerAvatar: chatData.customerDetails?.avatar_url,
+          unreadCount: chatData.unreadCount || 0, // Đảm bảo backend trả về trường này
+        });
+        unreadCount.current = chatData.unreadCount || 0;
+      } catch (error) {
+        console.log("Failed to get chat:", error);
+        // Khi có lỗi, cũng nên reset state
+        setAgentChatRoom(null);
+      }
+    } else {
+      // Reset state khi người dùng logout
+      setAgentChatRoom(null);
+    }
+  };
   // Hàm để khách hàng yêu cầu chat
   const requestAgentChat = useCallback(() => {
     if (!isLoggedIn) {
@@ -186,6 +231,7 @@ export function ChatProvider({ children }) {
             agentDetails: response.agentDetails, // Thêm thông tin agent
             customerName: response.customerName, // Thêm thông tin customer
             customerAvatar: response.customerAvatar, // Thêm thông tin customer
+            unreadCount: response.unreadCount || 0,
           });
           // Khi yêu cầu chat thành công, đánh dấu tất cả tin nhắn là đã đọc
           if (
@@ -200,6 +246,7 @@ export function ChatProvider({ children }) {
               messageId: lastMessageId,
             });
           }
+          unreadCount.current = response.unreadCount || 0;
           resolve(response);
         } else {
           console.error("Chat request failed:", response.message);
@@ -224,7 +271,22 @@ export function ChatProvider({ children }) {
     },
     [agentChatRoom?.roomId]
   );
+  // hàm đánh dấu đã đọc tin nhắn
+  const markChatAsRead = useCallback(() => {
+    setAgentChatRoom((prev) => {
+      if (!prev || !prev.roomId || prev.unreadCount === 0) return prev;
 
+      const lastMessage = prev.messages[prev.messages.length - 1];
+      if (lastMessage) {
+        socketRef.current.emit("mark_chat_as_read", {
+          roomId: prev.roomId,
+          messageId: lastMessage.id,
+        });
+      }
+      // Reset số tin chưa đọc ở FE ngay lập tức
+      return { ...prev, unreadCount: 0 };
+    });
+  }, []);
   // hàm lấy danh sách chat dành cho admin
   const getAllChat = useCallback(() => {
     if (!isLoggedIn) {
@@ -259,6 +321,10 @@ export function ChatProvider({ children }) {
     agentChatRoom,
     requestAgentChat,
     sendChatMessage,
+    refToken,
+    markChatAsRead,
+    notifications,
+    unreadCount,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

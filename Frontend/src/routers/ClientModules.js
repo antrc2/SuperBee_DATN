@@ -55,6 +55,9 @@ const News = React.lazy(() =>
 const SearchPage = React.lazy(() =>
   import("../pages/Clients/SearchPage/SearchPage ")
 );
+const NotificationPage = React.lazy(() =>
+  import("../pages/Clients/Notification/NotificationPage")
+);
 
 export const clientModules = [
   {
@@ -146,6 +149,11 @@ export const clientModules = [
     path: "/search",
     view: SearchPage,
     requiresAuth: false, // Hoặc false tùy vào yêu cầu của bạn
+  },
+  {
+    path: "/notifications",
+    view: NotificationPage,
+    requiresAuth: true, // Hoặc false tùy vào yêu cầu của bạn
   },
 ];
 

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAgentChat } from "../../contexts/AgentChatContext";
+import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 export default function ChatWindow() {
   const { messages, activeChatId, sendMessage, refToken } = useAgentChat();
@@ -19,66 +20,87 @@ export default function ChatWindow() {
 
   if (!activeChatId) {
     return (
-      <div className="w-2/3 flex items-center justify-center bg-gray-50 p-6 rounded-lg shadow-inner">
-        <p className="text-xl text-gray-500 font-medium">
-          <span className="mr-2">✨</span>Chọn một cuộc trò chuyện để bắt đầu
-        </p>
+      <div className="w-full sm:w-2/3 md:w-3/4 flex flex-col items-center justify-center bg-white dark:bg-gray-900 p-6">
+        <div className="text-center">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              vectorEffect="non-scaling-stroke"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+            />
+          </svg>
+          <h3 className="mt-2 text-lg font-medium text-gray-700 dark:text-gray-300">
+            Bắt đầu cuộc trò chuyện
+          </h3>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Chọn một khách hàng từ danh sách bên trái.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="w-2/3 flex flex-col bg-white rounded-lg shadow-lg">
-      <div className="flex-1 p-6 overflow-y-auto custom-scrollbar">
+    <div className="w-full sm:w-2/3 md:w-3/4 flex flex-col bg-gray-50 dark:bg-gray-900">
+      {/* Chat Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm sticky top-0 z-10">
+        <h3 className="font-semibold text-lg text-gray-700 dark:text-gray-300">
+          Trò chuyện với {messages[0]?.sender_name || "Khách hàng"}
+        </h3>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 p-6 overflow-y-auto space-y-6 bg-white dark:bg-gray-900">
         {messages.map((msg) => {
           const isOwnMessage = msg.sender_id == refToken.current?.user_id;
           return (
             <div
               key={msg.id}
-              className={`flex items-end gap-3 mb-4 max-w-[85%] ${
+              className={`flex items-end gap-3 max-w-xl ${
                 isOwnMessage ? "ml-auto flex-row-reverse" : "mr-auto"
               }`}
             >
-              {/* <img
-                src={
-                  msg.sender_avatar ||
-                  "https://placehold.co/40x40/cbd5e0/475569?text=User"
-                }
-                alt={`${msg.sender_name || "Người dùng"} Avatar`}
-                className="w-9 h-9 rounded-full object-cover shadow-sm"
-              /> */}
               <div
-                className={`p-4 rounded-xl shadow-md relative ${
+                className={`p-3 rounded-2xl ${
                   isOwnMessage
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none"
+                    ? "bg-blue-600 text-white rounded-br-lg"
+                    : "bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-bl-lg"
                 }`}
               >
-                <p className="font-semibold text-sm mb-1">
-                  {isOwnMessage ? "Bạn" : `${msg.sender_name || "Khách hàng"}`}
-                </p>
-                <p className="text-base leading-relaxed">{msg.content}</p>
-                <span
-                  className={`block text-xs mt-2 ${
-                    isOwnMessage ? "text-blue-200" : "text-gray-500"
-                  } text-right`}
+                <p className="text-base">{msg.content}</p>
+                <p
+                  className={`text-xs mt-2 text-right ${
+                    isOwnMessage
+                      ? "text-blue-200"
+                      : "text-gray-400 dark:text-gray-500"
+                  }`}
                 >
                   {new Date(msg.created_at).toLocaleTimeString([], {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
-                </span>
+                </p>
               </div>
             </div>
           );
         })}
         <div ref={messagesEndRef} />
       </div>
-      <div className="p-4 border-t border-gray-200 bg-gray-50">
+
+      {/* Message Input */}
+      <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
         <div className="flex items-center space-x-3">
           <textarea
-            className="flex-1 p-3 border border-gray-300 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 placeholder-gray-400 shadow-sm"
-            placeholder="Nhập tin nhắn..."
+            className="flex-1 p-3 bg-gray-200 dark:bg-gray-800 border-transparent rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-700 dark:text-gray-300 placeholder-gray-500 dark:placeholder-gray-400"
+            placeholder="Nhập tin nhắn của bạn..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={(e) => {
@@ -88,13 +110,13 @@ export default function ChatWindow() {
               }
             }}
             rows="1"
-            style={{ maxHeight: "100px" }}
           />
           <button
-            className="px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-md transform active:scale-95"
+            className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 active:bg-blue-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900 disabled:opacity-50"
             onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
           >
-            Gửi
+            <PaperAirplaneIcon className="h-6 w-6" />
           </button>
         </div>
       </div>

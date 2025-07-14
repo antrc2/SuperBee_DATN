@@ -47,9 +47,8 @@ class ChatRoomParticipant extends Model
         return $this->belongsTo(ChatRoom::class, 'chat_room_id');
     }
 
-    /**
-     * Lấy người dùng liên kết với người tham gia này.
-     *
-     * @return BelongsTo
-     */
+     public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
 }

@@ -51,6 +51,7 @@ const UnauthorizedPage = React.lazy(() =>
 );
 const News = React.lazy(() =>
   import("../pages/Clients/Post/News")
+)
 const SearchPage = React.lazy(() =>
   import("../pages/Clients/SearchPage/SearchPage ")
 );

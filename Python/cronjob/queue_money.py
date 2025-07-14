@@ -16,8 +16,8 @@ def queue_money():
             })
             if (response.status_code):
                 data = response.json()
-                print(data)
-                print("\n\n")
+                # print(data)
+                # print("\n\n")
                 if data['status'] and len(data['data']) > 0:
                     for item in data['data']:
                         # print(f"Item: {item}")
@@ -42,7 +42,8 @@ def queue_money():
                         # else:
                         #     print(0)
                 else:
-                    print("No data or status is False")
+                    pass
+                    # print("No data or status is False")
                 # pass
             else:
                 pass

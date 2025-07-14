@@ -8,6 +8,7 @@ use App\Mail\ResetPassword;
 use App\Mail\VerifyEmail;
 use App\Models\Affiliate;
 use App\Models\Business_setting;
+use App\Models\Notification;
 use App\Models\User;
 use App\Models\Wallet;
 use App\Models\Web;
@@ -53,7 +54,6 @@ class AuthController extends Controller
                 "style" => "NOACTIVE"
             ], 200);
         }
-
     }
 
     /**
@@ -128,7 +128,8 @@ class AuthController extends Controller
             'web_id' => $user->web_id,
             'avatar' => $user->avatar_url,
             'role_ids' => $user->getRoleNames()->toArray(), // Use array for role names
-            'money' => $wallet->balance ?? "0"
+            'money' => $wallet->balance ?? "0",
+            'donate_code' => $user->donate_code,
         ];
         $expireTime = (int) env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
         // dd(time() + $expireTime, date('Y-m-d H:i:s'));
@@ -336,6 +337,15 @@ class AuthController extends Controller
                     "loginUrl" => "http://localhost:5173/auth/login"
                 ],
             ));
+            Notification::create([
+                'user_id' => $user->id,
+                'type' => 1,
+                'content' => "Chào mừng bạn đã đến với tôi hi hi hi hi hi",
+                'link' => null,
+                "published_at" => now(),
+                'is_read' => false,
+                "expires_at" => now()->addDays(3),
+            ]);
             // 9. Trả về phản hồi thành công
             return response()->json([
                 "message" => "Tài khoản của bạn đã được kích hoạt thành công!",
@@ -425,50 +435,57 @@ class AuthController extends Controller
     public function resetPassword(Request $request)
     {
         try {
-            // 1. Xác thực dữ liệu đầu vào
+            // 1. Xác thực dữ liệu với thông báo Tiếng Việt
             $request->validate([
                 'token' => 'required|string',
                 'password' => ['required', 'string', 'min:8', 'confirmed'],
+            ], [
+                // --- ĐÂY LÀ PHẦN THAY ĐỔI QUAN TRỌNG ---
+                'token.required' => 'Mã đặt lại mật khẩu là bắt buộc.',
+                'password.required' => 'Vui lòng nhập mật khẩu mới.',
+                'password.min' => 'Mật khẩu mới phải có ít nhất :min ký tự.',
+                'password.confirmed' => 'Xác nhận mật khẩu không khớp.',
             ]);
 
-            // 2. Tìm người dùng dựa trên token và kiểm tra thời hạn
+            // 2. Tìm người dùng (logic không đổi)
             $user = User::where('password_reset_token', $request->token)
                 ->where('password_reset_expires_at', '>', now())
                 ->first();
 
-            // 3. Xử lý trường hợp token không hợp lệ hoặc đã hết hạn
+            // 3. Xử lý token không hợp lệ (logic không đổi)
             if (!$user) {
                 return response()->json(['message' => 'Mã đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'], 400);
             }
 
-            // 4. Cập nhật mật khẩu và xóa token
+            // 4. Cập nhật mật khẩu và xóa token (logic không đổi)
             $user->password = Hash::make($request->password);
-            $user->password_reset_token = null; // Xóa token sau khi dùng
-            $user->password_reset_expires_at = null; // Xóa thời gian hết hạn
-            $user->save(); // Lưu thay đổi vào cơ sở dữ liệu
-            // EMAIL_INFO_ME 
+            $user->password_reset_token = null;
+            $user->password_reset_expires_at = null;
+            $user->save();
+
+            // Gửi event thông báo (logic không đổi)
             event(new SystemNotification(
-                'EMAIL_INFO_ME', // Loại thông báo
+                'EMAIL_INFO_ME',
                 [
                     'email' => $user->email,
                     "username" => $user->username,
                     "changedFields" => ['password']
                 ],
             ));
-            // 5. Trả về phản hồi thành công
-            return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
-        } catch (\Exception $e) {
-            // Xử lý các lỗi ngoại lệ khác
-            // Ghi lại lỗi để kiểm tra sau (trong storage/logs/laravel.log)
-            Log::error("Lỗi khi đặt lại mật khẩu: " . $e->getMessage(), [
-                'token' => $request->token,
-                'user_id' => isset($user) ? $user->id : 'N/A',
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ]);
 
-            // Trả về phản hồi lỗi chung cho người dùng
-            return response()->json(['message' => 'Đã xảy ra lỗi trong quá trình đặt lại mật khẩu. Vui lòng thử lại sau.'], 500); // Mã 500 Internal Server Error
+            // 5. Trả về thành công (logic không đổi)
+            return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Laravel sẽ tự động xử lý exception này và trả về JSON lỗi 422
+            // Bạn không cần viết lại logic này, nhưng có thể custom nếu muốn
+            return response()->json([
+                'message' => 'Dữ liệu cung cấp không hợp lệ.',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            // Xử lý các lỗi ngoại lệ khác (logic không đổi)
+            Log::error("Lỗi khi đặt lại mật khẩu: " . $e->getMessage());
+            return response()->json(['message' => 'Đã xảy ra lỗi máy chủ. Vui lòng thử lại sau.'], 500);
         }
     }
 
@@ -588,10 +605,11 @@ class AuthController extends Controller
                 'user' => [
                     'id' => $user->id,
                     'username' => $user->username,
-                    'name' => $user->name,
+                    'name' => $user->username,
                     'email' => $user->email,
-                    'avatar' => $user->avatar,
-                    'money' => $user->money,
+                    'avatar' => $user->avatar_url,
+                    'money' => $user->wallet->balance,
+
                 ]
             ])->withCookie($cookie);
         } catch (ValidationException $e) {

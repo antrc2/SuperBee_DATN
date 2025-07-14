@@ -9,6 +9,7 @@ import AppLayout from "@layouts/Partner/AppLayout";
 import ProtectedRoute from "@components/common/ProtectedRoute";
 // import { NotFound } from "../pages"; // <-- Xóa dòng này
 import { partnerModules } from "./PartnerModules";
+import { ThemeProvider } from "../contexts/ThemeContext";
 
 // Lazy load Home và NotFound
 const Home = React.lazy(() => import("@pages/Admin/Dashboard/Home")); // Vẫn dùng Home từ Admin dashboard
@@ -18,9 +19,11 @@ const partnerRoutes = [
   {
     path: "/partner",
     element: (
-      <ProtectedRoute allowedRoles={["partner"]}>
-        <AppLayout />
-      </ProtectedRoute>
+      <ThemeProvider>
+        <ProtectedRoute allowedRoles={["partner"]}>
+          <AppLayout />
+        </ProtectedRoute>
+      </ThemeProvider>
     ),
     children: [
       {

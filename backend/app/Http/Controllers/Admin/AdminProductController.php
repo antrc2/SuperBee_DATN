@@ -176,8 +176,8 @@ class AdminProductController extends Controller
                 'username'                    => 'nullable|string',
                 'password'                    => 'nullable|string',
                 'attributes'                  => 'nullable|array',
-                'attributes.*.attribute_key'  => 'required_with:attributes|string',
-                'attributes.*.attribute_value' => 'required_with:attributes|string',
+                'attributes.*.attribute_key'  => 'nullable:attributes|string',
+                'attributes.*.attribute_value' => 'nullable:attributes|string',
                 'images'                      => 'nullable|array',
                 'images.*'                    => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
             ]);
@@ -199,7 +199,7 @@ class AdminProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'price'       => $validated['price'] ?? $product->price,
-                'sale'        => $validated['sale'] ? $validated['sale'] != 0 & $validated['sale'] != null : null,
+                'sale' => isset($validated['sale']) && $validated['sale'] !== '' ? (float) $validated['sale'] : 0,
                 'updated_by'  => $request->user_id,
             ]);
 
@@ -251,7 +251,8 @@ class AdminProductController extends Controller
                 foreach ($response as $image){
                     if (is_null($image['url'])){
                         DB::rollBack();
-                        return response()->json(['message' => 'Failed to upload product image.'], 500);
+                        return response()->json(['message' => $image['message'],
+                    "status"=>False], 500);
                     }
 
                     ProductImage::create([
@@ -405,7 +406,7 @@ class AdminProductController extends Controller
             foreach ($response as $image){
                 if (is_null($image['url'])){
                     DB::rollBack();
-                    return response()->json(['message' => 'Failed to upload product image.'], 500);
+                    return response()->json(['message' => $image['messsage'],'status'=>False], 500);
                 }
 
                 ProductImage::create([

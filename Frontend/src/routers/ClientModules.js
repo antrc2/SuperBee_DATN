@@ -51,6 +51,8 @@ const UnauthorizedPage = React.lazy(() =>
 );
 const News = React.lazy(() =>
   import("../pages/Clients/Post/News")
+const SearchPage = React.lazy(() =>
+  import("../pages/Clients/SearchPage/SearchPage ")
 );
 
 export const clientModules = [
@@ -138,6 +140,11 @@ export const clientModules = [
     path: "/news",
     view: News,
     requiresAuth: false,
+  },
+  {
+    path: "/search",
+    view: SearchPage,
+    requiresAuth: false, // Hoặc false tùy vào yêu cầu của bạn
   },
 ];
 

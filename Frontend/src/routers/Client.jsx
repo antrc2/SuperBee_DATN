@@ -4,6 +4,7 @@ import { HomeLayout, ProfileLayout } from "@layouts";
 import { clientModules, profileModule } from "./ClientModules";
 // import { Home, Profile } from "@pages"; // <-- Xóa dòng này, sẽ lazy load từ ClientModules
 import ProtectedRouteClient from "../components/common/ProtectClient";
+import { ClientThemeProvider } from "../contexts/ClientThemeContext";
 // import { NotFound } from "../pages"; // <-- Xóa dòng này, sẽ lazy load
 // import Demo from "../pages/Chat/Chat"; // Xóa nếu ChatComponent đã được xử lý trong clientModules
 
@@ -15,14 +16,16 @@ const NotFound = React.lazy(() => import("../pages/NotFound/NotFound"));
 export const clientRoutes = [
   {
     path: "/",
-    element: <HomeLayout />,
+    element: (
+      <ClientThemeProvider>
+        <HomeLayout />
+      </ClientThemeProvider>
+    ),
     children: [
       {
         index: true,
         element: (
           <Suspense fallback={<div>Đang tải Trang chủ...</div>}>
-            {" "}
-            {/* Thêm Suspense */}
             <Home />
           </Suspense>
         ),
@@ -58,8 +61,6 @@ export const clientRoutes = [
         path: "*",
         element: (
           <Suspense fallback={<div>Đang tải trang lỗi...</div>}>
-            {" "}
-            {/* Suspense cho NotFound */}
             <NotFound />
           </Suspense>
         ),
@@ -73,9 +74,11 @@ export const profileRoutes = [
   {
     path: "/info",
     element: (
-      <ProtectedRouteClient>
-        <ProfileLayout />
-      </ProtectedRouteClient>
+      <ClientThemeProvider>
+        <ProtectedRouteClient>
+          <ProfileLayout />
+        </ProtectedRouteClient>
+      </ClientThemeProvider>
     ),
     children: [
       {

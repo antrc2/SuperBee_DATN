@@ -5,14 +5,16 @@ import { useHome } from "@contexts/HomeContext";
 
 export default function ShopAccount() {
   const { homeData } = useHome();
-  console.log("🚀 ~ ShopAccount ~ homeData:", homeData);
   return (
     <div>
       <div className="max-w-7xl mx-auto mt-3">
         <Breadcrumbs />
       </div>
       <div className="mt-8">
-        <ListCategoryCon items={homeData?.categories?.onlyChildren} count={9} />
+        <ListCategoryCon
+          items={homeData?.data?.categories?.onlyChildren}
+          count={9}
+        />
       </div>
     </div>
   );

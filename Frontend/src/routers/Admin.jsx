@@ -7,6 +7,7 @@ import { adminModules } from "@routers/adminModules";
 import AppLayout from "@layouts/Admin/AppLayout";
 // import Home from "@pages/Admin/Dashboard/Home"; // <-- Xóa dòng này
 import ProtectedRoute from "@components/common/ProtectedRoute";
+import { ThemeProvider } from "../contexts/ThemeContext";
 // import { NotFound } from "../pages"; // <-- Xóa dòng này
 
 // Lazy load Home và NotFound
@@ -17,9 +18,11 @@ const adminRoutes = [
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["admin"]}>
-        <AppLayout />
-      </ProtectedRoute>
+      <ThemeProvider>
+        <ProtectedRoute allowedRoles={["admin"]}>
+          <AppLayout />
+        </ProtectedRoute>
+      </ThemeProvider>
     ),
     children: [
       {

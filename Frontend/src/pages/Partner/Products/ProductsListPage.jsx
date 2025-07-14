@@ -85,17 +85,24 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                       size={20}
                     />
                   </Link>
-                  {product.status === 1 || product.status === 2 ? (
-                    <button
-                      onClick={() => handleLock(product.id)}
-                      title="Hủy Bán"
-                    >
-                      <Lock
-                        className="text-red-500 hover:text-red-700 cursor-pointer"
-                        size={20}
-                      />
-                    </button>
-                  ) : (
+                  {/* NÚT KHÓA: luôn hiển thị, chỉ cho bấm khi status === 2 */}
+                  <button
+                    onClick={() => product.status === 2 && handleLock(product.id)}
+                    title={product.status === 2 ? "Hủy Bán" : "Không thể hủy"}
+                    disabled={product.status !== 2}
+                    className={`${product.status === 2 ? "" : "opacity-50 cursor-not-allowed"}`}
+                  >
+                    <Lock
+                      className={
+                        product.status === 2
+                          ? "text-red-500 hover:text-red-700 cursor-pointer"
+                          : "text-gray-400"
+                      }
+                      size={20}
+                    />
+                  </button>
+                  {/* NÚT BÁN LẠI: chỉ hiện khi status === 3 */}
+                  {product.status === 3 && (
                     <button
                       onClick={() => handleKey(product.id)}
                       title="Bán Lại"

@@ -1,99 +1,73 @@
-// src/components/ServerErrorDisplay.jsx
+import React from "react";
+import {
+  AlertTriangle,
+  ServerCrash,
+  ShieldOff,
+  Lock,
+  SearchX,
+  Timer,
+  Wrench,
+} from "lucide-react";
 
 // Component để hiển thị thông báo lỗi server dựa trên status code
 const ServerErrorDisplay = ({ statusCode }) => {
-  let icon = "❓"; // Icon mặc định
-  let message = "Đã xảy ra lỗi không xác định."; // Thông báo mặc định
-  let title = "Lỗi không xác định"; // Tiêu đề mặc định
+  let IconComponent = AlertTriangle;
+  let title = "Lỗi không xác định";
+  let message = `Đã xảy ra lỗi không xác định (Mã lỗi: ${
+    statusCode || "Không rõ"
+  }).`;
 
   switch (statusCode) {
-    case 400:
-      icon = "🚫";
-      title = "Yêu cầu không hợp lệ";
-      message =
-        "Yêu cầu của bạn không hợp lệ. Vui lòng kiểm tra lại thông tin.";
-      break;
     case 401:
-      icon = "🔒";
-      title = "Không được phép";
-      message =
-        "Bạn không có quyền truy cập tài nguyên này. Vui lòng đăng nhập lại.";
+      IconComponent = Lock;
+      title = "Yêu cầu xác thực";
+      message = "Bạn cần đăng nhập để thực hiện hành động này.";
       break;
     case 403:
-      icon = "⛔";
+      IconComponent = ShieldOff;
       title = "Truy cập bị từ chối";
-      message = "Bạn không được phép truy cập tài nguyên này.";
+      message = "Bạn không có quyền để truy cập tài nguyên này.";
       break;
     case 404:
-      icon = "🔍";
-      title = "Không tìm thấy tài nguyên";
+      IconComponent = SearchX;
+      title = "Không tìm thấy";
       message = "Tài nguyên bạn đang tìm kiếm không tồn tại hoặc đã bị xóa.";
       break;
-    case 405:
-      icon = "❌";
-      title = "Phương thức không được phép";
-      message = "Phương thức HTTP được yêu cầu không được phép.";
-      break;
     case 429:
-      icon = "⏰";
+      IconComponent = Timer;
       title = "Quá nhiều yêu cầu";
-      message =
-        "Bạn đã gửi quá nhiều yêu cầu trong thời gian ngắn. Vui lòng thử lại sau.";
+      message = "Bạn đã gửi quá nhiều yêu cầu. Vui lòng thử lại sau.";
       break;
     case 500:
-      icon = "🚨";
-      title = "Lỗi máy chủ nội bộ";
-      message = "Máy chủ đang gặp sự cố. Vui lòng thử lại sau ít phút.";
-      break;
-    case 502:
-      icon = "🔌";
-      title = "Bad Gateway";
+      IconComponent = ServerCrash;
+      title = "Lỗi máy chủ";
       message =
-        "Máy chủ không thể nhận phản hồi từ một máy chủ khác. Có thể do lỗi tạm thời.";
+        "Máy chủ đang gặp sự cố. Chúng tôi đang khắc phục, vui lòng thử lại sau ít phút.";
       break;
     case 503:
-      icon = "🛠️";
-      title = "Dịch vụ không khả dụng";
-      message =
-        "Máy chủ đang tạm thời không hoạt động (bảo trì hoặc quá tải). Vui lòng thử lại sau.";
-      break;
-    case 504:
-      icon = "⏳";
-      title = "Gateway Timeout";
-      message =
-        "Máy chủ không nhận được phản hồi kịp thời. Vui lòng kiểm tra kết nối mạng của bạn.";
-      break;
-    default:
-      icon = "❓";
-      title = "Lỗi không xác định";
-      message = `Đã xảy ra lỗi không xác định (Mã lỗi: ${
-        statusCode || "Không rõ"
-      }). Vui lòng thử lại hoặc liên hệ hỗ trợ.`;
+      IconComponent = Wrench;
+      title = "Dịch vụ bảo trì";
+      message = "Hệ thống đang được bảo trì. Vui lòng quay lại sau.";
       break;
   }
 
   return (
-    <div
-      style={{
-        textAlign: "center",
-        padding: "30px",
-        margin: "20px auto",
-        maxWidth: "500px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
-        backgroundColor: "#f8f8f8",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-        fontFamily: "Arial, sans-serif",
-      }}
-    >
-      <div style={{ fontSize: "60px", marginBottom: "15px" }}>{statusCode}</div>
-      <div style={{ fontSize: "60px", marginBottom: "15px" }}>{icon}</div>
-      <h2 style={{ color: "#d32f2f", marginBottom: "10px" }}>{title}</h2>
-      <p style={{ color: "#555", lineHeight: "1.6" }}>{message}</p>
-      {/* Bạn có thể thêm nút "Thử lại" hoặc "Về trang chủ" ở đây */}
-      {/* <button style={{ marginTop: '20px', padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
-        Thử lại
-      </button> */}
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-secondary/20 p-4">
+      <div className="relative text-center bg-dropdown backdrop-blur-sm p-10 rounded-3xl shadow-2xl max-w-md w-full border border-themed">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="text-9xl font-black font-heading text-accent/10 select-none">
+            {statusCode}
+          </span>
+        </div>
+
+        <div className="relative z-10">
+          <IconComponent className="w-24 h-24 mx-auto mb-6 text-accent drop-shadow-lg" />
+          <h2 className="text-3xl font-bold font-heading text-primary mb-3">
+            {title}
+          </h2>
+          <p className="text-secondary leading-relaxed">{message}</p>
+        </div>
+      </div>
     </div>
   );
 };

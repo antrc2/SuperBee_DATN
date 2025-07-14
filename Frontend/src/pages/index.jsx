@@ -60,7 +60,9 @@ import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
 import ActiveAcc from "./Clients/ResetPassword/ActiveAcc";
 import ActivateWebPage from "./Clients/ActiveDomain/ActivateWebPage";
 import ChatComponent from "./Chat/Chat";
+import SearchPage from "./Clients/SearchPage/SearchPage ";
 export {
+  SearchPage,
   ChatComponent,
   ActivateWebPage,
   ActiveAcc,
@@ -116,5 +118,4 @@ export {
   CreatePostPage,
   EditPostPage,
   TrangDanhSachCategoryPost,
-
 };

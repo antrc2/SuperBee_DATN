@@ -2,11 +2,15 @@ from dotenv import load_dotenv
 import boto3
 import os
 from threading import Thread
+from controller.NSFWController import NSFWController
+from io import BytesIO
 load_dotenv()
 import time
 import hashlib
 import string
 import random
+
+
 class S3Controller:
     def __init__(self):
         self.aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
@@ -20,6 +24,10 @@ class S3Controller:
             aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.aws_default_region
         ).client('s3')
+        self.nsfw = NSFWController()
+    async def detect_file(self,file):
+        byte_file = BytesIO( await file.read())
+        return self.nsfw.detect(byte_file)
     def upload(self,file_content,file_name):
         self.s3_client.upload_fileobj(file_content, self.aws_bucket, file_name)
     def random_str(self,rand_len=8):
@@ -32,25 +40,54 @@ class S3Controller:
         # Tính MD5
         md5_hash = hashlib.md5(ms_bytes).hexdigest()
         return md5_hash
-    def add(self,file_content,file_name):
-        Thread(target=self.upload,args=(file_content,file_name)).start()
-        file_url = f"{self.aws_url.rstrip('/')}/{file_name}"
-        return file_url
-    def uploads(self,files,folder):
-        response = []
-        for file in files:
-            path = folder+self.random_str()
-            filename = file['filename']
-            file_extention = filename.split(".")[-1]
-            Thread(target=self.upload,args=(file['file'],f"{path}.{file_extention}")).start()
-            response.append(
-                {
-                    "url": f"{self.aws_url.rstrip('/')}/{path}.{file_extention}",
-                    "filename": filename
+    async def add(self,file,folder):
+        # filename = folder+self.random_str()
+        file_extension = file.filename.split(".")[-1]
+        random_str = self.random_str()
+        filename = folder + random_str
+        path = f"{filename}.{file_extension}"
+
+        # byte_file = BytesIO(await file.read())
+        if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+            if (await self.detect_file(file)):
+                return {
+                    "status": False,
+                    "message": f"File {file.filename} chứa nội dung không hợp lệ",
+                    "url": None
                 }
-            )
-        print(response)
-        return response
+            else:
+
+        # pass
+                Thread(target=self.upload,args=(BytesIO(await file.read()),path)).start()
+                file_url = f"{self.aws_url.rstrip('/')}/{path}"
+                return {
+                    "status": True,
+                    "url": file_url,
+                    "filename": random_str + file_extension
+                }
+    async def uploads(self,files,folder):
+        responses = []
+        for file in files:
+            responses.append( await self.add(file, folder))
+        print(responses)
+        return responses
+            # await self.detect_file(file)
+        # return "Xong"
+        # pass
+        # response = []
+        # for file in files:
+        #     path = folder+self.random_str()
+        #     filename = file['filename']
+        #     file_extention = filename.split(".")[-1]
+        #     Thread(target=self.upload,args=(file['file'],f"{path}.{file_extention}")).start()
+        #     response.append(
+        #         {
+        #             "url": f"{self.aws_url.rstrip('/')}/{path}.{file_extention}",
+        #             "filename": filename
+        #         }
+        #     )
+        # print(response)
+        # return response
     def delete(self,path):
         self.s3_client.delete_object(Bucket=self.aws_bucket, Key=path)
     def delete(self,path):

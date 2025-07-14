@@ -9,7 +9,6 @@ import api from "@utils/http";
 import { useNotification } from "@contexts/NotificationContext";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@contexts/AuthContext";
-// eslint-disable-next-line react-refresh/only-export-components
 const CartContext = createContext();
 
 export function CartProvider({ children }) {
@@ -45,10 +44,9 @@ export function CartProvider({ children }) {
       setLoadingCart(false);
     }
   }, [isLoggedIn, pop]);
-
   useEffect(() => {
     fetchCartItems();
-  }, [fetchCartItems, user]);
+  }, [fetchCartItems]);
 
   const handleAddToCart = useCallback(
     async (product) => {

@@ -444,65 +444,12 @@ export default function CreatePostPage() {
                                     {category.name}
                                 </option>
                             ))}
-                            <option value="new">-- Thêm danh mục mới --</option>
+                           
                         </select>
                     )}
                     {errors.category && <p className="text-red-500 text-xs italic mt-2">{errors.category}</p>}
                 </div>
-                {showNewCategoryForm && (
-                    <div className="border border-dashed border-gray-400 p-6 rounded-lg bg-blue-50">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Tạo Danh Mục Mới</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <label htmlFor="newCategoryName" className="block text-gray-700 text-sm font-bold mb-2">
-                                    Tên danh mục:
-                                </label>
-                                <input
-                                    type="text"
-                                    id="newCategoryName"
-                                    value={newCategoryName}
-                                    onChange={(e) => setNewCategoryName(e.target.value)}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
-                                    placeholder="Nhập tên danh mục mới"
-                                />
-                                {newCategoryError && <p className="text-red-500 text-xs italic mt-2">{newCategoryError}</p>}
-                            </div>
-                            <div>
-                                <label htmlFor="newCategoryDescription" className="block text-gray-700 text-sm font-bold mb-2">
-                                    Mô tả:
-                                </label>
-                                <textarea
-                                    id="newCategoryDescription"
-                                    value={newCategoryDescription}
-                                    onChange={(e) => setNewCategoryDescription(e.target.value)}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent h-24 resize-y"
-                                    placeholder="Mô tả ngắn về danh mục"
-                                ></textarea>
-                            </div>
-                            <div className="flex justify-end space-x-3 mt-4">
-                                <button
-                                    type="button"
-                                    onClick={handleCreateCategory}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
-                                >
-                                    Tạo Danh Mục
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setShowNewCategoryForm(false);
-                                        setNewCategoryName('');
-                                        setNewCategoryDescription('');
-                                        setNewCategoryError('');
-                                    }}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
-                                >
-                                    Hủy
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                
                 <div className="flex justify-end pt-4">
                     <button
                         type="submit"

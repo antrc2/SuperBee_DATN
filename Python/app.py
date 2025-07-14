@@ -21,26 +21,37 @@ app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
 @app.post("/upload_file")
 async def upload(file: UploadFile = File(...), folder: str = Form(...)):
-    object_name = f"uploads/{folder}/{file.filename}"
+    object_name = f"uploads/{folder}/"
 
-    # Đọc nội dung file vào bộ nhớ
-    file_content = BytesIO(await file.read())
+    # # Đọc nội dung file vào bộ nhớ
+    # file_content = BytesIO(await file.read())
 
-    file_url = s3_client.add(file_content,object_name)
+    response = await s3_client.add(file,object_name)
 
-    return {"url": file_url}
+    return response
 
 @app.post("/upload_files")
 async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...)):
     object_name = f"uploads/{folder}/"
-    file_contents = []
-    for file in files:
-        file_contents.append({
-            "file": BytesIO(await file.read()),
-            "filename": file.filename
-        })
-    files = s3_client.uploads(file_contents,object_name)
-    return files
+    # print(files)
+    # for file in files:
+    #     print(f"Name: {file.filename}, Type: {file.content_type}")
+    
+    # file_contents = []
+    # for file in files:
+        # print(file.)
+    #     byte_file = BytesIO(await file.read())
+    #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+    #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
+    #     file_contents.append({
+    #         "file": byte_file,
+    #         "filename": file.filename
+    #     })
+        # print(file_contents)
+        # print(type(BytesIO(await file.read())))
+    response = await s3_client.uploads(files,object_name)
+    return response
+    # return "Xong"
 
 
 @app.post("/delete_file")

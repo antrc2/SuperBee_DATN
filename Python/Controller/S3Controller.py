@@ -62,11 +62,12 @@ class S3Controller:
                 }
 
         # Upload lên S3 (dùng lại data)
-        def _upload():
-            # mỗi lần upload, tạo BytesIO mới vì upload_fileobj có thể đọc đến EOF
-            self.s3_client.upload_fileobj(BytesIO(data), self.aws_bucket, path)
+        Thread(target=self.upload,args=(BytesIO(data),path)).start()
+        # def _upload():
+        #     # mỗi lần upload, tạo BytesIO mới vì upload_fileobj có thể đọc đến EOF
+        #     self.s3_client.upload_fileobj(BytesIO(data), self.aws_bucket, path)
 
-        Thread(target=_upload, daemon=True).start()
+        # Thread(target=_upload, daemon=True).start()
 
         file_url = f"{self.aws_url.rstrip('/')}/{path}"
         return {

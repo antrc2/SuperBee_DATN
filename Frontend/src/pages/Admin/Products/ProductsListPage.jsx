@@ -58,7 +58,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                     ? "Đã hủy"
                     : product.status === 4
                     ? "Bán thành công"
-                    : "Không xác định"}
+                    : "Bị từ chối"}
                 </span>
               </td>
               <td className="py-3 px-4 text-center">

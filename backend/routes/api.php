@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/{id}", [UserCategoryController::class, 'show']);
     });
     Route::prefix('/products')->group(function () {
+        Route::get( "/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
     });

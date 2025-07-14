@@ -5,3 +5,6 @@ python-multipart
 python-dotenv
 requests
 tensorflow
+openai
+PyJWT
+Pillow

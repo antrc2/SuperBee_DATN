@@ -27,7 +27,7 @@ class CardController extends Controller
             $amount = $request->amount;
             $declared_value = $request->declared_value;
             $donate_promotion_id = $recharge_card->donate_promotion_id;
-
+            $donate_amount = $amount;
             if (!$recharge_card) {
                 return;
             }
@@ -87,6 +87,7 @@ class CardController extends Controller
                 "declared_value" => $declared_value,
                 "status" => $status,
                 'message' => $message,
+                "donate_amount"=>$donate_amount
             ]);
             return;
         } catch (\Throwable $th) {
@@ -163,6 +164,7 @@ class CardController extends Controller
                     "user_id" => $request->user_id,
                     "web_id" => $request->web_id,
                     'sign' => $sign,
+                    "donate_amount"=>0,
                     "wallet_transaction_id" => null,
                     "donate_promotion_id" => $donate_promotion_id
                 ]);

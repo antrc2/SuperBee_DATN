@@ -88,6 +88,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
             $table->string('sku', 50)->unique();           // SKU duy nhất
+            $table->string('description', 255)->nullable();           // SKU duy nhất
             $table->integer('import_price');             // giá nhập
             $table->integer('price');
             $table->integer('sale')->nullable();

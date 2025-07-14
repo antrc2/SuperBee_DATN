@@ -7,7 +7,7 @@ load_dotenv()
 backend_url = os.getenv("BACKEND_URL")
 api_key = os.getenv("BACKEND_API_KEY")
 event = Event()
-sleep = 15
+sleep = 3
 def queue_money():
     while not  event.is_set():
         try:
@@ -16,8 +16,11 @@ def queue_money():
             })
             if (response.status_code):
                 data = response.json()
+                print(data)
+                print("\n\n")
                 if data['status'] and len(data['data']) > 0:
                     for item in data['data']:
+                        # print(f"Item: {item}")
                         if time.strftime('%Y-%m-%d %H:%M:%S') >= item['recieved_at']:
                             count = 0
                             while count < 3:

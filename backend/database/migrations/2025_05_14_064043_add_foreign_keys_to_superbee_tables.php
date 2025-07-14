@@ -87,7 +87,7 @@ return new class extends Migration
             $table->foreign('product_id')->references('id')->on('products')->onDelete('restrict');
         });
         Schema::table("order_queues",function(Blueprint $table){
-            $table->foreign('order_item_id')->references('id')->on('order_items')->onDelete('cascade');
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
         });
         Schema::table('wallets', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');

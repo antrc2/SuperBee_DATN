@@ -5,12 +5,17 @@ import { useHome } from "@contexts/HomeContext";
 
 export default function ShopAccount() {
   const { homeData } = useHome();
+  const breadcrumbItems = [
+    { label: "Trang chủ", href: "/" },
+    { label: `Mua acc` },
+  ];
+
   return (
-    <div>
-      <div className="max-w-7xl mx-auto mt-3">
-        <Breadcrumbs />
+    <div className="py-8 ">
+      <div className="max-w-screen-xl mx-auto  ">
+        <Breadcrumbs items={breadcrumbItems} />
       </div>
-      <div className="mt-8">
+      <div className="px-4">
         <ListCategoryCon
           items={homeData?.data?.categories?.onlyChildren}
           count={9}

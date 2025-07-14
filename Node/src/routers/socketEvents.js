@@ -27,14 +27,16 @@ const setupSocketEvents = (io) => {
       const previousIsLoggedIn = socket.isLoggedIn;
       let newUserId;
       let newIsLoggedIn = false;
+      let RoomId = null;
+
       let userRole = "guest";
       let authMessage = "Xác thực lại thất bại: Token không hợp lệ.";
 
       try {
         const decoded = token ? verifyToken(token) : null;
-
         if (decoded && decoded.user_id) {
           newUserId = decoded.user_id.toString();
+          RoomId = decoded.roomId;
           newIsLoggedIn = true;
           userRole = decoded.role_ids[0] || "customer";
           socket.userRole = userRole;
@@ -66,6 +68,13 @@ const setupSocketEvents = (io) => {
         connectionManager.addConnection(newUserId, socket.id);
         socket.userId = newUserId;
         socket.isLoggedIn = newIsLoggedIn;
+      }
+      if (RoomId && userRole !== "admin") {
+        // Cho socket join vào phòng đã có ngay lập tức
+        socket.join(RoomId.toString());
+        console.log(
+          `[SocketEvents] Customer ${newUserId} đã join lại phòng ${RoomId} từ thông tin client.`
+        );
       }
 
       // Gửi phản hồi xác thực về cho client

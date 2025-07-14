@@ -3,12 +3,10 @@ import Banner3D from "../../components/Client/banner/Banner";
 import TopUpLeaderboard from "../../components/Client/TopUpLeaderboard/TopUpLeaderboard";
 
 export default function BannerAndCart({ top, banner }) {
-  console.log("🚀 ~ BannerAndCart ~ top:", top);
-  // Lọc người dùng có số dư > 0 để quyết định layout
   const hasLeaderboard = top && top.filter((e) => e.balance > 0).length > 0;
 
   return (
-    <div className="section-bg">
+    <div className="section-bg mt-8">
       {hasLeaderboard ? (
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Banner chiếm 2/3 không gian */}

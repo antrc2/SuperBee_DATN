@@ -380,10 +380,10 @@ export default function Pay() {
   if (loadingCheckout) return <LoadingDomain />;
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen">
       <div className="max-w-screen-xl mx-auto">
         {/* Breadcrumbs */}
-        <div className="breadcrumbs-container mb-6">
+        <div className="breadcrumbs-container p-4  ">
           <Link to="/" className="breadcrumb-link">
             Trang chủ
           </Link>

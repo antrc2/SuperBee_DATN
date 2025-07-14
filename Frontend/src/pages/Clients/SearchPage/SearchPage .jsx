@@ -212,7 +212,7 @@ export default function SearchPage() {
   ];
 
   return (
-    <div className="max-w-7xl mx-auto min-h-screen ">
+    <div className="max-w-screen-xl mx-auto min-h-screen ">
       <Breadcrumbs items={breadcrumbItems} />
 
       <div className="flex flex-col lg:flex-row gap-8 mt-6">

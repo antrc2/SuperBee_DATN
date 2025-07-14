@@ -10,7 +10,6 @@ import {
 } from "../Recharge/CardRechargeForm";
 
 const LeaderboardList = ({ top }) => {
-  console.log("🚀 ~ LeaderboardList ~ top:", top);
   const getRankBg = (index) => {
     switch (index) {
       case 0:

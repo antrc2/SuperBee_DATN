@@ -13,8 +13,7 @@ import {
   ChevronDown,
   MoreHorizontal,
   Newspaper,
-  Folders 
-  
+  Folders,
 } from "lucide-react";
 import Logo from "@assets/icons/logo.png";
 import { useSidebar } from "@contexts/SidebarContext";
@@ -45,6 +44,11 @@ const navItems = [
     icon: <Package />, // Biểu tượng phù hợp hơn cho Products
     name: "Products",
     path: "/admin/products",
+  },
+  {
+    icon: <Package />, // Biểu tượng phù hợp hơn cho Products
+    name: "PendingProduct",
+    path: "/admin/pendingProducts",
   },
   {
     icon: <ShoppingCart />, // Biểu tượng phù hợp hơn cho Orders

@@ -1,48 +1,57 @@
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "../../contexts/ChatContext";
-import { useAuth } from "../../contexts/AuthContext";
-import { decodeData } from "../../utils/hook";
+import { Send, MessageCircleWarning, X, ArrowDown } from "lucide-react"; // Thay đổi: ArrowUp -> ArrowDown
 
-const ChatComponent = () => {
-  const { isLoggedIn, agentChatRoom, sendChatMessage, requestAgentChat } =
-    useChat();
-
-  const refToken = useRef(null);
-  const { token } = useAuth();
-  useEffect(() => {
-    if (token) {
-      refToken.current = decodeData(token);
-    } else {
-      refToken.current = null; // Xóa refToken khi đăng xuất
-    }
-  }, [token]);
-
+const ChatComponent = ({ agent, onClose }) => {
+  // Nhận props agent và hàm onClose
+  const {
+    isLoggedIn,
+    agentChatRoom,
+    sendChatMessage,
+    requestAgentChat,
+    refToken,
+    unreadCount,
+  } = useChat();
   const [newMessage, setNewMessage] = useState("");
   const [localMessages, setLocalMessages] = useState([]);
+
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null); // Ref cho khu vực tin nhắn để theo dõi cuộn
+  const isAtBottomRef = useRef(true); // Ref để theo dõi vị trí cuộn
 
-  useEffect(() => {
-    if (agentChatRoom?.messages) {
-      setLocalMessages(agentChatRoom.messages);
-    } else {
-      setLocalMessages([]);
-    }
-  }, [agentChatRoom?.messages]);
+  // --- STATE VÀ LOGIC CHO NÚT CUỘN XUỐNG DƯỚI ---
+  const [showScrollBottom, setShowScrollBottom] = useState(false); // Thay đổi: Đổi tên state
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [localMessages]);
-
-  const handleRequestChat = async () => {
-    try {
-      await requestAgentChat();
-    } catch (error) {
-      console.error("Lỗi khi yêu cầu chat:", error.message);
-      // Hiển thị thông báo lỗi cho người dùng
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      // Kiểm tra nếu người dùng không ở cuối (với một khoảng đệm nhỏ)
+      const isScrolledToBottom = scrollHeight - scrollTop - clientHeight < 50;
+      setShowScrollBottom(!isScrolledToBottom);
+      isAtBottomRef.current = isScrolledToBottom; // Cập nhật trạng thái cuộn
     }
   };
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+  // -------------------------------------------
+
+  useEffect(() => {
+    setLocalMessages(agentChatRoom?.messages || []);
+  }, [agentChatRoom?.messages]);
+
+  // useEffect tự động cuộn xuống thông minh hơn
+  useEffect(() => {
+    if (isAtBottomRef.current) {
+      // Chỉ tự động cuộn nếu người dùng đang ở cuối
+      scrollToBottom();
+    }
+  }, [localMessages]); // Chạy mỗi khi có tin nhắn mới
+
   if (!isLoggedIn) {
+    // ... (Giữ nguyên phần giao diện khi chưa đăng nhập)
     return (
       <div className="flex flex-col min-h-[30rem] max-h-[45rem] bg-gradient-to-br from-white to-gray-50 p-6 rounded-xl shadow-xl border border-gray-200">
         <div className="flex-1 flex items-center justify-center">
@@ -77,7 +86,6 @@ const ChatComponent = () => {
     );
   }
 
-  // Xử lý gửi tin nhắn mới.
   const handleSendMessage = () => {
     const trimmedMessage = newMessage.trim();
     if (trimmedMessage && agentChatRoom?.roomId) {
@@ -93,123 +101,125 @@ const ChatComponent = () => {
       };
       setLocalMessages((prevMessages) => [...prevMessages, tempMessage]);
       setNewMessage("");
+      unreadCount.current = 0;
       const success = sendChatMessage(trimmedMessage);
       if (!success) {
         console.error("Không thể gửi tin nhắn ngay lập tức do sự cố nội bộ.");
       }
     }
   };
-
   return (
-    <div className="flex flex-col max-h-[45rem] bg-white p-6 rounded-xl shadow-2xl border border-gray-200">
-      {/* Header của Chat (hiển thị thông tin agent nếu có) */}
-      {agentChatRoom?.agentDetails && (
-        <div className="flex items-center p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-t-xl shadow-md mb-5">
+    <div className="flex flex-col h-full max-h-[600px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden">
+      {/* ... (Giữ nguyên Header của Chat) */}
+      <div className="flex items-center justify-between p-4 bg-content-bg border-b border-themed flex-shrink-0">
+        <div className="flex items-center gap-3">
           <img
-            src={
-              agentChatRoom.agentDetails.agentAvatar ||
-              "https://placehold.co/48x48/ffffff/334155?text=Agent"
-            }
+            src={agent?.agentAvatar ?? agent?.avatar_url}
             alt="Agent Avatar"
-            className="w-12 h-12 rounded-full object-cover mr-4 ring-2 ring-blue-200"
+            className="w-12 h-12 rounded-full object-cover ring-2 ring-accent/50"
           />
           <div>
-            <p className="font-bold text-xl">
-              {agentChatRoom.agentDetails.agentName || "Nhân viên hỗ trợ"}
+            <p className="font-bold text-lg text-primary">
+              {agent?.agentName ?? agent?.username}
             </p>
-            {agentChatRoom.agentDetails.average_rating !== null && (
-              <p className="text-sm text-blue-100">
-                ⭐ Đánh giá: {agentChatRoom.agentDetails.average_rating} (
-                {agentChatRoom.agentDetails.total_ratings_count} lượt)
+            {agent?.average_rating && (
+              <p className="text-xs text-secondary">
+                ⭐ {agent?.average_rating} ({agent?.total_ratings_count} đánh
+                giá)
               </p>
             )}
           </div>
         </div>
-      )}
-
-      {/* Khu vực hiển thị tin nhắn chat chính */}
-      <div className="flex-1 bg-gray-50 p-4 rounded-lg overflow-y-auto shadow-inner mb-5 flex flex-col space-y-3 custom-scrollbar border border-gray-100">
-        {localMessages.map((msg) => {
-          // Xác định xem tin nhắn có phải do người dùng hiện tại gửi hay không
+        <div className="flex items-center gap-1">
+          <button
+            title="Khiếu nại"
+            className="p-2 rounded-full text-secondary hover:text-primary hover:bg-accent/10 transition-colors"
+          >
+            <MessageCircleWarning className="w-5 h-5" />
+          </button>
+          <button
+            title="Đóng"
+            onClick={onClose}
+            className="p-2 rounded-full text-secondary hover:text-primary hover:bg-accent/10 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+      {/* Khu vực hiển thị tin nhắn */}
+      <div
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 bg-background p-4 overflow-y-auto flex flex-col space-y-4 custom-scrollbar relative min-h-[300px]"
+      >
+        {localMessages.map((msg, index) => {
           const isOwnMessage = msg.sender_id == refToken.current?.user_id;
           return (
             <div
-              key={msg.id} // Sử dụng ID tin nhắn làm khóa để React render danh sách
-              className={`flex items-end gap-3 max-w-[85%] ${
+              key={msg.id || index}
+              className={`flex items-end gap-2.5 max-w-[85%] ${
                 isOwnMessage ? "ml-auto flex-row-reverse" : "mr-auto"
               }`}
             >
-              {/* <img
-                src={
-                  msg.sender_avatar ||
-                  "https://placehold.co/40x40/cbd5e0/475569?text=User"
-                }
-                alt={`${msg.sender_name || "Người dùng"} Avatar`}
-                className="w-9 h-9 rounded-full object-cover shadow-sm"
-              /> */}
               <div
-                className={`p-4 rounded-xl shadow-md relative ${
+                className={`px-4 py-3 rounded-2xl shadow-md ${
                   isOwnMessage
-                    ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-br-none"
-                    : "bg-gray-200 text-gray-800 rounded-bl-none"
+                    ? "bg-gradient-button text-accent-contrast rounded-br-none"
+                    : "bg-content-bg text-primary rounded-bl-none"
                 }`}
               >
-                <p className="font-semibold text-sm mb-1">
-                  {isOwnMessage
-                    ? "Bạn"
-                    : `${msg.sender_name || "Nhân viên hỗ trợ"}`}
-                </p>
-                <p className="text-base leading-relaxed">{msg.content}</p>
-                <span
-                  className={`block text-xs mt-2 ${
-                    isOwnMessage ? "text-blue-200" : "text-gray-500"
-                  } text-right`}
-                >
-                  {/* Định dạng dấu thời gian tin nhắn theo giờ địa phương */}
-                  {new Date(msg.created_at).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
+                <p className="text-sm leading-relaxed">{msg.content}</p>
               </div>
             </div>
           );
         })}
         <div ref={messagesEndRef} />
+
+        {/* Thay đổi: Nút cuộn xuống dưới */}
+        {showScrollBottom && (
+          <button
+            onClick={scrollToBottom}
+            title="Cuộn xuống tin nhắn mới nhất"
+            className="sticky bottom-4 left-1/2 -translate-x-1/2 w-10 h-10 rounded-full bg-accent/80 backdrop-blur-sm text-accent-contrast flex items-center justify-center shadow-lg animate-fade-in"
+          >
+            <ArrowDown className="w-6 h-6" />
+            {unreadCount.current > 0 ? unreadCount.current : ""}
+          </button>
+        )}
       </div>
+
+      {/* ... (Giữ nguyên khu vực nhập tin nhắn) */}
       {agentChatRoom?.roomId ? (
-        <div className="flex items-center p-3 bg-white rounded-xl shadow-lg border border-gray-200">
+        <div className="flex items-center p-3 bg-content-bg border-t border-themed flex-shrink-0">
           <input
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            placeholder="Nhập tin nhắn của bạn..."
-            className="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent text-gray-700 placeholder-gray-400 shadow-sm"
-            onKeyPress={(e) => {
-              // Gửi tin nhắn khi nhấn phím Enter
-              if (e.key === "Enter" && !e.shiftKey) {
-                // Thêm !e.shiftKey để cho phép xuống dòng bằng Shift+Enter
-                e.preventDefault(); // Ngăn chặn xuống dòng mặc định
-                handleSendMessage();
-              }
-            }}
-            disabled={!agentChatRoom?.roomId} // Vô hiệu hóa ô nhập nếu không có chat đang hoạt động
+            placeholder="Nhập tin nhắn..."
+            className="flex-1 p-3 bg-input text-input border-themed rounded-xl focus:outline-none border-hover placeholder-theme"
+            onKeyPress={(e) =>
+              e.key === "Enter" &&
+              !e.shiftKey &&
+              (e.preventDefault(), handleSendMessage())
+            }
           />
           <button
             onClick={handleSendMessage}
-            className="ml-3 px-6 py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition-colors duration-200 shadow-md transform active:scale-95"
-            disabled={!newMessage.trim() || !agentChatRoom?.roomId} // Vô hiệu hóa nút gửi nếu không có tin nhắn hoặc không có chat đang hoạt động
+            className="action-button action-button-primary !w-auto ml-2 !px-5 !py-3"
+            disabled={!newMessage.trim()}
           >
-            Gửi
+            <Send className="w-5 h-5" />
           </button>
         </div>
       ) : (
-        <button
-          onClick={handleRequestChat}
-          className="w-full px-6 py-4 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-colors duration-200 shadow-lg transform active:scale-95 text-lg"
-        >
-          Yêu cầu Chat với Nhân viên ✨
-        </button>
+        <div className="p-4">
+          <button
+            onClick={requestAgentChat}
+            className="action-button action-button-primary"
+          >
+            Yêu cầu Chat với Nhân viên ✨
+          </button>
+        </div>
       )}
     </div>
   );

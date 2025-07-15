@@ -27,6 +27,8 @@ class CommonController extends Controller
             if ($donate_promotion->per_user_limit != -1 && $total_used >= $donate_promotion->per_user_limit) {
                 return ['donate_promotion_id'=> null, 'donate_promotion_amount'=> 0];
             }
+            $donate_promotion->total_used += 1;
+            $donate_promotion->save();
             return ['donate_promotion_id'=>$donate_promotion->id,"donate_promotion_amount"=>$donate_promotion->amount];
             // $donate_promotion_id = $donate_promotion->id;
             // $donate_promotion_amount = $donate_promotion->amount;

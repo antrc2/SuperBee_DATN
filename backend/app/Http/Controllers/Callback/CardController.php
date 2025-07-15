@@ -48,7 +48,7 @@ class CardController extends Controller
             // if ($donate_promotion_id !== NULL) {
             //     $donate_promotion_amount = DonatePromotion::where("id",$donate_promotion_id)->first()->amount;
             $bonus = $amount * ($donate_promotion_amount / 100);
-            //     $amount += $bonus;
+            $amount += $bonus;
             // }
             DB::beginTransaction();
             if ($declared_value == $value) { // Thẻ đúng

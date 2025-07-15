@@ -11,7 +11,7 @@ use App\Models\WalletTransaction;
 use App\Models\Withdraw;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use App\Http\Controllers\Callback\CommonController;
 class BankController extends Controller
 {   
     public function donate(Request $request){
@@ -32,14 +32,10 @@ class BankController extends Controller
                     $web_id = $user->web_id;
                     $wallet_id = $user->wallet->id;
                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate   )->where('status', 1)->orderBy('id', 'desc')->first();
-                    if ($donate_promotion !== NULL){
-                        $donate_promotion_id = $donate_promotion->id;
-                        $donate_promotion_amount = $donate_promotion->amount;
-                        
-                    } else {
-                        $donate_promotion_id = NULL;
-                        $donate_promotion_amount = 0;
-                    }
+                    $common = new CommonController();
+                    $result = $common->donate_promotion($donate_promotion,$user_id);
+                    $donate_promotion_id = $result['donate_promotion_id'];
+                    $donate_promotion_amount = $result['donate_promotion_amount'];
                     $amount = $request->transferAmount;
                     $donate_amount = $amount;
                     $bonus = $amount * ($donate_promotion_amount / 100);

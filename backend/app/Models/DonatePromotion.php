@@ -18,9 +18,9 @@ class DonatePromotion extends Model
         'amount',
         'start_date',
         'end_date',
-        // 'usage_limit',
-        // 'per_user_limit',
-        // 'total_used', // This is usually incremented
+        'usage_limit',
+        'per_user_limit',
+        'total_used', // This is usually incremented
         'status',
         'created_by',
         'updated_by',

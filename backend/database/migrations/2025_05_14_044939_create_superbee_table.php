@@ -314,9 +314,9 @@ return new class extends Migration
             $table->decimal('amount', 15, 0); // Giá trị khuyến mãi
             $table->timestamp('start_date'); // Ngày bắt đầu
             $table->timestamp('end_date'); // Ngày kết thúc
-            // $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
-            // $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
-            // $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
+            $table->integer('usage_limit')->nullable()->default(-1); // Giới hạn số lần sử dụng tổng cộng. -1 nghĩa là k giới hạn
+            $table->integer('per_user_limit')->default(-1); // Giới hạn mỗi người dùng. -1 nghĩa là k giới hạn
+            $table->integer('total_used')->default(0); // Tổng số lần đã sử dụng
             $table->integer('status')->default(1); // Trạng thái
             $table->unsignedBigInteger('created_by'); // Ai tạo
             $table->unsignedBigInteger('updated_by'); // Ai cập nhật

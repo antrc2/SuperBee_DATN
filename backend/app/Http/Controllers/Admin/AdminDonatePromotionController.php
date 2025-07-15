@@ -86,12 +86,18 @@ class AdminDonatePromotionController extends Controller
                 'amount'      => 'required|integer',
                 'start_date'  => 'required|date|before:end_date',
                 'end_date'    => 'required|date|after:start_date',
+                "usage_limit" => 'nullable',
+                "per_user_limit" => 'nullable',
+                "total_used" =>'nullable'
             ]);
             DonatePromotion::create([
                 'web_id'      => $web_id,
                 'amount'      => $validatedData['amount'],
                 'start_date'  => $validatedData['start_date'],
                 'end_date'    => $validatedData['end_date'],
+                'usage_limit' =>$validatedData['usage_limit'],
+                "per_user_limit"=>$validatedData['per_user_limit'],
+                "total_used"=>$validatedData['total_used']
             ]);
             return response()->json([
                 "status" => True,

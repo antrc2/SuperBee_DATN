@@ -630,6 +630,9 @@ class UserOrderController extends Controller
 
                     $wallet->balance -= $total_price;
                     $wallet->save();
+                    $promotion = Promotion::where("code",$promotion_code)->get();
+                    $promotion->total_used += 1;
+                    $promotion->save();
                     // var_dump($wallet->id);
                     $wallet_transaction = WalletTransaction::create([
                         "wallet_id"=>$wallet->id,

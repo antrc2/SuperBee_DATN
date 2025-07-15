@@ -22,7 +22,7 @@ class Promotion extends Model
         'end_date',
         'usage_limit',
         'per_user_limit',
-        // 'total_used', // This is usually incremented, not directly filled
+        'total_used', // This is usually incremented, not directly filled
         'status',
         'created_by',
         'updated_by',

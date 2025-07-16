@@ -189,6 +189,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
             Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
             Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+            Route::get('/user/{id}', [AdminDiscountCodeController::class, 'getUserByWebId']);
+            Route::get('/web/{id}', [AdminDiscountCodeController::class, 'getWebId']);
         });
         // Route::prefix('/discountcode')->group(function () {
         //     Route::get('/', [AdminDiscountCodeController::class, 'index']);
@@ -273,8 +275,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::Post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost']);
             Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost']);
         });
-     Route::prefix('/authorization')->group(function () {
-            
+        Route::prefix('/authorization')->group(function () {
+
             // --- Dashboard ---
             Route::get('dashboard', [AuthorizationDashboardController::class, 'index']);
 
@@ -306,12 +308,11 @@ Route::middleware(['jwt'])->group(function () {
             Route::get('users', [UserPermissionController::class, 'index']);
             Route::get('users/{user}/roles', [UserPermissionController::class, 'getUserRoles']);
             Route::post('users/{user}/roles', [UserPermissionController::class, 'assignRolesToUser']);
-            
+
             // --- Quản lý User chi tiết (mới) ---
             Route::get('users/{id}/manage', [AuthorizationDashboardController::class, 'getUserDetails']);
             Route::post('users/{user}/manage/roles', [AuthorizationDashboardController::class, 'syncRoles']);
             Route::post('users/{user}/manage/permissions', [AuthorizationDashboardController::class, 'syncDirectPermissions']);
-
         });
     });
 });

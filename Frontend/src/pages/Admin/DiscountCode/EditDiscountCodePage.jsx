@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "@utils/http";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 const EditDiscountCodePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [pop,confirm]=useNotification();
+  const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     code: "",
     usage_limit: "",
@@ -16,35 +19,52 @@ const EditDiscountCodePage = () => {
     start_date: "",
     end_date: "",
     status: 1,
+    target_user_id: -1,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchDiscountCode = async () => {
-      try {
-        const response = await api.get(`/admin/discountcode/${id}`);
-        const data = response.data?.data || {};
-        setForm({
-          code: data.code || "",
-          description: data.description || "",
-          usage_limit: data.usage_limit || "",
-          per_user_limit: data.per_user_limit || "",
-          discount_value: data.discount_value || "",
-          min_discount_amount: data.min_discount_amount || "",
-          max_discount_amount: data.max_discount_amount || "",
-          start_date: data.start_date ? new Date(data.start_date).toISOString().slice(0, 16) : "",
-          end_date: data.end_date ? new Date(data.end_date).toISOString().slice(0, 16) : "",
-          status: data.status !== undefined ? data.status : 1,
-        });
-      } catch (err) {
-        setError(err.response?.data?.message || "Không thể tải dữ liệu mã giảm giá!");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDiscountCode();
-  }, [id]);
+  const fetchData = async () => {
+    try {
+      // 1. Load mã giảm giá
+      const response = await api.get(`/admin/discountcode/${id}`);
+      const data = response.data?.data || {};
+      setForm({
+        code: data.code || "",
+        description: data.description || "",
+        usage_limit: data.usage_limit || "",
+        per_user_limit: data.per_user_limit || "",
+        discount_value: data.discount_value || "",
+        min_discount_amount: data.min_discount_amount || "",
+        max_discount_amount: data.max_discount_amount || "",
+        start_date: data.start_date ? new Date(data.start_date).toISOString().slice(0, 16) : "",
+        end_date: data.end_date ? new Date(data.end_date).toISOString().slice(0, 16) : "",
+        status: data.status !== undefined ? data.status : 1,
+        target_user_id: data.target_user_id ?? -1, // Nếu có
+      });
+
+      // 2. Lấy api_key từ sessionStorage
+      const apiKey = sessionStorage.getItem("web");
+      if (!apiKey) return;
+
+      // 3. Lấy web_id
+      const webRes = await api.get(`/admin/discountcode/web/${apiKey}`);
+      const webId = webRes.data?.data?.id;
+      if (!webId) return;
+
+      // 4. Lấy danh sách người dùng
+      const userRes = await api.get(`/admin/discountcode/user/${webId}`);
+      setUsers(userRes.data?.data || []);
+    } catch (err) {
+      setError(err.response?.data?.message || "Lỗi khi tải dữ liệu!");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchData();
+}, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,10 +99,11 @@ const EditDiscountCodePage = () => {
         discount_value: form.discount_value ? Number(form.discount_value) : null,
         min_discount_amount: form.min_discount_amount ? Number(form.min_discount_amount) : null,
         max_discount_amount: form.max_discount_amount ? Number(form.max_discount_amount) : null,
+        target_user_id: Number(form.target_user_id),
       };
 
       await api.put(`/admin/discountcode/${id}`, payload);
-      alert("Cập nhật mã giảm giá thành công!");
+      pop("Cập nhật mã giảm giá thành công!",'s');
       navigate("/admin/discountcode");
     } catch (err) {
       setError(err.response?.data?.message || "Có lỗi xảy ra!");
@@ -168,6 +189,23 @@ const EditDiscountCodePage = () => {
                 />
               </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Áp dụng cho</label>
+              <select
+                name="target_user_id"
+                value={form.target_user_id}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md"
+              >
+                <option value={-1}>Tất cả người dùng</option>
+                {users.map((user) => (
+                  <option key={user.id} value={user.id}>
+                    {user.name || user.email || `Người dùng #${user.id}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Giảm giá tối thiểu (VNĐ)</label>

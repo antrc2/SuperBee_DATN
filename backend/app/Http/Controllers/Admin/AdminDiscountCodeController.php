@@ -84,6 +84,7 @@ class AdminDiscountCodeController extends Controller
                 'end_date' => 'required|date|after_or_equal:start_date',
                 'usage_limit' => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit' => 'nullable|integer|min:-1|not_in:0',
+                'target_user_id' => 'required|integer',
             ]);
 
             if ($validator->fails()) {
@@ -114,6 +115,7 @@ class AdminDiscountCodeController extends Controller
             $validated['usage_limit'] = $validated['usage_limit'] ?? -1;
             $validated['per_user_limit'] = $validated['per_user_limit'] ?? -1;
             $validated['total_used'] = 0;
+            $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
 
@@ -168,6 +170,7 @@ class AdminDiscountCodeController extends Controller
                 'start_date' => 'required|date',
                 "status" => 'required|in:0,1', // Thêm kiểm tra trạng thái
                 'end_date' => 'required|date|after_or_equal:start_date',
+                'target_user_id' => 'required|integer'
             ], [
                 'max_discount_amount.gt' => 'Giá trị tối đa phải lớn hơn giá trị tối thiểu',
                 'usage_limit' => 'nullable|integer|min:-1|not_in:0',
@@ -182,6 +185,7 @@ class AdminDiscountCodeController extends Controller
             }
 
             $validated = $validator->validated();
+            $validated['user_id'] = $request->per_user_limit;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
 
@@ -283,6 +287,50 @@ class AdminDiscountCodeController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Lỗi khi xóa mã giảm giá: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
+    }
+    public function getUserByWebId($id)
+    {
+        try {
+            $user = User::where('web_id', $id)->get();
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Lấy danh sách user không thành công.',
+                    'status' => false
+                ], 400);
+            }
+            return response()->json([
+                'message' => 'Lấy danh sách user thành công.',
+                'status' => true,
+                'data' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+                'status' => false
+            ], 500);
+        }
+    }
+    public function getWebId($api_key)
+    {
+        try {
+            $web = Web::where('api_key', $api_key)->first();
+            if (!$web) {
+                return response()->json([
+                    'message' => 'Lấy web_id không thành công.',
+                    'status' => false
+                ], 400);
+            }
+            return response()->json([
+                'message' => 'Lấy web_id thành công.',
+                'status' => true,
+                'data' => $web
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
                 'status' => false
             ], 500);
         }

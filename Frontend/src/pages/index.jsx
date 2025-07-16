@@ -61,7 +61,14 @@ import ActiveAcc from "./Clients/ResetPassword/ActiveAcc";
 import ActivateWebPage from "./Clients/ActiveDomain/ActivateWebPage";
 import ChatComponent from "./Chat/Chat";
 import SearchPage from "./Clients/SearchPage/SearchPage ";
+import RolesPage from "./Admin/Authorization/RolesPage";
+import PermissionsPage from "./Admin/Authorization/PermissionsPage";
+import UserAssignRolesPage from "./Admin/Authorization/UserRolesPage";
+
 export {
+  RolesPage,
+  PermissionsPage,
+  UserAssignRolesPage,
   SearchPage,
   ChatComponent,
   ActivateWebPage,

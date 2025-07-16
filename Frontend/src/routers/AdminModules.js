@@ -99,8 +99,54 @@ const UpdateProductBrowse = React.lazy(() =>
 const AgentDashboardPage = React.lazy(() =>
   import("../pages/AgentDashboard/AgentDashboardPage")
 );
+const RolesPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/RolesPage")
+);
+// const { UserListPage } = React.lazy(() =>
+//   import("../pages/Admin/Authorization/UserRolesPage")
+// );
+import { UserListPage } from "../pages/Admin/Authorization/UserRolesPage";
+const PermissionsPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/PermissionsPage")
+);
+const AuthorizationDashboardPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/AuthorizationDashboardPage")
+);
 
 export const adminModules = [
+  {
+    name: "authorization/permissions",
+    list: PermissionsPage,
+    create: NotFound, // Không cần trang riêng
+    edit: NotFound, // Không cần trang riêng
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization", // Route: /admin/authorization
+    list: AuthorizationDashboardPage, // Trang tổng quan sẽ là trang chính
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization/roles",
+    list: RolesPage,
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization/users",
+    list: UserListPage,
+    // Trang gán quyền sẽ được xử lý bằng route tùy chỉnh bên dưới
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
   {
     name: "discountcode",
     list: DiscountCodePage,

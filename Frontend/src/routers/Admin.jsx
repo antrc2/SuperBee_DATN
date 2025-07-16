@@ -8,6 +8,8 @@ import AppLayout from "@layouts/Admin/AppLayout";
 // import Home from "@pages/Admin/Dashboard/Home"; // <-- Xóa dòng này
 import ProtectedRoute from "@components/common/ProtectedRoute";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { UserAssignRolesPage } from "../pages/Admin/Authorization/UserRolesPage";
+import UserManagementPage from "../pages/Admin/Authorization/UserManagementPage";
 // import { NotFound } from "../pages"; // <-- Xóa dòng này
 
 // Lazy load Home và NotFound
@@ -32,6 +34,24 @@ const adminRoutes = [
             {" "}
             {/* Suspense cho Home */}
             <Home />
+          </Suspense>
+        ),
+      },
+      {
+        path: "authorization/users/:userId/assign",
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Suspense fallback={<div>Đang tải...</div>}>
+              <UserAssignRolesPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "authorization/users/:userId/manage",
+        element: (
+          <Suspense fallback={<div>Đang tải...</div>}>
+            <UserManagementPage />
           </Suspense>
         ),
       },

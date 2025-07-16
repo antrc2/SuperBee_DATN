@@ -478,4 +478,81 @@
     border-color: var(--color-border-hover);
     color: var(--color-text-primary);
   }
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(110%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutToRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(110%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes progressBarShrink {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  /* --- Animation Classes --- */
+  .toast-enter {
+    animation: slideInFromRight 0.5s ease-out forwards;
+  }
+
+  .toast-exit {
+    animation: slideOutToRight 0.5s ease-in forwards;
+  }
+
+  .progress-bar-animate {
+    animation: progressBarShrink linear forwards;
+  }
+
+  /* --- Themed Shadow for Modals/Popups --- */
+  .shadow-themed {
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--color-text-primary)
+            20%, transparent),
+      0 8px 10px -6px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
+  }
+
+  /* --- Modal Button --- */
+  .modal-button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .modal-button-confirm {
+    background: var(--gradient-button);
+    color: var(--color-accent-text);
+  }
+  .modal-button-confirm:hover {
+    filter: brightness(1.1);
+  }
+
+  .modal-button-cancel {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .modal-button-cancel:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
 }

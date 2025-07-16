@@ -75,6 +75,11 @@ const navItems = [
     name: "Post",
     path: "/admin/post",
   },
+  {
+    icon: <Newspaper />,
+    name: "Authorization",
+    path: "/admin/authorization",
+  },
 ];
 
 const AppSidebar = () => {

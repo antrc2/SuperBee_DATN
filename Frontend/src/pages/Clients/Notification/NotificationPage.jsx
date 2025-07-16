@@ -1,71 +1,188 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Search } from "lucide-react";
+import clsx from "clsx"; // clsx là một tiện ích nhỏ để nối các tên lớp lại với nhau có điều kiện
 import NotificationItem from "../../../components/Client/Notification/NotificationItem";
 import Breadcrumbs from "../../../utils/Breadcrumbs";
 // Import file cấu hình
 import { NOTIFICATION_TYPES } from "../../../config/notification.jsx";
+import { useHome } from "../../../contexts/HomeContext.jsx";
 
-// Mock Data (Dữ liệu giả)
-const MOCK_NOTIFICATIONS = [
-  {
-    id: 1,
-    type: "promotion",
-    content:
-      "🔥 Giảm giá 50% tất cả các gói dịch vụ trong dịp lễ! Đừng bỏ lỡ cơ hội vàng để nâng cấp tài khoản của bạn.",
-    published_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    is_read: false,
-  },
-  {
-    id: 2,
-    type: "system",
-    content:
-      "Bảo trì hệ thống định kỳ sẽ diễn ra vào lúc 02:00 sáng mai. Dịch vụ có thể bị gián đoạn trong ít phút.",
-    published_at: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    is_read: false,
-  },
-  {
-    id: 3,
-    type: "alert",
-    content:
-      "Chúng tôi phát hiện một lần đăng nhập đáng ngờ từ một thiết bị lạ. Vui lòng kiểm tra và bảo mật tài khoản của bạn ngay lập tức.",
-    published_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    is_read: false,
-  },
-  {
-    id: 4,
-    type: "info",
-    content:
-      "Chào mừng bạn đến với phiên bản mới của trang web! Khám phá ngay các tính năng được cập nhật để có trải nghiệm tốt hơn.",
-    published_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    is_read: true,
-  },
-];
+const ITEMS_PER_PAGE = 5; // Số lượng thông báo trên mỗi trang
 
+// --- COMPONENT PHÂN TRANG ---
+// Component con để xử lý logic và giao diện của phân trang
+const Pagination = ({ currentPage, pageCount, onPageChange }) => {
+  if (pageCount <= 1) {
+    return null; // Không hiển thị phân trang nếu chỉ có 1 trang
+  }
+
+  const handlePageChange = (page) => {
+    if (page >= 1 && page <= pageCount) {
+      onPageChange(page);
+    }
+  };
+
+  // Tạo ra danh sách các số trang để hiển thị
+  const renderPageNumbers = () => {
+    const pageNumbers = [];
+    const maxPagesToShow = 5; // Số lượng nút trang tối đa hiển thị
+    const ellipsis = (
+      <span key="ellipsis" className="px-4 py-2 text-secondary">
+        ...
+      </span>
+    );
+
+    if (pageCount <= maxPagesToShow + 2) {
+      for (let i = 1; i <= pageCount; i++) {
+        pageNumbers.push(
+          <button
+            key={i}
+            onClick={() => handlePageChange(i)}
+            className={clsx("px-4 py-2 rounded-lg text-sm w-auto", {
+              "action-button-primary shadow-md": i === currentPage,
+              "border-hover bg-input text-secondary": i !== currentPage,
+            })}
+          >
+            {i}
+          </button>
+        );
+      }
+    } else {
+      // Logic hiển thị phức tạp hơn: 1 ... 4 5 6 ... 10
+      pageNumbers.push(
+        <button
+          key={1}
+          onClick={() => handlePageChange(1)}
+          className={clsx("px-4 py-2 rounded-lg text-sm w-auto", {
+            "action-button-primary shadow-md": 1 === currentPage,
+            "border-hover bg-input text-secondary": 1 !== currentPage,
+          })}
+        >
+          1
+        </button>
+      );
+
+      if (currentPage > 3) {
+        pageNumbers.push(ellipsis);
+      }
+
+      let startPage = Math.max(2, currentPage - 1);
+      let endPage = Math.min(pageCount - 1, currentPage + 1);
+
+      for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(
+          <button
+            key={i}
+            onClick={() => handlePageChange(i)}
+            className={clsx("px-4 py-2 rounded-lg text-sm w-auto", {
+              "action-button-primary shadow-md": i === currentPage,
+              "border-hover bg-input text-secondary": i !== currentPage,
+            })}
+          >
+            {i}
+          </button>
+        );
+      }
+
+      if (currentPage < pageCount - 2) {
+        pageNumbers.push(ellipsis);
+      }
+
+      pageNumbers.push(
+        <button
+          key={pageCount}
+          onClick={() => handlePageChange(pageCount)}
+          className={clsx("px-4 py-2 rounded-lg text-sm w-auto", {
+            "action-button-primary shadow-md": pageCount === currentPage,
+            "border-hover bg-input text-secondary": pageCount !== currentPage,
+          })}
+        >
+          {pageCount}
+        </button>
+      );
+    }
+
+    return pageNumbers;
+  };
+
+  return (
+    <div className="mt-8 flex justify-center items-center space-x-2">
+      <button
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-4 py-2 rounded-lg border-hover bg-input text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Trước
+      </button>
+      {renderPageNumbers()}
+      <button
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === pageCount}
+        className="px-4 py-2 rounded-lg border-hover bg-input text-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Sau
+      </button>
+    </div>
+  );
+};
+
+// --- COMPONENT TRANG CHÍNH ---
 const NotificationPage = () => {
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
-  const [filteredNotifications, setFilteredNotifications] =
-    useState(MOCK_NOTIFICATIONS);
+  const { notifications } = useHome();
+
+  // State cho các bộ lọc
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [filterReadStatus, setFilterReadStatus] = useState("all"); // State mới cho trạng thái đọc
   const [sortOrder, setSortOrder] = useState("newest");
 
-  useEffect(() => {
-    let result = [...notifications];
+  // State cho phân trang
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Sử dụng useMemo để tính toán danh sách thông báo đã được lọc và sắp xếp
+  // Chỉ tính toán lại khi các bộ lọc hoặc dữ liệu gốc thay đổi
+  const filteredNotifications = useMemo(() => {
+    let result = [...(notifications?.notifications || [])];
+
+    // 1. Lọc theo từ khóa tìm kiếm
     if (searchTerm) {
       result = result.filter((n) =>
         n.content.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
+
+    // 2. Lọc theo loại thông báo
     if (filterType !== "all") {
       result = result.filter((n) => n.type === filterType);
     }
+
+    // 3. Lọc theo trạng thái đã đọc / chưa đọc
+    if (filterReadStatus !== "all") {
+      const isRead = filterReadStatus === "read";
+      result = result.filter((n) => n.is_read === isRead);
+    }
+
+    // 4. Sắp xếp
     result.sort((a, b) => {
       const dateA = new Date(a.published_at);
       const dateB = new Date(b.published_at);
       return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
     });
-    setFilteredNotifications(result);
-  }, [searchTerm, filterType, sortOrder, notifications]);
+
+    return result;
+  }, [searchTerm, filterType, sortOrder, notifications, filterReadStatus]);
+
+  // Reset về trang 1 mỗi khi bộ lọc thay đổi
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, sortOrder, filterReadStatus]);
+
+  // Tính toán các thông báo sẽ hiển thị trên trang hiện tại và tổng số trang
+  const pageCount = Math.ceil(filteredNotifications.length / ITEMS_PER_PAGE);
+  const displayedNotifications = filteredNotifications.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
@@ -81,8 +198,9 @@ const NotificationPage = () => {
 
       {/* Filter Section */}
       <div className="section-bg mb-8 p-4 sm:p-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
-          <div className="md:col-span-3 lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
+          {/* Search Input */}
+          <div className="lg:col-span-2">
             <label
               htmlFor="search"
               className="block text-sm font-semibold text-secondary mb-2"
@@ -103,6 +221,8 @@ const NotificationPage = () => {
               />
             </div>
           </div>
+
+          {/* Type Filter */}
           <div>
             <label
               htmlFor="type"
@@ -117,7 +237,6 @@ const NotificationPage = () => {
               onChange={(e) => setFilterType(e.target.value)}
             >
               <option value="all">Tất cả</option>
-              {/* Danh sách option được tạo tự động từ file cấu hình */}
               {Object.values(NOTIFICATION_TYPES)
                 .filter((type) => type.showInFilter)
                 .map((type) => (
@@ -127,7 +246,29 @@ const NotificationPage = () => {
                 ))}
             </select>
           </div>
+
+          {/* Read Status Filter (MỚI) */}
           <div>
+            <label
+              htmlFor="readStatus"
+              className="block text-sm font-semibold text-secondary mb-2"
+            >
+              Trạng thái
+            </label>
+            <select
+              id="readStatus"
+              className="w-full px-4 py-3 bg-input text-input border-hover rounded-lg focus:outline-none"
+              value={filterReadStatus}
+              onChange={(e) => setFilterReadStatus(e.target.value)}
+            >
+              <option value="all">Tất cả</option>
+              <option value="unread">Chưa đọc</option>
+              <option value="read">Đã đọc</option>
+            </select>
+          </div>
+
+          {/* Sort Order */}
+          <div className="md:col-start-2 lg:col-start-auto">
             <label
               htmlFor="sort"
               className="block text-sm font-semibold text-secondary mb-2"
@@ -149,15 +290,15 @@ const NotificationPage = () => {
 
       {/* Notifications List */}
       <div className="space-y-4">
-        {filteredNotifications.length > 0 ? (
-          filteredNotifications.map((notification) => (
+        {displayedNotifications.length > 0 ? (
+          displayedNotifications.map((notification) => (
             <NotificationItem
               key={notification.id}
               notification={notification}
             />
           ))
         ) : (
-          <div className="text-center py-16 section-bg">
+          <div className="text-center py-16 section-bg rounded-lg">
             <p className="text-secondary">
               Không tìm thấy thông báo nào phù hợp.
             </p>
@@ -165,33 +306,12 @@ const NotificationPage = () => {
         )}
       </div>
 
-      {/* Pagination (Giao diện tĩnh) */}
-      <div className="mt-8 flex justify-center items-center space-x-2">
-        <a
-          href="#"
-          className="px-4 py-2 rounded-lg border-hover bg-input text-secondary"
-        >
-          Trước
-        </a>
-        <a
-          href="#"
-          className="px-4 py-2 rounded-lg action-button-primary text-sm w-auto"
-        >
-          1
-        </a>
-        <a
-          href="#"
-          className="px-4 py-2 rounded-lg border-hover bg-input text-secondary"
-        >
-          2
-        </a>
-        <a
-          href="#"
-          className="px-4 py-2 rounded-lg border-hover bg-input text-secondary"
-        >
-          Sau
-        </a>
-      </div>
+      {/* Pagination (MỚI) */}
+      <Pagination
+        currentPage={currentPage}
+        pageCount={pageCount}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

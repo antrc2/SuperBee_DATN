@@ -42,6 +42,7 @@ export function HomeProvider({ children }) {
     count: 0,
     notifications: [],
   });
+  console.log("🚀 ~ HomeProvider ~ notifications:", notifications);
   const {
     data: homeData,
     isLoading: isLoadingHome,

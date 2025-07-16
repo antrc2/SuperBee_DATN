@@ -1,7 +1,7 @@
 // src/layouts/AuthLayout.jsx
 
 import { Outlet } from "react-router-dom";
-import chi from "@assets/tn/chitos.png"; // Điều chỉnh đường dẫn nếu cần
+import chi from "@assets/tn/chitos.gif"; // Điều chỉnh đường dẫn nếu cần
 import { useClientTheme } from "../../contexts/ClientThemeContext";
 
 export default function AuthLayout() {
@@ -15,7 +15,7 @@ export default function AuthLayout() {
           <Outlet />
         </div>
 
-        {/* Phần bên phải chứa ảnh, chỉ hiển thị trên desktop */}
+        {/* Phần bên phải chứa ảnh, chỉ hiển thị trên desktop
         <div className="relative hidden items-center justify-center lg:flex lg:w-1/2">
           <img
             src={chi}
@@ -23,14 +23,7 @@ export default function AuthLayout() {
             className="h-full max-h-screen w-full object-contain"
             loading="eager"
           />
-        </div>
-      </div>
-      <div className="fixed z-50 hidden bottom-6 right-6 sm:block">
-        <select value={theme} onChange={(e) => setTheme(e.target.value)}>
-          <option value="light">Sáng</option>
-          <option value="dark">Tối</option>
-          <option value="theme-pink">Hồng</option>
-        </select>
+        </div> */}
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "@utils/http";
+import { FilePenLine, Eye, Lock, Key } from "lucide-react";
+
 
 const DiscountCodePage = () => {
   const [discountCodes, setDiscountCodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
 
   useEffect(() => {
     const fetchDiscountCodes = async () => {
@@ -105,34 +108,42 @@ const handleUpdate = async (id) => {
               <td className="px-3 py-2">{d.start_date}</td>
               <td className="px-3 py-2">{d.end_date}</td>
               <td className="px-3 py-2">{d.status===1 ? "Hoạt động" :"Không hoạt động"}</td>
-              <td className="px-3 py-2 text-center space-x-2">
-                <Link to={`/admin/discountcode/${d.id}/edit`}>
-                  <button className="bg-yellow-400 px-3 py-1 rounded hover:bg-yellow-500 text-white">
-                    Sửa
-                  </button>
-                </Link>
-                <Link to={`/admin/discountcode/${d.id}`}>
-                  <button className="bg-yellow-400 px-3 py-1 rounded hover:bg-yellow-500 text-white">
-                    Chi tiết
-                  </button>
-                </Link>
-                {d.status === 1 ? (
-                   <button
-                  className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-white"
-                  onClick={() => handleDelete(d.id)}
-                >
-                  Xoá
-                </button>
-                ) : (
-                   <button
-                  className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-white"
-                  onClick={() => handleUpdate(d.id)}
-                >
-                  Khôi phục
-                </button>
-                ) }
-               
-              </td>
+              <td className="px-3 py-2 text-center space-x-3">
+  <Link
+    to={`/admin/discountcode/${d.id}/edit`}
+    className="inline-block text-yellow-500 hover:text-yellow-600"
+    title="Sửa"
+  >
+    <FilePenLine size={20} />
+  </Link>
+
+  <Link
+    to={`/admin/discountcode/${d.id}`}
+    className="inline-block text-blue-500 hover:text-blue-600"
+    title="Chi tiết"
+  >
+    <Eye size={20} />
+  </Link>
+
+  {d.status === 1 ? (
+    <span
+      onClick={() => handleDelete(d.id)}
+      className="inline-block text-red-500 hover:text-red-600 cursor-pointer"
+      title="Xoá"
+    >
+      <Lock size={20} />
+    </span>
+  ) : (
+    <span
+      onClick={() => handleUpdate(d.id)}
+      className="inline-block text-green-500 hover:text-green-600 cursor-pointer"
+      title="Khôi phục"
+    >
+      <Key size={20} />
+    </span>
+  )}
+</td>
+
             </tr>
           ))}
         </tbody>

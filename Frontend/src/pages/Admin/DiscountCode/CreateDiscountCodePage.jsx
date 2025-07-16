@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@utils/http";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 const initialState = {
   code: "",
@@ -13,13 +14,47 @@ const initialState = {
   start_date: "",
   end_date: "",
   status: 1,
+   target_user_id: -1,
 };
 
 const CreateDiscountCodePage = () => {
+  const [users, setUsers] = useState([]);
+  const { pop, conFim } = useNotification();
   const [form, setForm] = useState(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [userLoading, setUserLoading] = useState(true);
   const navigate = useNavigate();
+  useEffect(() => {
+  const fetchUsers = async () => {
+    try {
+      setUserLoading(true); // bật loading
+      const apiKey = sessionStorage.getItem("web");
+     if (!apiKey) {
+        console.error("Không tìm thấy API key trong sessionStorage");
+        return;
+      }
+
+      // Gọi API để lấy web info dựa trên api_key
+      const webRes = await api.get(`/admin/discountcode/web/${apiKey}`);
+      const webId = webRes.data?.data?.id;
+
+      if (!webId) {
+        console.error("Không tìm thấy web_id tương ứng");
+        return;
+      }
+
+      // Dùng web_id để lấy danh sách người dùng
+      const userRes = await api.get(`/admin/discountcode/user/${webId}`);
+      setUsers(userRes.data?.data);
+    } catch (err) {
+      console.error("Lỗi khi tải danh sách người dùng:", err);
+    }
+  };
+
+  fetchUsers();
+}, []);
+
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -61,11 +96,12 @@ const CreateDiscountCodePage = () => {
         start_date: form.start_date,
         end_date: form.end_date,
         status: Number(form.status),
+        target_user_id: Number(form.target_user_id), 
       };
 
 
       await api.post("/admin/discountcode", payload);
-      alert("Tạo mã giảm giá thành công!");
+      pop("Tạo mã giảm giá thành công!",'s');
       navigate("/admin/discountcode");
     } catch (err) {
       setError(err.response?.data?.message || "Có lỗi xảy ra!");
@@ -139,6 +175,22 @@ const CreateDiscountCodePage = () => {
                 placeholder="-1 là không giới hạn"
               />
             </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Áp dụng cho</label>
+            <select
+              name="target_user_id"
+              value={form.target_user_id}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-md"
+            >
+              <option value={-1}>Tất cả người dùng</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name || user.email || `Người dùng #${user.id}`}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

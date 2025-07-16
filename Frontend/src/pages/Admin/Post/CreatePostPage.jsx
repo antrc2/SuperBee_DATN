@@ -33,6 +33,7 @@ import 'froala-editor/js/plugins/video.min.js';
 import 'froala-editor/js/plugins/line_breaker.min.js';
 import 'froala-editor/js/plugins/word_paste.min.js';
 import 'froala-editor/js/plugins/save.min.js';
+import { useNotification } from '../../../contexts/NotificationContext';
 
 // Khởi tạo TurndownService
 const turndownService = new TurndownService({
@@ -75,7 +76,7 @@ const processImageContent = (htmlContent) => {
 
 export default function CreatePostPage() {
     const navigate = useNavigate();
-
+    const { pop, conFim } = useNotification();
     // State cho danh mục
     const [categories, setCategories] = useState([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -194,27 +195,18 @@ export default function CreatePostPage() {
         setGlobalError(null);
 
         try {
-            console.log('Chuẩn bị gọi API tạo danh mục với dữ liệu:', {
-                name: newCategoryName.trim(),
-                slug: slugify(newCategoryName.trim()),
-                description: newCategoryDescription.trim(),
-            });
-
             const response = await api.post("/admin/categoryPost/new", {
                 name: newCategoryName.trim(),
                 slug: slugify(newCategoryName.trim()),
                 description: newCategoryDescription.trim(),
             });
-
-            console.log('API tạo danh mục thành công, phản hồi:', response.data);
-
             const createdCategory = response.data.data || response.data;
             setCategories((prevCategories) => [...prevCategories, createdCategory]);
             setSelectedCategoryId(createdCategory.id.toString());
             setShowNewCategoryForm(false);
             setNewCategoryName('');
             setNewCategoryDescription('');
-            alert('Danh mục đã được tạo thành công!');
+            pop('Danh mục đã được tạo thành công!','s');
         } catch (error) {
             console.error('Lỗi khi tạo danh mục:', error.response?.data || error.message);
             if (error.response && error.response.status === 422) {
@@ -231,7 +223,6 @@ export default function CreatePostPage() {
             }
         } finally {
             setSubmittingPost(false);
-            console.log('--- Kết thúc handleCreateCategory ---');
         }
     };
 
@@ -290,7 +281,7 @@ export default function CreatePostPage() {
             });
 
             if (response.status === 201 || response.status === 200) {
-                alert('Bài viết đã được tạo thành công!');
+                pop('Bài viết đã được tạo thành công!','s');
                 navigate("/admin/post");
                 setPostTitle('');
                 setPostContent('');

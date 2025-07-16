@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "../../../utils/http";
 import { ImagePlus, PlusCircle, X, Eye, EyeOff } from "lucide-react";
 
-
 const MAX_IMAGES = 15;
 
 export default function CreateFormProducts({
@@ -14,7 +13,7 @@ export default function CreateFormProducts({
   const [formData, setFormData] = useState({
     category_id: "",
     price: "",
-    import_price:"",
+    import_price: "",
     sale: "",
     username: "",
     password: "",
@@ -76,7 +75,7 @@ export default function CreateFormProducts({
   // Load initial data for editing
   useEffect(() => {
     if (initialData) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         category_id: initialData.category_id || "",
         import_price: initialData.import_price || "",
@@ -177,11 +176,13 @@ export default function CreateFormProducts({
       "image/svg+xml",
       "image/avif",
       "image/heic",
-      "image/heif"
+      "image/heif",
     ];
-    const validFiles = files.filter(f => allowedTypes.includes(f.type));
+    const validFiles = files.filter((f) => allowedTypes.includes(f.type));
     if (validFiles.length !== files.length) {
-      alert("Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic");
+      alert(
+        "Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic"
+      );
     }
     const total = existingImages.length + newImages.length + validFiles.length;
     if (total > MAX_IMAGES) return alert(`Chỉ được tối đa ${MAX_IMAGES} ảnh.`);
@@ -233,7 +234,7 @@ export default function CreateFormProducts({
   const renderCategory = (cats, lvl = 0) =>
     cats.flatMap((cat) => [
       <option key={cat.id} value={cat.id}>
-        {" ".repeat(lvl * 4)}
+        {"".repeat(lvl * 4)}
         {cat.name}
       </option>,
       ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),

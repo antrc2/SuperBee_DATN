@@ -196,6 +196,7 @@ export default function ProductDetail() {
 
   const nextImage = () =>
     product && setSelectedImageIndex((p) => (p + 1) % product.images.length);
+
   const prevImage = () =>
     product &&
     setSelectedImageIndex(

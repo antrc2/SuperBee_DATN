@@ -352,7 +352,7 @@ export default function Pay() {
       return;
     }
 
-    if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
+    // if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
 
     try {
       const response = await api.post("/orders/purchase", {

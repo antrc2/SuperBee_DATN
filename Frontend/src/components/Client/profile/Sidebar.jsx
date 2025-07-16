@@ -4,7 +4,6 @@ import { NavLink } from "react-router-dom";
 import { User, Lock, Wallet, Package, LogOut, Coins, Copy, X } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import { useNotification } from "@contexts/NotificationContext";
-
 import { useState } from "react";
 
 export default function Sidebar() {
@@ -88,6 +87,11 @@ export default function Sidebar() {
                 <span>Tiếp thị liên kết</span>
               </span>
             </button>
+            {/* Affiliate History Link */}
+            <NavLink to="/info/affiliate-history" className={navLinkClass}>
+              <Wallet className="h-5 w-5" />
+              <span>Lịch sử tiếp thị</span>
+            </NavLink>
           </div>
         </div>
         <div>
@@ -120,7 +124,7 @@ export default function Sidebar() {
       {/* Affiliate Modal */}
       {showAffiliate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+          <div className="bg-gradient-header rounded-xl shadow-lg p-6 w-full max-w-md relative">
             <button
               className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
               onClick={() => setShowAffiliate(false)}

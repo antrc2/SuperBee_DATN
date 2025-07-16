@@ -68,7 +68,7 @@ abstract class Controller
         }
     }
 
-    public function uploadFile(UploadedFile $file, string $directory): ?string
+    public function uploadFile(UploadedFile $file, string $directory, bool $thread = True): ?string
     {
         try {
             $api_url = env('PYTHON_API');
@@ -76,7 +76,7 @@ abstract class Controller
                 'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
-            )->post("{$api_url}/upload_file", ["folder" => $directory]);
+            )->post("{$api_url}/upload_file", ["folder" => $directory,'thread' => $thread ? 'true' : 'false',]);
             $response = json_decode($response);
             return $response->url;
         } catch (\Throwable $th) {

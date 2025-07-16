@@ -39,7 +39,7 @@ class S3Controller:
         # Tính MD5
         md5_hash = hashlib.md5(ms_bytes).hexdigest()
         return md5_hash
-    async def add(self, file, folder):
+    async def add(self, file, folder,thread):
         # lấy phần mở rộng và random tên như cũ
         file_extension = file.filename.split(".")[-1]
         random_str = self.random_str()
@@ -58,11 +58,14 @@ class S3Controller:
                 return {
                     "status": False,
                     "message": f"File {file.filename} chứa nội dung không hợp lệ",
-                    "url": None
+                    "url": ""
                 }
+        if (thread):
 
         # Upload lên S3 (dùng lại data)
-        Thread(target=self.upload,args=(BytesIO(data),path)).start()
+            Thread(target=self.upload,args=(BytesIO(data),path)).start()
+        else :
+            self.upload(BytesIO(data),path)
         # def _upload():
         #     # mỗi lần upload, tạo BytesIO mới vì upload_fileobj có thể đọc đến EOF
         #     self.s3_client.upload_fileobj(BytesIO(data), self.aws_bucket, path)
@@ -102,11 +105,11 @@ class S3Controller:
     #                 "url": file_url,
     #                 "filename": random_str + file_extension
     #             }
-    async def uploads(self,files,folder):
+    async def uploads(self,files,folder,thread):
         responses = []
         for file in files:
-            responses.append( await self.add(file, folder))
-        print(responses)
+            responses.append( await self.add(file, folder,thread))
+        # print(responses)
         return responses
             # await self.detect_file(file)
         # return "Xong"

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\DonatePromotion;
+use App\Models\Notification;
 use App\Models\RechargeBank;
 use App\Models\RechargeCard;
 use Illuminate\Http\Request;
@@ -99,6 +100,7 @@ class AdminDonatePromotionController extends Controller
                 "per_user_limit"=>$validatedData['per_user_limit'],
                 "total_used"=>$validatedData['total_used']
             ]);
+    
             return response()->json([
                 "status" => True,
                 "message" => "Tạo khuyến mãi nạp thẻ thành công"

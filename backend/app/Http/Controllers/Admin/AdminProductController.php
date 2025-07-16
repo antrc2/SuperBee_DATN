@@ -376,7 +376,7 @@ class AdminProductController extends Controller
                 "sku" => $sku,
                 "import_price" => $validatedData['import_price'], 
                 "price" => $validatedData['price'],
-                "sale" => $validatedData['sale'] ? $validatedData['sale'] != 0 & $validatedData['sale'] != null : null ,
+                "sale" => $validatedData['sale'] ? $validatedData['sale'] != 0 && $validatedData['sale'] != null  : null ,
                 "web_id" => $request->web_id,
                 'status' => 1, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,

@@ -1,5 +1,6 @@
 import React from "react";
 
+
 // Thay đổi các import trực tiếp thành React.lazy
 const Home = React.lazy(() => import("@pages/Clients/Home/Home"));
 const RechargeCard = React.lazy(() =>
@@ -50,8 +51,12 @@ const UnauthorizedPage = React.lazy(() =>
   import("../pages/Error/UnauthorizedPage")
 );
 const News = React.lazy(() =>
-  import("../pages/Clients/Post/News")
-)
+  import("../pages/Clients/Post/News"));
+
+const NewDetail = React.lazy(() =>
+  import("../pages/Clients/Post/NewDetail"));
+
+
 const SearchPage = React.lazy(() =>
   import("../pages/Clients/SearchPage/SearchPage ")
 );
@@ -143,6 +148,11 @@ export const clientModules = [
   {
     path: "/news",
     view: News,
+    requiresAuth: false,
+  },
+  {
+    path: "/news/:slug",
+    view: NewDetail,
     requiresAuth: false,
   },
   {

@@ -19,15 +19,13 @@ export default function News() {
       try {
         setLoading(true);
         // Call API to get posts
-        const newsResponse = await api.get('/admin/post');
-        console.log("API /admin/post response:", newsResponse.data);
+        const newsResponse = await api.get('/post');
         const rawData = newsResponse.data?.data;
         const articlesData = Array.isArray(rawData) ? rawData : (rawData && Array.isArray(rawData.data) ? rawData.data : []);
         setNewsArticles(articlesData);
 
         // Call API to get categories
-        const categoriesResponse = await api.get('/admin/categoryPost');
-        console.log("API /admin/categoryPost response:", categoriesResponse.data);
+        const categoriesResponse = await api.get('/categoryPost');
         const categoriesData = Array.isArray(categoriesResponse.data?.data) ? categoriesResponse.data.data : [];
         if (!categoriesData.length) {
           throw new Error('Dữ liệu danh mục trống hoặc không hợp lệ');

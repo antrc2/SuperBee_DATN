@@ -33,7 +33,7 @@ export const clientRoutes = [
 
       // Áp dụng logic kiểm tra tại đây
       ...clientModules.map((e) => {
-        const View = e.view;
+        const View = e.view; 
         // Kiểm tra xem route có được đánh dấu 'requiresAuth' hay không
         const elementToRender = e.requiresAuth ? (
           <ProtectedRouteClient>

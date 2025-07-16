@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminBannerController;
 use App\Http\Controllers\Admin\AdminCategoryPostController;
+use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
@@ -28,6 +29,10 @@ use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserBannerController;
+use App\Http\Controllers\User\UserCategoryPostController;
+use App\Http\Controllers\User\UserCommentPostController;
+use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
+use App\Http\Controllers\User\UserPostController;
 use App\Http\Controllers\User\UserProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -66,6 +71,21 @@ Route::middleware('auth')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
         Route::get('/products', [HomeController::class, 'products']);
     });
+    Route::prefix('comment')->group(function () {
+        Route::post('/', [UserCommentPostController::class, "create"]);
+        Route::get('/post/{id}', [UserCommentPostController::class, "getCommentByPost"]);
+    });
+
+    Route::prefix('/post')->group(function () {
+        Route::get('/', [UserPostController::class, 'index']);
+        Route::get('/{id}', [UserPostController::class, 'show']);
+        Route::get('/category/{id}', [UserPostController::class, 'getCategoryById']);
+        Route::get('/bycategory/{id}', [UserPostController::class, 'getPostByCategory']);
+    });
+    Route::prefix('/categoryPost')->group(function () {
+        Route::get('/', [UserCategoryPostController::class, 'getCategoryPost']);
+    });
+
     Route::prefix("/categories")->group(function () {
         Route::get("/", [UserCategoryController::class, 'index']);
         Route::get("/{id}", [UserCategoryController::class, 'show']);
@@ -238,6 +258,9 @@ Route::middleware(['jwt'])->group(function () {
             Route::delete('/{id}', [AdminPostController::class, 'destroy']);
             Route::patch('/{id}/publish', [AdminPostController::class, 'publish']);
             Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish']);
+            Route::get('/category/{id}', [AdminPostController::class, 'getCategoryById']);
+            Route::get('/bycategory/{id}', [AdminPostController::class, 'getPostByCategory']);
+
 
             // ---- THÊM CÁC ROUTE UPLOAD ẢNH CHO FROALA EDITOR VÀO ĐÂY ----
             // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)

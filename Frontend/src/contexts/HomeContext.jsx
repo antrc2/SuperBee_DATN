@@ -36,12 +36,13 @@ export function HomeProvider({ children }) {
   }, [style]);
   useEffect(() => {
     fetchUserMoney();
-  }, []);
+  }, [fetchUserMoney]);
 
   const [notifications, setNotifications] = useState({
     count: 0,
     notifications: [],
   });
+  console.log("🚀 ~ HomeProvider ~ notifications:", notifications);
   const {
     data: homeData,
     isLoading: isLoadingHome,

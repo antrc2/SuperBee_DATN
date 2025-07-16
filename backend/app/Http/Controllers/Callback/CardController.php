@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Callback;
 
+use App\Events\SystemNotification;
 use App\Http\Controllers\Controller;
 use App\Models\DonatePromotion;
+use App\Models\Notification;
 use App\Models\RechargeCard;
 use App\Models\User;
 use App\Models\Wallet;
@@ -27,7 +29,7 @@ class CardController extends Controller
             $amount = $request->amount;
             $declared_value = $request->declared_value;
             $donate_promotion_id = $recharge_card->donate_promotion_id;
-
+            $donate_amount = $amount;
             if (!$recharge_card) {
                 return;
             }
@@ -35,11 +37,20 @@ class CardController extends Controller
             $web_id = $recharge_card->web_id;
             $user_info = User::with("wallet")->where("id", $user_id)->first();
             $wallet_id = $user_info->wallet->id;
-            if ($donate_promotion_id !== NULL) {
-                $donate_promotion_amount = DonatePromotion::where("id",$donate_promotion_id)->first()->amount;
-                $bonus = $amount * ($donate_promotion_amount / 100);
-                $amount += $bonus;
-            }
+            $common = new CommonController();
+            $donate_promotion = DonatePromotion::where('id',$donate_promotion_id)->first();
+            // print_r($donate_promotion);
+            $result = $common->donate_promotion($donate_promotion,$user_id);
+            // print_r($result);
+            // return;
+            $donate_promotion_id = $result['donate_promotion_id'];
+            $donate_promotion_amount = $result['donate_promotion_amount'];
+            // if ($donate_promotion_id !== NULL) {
+            //     $donate_promotion_amount = DonatePromotion::where("id",$donate_promotion_id)->first()->amount;
+            $bonus = $amount * ($donate_promotion_amount / 100);
+            $amount += $bonus;
+            // }
+            DB::beginTransaction();
             if ($declared_value == $value) { // Thẻ đúng
 
 
@@ -87,9 +98,31 @@ class CardController extends Controller
                 "declared_value" => $declared_value,
                 "status" => $status,
                 'message' => $message,
+                "donate_amount"=>$donate_amount
             ]);
+            // $frontend_url = env("FRONTEND_URL");
+            // $notification = Notification::create([
+            //     "user_id"=>$user_id,
+            //     "type"=>1,
+            //     "content"=>"Nạp thẻ thành công",
+            //     "link"=> $frontend_url . "/info/transactions",
+            // ]);
+            // event(new SystemNotification(
+            //     'NOTIFICATION_PRIVATE', // Loại thông báo
+            //     [
+            //         "id"=> $notification->id,
+            //         "type"=> 1,
+            //         "content"=> "Nạp thẻ thành công",
+            //         "published_at"=> "2025-06-25T15:53:26.000000Z",
+            //         "link"=> null,
+            //         "is_read"=> false,
+            //         'user_id'=>1
+            //     ]
+            // ));
+            DB::commit();
             return;
         } catch (\Throwable $th) {
+            DB::rollBack();
             return response()->json([
                 "status"=>False,
                 'message'=>"Đã có lỗi xảy ra"
@@ -163,6 +196,7 @@ class CardController extends Controller
                     "user_id" => $request->user_id,
                     "web_id" => $request->web_id,
                     'sign' => $sign,
+                    "donate_amount"=>0,
                     "wallet_transaction_id" => null,
                     "donate_promotion_id" => $donate_promotion_id
                 ]);
@@ -190,7 +224,7 @@ class CardController extends Controller
             return response()->json([
                 'status' => False,
                 'message' => 'Đã có lỗi xảy ra',
-                // "response" => $th->getMessage()
+                "response" => $th->getMessage()
             ], 500);
         }
     }

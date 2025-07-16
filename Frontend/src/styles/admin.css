@@ -188,7 +188,20 @@ layer(base);
     @apply relative font-normal font-outfit z-1 bg-gray-50;
   }
 }
-
+.custom-scrollbar-notification::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scrollbar-notification::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-notification::-webkit-scrollbar-thumb {
+  background-color: var(--color-scrollbar-thumb);
+  border-radius: 10px;
+}
+.custom-scrollbar-notification::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-scrollbar-thumb-hover);
+}
 @utility menu-item {
   @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
 }

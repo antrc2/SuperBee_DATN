@@ -8,6 +8,8 @@ import AppLayout from "@layouts/Admin/AppLayout";
 // import Home from "@pages/Admin/Dashboard/Home"; // <-- Xóa dòng này
 import ProtectedRoute from "@components/common/ProtectedRoute";
 import { ThemeProvider } from "../contexts/ThemeContext";
+import { UserAssignRolesPage } from "../pages/Admin/Authorization/UserRolesPage";
+import UserManagementPage from "../pages/Admin/Authorization/UserManagementPage";
 // import { NotFound } from "../pages"; // <-- Xóa dòng này
 
 // Lazy load Home và NotFound
@@ -35,6 +37,24 @@ const adminRoutes = [
           </Suspense>
         ),
       },
+      {
+        path: "authorization/users/:userId/assign",
+        element: (
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <Suspense fallback={<div>Đang tải...</div>}>
+              <UserAssignRolesPage />
+            </Suspense>
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "authorization/users/:userId/manage",
+        element: (
+          <Suspense fallback={<div>Đang tải...</div>}>
+            <UserManagementPage />
+          </Suspense>
+        ),
+      },
       // cho mỗi module
 
       ...adminModules.map(
@@ -44,8 +64,6 @@ const adminRoutes = [
           create: Create,
           edit: Edit,
           show: Show,
-          browse: Browse,
-          update: Update,
           allowedRoles,
         }) => ({
           path: name,
@@ -72,14 +90,6 @@ const adminRoutes = [
               ),
             },
             {
-              path: "browse",
-              element: (
-                <Suspense fallback={<div>Đang tải trang duyệt...</div>}>
-                  <Browse />
-                </Suspense>
-              ),
-            },
-            {
               path: ":id",
               element: (
                 <Suspense fallback={<div>Đang tải chi tiết...</div>}>
@@ -92,14 +102,6 @@ const adminRoutes = [
               element: (
                 <Suspense fallback={<div>Đang tải trang chỉnh sửa...</div>}>
                   <Edit />
-                </Suspense>
-              ),
-            },
-            {
-              path: ":id/update",
-              element: (
-                <Suspense fallback={<div>Đang tải trang cập nhật...</div>}>
-                  <Update />
                 </Suspense>
               ),
             },

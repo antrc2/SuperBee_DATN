@@ -1,26 +1,38 @@
 from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
-
+from io import BytesIO
 from threading import Thread
-from controller.S3Controller import S3Controller
+from controller import S3Controller
 from cronjob import queue_money, event
 app = FastAPI()
 s3_client = S3Controller()
+from controller.ChatAssistance import router as chat_router
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
 @app.post("/upload_file")
-async def upload(file: UploadFile = File(...), folder: str = Form(...)):
-    object_name = f"uploads/{folder}/{file.filename}"
+async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
+    print(thread)
+    object_name = f"uploads/{folder}/"
 
     # # Đọc nội dung file vào bộ nhớ
     # file_content = BytesIO(await file.read())
 
-    response = await s3_client.add(file,object_name)
+    response = await s3_client.add(file,object_name,thread)
 
     return response
 
 @app.post("/upload_files")
-async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...)):
+async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
     object_name = f"uploads/{folder}/"
     # print(files)
     # for file in files:
@@ -38,7 +50,7 @@ async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...)):
     #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
-    response = await s3_client.uploads(files,object_name)
+    response = await s3_client.uploads(files,object_name,thread)
     return response
     # return "Xong"
 

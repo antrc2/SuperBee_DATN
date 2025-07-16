@@ -4,9 +4,11 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
+use App\Models\ChatRoom;
 use App\Models\Product;
 use App\Models\Wallet;
 use App\Models\Category;
+use App\Models\Message;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -19,7 +21,7 @@ class HomeController extends Controller
     {
         // ... (Giữ nguyên logic của hàm index đã tối ưu ở lần trước)
         $banners = Banner::where('web_id', $request->web_id)->where('status', 1)->orderBy('id', 'asc')->get();
-             $category = new UserCategoryController();
+        $category = new UserCategoryController();
         $categories = $category->index()->getData();
         $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
             ->select('balance', 'user_id')->orderBy('balance', 'desc')->limit(5)->get();
@@ -73,9 +75,9 @@ class HomeController extends Controller
             $searchKey = $request->query('key');
             $query->where(function ($q) use ($searchKey) {
                 $q->where('sku', 'like', '%' . $searchKey . '%')
-                  ->orWhereHas('category', function ($catQuery) use ($searchKey) {
-                      $catQuery->where('name', 'like', '%' . $searchKey . '%');
-                  });
+                    ->orWhereHas('category', function ($catQuery) use ($searchKey) {
+                        $catQuery->where('name', 'like', '%' . $searchKey . '%');
+                    });
             });
         }
 
@@ -107,8 +109,8 @@ class HomeController extends Controller
                 $query->orderBy('price', 'desc');
                 break;
             case 'featured':
-                 $query->whereNotNull('sale')->orderBy('price', 'desc');
-                 break;
+                $query->whereNotNull('sale')->orderBy('price', 'desc');
+                break;
             case 'newest':
             default:
                 $query->latest();
@@ -119,5 +121,73 @@ class HomeController extends Controller
         $products = $query->paginate($limit);
         return response()->json($products);
     }
+    // app/Http/Controllers/YourController.php
 
+public function messages(Request $request)
+{
+    try {
+        $userId = $request->user_id;
+
+        // Tối ưu eager loading: chỉ chọn các cột cần thiết từ bảng user
+        $chatRoom = ChatRoom::whereHas('participants', function ($query) use ($userId) {
+            $query->where('user_id', $userId)->where('role', 'customer');
+        })
+        ->with([
+            'messages' => function ($query) {
+                $query->orderBy('created_at', 'asc');
+            },
+            // Chỉ lấy các trường id, username, avatar_url từ user của participant
+            'participants.user:id,username,avatar_url' 
+        ])
+        ->first();
+
+        if (!$chatRoom) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy phòng chat.',
+            ], 200); // 200 OK vẫn hợp lý vì đây là trường hợp nghiệp vụ, không phải lỗi server
+        }
+
+        $agent = null;
+        $customer = null;
+        $customerParticipant = null;
+
+        foreach ($chatRoom->participants as $participant) {
+            if ($participant->role === 'agent' && $participant->user) {
+                $agent = $participant->user;
+            }
+            if ($participant->role === 'customer' && $participant->user) {
+                $customer = $participant->user;
+                $customerParticipant = $participant; // Lưu lại thông tin participant của customer
+            }
+        }
+        
+        // Tính số tin nhắn chưa đọc
+        $lastReadMessageId = $customerParticipant ? $customerParticipant->last_read_message_id : 0;
+        $unreadCount = $chatRoom->messages->where('id', '>', $lastReadMessageId)->count();
+
+
+        // Dữ liệu trả về đã gọn hơn
+        $responseData = [
+            'roomInfo' => $chatRoom, // roomInfo đã chứa messages và participants
+            'messages' => $chatRoom->messages, // Vẫn giữ lại để FE không cần đổi logic (res.data.data.messages)
+            'agentDetails' => $agent,
+            'customerDetails' => $customer,
+            'unreadCount' => $unreadCount, // Thêm số tin nhắn chưa đọc
+        ];
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Lấy thông tin chat thành công.',
+            'data' => $responseData
+        ]);
+
+    } catch (\Throwable $e) {
+        // Log lỗi để debug
+        return response()->json([
+            'status' => false,
+            'message' => "Lỗi hệ thống khi lấy thông tin chat.",
+        ], 500);
+    }
+}
 }

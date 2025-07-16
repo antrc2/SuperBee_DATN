@@ -18,6 +18,7 @@ class RechargeBank extends Model
         'transaction_reference',
         'status',
         'donate_promotion_id',
+        "donate_amount"
     ];
 
     public function walletTransaction()

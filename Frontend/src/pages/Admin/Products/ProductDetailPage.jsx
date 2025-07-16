@@ -148,7 +148,7 @@ export default function ProductDetailPage() {
           style = "bg-blue-100 text-blue-800";
           break;
         default:
-          label = "Không xác định";
+          label = "Sản phẩm bị từ chối!";
           style = "bg-gray-100 text-gray-800";
       }
 
@@ -171,7 +171,7 @@ export default function ProductDetailPage() {
         </h3>
         {product.credentials && product.credentials.length > 0 ? (
           <div>
-            {product.credentials.map((cred, index) => (
+            {product.credentials.map((cred) => (
               <div key={cred.id} className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700"></h4>
                 <dl>

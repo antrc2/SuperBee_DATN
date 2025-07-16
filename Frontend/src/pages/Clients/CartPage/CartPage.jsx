@@ -169,9 +169,9 @@ export default function CartPage() {
   );
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen ">
       <div className="max-w-screen-xl mx-auto">
-        <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row justify-between items-center gap-4 px-4 py-3">
           <h1 className="text-3xl font-bold font-heading text-primary flex items-center gap-3">
             <ShoppingCart size={32} className="text-accent" />
             Giỏ hàng ({cartItems.length})

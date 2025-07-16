@@ -29,8 +29,6 @@ import { formatCurrencyVND } from "../../../utils/hook";
 import DarkMode from "./Darkmode";
 
 export default function Header() {
-  const navigate = useNavigate();
-
   // State management
   const [dropdownStates, setDropdownStates] = useState({
     category: false,
@@ -160,7 +158,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 w-full bg-gradient-header shadow-2xl body-decorated">
+      <header className="sticky -top-[64px] z-50 w-full bg-gradient-header shadow-2xl body-decorated">
         {/* TOP ROW - Logo, Search, Actions */}
         <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-4">
           <div className="flex items-center gap-3">

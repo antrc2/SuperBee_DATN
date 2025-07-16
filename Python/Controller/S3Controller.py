@@ -25,8 +25,7 @@ class S3Controller:
             region_name=self.aws_default_region
         ).client('s3')
         self.nsfw = NSFWController()
-    async def detect_file(self,file):
-        byte_file = BytesIO( await file.read())
+    async def detect_file(self,byte_file):
         return self.nsfw.detect(byte_file)
     def upload(self,file_content,file_name):
         self.s3_client.upload_fileobj(file_content, self.aws_bucket, file_name)
@@ -40,36 +39,77 @@ class S3Controller:
         # Tính MD5
         md5_hash = hashlib.md5(ms_bytes).hexdigest()
         return md5_hash
-    async def add(self,file,folder):
-        # filename = folder+self.random_str()
+    async def add(self, file, folder,thread):
+        # lấy phần mở rộng và random tên như cũ
         file_extension = file.filename.split(".")[-1]
         random_str = self.random_str()
-        filename = folder + random_str
+        filename = f"{folder}{random_str}"
         path = f"{filename}.{file_extension}"
 
-        # byte_file = BytesIO(await file.read())
-        if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
-            if (await self.detect_file(file)):
+        # Đọc nội dung file **một lần duy nhất**
+        data = await file.read()
+        byte_buf = BytesIO(data)
+
+        # Kiểm tra NSFW trên bản sao byte_buf (nếu là ảnh)
+        if file.content_type in ("image/jpeg", "image/png", "image/webp"):
+            # cần reset con trỏ về đầu nếu NSFWController dùng trực tiếp byte_buf
+            byte_buf.seek(0)
+            if self.nsfw.detect(byte_buf):
                 return {
                     "status": False,
                     "message": f"File {file.filename} chứa nội dung không hợp lệ",
-                    "url": None
+                    "url": ""
                 }
-            else:
+        if (thread):
 
-        # pass
-                Thread(target=self.upload,args=(BytesIO(await file.read()),path)).start()
-                file_url = f"{self.aws_url.rstrip('/')}/{path}"
-                return {
-                    "status": True,
-                    "url": file_url,
-                    "filename": random_str + file_extension
-                }
-    async def uploads(self,files,folder):
+        # Upload lên S3 (dùng lại data)
+            Thread(target=self.upload,args=(BytesIO(data),path)).start()
+        else :
+            self.upload(BytesIO(data),path)
+        # def _upload():
+        #     # mỗi lần upload, tạo BytesIO mới vì upload_fileobj có thể đọc đến EOF
+        #     self.s3_client.upload_fileobj(BytesIO(data), self.aws_bucket, path)
+
+        # Thread(target=_upload, daemon=True).start()
+
+        file_url = f"{self.aws_url.rstrip('/')}/{path}"
+        return {
+            "status": True,
+            "url": file_url,
+            "filename": f"{random_str}.{file_extension}"
+        }
+
+    # async def add(self,file,folder):
+    #     # filename = folder+self.random_str()
+    #     file_extension = file.filename.split(".")[-1]
+    #     random_str = self.random_str()
+    #     filename = folder + random_str
+    #     path = f"{filename}.{file_extension}"
+    #     data = await file.read()
+    #     byte_buf = BytesIO(data)
+    #     # byte_file = BytesIO(await file.read())
+    #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+    #         if (await self.detect_file(byte_buf)):
+    #             return {
+    #                 "status": False,
+    #                 "message": f"File {file.filename} chứa nội dung không hợp lệ",
+    #                 "url": None
+    #             }
+    #         else:
+
+    #     # pass
+    #             Thread(target=self.upload,args=(byte_buf,path)).start()
+    #             file_url = f"{self.aws_url.rstrip('/')}/{path}"
+    #             return {
+    #                 "status": True,
+    #                 "url": file_url,
+    #                 "filename": random_str + file_extension
+    #             }
+    async def uploads(self,files,folder,thread):
         responses = []
         for file in files:
-            responses.append( await self.add(file, folder))
-        print(responses)
+            responses.append( await self.add(file, folder,thread))
+        # print(responses)
         return responses
             # await self.detect_file(file)
         # return "Xong"

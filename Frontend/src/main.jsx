@@ -51,6 +51,12 @@ const queryClient = new QueryClient({
     },
   },
 });
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import "dayjs/locale/vi";
+
+dayjs.extend(relativeTime);
+dayjs.locale("vi");
 // Render ứng dụng React
 createRoot(document.getElementById("root")).render(
   <StrictMode>

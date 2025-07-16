@@ -630,6 +630,9 @@ class UserOrderController extends Controller
 
                     $wallet->balance -= $total_price;
                     $wallet->save();
+                    $promotion = Promotion::where("code",$promotion_code)->get();
+                    $promotion->total_used += 1;
+                    $promotion->save();
                     // var_dump($wallet->id);
                     $wallet_transaction = WalletTransaction::create([
                         "wallet_id"=>$wallet->id,
@@ -657,6 +660,12 @@ class UserOrderController extends Controller
                         
                     ]);
 
+                    OrderQueue::create([
+                        "order_id"=>$order->id,
+                        "recieved_at"=>now()->addDays(3),
+                        "status"=>0,
+                    ]);
+
                     foreach($cart_status['carts'] as $cart){
                         $order_item = OrderItem::create([
                             "order_id"=>$order->id,
@@ -664,12 +673,12 @@ class UserOrderController extends Controller
                             "unit_price"=>$cart->unit_price,
                         ]);
 
-                        OrderQueue::create([
-                            'order_item_id'=>$order_item->id,
-                            "amount" => $cart->product->import_price,
-                            "recieved_at" => now()->addDays(3),
-                            'status'=>0
-                        ]);
+                        // OrderQueue::create([
+                        //     'order_item_id'=>$order_item->id,
+                        //     "amount" => $cart->product->import_price,
+                        //     "recieved_at" => now()->addDays(3),
+                        //     'status'=>0
+                        // ]);
 
                         Product::where('id',$cart->product_id)->update([
                             "status"=>4
@@ -677,27 +686,27 @@ class UserOrderController extends Controller
                         CartItem::where('product_id',$cart->product_id)->where('cart_id',$cart->cart_id)->delete();
                     }
 
-                    if ($affiliate == null) {
+                    // if ($affiliate == null) {
 
-                    } else {
-                        $affiliated_by = $affiliate->affiliated_by;
-                        $affiliate_amount = $total_price * 5 / 100 ;
-                        $affiliate_history =  AffiliateHistory::create([
-                            "affiliate_id"=>$affiliate->id,
-                            "commission_amount"=>$affiliate_amount,
-                            "order_id"=>$order->id
-                        ]);
+                    // } else {
+                    //     $affiliated_by = $affiliate->affiliated_by;
+                    //     $affiliate_amount = $total_price * 5 / 100 ;
+                    //     $affiliate_history =  AffiliateHistory::create([
+                    //         "affiliate_id"=>$affiliate->id,
+                    //         "commission_amount"=>$affiliate_amount,
+                    //         "order_id"=>$order->id
+                    //     ]);
 
-                        $affiliated_by_wallet = Wallet::where('user_id',$affiliated_by)->first();
-                        WalletTransaction::create([
-                            "wallet_id"=>$affiliated_by_wallet->id,
-                            "type"=>"commission",
-                            "amount"=>$affiliate_amount,
-                            "related_id"=>$affiliate_history->id,
-                            "related_type"=>"App\Models\AffiliateHistory",
-                            "status"=>1
-                        ]);
-                    }
+                    //     $affiliated_by_wallet = Wallet::where('user_id',$affiliated_by)->first();
+                    //     WalletTransaction::create([
+                    //         "wallet_id"=>$affiliated_by_wallet->id,
+                    //         "type"=>"commission",
+                    //         "amount"=>$affiliate_amount,
+                    //         "related_id"=>$affiliate_history->id,
+                    //         "related_type"=>"App\Models\AffiliateHistory",
+                    //         "status"=>1
+                    //     ]);
+                    // }
                     DB::commit();
                     return response()->json([
                         "status"=>True,

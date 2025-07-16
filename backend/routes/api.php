@@ -14,6 +14,10 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPostController;
+use App\Http\Controllers\Admin\AuthorizationDashboardController;
+use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UserPermissionController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
@@ -87,6 +91,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/{id}", [UserCategoryController::class, 'show']);
     });
     Route::prefix('/products')->group(function () {
+        Route::get("/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
     });
@@ -168,6 +173,7 @@ Route::middleware('auth')->group(function () {
             Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
+        Route::get('messages', [HomeController::class, 'messages']);
     });
 });
 
@@ -266,6 +272,46 @@ Route::middleware(['jwt'])->group(function () {
             Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug']);
             Route::Post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost']);
             Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost']);
+        });
+     Route::prefix('/authorization')->group(function () {
+            
+            // --- Dashboard ---
+            Route::get('dashboard', [AuthorizationDashboardController::class, 'index']);
+
+            // --- Quản lý Permissions ---
+            // GET /admin/authorization/permissions -> Lấy danh sách quyền
+            Route::get('permissions', [PermissionController::class, 'index']);
+            // POST /admin/authorization/permissions -> Tạo quyền mới
+            Route::post('permissions', [PermissionController::class, 'store']);
+            // PUT /admin/authorization/permissions/{permission} -> Cập nhật quyền
+            Route::put('permissions/{permission}', [PermissionController::class, 'update']);
+            // DELETE /admin/authorization/permissions/{permission} -> Xóa quyền
+            Route::delete('permissions/{permission}', [PermissionController::class, 'destroy']);
+
+            // --- Quản lý Roles ---
+            // GET /admin/authorization/roles -> Lấy danh sách vai trò
+            Route::get('roles', [RoleController::class, 'index']);
+            // POST /admin/authorization/roles -> Tạo vai trò mới
+            Route::post('roles', [RoleController::class, 'store']);
+            // GET /admin/authorization/roles/{role} -> Xem chi tiết một vai trò
+            Route::get('roles/{role}', [RoleController::class, 'show']);
+            // PUT /admin/authorization/roles/{role} -> Cập nhật vai trò
+            Route::put('roles/{role}', [RoleController::class, 'update']);
+            // DELETE /admin/authorization/roles/{role} -> Xóa vai trò
+            Route::delete('roles/{role}', [RoleController::class, 'destroy']);
+            // POST /admin/authorization/roles/{role}/permissions -> Gán quyền cho vai trò
+            Route::post('roles/{role}/permissions', [RoleController::class, 'assignPermissions']);
+
+            // --- Quản lý User và Role (cũ) ---
+            Route::get('users', [UserPermissionController::class, 'index']);
+            Route::get('users/{user}/roles', [UserPermissionController::class, 'getUserRoles']);
+            Route::post('users/{user}/roles', [UserPermissionController::class, 'assignRolesToUser']);
+            
+            // --- Quản lý User chi tiết (mới) ---
+            Route::get('users/{id}/manage', [AuthorizationDashboardController::class, 'getUserDetails']);
+            Route::post('users/{user}/manage/roles', [AuthorizationDashboardController::class, 'syncRoles']);
+            Route::post('users/{user}/manage/permissions', [AuthorizationDashboardController::class, 'syncDirectPermissions']);
+
         });
     });
 });

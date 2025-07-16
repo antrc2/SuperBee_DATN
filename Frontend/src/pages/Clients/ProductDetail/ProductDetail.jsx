@@ -27,7 +27,7 @@ import Breadcrumbs from "../../../utils/Breadcrumbs";
 
 // Component cho nội dung trong các Tab
 const TabContent = ({ product }) => {
-  const [activeTab, setActiveTab] = useState("description");
+  const [activeTab, setActiveTab] = useState("attributes");
 
   const tabs = [
     { id: "description", label: "Mô tả chi tiết", icon: FileText },
@@ -231,8 +231,8 @@ export default function ProductDetail() {
   const hasSale = product.sale > 0 && product.sale < product.price;
 
   return (
-    <div className="min-h-screen py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen py-8 ">
+      <div className="max-w-screen-xl mx-auto">
         <Breadcrumbs items={breadcrumbItems} />
 
         {/* --- KHU VỰC THÔNG TIN CHÍNH --- */}

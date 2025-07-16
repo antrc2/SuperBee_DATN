@@ -8,7 +8,7 @@ export default function ProfileLayout() {
   return (
     <ClientThemeProvider>
       {/* Sử dụng class `bg-background` từ theme để đảm bảo toàn bộ trang có màu nền đúng */}
-      <div className="bg-background min-h-screen">
+      <div className="bg-background min-h-screen ">
         <Header />
         <div className="flex flex-col md:flex-row max-w-screen-xl mx-auto py-6 px-4 gap-6">
           <Sidebar />

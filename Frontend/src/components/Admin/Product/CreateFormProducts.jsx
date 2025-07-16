@@ -10,13 +10,12 @@ export default function CreateFormProducts({
   onSubmit,
   isEditing = false,
   isLoading = false,
-  mode = "admin",
 }) {
   const [formData, setFormData] = useState({
     category_id: "",
-    price: 0,
-    import_price:0,
-    sale: 0,
+    price: "",
+    import_price:"",
+    sale: "",
     username: "",
     password: "",
     attributes: [],
@@ -80,7 +79,7 @@ export default function CreateFormProducts({
       setFormData(prev => ({
         ...prev,
         category_id: initialData.category_id || "",
-        import_price: initialData.import_price || 0,
+        import_price: initialData.import_price || "",
         username: initialData.credentials?.[0]?.username || "",
         password: initialData.credentials?.[0]?.password || "",
         attributes:
@@ -88,17 +87,14 @@ export default function CreateFormProducts({
             attribute_key: attr.attribute_key,
             attribute_value: attr.attribute_value,
           })) || [],
-        // Nếu là admin thì lấy thêm price, sale
-        ...(mode !== "partner" && {
-          price: initialData.price || 0,
-          sale: initialData.sale || 0,
-        })
+        price: initialData.price || 0,
+        sale: initialData.sale || "",
       }));
       setSelectedGame(initialData.game_code || "none");
       setExistingImages(initialData.images || []);
       setNewImages([]);
     }
-  }, [initialData, mode]);
+  }, [initialData]);
 
   useEffect(() => {
     // Bỏ qua nếu đang trong chế độ chỉnh sửa
@@ -172,9 +168,24 @@ export default function CreateFormProducts({
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files);
-    const total = existingImages.length + newImages.length + files.length;
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+      "image/webp",
+      "image/gif",
+      "image/svg+xml",
+      "image/avif",
+      "image/heic",
+      "image/heif"
+    ];
+    const validFiles = files.filter(f => allowedTypes.includes(f.type));
+    if (validFiles.length !== files.length) {
+      alert("Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic");
+    }
+    const total = existingImages.length + newImages.length + validFiles.length;
     if (total > MAX_IMAGES) return alert(`Chỉ được tối đa ${MAX_IMAGES} ảnh.`);
-    const withPreview = files.map((f) =>
+    const withPreview = validFiles.map((f) =>
       Object.assign(f, { preview: URL.createObjectURL(f) })
     );
     setNewImages((prev) => [...prev, ...withPreview]);
@@ -195,47 +206,26 @@ export default function CreateFormProducts({
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!formData.category_id) return alert("Vui lòng chọn danh mục.");
-    if (mode === "partner") {
-      if (!formData.import_price) return alert("Vui lòng nhập giá bán.");
-      if(formData.import_price>999999999) return alert("Giá phải nhỏ hơn 999.999.999đ")
-    } else {
-      if (!formData.price) return alert("Vui lòng nhập giá bán.");
-      if (!formData.import_price) return alert("Vui lòng nhập giá nhập.");
-      // Nếu có sale thì phải nhỏ hơn price
-      if (formData.sale && Number(formData.sale) >= Number(formData.price)) {
-        return alert("Giá sale phải nhỏ hơn giá bán.");
-      }
+    if (!formData.price) return alert("Vui lòng nhập giá bán.");
+    if (!formData.import_price) return alert("Vui lòng nhập giá nhập.");
+    // Nếu có sale thì phải nhỏ hơn price
+    if (formData.sale && Number(formData.sale) >= Number(formData.price)) {
+      return alert("Giá sale phải nhỏ hơn giá bán.");
     }
     if (!formData.username) return alert("Vui lòng nhập username.");
     if (!isEditing && !formData.password)
       return alert("Vui lòng nhập password.");
 
     const data = new FormData();
-    if (mode === "partner") {
-      // Partner chỉ gửi các trường cần thiết
-      data.append("category_id", formData.category_id);
-      data.append("import_price", formData.import_price);
-      data.append("username", formData.username);
-      data.append("password", formData.password);
-      data.append("attributes", JSON.stringify(formData.attributes));
-      newImages.forEach((f) => data.append("images[]", f));
-      if (isEditing)
-        data.append(
-          "existing_images",
-          JSON.stringify(existingImages.map((img) => img.image_url))
-        );
-    } else {
-      // Admin hoặc edit
-      Object.entries(formData).forEach(([k, v]) =>
-        data.append(k, typeof v === "object" ? JSON.stringify(v) : v)
+    Object.entries(formData).forEach(([k, v]) =>
+      data.append(k, typeof v === "object" ? JSON.stringify(v) : v)
+    );
+    newImages.forEach((f) => data.append("images[]", f));
+    if (isEditing)
+      data.append(
+        "existing_images",
+        JSON.stringify(existingImages.map((img) => img.image_url))
       );
-      newImages.forEach((f) => data.append("images[]", f));
-      if (isEditing)
-        data.append(
-          "existing_images",
-          JSON.stringify(existingImages.map((img) => img.image_url))
-        );
-    }
     onSubmit(data);
   };
 
@@ -326,68 +316,46 @@ export default function CreateFormProducts({
                 : renderCategory(categories)}
             </select>
           </div>
-          {/* Nếu là partner thì chỉ hiển thị ô nhập Giá Bán (import_price) */}
-          {mode === "partner" ? (
-            <div className="md:col-span-2">
-              <label htmlFor="import_price" className="block mb-1 text-sm">
-                Giá Bán
-              </label>
-              <input
-                name="import_price"
-                type="number"
-                value={formData.import_price}
-                onChange={handleChange}
-                required
-                className="w-full p-2 rounded border"
-                disabled={isEditing && (initialData?.status === 1 || initialData?.status === 4)}
-              />
-              {isEditing && (initialData?.status === 1 || initialData?.status === 4) && (
-                <p className="text-xs text-gray-500 mt-1">Không thể sửa giá khi sản phẩm đang bán hoặc đã bán.</p>
-              )}
-            </div>
-          ) : (
-            // Admin: hiển thị đủ các trường
-            <>
-              <div>
-                <label htmlFor="price" className="block mb-1 text-sm">
-                  Giá Bán
-                </label>
-                <input
-                  name="price"
-                  type="number"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-2 rounded border"
-                />
-              </div>
-              <div>
-                <label htmlFor="import_price" className="block mb-1 text-sm">
-                  Giá Nhập
-                </label>
-                <input
-                  name="import_price"
-                  type="number"
-                  value={formData.import_price}
-                  onChange={handleChange}
-                  required
-                  className="w-full p-2 rounded border"
-                />
-              </div>
-              <div>
-                <label htmlFor="sale" className="block mb-1 text-sm">
-                  Giá sale
-                </label>
-                <input
-                  name="sale"
-                  type="number"
-                  value={formData.sale}
-                  onChange={handleChange}
-                  className="w-full p-2 rounded border"
-                />
-              </div>
-            </>
-          )}
+          {/* Admin: hiển thị đủ các trường */}
+          <div>
+            <label htmlFor="import_price" className="block mb-1 text-sm">
+              Giá Nhập
+            </label>
+            <input
+              name="import_price"
+              type="number"
+              value={formData.import_price}
+              onChange={handleChange}
+              required
+              className="w-full p-2 rounded border"
+            />
+          </div>
+          <div>
+            <label htmlFor="price" className="block mb-1 text-sm">
+              Giá Bán
+            </label>
+            <input
+              name="price"
+              type="number"
+              value={formData.price}
+              onChange={handleChange}
+              required
+              className="w-full p-2 rounded border"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="sale" className="block mb-1 text-sm">
+              Giá sale
+            </label>
+            <input
+              name="sale"
+              type="number"
+              value={formData.sale}
+              onChange={handleChange}
+              className="w-full p-2 rounded border"
+            />
+          </div>
         </div>
       </div>
       {/* Phần thông tin đăng nhập */}

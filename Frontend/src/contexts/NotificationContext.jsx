@@ -1,132 +1,157 @@
-// src/components/NotificationProvider.jsx
+// src/contexts/NotificationContext.jsx
 import React, {
   createContext,
   useState,
   useCallback,
   useRef,
   useContext,
+  useEffect,
 } from "react";
 import clsx from "clsx";
 import { Info, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 
-// eslint-disable-next-line react-refresh/only-export-components
 const NotificationContext = createContext();
 
+// Component Toast đơn lẻ để quản lý state và timer của riêng nó
+function Toast({ toast, onRemove }) {
+  const [isExiting, setIsExiting] = useState(false);
+
+  useEffect(() => {
+    // Bắt đầu timer để tự động ẩn
+    const timer = setTimeout(() => {
+      setIsExiting(true); // Bắt đầu hiệu ứng thoát
+      // Sau khi hiệu ứng thoát hoàn thành (500ms), thực sự xóa toast khỏi DOM
+      setTimeout(() => onRemove(toast.id), 500);
+    }, toast.duration);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [toast, onRemove]);
+
+  const toastTypes = {
+    s: {
+      className: "alert-success", //
+      Icon: CheckCircle,
+      progressClass: "bg-tertiary", //
+    },
+    e: {
+      className: "alert-danger", //
+      Icon: XCircle,
+      progressClass: "bg-gradient-danger", //
+    },
+    i: {
+      className: "alert-info", //
+      Icon: Info,
+      progressClass: "bg-gradient-info", //
+    },
+    w: {
+      className: "alert-warning", //
+      Icon: AlertCircle,
+      progressClass: "bg-gradient-warning", //
+    },
+  };
+
+  const { className, Icon, progressClass } =
+    toastTypes[toast.type] || toastTypes.i;
+
+  return (
+    <div
+      className={clsx(
+        "alert min-w-[320px] max-w-sm rounded-lg shadow-themed flex items-start relative overflow-hidden",
+        "toast-enter",
+        isExiting && "toast-exit",
+        className
+      )}
+    >
+      <span className="mr-3 text-2xl flex-shrink-0 mt-[-2px]">
+        <Icon size={22} />
+      </span>
+      <span className="flex-1 whitespace-pre-wrap font-semibold">
+        {toast.message}
+      </span>
+      <div
+        className={clsx(
+          "absolute bottom-0 left-0 h-1 progress-bar-animate",
+          progressClass
+        )}
+        style={{ animationDuration: `${toast.duration}ms` }}
+      />
+    </div>
+  );
+}
+
 export function NotificationProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
+  // notificationQueue chứa TOÀN BỘ hàng đợi thông báo
+  const [notificationQueue, setNotificationQueue] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
   const [alertState, setAlertState] = useState(null);
-  // Sử dụng ref để tạo ID duy nhất cho mỗi thông báo
   const idRef = useRef(0);
 
-  // --- HÀM REMOVE ĐƯỢC ĐƯA LÊN TRƯỚC HÀM POP ---
-  // Hàm để xóa một thông báo toast theo ID
+  // Hàm `remove` để xóa một thông báo khỏi hàng đợi
   const remove = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id)); // Lọc bỏ toast có ID tương ứng
+    setNotificationQueue((prevQueue) => prevQueue.filter((n) => n.id !== id));
   }, []);
 
-  // Hàm để hiển thị thông báo toast
-  const pop = useCallback(
-    (message, type = "info", duration = 3000) => {
-      idRef.current += 1; // Tăng ID
-      const newToast = { id: idRef.current, message, type }; // Tạo đối tượng toast mới
+  // Hàm `pop` giờ chỉ có nhiệm vụ THÊM thông báo vào đầu hàng đợi
+  const pop = useCallback((message, type = "i", duration = 4000) => {
+    idRef.current += 1;
+    const newToast = { id: idRef.current, message, type, duration };
+    setNotificationQueue((prevQueue) => [newToast, ...prevQueue]); // Thêm vào ĐẦU hàng đợi
+  }, []);
 
-      setToasts((prev) => {
-        const next = [...prev, newToast]; // Thêm toast mới vào danh sách
-        const limitedNext = next.slice(-10); // Giới hạn chỉ hiển thị tối đa 10 toast
-
-        // Thiết lập thời gian tự động ẩn toast
-        setTimeout(() => {
-          remove(newToast.id); // <--- Giờ thì hàm remove đã được định nghĩa rồi!
-        }, duration);
-
-        return limitedNext;
-      });
-    },
-    [remove] // Phụ thuộc vào hàm remove để đảm bảo nó luôn được cập nhật
-  );
-
-  // Hàm để hiển thị hộp thoại xác nhận (Confirm Dialog)
+  // Các hàm cho Modal (Confirm, Alert)
   const conFim = useCallback((message) => {
-    return new Promise((resolve) => {
-      setConfirmState({ message, resolve }); // Lưu tin nhắn và hàm resolve của Promise
-    });
+    return new Promise((resolve) => setConfirmState({ message, resolve }));
   }, []);
 
-  // Xử lý kết quả khi người dùng nhấn nút trong hộp thoại xác nhận
   const handleConfirm = (result) => {
     if (confirmState) {
-      confirmState.resolve(result); // Giải quyết Promise với true (Xác nhận) hoặc false (Hủy)
-      setConfirmState(null); // Đóng hộp thoại xác nhận
+      confirmState.resolve(result);
+      setConfirmState(null);
     }
   };
 
-  // Hàm để hiển thị hộp thoại thông báo (Alert Dialog)
   const showAlert = useCallback((message) => {
-    return new Promise((resolve) => {
-      setAlertState({ message, resolve }); // Lưu tin nhắn và hàm resolve của Promise
-    });
+    return new Promise((resolve) => setAlertState({ message, resolve }));
   }, []);
 
-  // Xử lý khi người dùng nhấn nút "OK" trong hộp thoại thông báo
   const handleAlertClose = () => {
     if (alertState) {
-      alertState.resolve(); // Giải quyết Promise
-      setAlertState(null); // Đóng hộp thoại thông báo
+      alertState.resolve();
+      setAlertState(null);
     }
   };
+
+  // Chỉ lấy tối đa 10 thông báo từ ĐẦU hàng đợi để hiển thị
+  const visibleToasts = notificationQueue.slice(0, 10);
 
   return (
     <NotificationContext.Provider value={{ pop, conFim, showAlert }}>
       {children}
 
       {/* Container cho các thông báo Toast */}
-      <div className="fixed top-10 left-1/2 -translate-x-1/2 space-y-3 z-[9999]">
-        {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={clsx(
-              "min-w-[280px] max-w-sm p-4 rounded-lg shadow-xl flex items-start text-sm transition-all duration-300 ease-out transform",
-              {
-                "bg-green-50 text-green-800 border border-green-200":
-                  toast.type === "s",
-                "bg-red-50 text-red-800 border border-red-200":
-                  toast.type === "e",
-                "bg-blue-50 text-blue-800 border border-blue-200":
-                  toast.type === "i",
-                "bg-yellow-50 text-yellow-800 border border-yellow-200":
-                  toast.type === "w",
-              }
-            )}
-          >
-            <span className="mr-3 text-lg flex-shrink-0">
-              {toast.type === "s" && <CheckCircle size={20} />}
-              {toast.type === "e" && <XCircle size={20} />}
-              {toast.type === "i" && <Info size={20} />}
-              {toast.type === "w" && <AlertCircle size={20} />}
-            </span>
-            <span className="flex-1 whitespace-pre-wrap">{toast.message}</span>
-          </div>
+      <div className="fixed top-16 right-4 z-[9999] flex flex-col items-end space-y-3">
+        {visibleToasts.map((toast) => (
+          <Toast key={toast.id} toast={toast} onRemove={remove} />
         ))}
       </div>
 
-      {/* Hộp thoại xác nhận (Confirm Modal) */}
+      {/* Hộp thoại xác nhận (Confirm Modal) - Đã cập nhật giao diện */}
       {confirmState && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
-          <div className="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center transform scale-95 animate-scaleIn">
-            <p className="mb-6 text-lg font-medium text-gray-800">
-              {confirmState.message}
-            </p>
+          <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">
+            <p className="mb-6 text-lg text-primary">{confirmState.message}</p>
             <div className="flex justify-center space-x-4">
               <button
                 onClick={() => handleConfirm(true)}
-                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
+                className="modal-button modal-button-confirm"
               >
                 Xác nhận
               </button>
               <button
                 onClick={() => handleConfirm(false)}
-                className="px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200"
+                className="modal-button modal-button-cancel"
               >
                 Hủy
               </button>
@@ -135,16 +160,14 @@ export function NotificationProvider({ children }) {
         </div>
       )}
 
-      {/* Hộp thoại thông báo (Alert Modal) */}
+      {/* Hộp thoại thông báo (Alert Modal) - Đã cập nhật giao diện */}
       {alertState && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
-          <div className="bg-white p-8 rounded-xl shadow-2xl max-w-sm w-full text-center transform scale-95 animate-scaleIn">
-            <p className="mb-6 text-lg font-medium text-gray-800">
-              {alertState.message}
-            </p>
+          <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">
+            <p className="mb-6 text-lg text-primary">{alertState.message}</p>
             <button
               onClick={handleAlertClose}
-              className="px-8 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-200"
+              className="modal-button modal-button-confirm w-full"
             >
               OK
             </button>
@@ -158,7 +181,8 @@ export function NotificationProvider({ children }) {
 // Hook tùy chỉnh để sử dụng các hàm thông báo
 export function useNotification() {
   const context = useContext(NotificationContext);
-  if (!context)
+  if (!context) {
     throw new Error("useNotification must be used within NotificationProvider");
+  }
   return context;
 }

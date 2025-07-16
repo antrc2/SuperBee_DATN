@@ -19,7 +19,6 @@ export function AgentChatProvider({ children }) {
   const refToken = useRef(null);
   const { token, user } = useAuth();
   const [chatList, setChatList] = useState([]);
-  console.log("🚀 ~ AgentChatProvider ~ chatList:", chatList);
   const [activeChatId, setActiveChatId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

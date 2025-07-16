@@ -1,5 +1,6 @@
 import React from "react"; // <-- Thêm dòng này
 import EditCategoryPost from "../pages/Admin/CategoryPost/EditCategoryPostPage";
+import NotFound from "../pages/NotFound/NotFound";
 
 // Thay đổi các import trực tiếp thành React.lazy
 const CategoryPage = React.lazy(() =>
@@ -8,7 +9,9 @@ const CategoryPage = React.lazy(() =>
 const CreateCategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/CreateCategoryPage")
 );
-const CreateCategoryPostPage = React.lazy(() => import("@pages/Admin/CategoryPost/CreateCategoryPostPage.jsx"));
+const CreateCategoryPostPage = React.lazy(() =>
+  import("@pages/Admin/CategoryPost/CreateCategoryPostPage.jsx")
+);
 const EditCategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/EditCategoryPage")
 );
@@ -96,8 +99,54 @@ const UpdateProductBrowse = React.lazy(() =>
 const AgentDashboardPage = React.lazy(() =>
   import("../pages/AgentDashboard/AgentDashboardPage")
 );
+const RolesPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/RolesPage")
+);
+// const { UserListPage } = React.lazy(() =>
+//   import("../pages/Admin/Authorization/UserRolesPage")
+// );
+import { UserListPage } from "../pages/Admin/Authorization/UserRolesPage";
+const PermissionsPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/PermissionsPage")
+);
+const AuthorizationDashboardPage = React.lazy(() =>
+  import("../pages/Admin/Authorization/AuthorizationDashboardPage")
+);
 
 export const adminModules = [
+  {
+    name: "authorization/permissions",
+    list: PermissionsPage,
+    create: NotFound, // Không cần trang riêng
+    edit: NotFound, // Không cần trang riêng
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization", // Route: /admin/authorization
+    list: AuthorizationDashboardPage, // Trang tổng quan sẽ là trang chính
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization/roles",
+    list: RolesPage,
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "authorization/users",
+    list: UserListPage,
+    // Trang gán quyền sẽ được xử lý bằng route tùy chỉnh bên dưới
+    create: NotFound,
+    edit: NotFound,
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
   {
     name: "discountcode",
     list: DiscountCodePage,
@@ -111,12 +160,15 @@ export const adminModules = [
     list: CategoryPage,
     create: CreateCategoryPage,
     edit: EditCategoryPage,
+    show: NotFound,
     allowedRoles: ["admin"],
   },
   {
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,
+    edit: NotFound,
+    create: NotFound,
     allowedRoles: ["admin"],
   },
   {
@@ -133,8 +185,14 @@ export const adminModules = [
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,
-    browse: TrangDanhSachAccGameBrowse,
-    update: UpdateProductBrowse,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "pendingProducts",
+    list: TrangDanhSachAccGameBrowse,
+    show: UpdateProductBrowse,
+    edit: NotFound,
+    create: NotFound,
     allowedRoles: ["admin"],
   },
   {
@@ -149,19 +207,24 @@ export const adminModules = [
     name: "orders",
     list: ListOrderPage,
     show: ShowOrderPage,
+    create: NotFound,
+    edit: NotFound,
     allowedRoles: ["admin"],
   },
   {
     name: "agent",
     list: AgentDashboardPage,
     show: ShowOrderPage,
+    create: NotFound,
+    edit: NotFound,
     allowedRoles: ["admin"],
   },
   {
-    name: 'categoryPost',
+    name: "categoryPost",
     list: TrangDanhSachCategoryPost,
     create: CreateCategoryPostPage,
     edit: EditCategoryPost,
-    allowedRoles: ['admin'],
-  }
+    show: NotFound,
+    allowedRoles: ["admin"],
+  },
 ];

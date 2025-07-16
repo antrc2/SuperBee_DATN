@@ -1,14 +1,11 @@
 "use client";
 
-import { X, Gift, AlertTriangle, Info, Dot, Bell } from "lucide-react";
+import { X, Dot } from "lucide-react";
 import { useEffect, useRef } from "react";
 import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
-import "dayjs/locale/vi";
 import { Link } from "react-router-dom";
-
-dayjs.extend(relativeTime);
-dayjs.locale("vi");
+// Import cấu hình
+import { getNotificationConfig } from "../../../config/notification";
 
 export default function NotificationDropdown({
   notifications,
@@ -18,32 +15,7 @@ export default function NotificationDropdown({
 }) {
   const dropdownRef = useRef(null);
 
-  const getNotificationTypeString = (type) => {
-    switch (type) {
-      case 1:
-        return "system";
-      case 2:
-        return "promotion";
-      case 3:
-        return "alert";
-      default:
-        return "info";
-    }
-  };
-
-  const getNotificationIcon = (type) => {
-    const typeString = getNotificationTypeString(type);
-    switch (typeString) {
-      case "system":
-        return <Bell className="w-5 h-5 text-highlight" />;
-      case "promotion":
-        return <Gift className="w-5 h-5 text-accent" />;
-      case "alert":
-        return <AlertTriangle className="w-5 h-5 text-red-500" />;
-      default:
-        return <Info className="w-5 h-5 text-info" />;
-    }
-  };
+  // Giả định dayjs đã được cấu hình ở file main.jsx
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -65,6 +37,61 @@ export default function NotificationDropdown({
         document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [isOpen, onClose, isMobile]);
+
+  /**
+   * Render nội dung của một thông báo.
+   * Tùy vào cấu hình isClickable, nó sẽ được bọc trong thẻ <Link> hoặc <div>.
+   */
+  const renderNotificationContent = (notification) => {
+    // Quan trọng: Giả định notification.type là string ("system", "promotion",...)
+    // thay vì số (1, 2, 3) để khớp với file config.
+    const config = getNotificationConfig(notification.type);
+
+    // Phần JSX chung cho nội dung
+    const contentJSX = (
+      <>
+        <div className="relative flex-shrink-0 mt-1">{config.icon}</div>
+        <div className="flex-grow min-w-0">
+          <p
+            className={`text-sm leading-relaxed ${
+              !notification.is_read
+                ? "text-primary font-semibold"
+                : "text-secondary group-hover:text-primary"
+            }`}
+          >
+            {notification.content}
+          </p>
+          <div className="flex items-center gap-2 mt-2">
+            <p className="text-xs text-info font-medium">
+              {formatDate(notification.published_at)}
+            </p>
+            {config.badge && (
+              <span className={config.badge.className}>
+                {config.badge.text}
+              </span>
+            )}
+          </div>
+        </div>
+        {!notification.is_read && (
+          <div className="flex-shrink-0 ml-auto">
+            <Dot className="w-8 h-8 text-red-500 fill-current animate-pulse" />
+          </div>
+        )}
+      </>
+    );
+
+    // Quyết định render <Link> hay <div> dựa trên cấu hình
+    if (config.isClickable && notification.link) {
+      return (
+        <Link to={notification.link} className="flex items-start gap-4 w-full">
+          {contentJSX}
+        </Link>
+      );
+    }
+
+    // Nếu không thể click, render bằng thẻ div
+    return <div className="flex items-start gap-4 w-full">{contentJSX}</div>;
+  };
 
   if (!isOpen) return null;
 
@@ -100,42 +127,18 @@ export default function NotificationDropdown({
           notifications.notifications.map((notification, index) => (
             <div
               key={index}
-              className={`flex items-start gap-4 p-4 border-b border-themed/50 transition-all duration-300 cursor-pointer group
-                ${
-                  !notification.is_read
-                    ? "bg-notification-unread"
-                    : "hover:bg-primary/5"
-                }`}
+              className={`p-4 border-b border-themed/50 transition-all duration-300 group ${
+                !notification.is_read
+                  ? "bg-notification-unread"
+                  : "hover:bg-primary/5"
+              } ${
+                getNotificationConfig(notification.type).isClickable
+                  ? "cursor-pointer"
+                  : "cursor-default"
+              }`}
             >
-              <div className="relative flex-shrink-0 mt-1">
-                {getNotificationIcon(notification.type)}
-              </div>
-              <Link to={notification.link} className="flex-grow min-w-0">
-                <p
-                  className={`text-sm leading-relaxed ${
-                    !notification.is_read
-                      ? "text-primary font-semibold"
-                      : "text-secondary group-hover:text-primary"
-                  }`}
-                >
-                  {notification.content}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  <p className="text-xs text-info font-medium">
-                    {formatDate(notification.published_at)}
-                  </p>
-                  {notification.type === 2 && (
-                    <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-warning text-accent-contrast">
-                      HOT
-                    </span>
-                  )}
-                </div>
-              </Link>
-              {!notification.is_read && (
-                <div className="flex-shrink-0 ml-auto">
-                  <Dot className="w-8 h-8 text-red-500 fill-current animate-pulse" />
-                </div>
-              )}
+              {/* Gọi hàm render mới */}
+              {renderNotificationContent(notification)}
             </div>
           ))
         ) : (
@@ -149,12 +152,12 @@ export default function NotificationDropdown({
       </div>
 
       <div className="p-4 border-t border-themed bg-primary/5 backdrop-blur-sm sticky bottom-0">
-        <a
-          href="#"
+        <Link
+          to={"/notifications"}
           className="block w-full text-center text-sm font-semibold bg-gradient-button text-accent-contrast py-2.5 rounded-lg shadow-lg hover:shadow-xl transition-all"
         >
           Xem tất cả thông báo
-        </a>
+        </Link>
       </div>
     </div>
   );

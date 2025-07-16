@@ -285,7 +285,7 @@ class AdminPostController extends Controller
 
         if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
-            $imageUrl = $this->uploadFile($uploadedFile, 'froala_image');
+            $imageUrl = $this->uploadFile($uploadedFile, 'froala_image',false);
 
             if ($imageUrl) {
                 return response()->json(['link' => $imageUrl], 200);

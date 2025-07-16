@@ -199,7 +199,7 @@ class AdminProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'price'       => $validated['price'] ?? $product->price,
-                'sale' => isset($validated['sale']) && $validated['sale'] !== '' ? (float) $validated['sale'] : 0,
+                'sale' => (isset($validatedData['sale']) && $validatedData['sale'] != 0) ? $validatedData['sale'] : null,
                 'updated_by'  => $request->user_id,
             ]);
 
@@ -306,14 +306,14 @@ class AdminProductController extends Controller
             return response()->json([
                 'status'  => false,
                 'message' => 'Dữ liệu không hợp lệ',
-                'errors'  => $e->errors(),
+                // 'errors'  => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
                 'status'  => false,
                 'message' => 'Đã có lỗi xảy ra',
-                'error'   => $th->getMessage(),
+                // 'error'   => $th->getMessage(),
             ], 500);
         }
     }
@@ -376,7 +376,7 @@ class AdminProductController extends Controller
                 "sku" => $sku,
                 "import_price" => $validatedData['import_price'], 
                 "price" => $validatedData['price'],
-                "sale" => $validatedData['sale'] ? $validatedData['sale'] != 0 && $validatedData['sale'] != null  : null ,
+                "sale" => (isset($validatedData['sale']) && $validatedData['sale'] != 0) ? $validatedData['sale'] : null,
                 "web_id" => $request->web_id,
                 'status' => 1, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,
@@ -445,7 +445,7 @@ class AdminProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Dữ liệu không hợp lệ",
-                "errors" => $e->errors(),
+                // "errors" => $e->errors(),
             ], 422);
         } catch (\Throwable $th) {
             // Rollback nếu có lỗi
@@ -453,7 +453,7 @@ class AdminProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Đã có lỗi xảy ra",
-                "error" => $th->getMessage(),
+                // "error" => $th->getMessage(),
             ], 500);
         }
     }

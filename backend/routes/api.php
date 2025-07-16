@@ -122,6 +122,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+            Route::get('/getHistoryAff', [UserProfileController::class, 'getAllAffHistory']);
         });
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [DiscountCodeController::class, 'index']);

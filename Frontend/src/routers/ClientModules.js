@@ -63,6 +63,7 @@ const SearchPage = React.lazy(() =>
 const NotificationPage = React.lazy(() =>
   import("../pages/Clients/Notification/NotificationPage")
 );
+const AffiliateHistory = React.lazy(() => import("@pages/Clients/Profile/AffiliateHistory"));
 
 export const clientModules = [
   {
@@ -189,6 +190,12 @@ export const profileModule = [
   {
     path: "/info/orders",
     view: HistoryOrder,
+    requiresAuth: true,
+  },
+  // Thêm route lịch sử tiếp thị liên kết
+  {
+    path: "/info/affiliate-history",
+    view: AffiliateHistory,
     requiresAuth: true,
   },
 ];

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Models\Affiliate;
+use App\Models\AffiliateHistory;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -257,4 +259,41 @@ class UserProfileController extends Controller
             ], 500);
         }
     }
+    public function getAllAffHistory(Request $request)
+    {
+        $user = User::where('id', '=', $request->user_id)
+            ->where('web_id', '=', $request->web_id)
+            ->first();
+    
+        if (!$user) {
+            return response()->json([
+                'message' => 'Unauthorized or User not found.',
+                'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'
+            ], 401);
+        }
+    
+        $affiliate = Affiliate::where('affiliated_by', $user->id)->first();
+        //  return response()->json([
+        //     'message' => 'Get affiliate history successfully.',
+        //     'data' => $affiliate
+        // ], 200);
+        // Nếu user chưa có affiliate thì trả về data rỗng
+        if (!$affiliate) {
+            return response()->json([
+                'message' => 'Get affiliate history successfully.',
+                'data' => []
+            ], 200);
+        }
+    
+        // Lấy lịch sử hoa hồng
+        $histories = AffiliateHistory::where('affiliate_id', $affiliate->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+    
+        return response()->json([
+            'message' => 'Get affiliate history successfully.',
+            'data' => $histories
+        ], 200);
+    }
+    
 }

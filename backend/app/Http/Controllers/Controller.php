@@ -30,7 +30,7 @@ abstract class Controller
      * @return string|null Đường dẫn công khai của file đã lưu, hoặc null nếu có lỗi.
      */
 
-    public function uploadFiles(array $files, string $directory): array
+    public function uploadFiles(array $files, string $directory,bool $thread = True ): array
     {
         try {
             $apiUrl = env('PYTHON_API');
@@ -54,7 +54,7 @@ abstract class Controller
 
             // Gửi 1 lần duy nhất
             $response = $request->post("{$apiUrl}/upload_files", [
-                'folder' => $directory,
+                'folder' => $directory, "thread"=>$thread
             ]);
 
             $response = $response->json();

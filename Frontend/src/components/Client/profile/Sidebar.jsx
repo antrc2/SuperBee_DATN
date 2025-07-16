@@ -1,17 +1,32 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { User, Lock, Wallet, Package, LogOut, Coins } from "lucide-react";
+import { User, Lock, Wallet, Package, LogOut, Coins, Copy, X } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
+import { useNotification } from "@contexts/NotificationContext";
+
+import { useState } from "react";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
+  const [showAffiliate, setShowAffiliate] = useState(false);
+  const URL_FE = import.meta.env.VITE_FRONTEND_URL || "http://localhost:5173";
+  const affiliateLink = `${URL_FE}/auth/register?aff=${user?.id || ""}`;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
     }).format(amount || 0);
+  };
+  const { pop } = useNotification();
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(affiliateLink);
+      pop("Đã copy link liên kết thành công!", "s"); // "s" là success
+    } catch {
+      pop("Copy thất bại, hãy thử lại!", "e"); // "e" là error
+    }
   };
 
   const navLinkClass = ({ isActive }) =>
@@ -62,6 +77,17 @@ export default function Sidebar() {
               <Lock className="h-5 w-5" />
               <span>Đổi mật khẩu</span>
             </NavLink>
+            {/* Affiliate Link */}
+            <button
+              type="button"
+              className={navLinkClass({ isActive: false })}
+              onClick={() => setShowAffiliate(true)}
+            >
+              <span className="flex items-center gap-3">
+                <Copy className="h-5 w-5" />
+                <span>Tiếp thị liên kết</span>
+              </span>
+            </button>
           </div>
         </div>
         <div>
@@ -91,6 +117,35 @@ export default function Sidebar() {
           <span>Đăng xuất</span>
         </button>
       </div>
+      {/* Affiliate Modal */}
+      {showAffiliate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md relative">
+            <button
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowAffiliate(false)}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <h3 className="font-bold text-lg mb-4 text-primary">Link tiếp thị liên kết của bạn</h3>
+            <div className="flex items-center gap-2 border rounded-lg p-2 bg-gray-50">
+              <input
+                type="text"
+                value={affiliateLink}
+                readOnly
+                className="flex-1 bg-transparent outline-none text-sm text-gray-700"
+              />
+              <button
+                onClick={handleCopy}
+                className="px-3 py-1 bg-accent text-white rounded hover:bg-accent/80 text-xs font-semibold"
+              >
+                Copy
+              </button>
+            </div>
+            <p className="text-xs text-secondary mt-2">Gửi link này cho bạn bè, khi họ đăng ký bạn sẽ nhận được hoa hồng!</p>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

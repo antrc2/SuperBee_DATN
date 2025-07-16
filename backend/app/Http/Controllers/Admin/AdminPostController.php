@@ -360,4 +360,48 @@ class AdminPostController extends Controller
             return response()->json(['error' => 'Không thể xóa ảnh.'], 500);
         }
     }
+    public function getCategoryById($id)
+    {
+        try {
+            $category = Categorypost::where("id", $id)->first();
+            if (!$category) {
+                return response()->json([
+                    'message' => "danh mục bài viết không tồn tại",
+                    'status' => false
+                ], 401);
+            }
+            return response()->json([
+                'message' => "Lấy danh mục bài viết thành công",
+                'status' => false,
+                'data' => $category
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Lỗi khi đổi trạng thái bài viết: " . $e->getMessage(),
+                "status" => false
+            ], 500);
+        }
+    }
+    public function getPostByCategory($id)
+    {
+        try {
+            $posts = Post::with('comments', 'author', 'category')->where("category_id", $id)->get();
+            if (!$posts) {
+                return response()->json([
+                    'message' => "không có bài viết liên quan.",
+                    'status' => false
+                ], 401);
+            }
+            return response()->json([
+                'message' => "Lấy bài viết liên quan thành công.",
+                'status' => false,
+                'data' => $posts
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Tải bài viết thất bại: " . $e->getMessage(),
+                "status" => false
+            ], 500);
+        }
+    }
 }

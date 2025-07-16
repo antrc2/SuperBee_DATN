@@ -16,6 +16,7 @@ export function AuthProvider({ children }) {
     const decoded = getDecodedToken();
     return decoded
       ? {
+          id: decoded.user_id, // Thêm dòng này
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
@@ -37,6 +38,7 @@ export function AuthProvider({ children }) {
       const decoded = getDecodedToken();
       if (decoded) {
         setUser({
+          id: decoded.user_id, // Thêm dòng này
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
@@ -101,6 +103,7 @@ export function AuthProvider({ children }) {
       const decoded = getDecodedToken();
       if (decoded) {
         setUser({
+          id: decoded.user_id, // Thêm dòng này
           name: decoded.name,
           money: decoded.money,
           avatar: decoded.avatar,

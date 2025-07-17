@@ -269,6 +269,15 @@ Route::middleware(['jwt'])->group(function () {
             // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)
             // Tùy chọn: Route để xóa ảnh từ Image Manager
         });
+
+        Route::prefix("/donate_promotions")->group(function(){
+            Route::get("/",[AdminDonatePromotionController::class,'index']);
+            Route::get("/{id}",[AdminDonatePromotionController::class,'show']);
+            Route::post("/",[AdminDonatePromotionController::class,'store']);
+            Route::delete("/{id}",[AdminDonatePromotionController::class,'destroy']);
+        });
+
+
         Route::prefix('/categoryPost')->group(function () {
             Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
             Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost']);

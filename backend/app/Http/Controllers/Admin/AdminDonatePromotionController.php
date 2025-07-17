@@ -90,23 +90,27 @@ class AdminDonatePromotionController extends Controller
                 "per_user_limit" => 'nullable',
                 "total_used" =>'nullable'
             ]);
-            DonatePromotion::create([
+            $donate_promotion = DonatePromotion::create([
                 'web_id'      => $web_id,
                 'amount'      => $validatedData['amount'],
                 'start_date'  => $validatedData['start_date'],
                 'end_date'    => $validatedData['end_date'],
                 'usage_limit' =>$validatedData['usage_limit'],
                 "per_user_limit"=>$validatedData['per_user_limit'],
-                "total_used"=>$validatedData['total_used']
+                "total_used"=>$validatedData['total_used'],
+                'created_by'=>$request->user_id,
+                "updated_by"=>$request->user_id
             ]);
             return response()->json([
                 "status" => True,
-                "message" => "Tạo khuyến mãi nạp thẻ thành công"
+                "message" => "Tạo khuyến mãi nạp thẻ thành công",
+                "data"=>$donate_promotion
             ], 201);
         } catch (\Throwable $th) {
             return response()->json([
                 "status" => False,
-                "message" => "Đã có lỗi xảy ra"
+                "message" => "Đã có lỗi xảy ra",
+                "hehe"=>$th->getMessage()
             ], 500);
         }
     }

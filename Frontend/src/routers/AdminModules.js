@@ -24,8 +24,14 @@ const CreateDiscountCodePage = React.lazy(() =>
 const EditDiscountCodePage = React.lazy(() =>
   import("@pages/Admin/DiscountCode/EditDiscountCodePage")
 );
+const DonatePromotionDashboard = React.lazy(() =>
+  import("@pages/Admin/DonatePromotion/DonatePromotionDashboard")
+);
 const DonatePromotionPage = React.lazy(() =>
   import("@pages/Admin/DonatePromotion/DonatePromotionPage")
+);
+const DonatePromotionDetail = React.lazy(() =>
+  import("@pages/Admin/DonatePromotion/DonatePromotionDetail")
 );
 const CreateDonatePromotionPage = React.lazy(() =>
   import("@pages/Admin/DonatePromotion/CreateDonatePromotionPage")
@@ -153,6 +159,14 @@ export const adminModules = [
     create: CreateDiscountCodePage,
     edit: EditDiscountCodePage,
     show: ShowDiscountCodePage,
+    allowedRoles: ["admin"],
+  },
+  {
+    name: "donatePromotions",
+    list: DonatePromotionDashboard,
+    create: CreateDonatePromotionPage,
+    edit: EditDonatePromotionPage,
+    show: DonatePromotionDetail,
     allowedRoles: ["admin"],
   },
   {

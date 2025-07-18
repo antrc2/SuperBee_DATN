@@ -275,6 +275,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::get("/{id}",[AdminDonatePromotionController::class,'show']);
             Route::post("/",[AdminDonatePromotionController::class,'store']);
             Route::delete("/{id}",[AdminDonatePromotionController::class,'destroy']);
+            Route::post("/{id}/undo",[AdminDonatePromotionController::class,'undo']);
         });
 
 

@@ -49,6 +49,21 @@ export default function ChatWidget() {
     }
   }, [open]);
 
+  const chatRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (open && chatRef.current && !chatRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -160,7 +175,7 @@ export default function ChatWidget() {
       {/* ####################################### */}
       {/* Khung chat */}
       {open && (
-        <div className="fixed bottom-[130px] right-6 z-90 w-[800px] h-full max-h-[500px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div ref={chatRef} className="fixed bottom-[130px] right-6 z-90 w-[800px] h-full max-h-[500px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden flex flex-col">
           <div className="flex items-center justify-between p-4 bg-content-bg border-b border-themed flex-shrink-0">
             <span className="font-bold text-lg text-primary">13Bee</span>
             <button

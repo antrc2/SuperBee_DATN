@@ -5,22 +5,22 @@ export default function DonatePromotionListPage({ data, handleLock, handleUndo }
   console.log("Dữ liệu khuyến mãi nhận được:", data.data);
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white">
-        <thead className="bg-gray-100">
+      <table className="min-w-full border text-sm text-left">
+        <thead className="rounded-lg border transition-all border-themed/50 shadow text-sm">
           <tr>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">ID</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Số lượng</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Thời gian</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Trạng thái</th>
-            <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Hành động</th>
+            <th className="py-3 px-4 text-left text-sm font-semibold text-l-600">ID</th>
+            <th className="py-3 px-4 text-left text-sm font-semibold text-l-600">Số lượng</th>
+            <th className="py-3 px-4 text-left text-sm font-semibold text-l-600">Thời gian</th>
+            <th className="py-3 px-4 text-left text-sm font-semibold text-l-600">Trạng thái</th>
+            <th className="py-3 px-4 text-center text-sm font-semibold text-l-600">Hành động</th>
           </tr>
         </thead>
         <tbody>
           {data?.map((item) => (
-            <tr key={item.id} className="border-b hover:bg-gray-50">
-              <td className="py-3 px-4 text-sm text-gray-700">{item.id}</td>
-              <td className="py-3 px-4 text-sm text-gray-700">{item.amount.toLocaleString()}%</td>
-              <td className="py-3 px-4 text-sm text-gray-700">
+            <tr key={item.id} className="border-b hover:bg-dark-50">
+              <td className="py-3 px-4 text-sm text-sm-700">{item.id}</td>
+              <td className="py-3 px-4 text-sm text-sm-700">{item.amount.toLocaleString()}%</td>
+              <td className="py-3 px-4 text-sm text-sm-700">
                 {item.start_date} → {item.end_date}
               </td>
               <td className="py-3 px-4 text-sm">

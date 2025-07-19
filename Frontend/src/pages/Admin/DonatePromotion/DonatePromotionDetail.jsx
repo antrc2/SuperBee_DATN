@@ -58,17 +58,17 @@ export default function DonatePromotionDetailPage() {
 
       {/* Thông tin số liệu */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 bg-green-50 rounded-xl text-center shadow">
-          <p className="text-sm text-green-700">Mức giảm</p>
-          <p className="text-2xl font-bold text-green-800">{promotion.amount}%</p>
+        <div className="p-4 rounded-lg border transition-all bg-green-400/10 border-green-400/30 shadow">
+          <p className="text-sm text-red-700">Mức giảm</p>
+          <p className="text-2xl font-bold text-red-800">{promotion.amount}%</p>
         </div>
-        <div className="p-4 bg-blue-50 rounded-xl text-center shadow">
-          <p className="text-sm text-blue-700">Đã sử dụng</p>
-          <p className="text-2xl font-bold text-blue-800">{promotion.total_used} lượt</p>
+        <div className="p-4 rounded-lg border transition-all bg-orange-400/10 border-orange-400/30 shadow">
+          <p className="text-sm text-yellow-700">Đã sử dụng</p>
+          <p className="text-2xl font-bold text-yellow-800">{promotion.total_used} lượt</p>
         </div>
-        <div className="p-4 bg-purple-50 rounded-xl text-center shadow">
-          <p className="text-sm text-purple-700">Giới hạn mỗi người</p>
-          <p className="text-2xl font-bold text-purple-800">
+        <div className="p-4 rounded-lg border transition-all bg-gray-400/10 border-gray-400/30 shadow">
+          <p className="text-sm text-blue-700">Giới hạn mỗi người</p>
+          <p className="text-2xl font-bold text-blue-800">
             {promotion.per_user_limit === -1 ? "Không giới hạn" : promotion.per_user_limit}
           </p>
         </div>
@@ -77,27 +77,27 @@ export default function DonatePromotionDetailPage() {
       {/* Grid chính */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Thông tin khuyến mãi */}
-        <div className="col-span-2 bg-white rounded-lg shadow p-6 space-y-2">
+        <div className="col-span-2 rounded-lg border shadow transition-all border-themed/50 p-6 shadow p-6 space-y-2">
           <h2 className="text-xl font-semibold mb-4">Thông tin mã khuyến mãi</h2>
           <div className="grid sm:grid-cols-2 gap-y-3 text-sm">
-            <div><span className="font-medium text-gray-500">Mã khuyến mãi:</span> {creator.donate_code}</div>
-            <div><span className="font-medium text-gray-500">Trạng thái:</span> 
+            <div><span className="font-medium text-sm-500">Mã khuyến mãi:</span> {creator.donate_code}</div>
+            <div><span className="font-medium text-sm-500">Trạng thái:</span> 
               {promotion.status === 1 ? (
                 <span className="ml-1 px-2 py-0.5 rounded-full text-green-800 bg-green-100 text-xs font-medium">Hoạt động</span>
               ) : (
                 <span className="ml-1 px-2 py-0.5 rounded-full text-red-800 bg-red-100 text-xs font-medium">Tạm tắt</span>
               )}
             </div>
-            <div><span className="font-medium text-gray-500">Thời gian bắt đầu:</span> {new Date(promotion.start_date).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-gray-500">Thời gian kết thúc:</span> {new Date(promotion.end_date).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-gray-500">Giới hạn tổng:</span> {promotion.usage_limit === -1 ? "Không giới hạn" : promotion.usage_limit}</div>
-            <div><span className="font-medium text-gray-500">Ngày tạo:</span> {new Date(promotion.created_at).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-gray-500">Ngày cập nhật:</span> {new Date(promotion.updated_at).toLocaleString("vi-VN")}</div>
+            <div><span className="font-medium text-sm-500">Thời gian bắt đầu:</span> {new Date(promotion.start_date).toLocaleString("vi-VN")}</div>
+            <div><span className="font-medium text-sm-500">Thời gian kết thúc:</span> {new Date(promotion.end_date).toLocaleString("vi-VN")}</div>
+            <div><span className="font-medium text-sm-500">Giới hạn tổng:</span> {promotion.usage_limit === -1 ? "Không giới hạn" : promotion.usage_limit}</div>
+            <div><span className="font-medium text-sm-500">Ngày tạo:</span> {new Date(promotion.created_at).toLocaleString("vi-VN")}</div>
+            <div><span className="font-medium text-sm-500">Ngày cập nhật:</span> {new Date(promotion.updated_at).toLocaleString("vi-VN")}</div>
           </div>
         </div>
 
         {/* Người tạo */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="rounded-lg border shadow transition-all border-themed/50 shadow p-6">
           <h2 className="text-xl font-semibold mb-4">Người tạo</h2>
           <div className="flex items-center gap-3 mb-4">
             <img
@@ -107,10 +107,10 @@ export default function DonatePromotionDetailPage() {
             />
             <div>
               <p className="text-sm font-medium">{creator.username}</p>
-              <p className="text-xs text-gray-500">ID: {creator.id}</p>
+              <p className="text-xs text-sm-500">ID: {creator.id}</p>
             </div>
           </div>
-          <div className="text-sm space-y-1 text-gray-700">
+          <div className="text-sm space-y-1 text-xl-700">
             <p>Email: {creator.email}</p>
             <p>SĐT: {creator.phone || "Chưa có"}</p>
             <p>Trạng thái: 
@@ -126,12 +126,12 @@ export default function DonatePromotionDetailPage() {
 
       {/* Thông tin website */}
       {web && (
-        <div className="bg-white rounded-lg shadow p-6 mt-6">
+        <div className="rounded-lg border shadow transition-all border-themed/50 shadow p-6 mt-6">
           <h2 className="text-xl font-semibold mb-4">Thông tin website</h2>
-          <div className="grid sm:grid-cols-2 gap-4 text-sm text-gray-700">
-            <div><span className="font-medium text-gray-500">Subdomain:</span> {web.subdomain}</div>
-            <div><span className="font-medium text-gray-500">API Key:</span> <span className="font-mono">{web.api_key.slice(0, 8)}...</span></div>
-            <div><span className="font-medium text-gray-500">Trạng thái:</span> 
+          <div className="grid sm:grid-cols-2 gap-4 text-sm text-xl-700">
+            <div><span className="font-medium text-sm-500">Subdomain:</span> {web.subdomain}</div>
+            <div><span className="font-medium text-sm-500">API Key:</span> <span className="font-mono">{web.api_key.slice(0, 8)}...</span></div>
+            <div><span className="font-medium text-sm-500">Trạng thái:</span> 
               {web.status === 1 ? (
                 <span className="ml-1 text-green-600 font-medium">Hoạt động</span>
               ) : (

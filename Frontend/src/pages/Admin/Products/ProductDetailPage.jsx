@@ -6,9 +6,9 @@ import api from "../../../utils/http";
 // Component con để hiển thị một mục thông tin
 const DetailItem = ({ label, value, className = "" }) => (
   <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-    <dt className="text-sm font-medium text-gray-500">{label}</dt>
+    <dt className="text-sm font-medium text-sm-500">{label}</dt>
     <dd
-      className={`mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2 ${className}`}
+      className={`mt-1 text-sm text-sm-900 sm:mt-0 sm:col-span-2 ${className}`}
     >
       {value}
     </dd>
@@ -83,7 +83,7 @@ export default function ProductDetailPage() {
       <div className="flex justify-between items-center mb-6">
         <Link
           to="/admin/products"
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          className="flex items-center gap-2 text-sm-600 hover:text-sm-900"
         >
           <ArrowLeft size={20} />
           Quay lại danh sách
@@ -97,12 +97,12 @@ export default function ProductDetailPage() {
         </Link> */}
       </div>
 
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">
+      <h1 className="text-2xl font-bold text-sm-900 mb-4">
         Chi tiết sản phẩm {product.sku}
       </h1>
 
       {/* Thông tin chung */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-sm-200">
         <dl>
           <DetailItem label="SKU" value={product.sku} />
           <DetailItem
@@ -153,7 +153,7 @@ export default function ProductDetailPage() {
       }
 
       return (
-        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${style}`}>
+        <span className={`px-2 py-1 text-sm font-semibold rounded-full ${style}`}>
           {label}
         </span>
       );
@@ -166,14 +166,14 @@ export default function ProductDetailPage() {
 
       {/* Thông tin đăng nhập */}
       <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
+        <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
           Thông tin đăng nhập
         </h3>
         {product.credentials && product.credentials.length > 0 ? (
           <div>
             {product.credentials.map((cred) => (
               <div key={cred.id} className="mb-4">
-                <h4 className="text-sm font-medium text-gray-700"></h4>
+                <h4 className="text-sm font-medium text-sm-700"></h4>
                 <dl>
                   <DetailItem label="Tài khoản" value={cred.username} />
                   <DetailItem label="Mật khẩu" value={cred.password} />
@@ -182,14 +182,14 @@ export default function ProductDetailPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-500">Không có thông tin đăng nhập.</p>
+          <p className="text-sm text-sm-500">Không có thông tin đăng nhập.</p>
         )}
       </div>
 
       {/* Thuộc tính game (EAV) */}
       {product.game_attributes && product.game_attributes.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
+          <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
             Thuộc tính riêng
           </h3>
           <dl>
@@ -207,7 +207,7 @@ export default function ProductDetailPage() {
       {/* Hình ảnh sản phẩm */}
       {product.images && product.images.length > 0 && (
         <div className="mt-8">
-          <h3 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
+          <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
             Hình ảnh
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
@@ -226,7 +226,7 @@ export default function ProductDetailPage() {
 
       {/* Thông tin bổ sung */}
       <div className="mt-8">
-        <h3 className="text-lg font-semibold text-gray-800 mb-2 border-b pb-2">
+        <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
           Thông tin bổ sung
         </h3>
         <dl>

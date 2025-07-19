@@ -10,7 +10,7 @@ class AdminOrderController extends Controller
 {
     public function index(){
         try {
-            $orders = Order::with('items')->get();
+            $orders = Order::with('items.product.gameAttributes','items.product.images','user')->get();
             return response()->json([
                 "status"=>True,
                 "message"=>"Lấy danh sách đơn hàng thành công",
@@ -26,7 +26,7 @@ class AdminOrderController extends Controller
     }
     public function show($id){
         try {
-            $order = Order::where('id',$id)->with('items.product.category')->with("items.product.gameAttributes")->with("items.product.images")->first();
+            $order = Order::where('id',$id)->with('items.product.category')->with("items.product.gameAttributes")->with("items.product.images")->with("user")->with("walletTransaction")->first();
             return response()->json([
                 "status"=>True,
                 "message"=>"Lấy chi tiết đơn hàng thành công",

@@ -112,7 +112,7 @@ const Pagination = ({ meta, onPageChange }) => {
         </li>
         {totalItems !== undefined && (
           <li className="ml-4">
-            <span className="text-gray-700 text-sm">Total: {totalItems}</span>
+            <span className="text-sm-700 text-sm">Total: {totalItems}</span>
           </li>
         )}
       </ul>

@@ -6,34 +6,34 @@ import { FilePenLine, Eye, Lock, Key } from "lucide-react";
 export default function ProductsListPage({ products, handleKey, handleLock }) {
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white">
-        <thead className="bg-gray-100">
+      <table className="min-w-full text-sm text-left">
+        <thead className="rounded-lg border transition-all border-themed/50 shadow text-sm">
           <tr>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">
+            <th className="py-3 px-4 text-left text-sm font-semibold text-sm-600">
               SKU
             </th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">
+            <th className="py-3 px-4 text-left text-sm font-semibold text-sm-600">
               Tên sản phẩm (Tạm)
             </th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">
+            <th className="py-3 px-4 text-left text-sm font-semibold text-sm-600">
               Giá
             </th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">
+            <th className="py-3 px-4 text-left text-sm font-semibold text-sm-600">
               Trạng thái
             </th>
-            <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">
+            <th className="py-3 px-4 text-center text-sm font-semibold text-sm-600">
               Hành động
             </th>
           </tr>
         </thead>
         <tbody>
           {products.map((product) => (
-            <tr key={product.id} className="border-b hover:bg-gray-50">
-              <td className="py-3 px-4 text-sm text-gray-700">{product.sku}</td>
-              <td className="py-3 px-4 text-sm text-gray-700">
+            <tr key={product.id} className="border-b hover:bg-sm-50">
+              <td className="py-3 px-4 text-sm text-sm-700">{product.sku}</td>
+              <td className="py-3 px-4 text-sm text-sm-700">
                 Sản phẩm #{product.id}
               </td>
-              <td className="py-3 px-4 text-sm text-gray-700">
+              <td className="py-3 px-4 text-sm text-sm-700">
                 {product.price.toLocaleString()}đ
               </td>
               <td className="py-3 px-4 text-sm">
@@ -47,7 +47,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                       ? "bg-red-100 text-red-800"
                       : product.status === 4
                       ? "bg-blue-100 text-blue-800"
-                      : "bg-gray-100 text-gray-800"
+                      : "bg-violet-100 text-violet-800"
                   }`}
                 >
                   {product.status === 1

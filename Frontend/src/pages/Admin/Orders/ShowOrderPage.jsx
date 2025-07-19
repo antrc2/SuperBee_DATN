@@ -1,92 +1,142 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import api from "../../../utils/http";
+import LoadingDomain from "@components/Loading/LoadingDomain";
 
 export default function ShowOrderPage() {
-  const [order, setOrder] = useState(null);
   const { id } = useParams();
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    const fetchProduct = async () => {
+    const fetchOrder = async () => {
       try {
-        const response = await api.get(`/admin/orders/${id}`);
-        const productData = response.data;
-        setOrder(productData);
+        const res = await api.get(`/admin/orders/${id}`);
+        setOrder(res.data.data);
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    fetchProduct();
+
+    fetchOrder();
   }, [id]);
 
-  if (!order || !order.order || order.order.length === 0) {
-    return <div className="p-4 text-center">No order details available.</div>;
-  }
+  if (loading) return <LoadingDomain />;
+  if (!order) return <div className="text-center p-6">Không tìm thấy đơn hàng.</div>;
 
-  const orderDetails = order.order[0].order; // Assuming all items belong to the same order
-  const productsInOrder = order.order;
+  const { items, user, wallet_transaction: wallet, ...orderInfo } = order;
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Order Details</h1>
+    <div className="space-y-6">
+      {/* Back Button */}
+      <div className="flex justify-between items-center">
+        <Link
+          to="/admin/orders"
+          className="flex items-center gap-2 text-sm-600 hover:text-sm-900"
+        >
+          <ArrowLeft size={20} />
+          Quay lại danh sách
+        </Link>
+      </div>
 
-      {/* Order Summary */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700">
-          Order Summary
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <p>
-            <strong className="text-gray-700">Order Code:</strong>{" "}
-            {orderDetails.order_code}
+      <h1 className="text-2xl font-bold text-sm-900">Chi tiết đơn hàng #{orderInfo.order_code}</h1>
+
+      {/* Order Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-4 rounded-lg border transition-all bg-orange-400/10 border-orange-400/30">
+          <p className="text-sm text-yellow-700">Tổng tiền</p>
+          <p className="text-2xl font-bold text-yellow-800">{orderInfo.total_amount}đ</p>
+        </div>
+        <div className="p-4 rounded-lg border transition-all bg-green-400/10 border-green-400/30">
+          <p className="text-sm text-red-700">Khuyến mãi</p>
+          <p className="text-2xl font-bold text-red-800">
+            {orderInfo.discount_amount || 0}đ
           </p>
-          <p>
-            <strong className="text-gray-700">Total Amount:</strong>{" "}
-            {orderDetails.total_amount}
-          </p>
-          <p>
-            <strong className="text-gray-700">Status:</strong>{" "}
-            {orderDetails.status === 1 ? "Completed" : "Pending"}
-          </p>
-          <p>
-            <strong className="text-gray-700">Discount Amount:</strong>{" "}
-            {orderDetails.discount_amount}
-          </p>
-          <p>
-            <strong className="text-gray-700">Ordered By:</strong>{" "}
-            {orderDetails.user.username} ({orderDetails.user.email})
-          </p>
-          <p>
-            <strong className="text-gray-700">Order Date:</strong>{" "}
-            {new Date(orderDetails.created_at).toLocaleString()}
+        </div>
+        <div className="p-4 rounded-lg border transition-all bg-gray-400/10 border-gray-400/30">
+          <p className="text-sm text-blue-700">Ngày đặt</p>
+          <p className="text-2xl font-bold text-blue-800">
+            {new Date(orderInfo.created_at).toLocaleString("vi-VN")}
           </p>
         </div>
       </div>
 
-      {/* Products in Order */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <h2 className="text-2xl font-semibold mb-4 text-blue-700">
-          Products in This Order
-        </h2>
+      {/* Thông tin người mua */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div className="col-span-2 rounded-lg border transition-all border-themed/50 shadow p-6 space-y-2">
+          <h2 className="text-xl font-semibold mb-4">Thông tin đơn hàng</h2>
+          <div className="grid sm:grid-cols-2 gap-y-3 text-sm text-sm-700">
+            <div><span className="font-medium text-sm-500">Mã đơn hàng:</span> {orderInfo.order_code}</div>
+            <div><span className="font-medium text-sm-500">Trạng thái:</span>{" "}
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-medium ${orderInfo.status === 1 ? "text-green-800 bg-green-100" : "text-red-800 bg-red-100"}`}>
+                {orderInfo.status === 1 ? "Hoàn tất" : "Đang xử lý"}
+              </span>
+            </div>
+            <div><span className="font-medium text-sm-500">Khuyến mãi áp dụng:</span> {orderInfo.promo_code || "Không có"}</div>
+            <div><span className="font-medium text-sm-500">Loại giao dịch:</span> {wallet?.type || "Không rõ"}</div>
+          </div>
+        </div>
+
+        {/* Người mua */}
+        <div className="rounded-lg border shadow transition-all border-themed/50 p-6">
+          <h2 className="text-xl font-semibold mb-4">Người mua</h2>
+          <div className="flex items-center gap-3 mb-4">
+            <img
+              src={user.avatar_url}
+              alt="avatar"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <div>
+              <p className="text-sm font-medium">{user.username}</p>
+              <p className="text-xs text-sm-500">ID: {user.id}</p>
+            </div>
+          </div>
+          <div className="text-sm space-y-1 text-sm-700">
+            <p className="text-sm font-medium">Email: {user.email}</p>
+            <p className="text-sm font-medium">SĐT: {user.phone || "Chưa có"}</p>
+            <p>Trạng thái:{" "}
+              {user.status === 1 ? (
+                <span className="text-green-600 font-medium">Hoạt động</span>
+              ) : (
+                <span className="text-red-600 font-medium">Ngưng</span>
+              )}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Sản phẩm trong đơn */}
+      <div className="rounded-lg border shadow transition-all border-themed/50 p-6">
+        <h2 className="text-xl font-semibold mb-4">Danh sách sản phẩm</h2>
         <div className="overflow-x-auto">
-          <table className="min-w-full bg-white">
-            <thead>
-              <tr className="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                <th className="py-3 px-6 text-left">Product SKU</th>
-                <th className="py-3 px-6 text-left">Unit Price</th>
-                <th className="py-3 px-6 text-left">Product Price</th>
+          <table className="min-w-full text-sm text-left">
+            <thead className="rounded-lg border transition-all border-themed/50 shadow text-sm">
+              <tr>
+                <th className="px-4 py-2">SKU</th>
+                <th className="px-4 py-2">Giá nhập</th>
+                <th className="px-4 py-2">Giá bán</th>
+                <th className="px-4 py-2">Thuộc tính</th>
               </tr>
             </thead>
-            <tbody className="text-gray-600 text-sm font-light">
-              {productsInOrder.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-gray-200 hover:bg-gray-100"
-                >
-                  <td className="py-3 px-6 text-left whitespace-nowrap">
-                    {item.product.sku}
+            {/* flex items-center justify-between p-3 rounded-lg border transition-all border-themed/50 */}
+            <tbody>
+              {items.map((item) => (
+                <tr key={item.id} className="border-b">
+                  <td className="px-4 py-2 text-sm-500">{item.product.sku}</td>
+                  <td className="px-4 py-2 text-sm-500">{item.unit_price}đ</td>
+                  <td className="px-4 py-2 text-sm-500">{item.product.price}đ</td>
+                  <td className="px-4 py-2 text-sm-500">
+                    <ul className="list-disc pl-4 text-sm-500">
+                      {item.product.game_attributes?.map((attr) => (
+                        <li key={attr.id}>
+                          <strong>{attr.attribute_key}:</strong> {attr.attribute_value}
+                        </li>
+                      ))}
+                    </ul>
                   </td>
-                  <td className="py-3 px-6 text-left">{item.unit_price}</td>
-                  <td className="py-3 px-6 text-left">{item.product.price}</td>
                 </tr>
               ))}
             </tbody>

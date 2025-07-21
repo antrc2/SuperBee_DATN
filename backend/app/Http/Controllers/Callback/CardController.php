@@ -50,6 +50,7 @@ class CardController extends Controller
             $bonus = $amount * ($donate_promotion_amount / 100);
             $amount += $bonus;
             // }
+            $frontend_link = env("FRONTEND_URL");
             DB::beginTransaction();
             if ($declared_value == $value) { // Thẻ đúng
 
@@ -68,6 +69,7 @@ class CardController extends Controller
                 $wallet = Wallet::find($wallet_id);
                 $wallet->increment('balance', $amount);
                 $wallet_transaction_id = $wallet_transaction->id;
+                $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
             } elseif ($value == 0) { // Thẻ sai
                 $wallet_transaction = WalletTransaction::create(
                     [
@@ -79,6 +81,7 @@ class CardController extends Controller
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;
+                $this->sendNotification(0,"Nạp số dư thất bại",$frontend_link . "/info/transactions",$user_id);
             } else { // Thẻ đúng nhưng sai mệnh giá
                 $wallet_transaction = WalletTransaction::create(
                     [
@@ -90,6 +93,7 @@ class CardController extends Controller
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;
+                $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
             }
             RechargeCard::where("id", $recharge_card_id)->update([
                 "wallet_transaction_id" => $wallet_transaction_id,
@@ -100,6 +104,7 @@ class CardController extends Controller
                 'message' => $message,
                 "donate_amount"=>$donate_amount
             ]);
+            // $this->sendNotification(1,"Nạp số dư thành công",$user_id = $user_id);
             // $frontend_url = env("FRONTEND_URL");
             // $notification = Notification::create([
             //     "user_id"=>$user_id,

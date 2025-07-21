@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\SystemNotification;
 use App\Models\GlobalNotification;
 use App\Models\Notification;
 use App\Models\RechargeBank;
@@ -227,6 +228,7 @@ abstract class Controller
     public function sendNotification(
         int $type,
         string $content,
+        
         ?string $link = null,
         ?int $user_id = null,
         ?Carbon $published_at = null,
@@ -242,7 +244,7 @@ abstract class Controller
                     Log::warning("Gửi thông báo thất bại: người dùng không tồn tại - $user_id");
                     return false;
                 }
-                return Notification::create([
+                $noti = Notification::create([
                     'user_id'      => $user_id,
                     'type'         => $type,
                     'content'      => $content,
@@ -250,16 +252,42 @@ abstract class Controller
                     'is_read'      => 0,
                     'published_at' => $published_at,
                     'expires_at'   => $expires_at,
-                ]) ? true : false;
+                ]);
+                event(new SystemNotification(
+                'NOTIFICATION_PRIVATE', // Loại thông báo
+                [
+                    "id"=> $noti->id,
+                    "type"=> $type,
+                    "content"=> $content,
+                    "published_at"=> $published_at,
+                    "link"=> $link,
+                    "is_read"=> 0,
+                    'user_id'=>$user_id
+                ]
+            ));
+                return true;
             } else {
                 // Gửi thông báo toàn bộ
-                return GlobalNotification::create([
+                $global_noti =  GlobalNotification::create([
                     'type'         => $type,
                     'content'      => $content,
                     'link'         => $link,
                     'published_at' => $published_at,
                     'expires_at'   => $expires_at,
-                ]) ? true : false;
+                ]);
+                    event(new SystemNotification(
+        'NOTIFICATION_PUBLIC', // Loại thông báo
+        [
+            "id"=> $global_noti->id,
+            "type"=> $type,
+            "content"=> $content,
+            "published_at"=> $published_at,
+            "link"=> $link,
+            "is_read"=> 0,
+        
+        ]
+    ));
+    return true;
             }
         } catch (\Throwable $e) {
             Log::error('Lỗi khi gửi thông báo: ' . $e->getMessage());

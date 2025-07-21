@@ -60,10 +60,20 @@ class UserProfileController extends Controller
                     'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'
                 ], 401);
             }
+            // Lấy danh sách tên các vai trò của user
+            $roles = $user->getRoleNames(); // Ví dụ: ['partner', 'user']
+
+            // Lấy danh sách tên của TẤT CẢ các quyền (bao gồm cả quyền từ vai trò và quyền trực tiếp)
+            $permissions = $user->getAllPermissions()->pluck('name'); // Ví dụ: ['products.create', 'orders.view-own']
+
             return response()->json([
-                'money' => $user->wallet->balance,
-                'message'=>"lay thành công",
-                'status'=>true
+                'status' => true,
+                'message' => 'Lấy dữ liệu thành công',
+                'data' => [
+                    'money' => $user->wallet->balance,
+                    'roles' => $roles,
+                    'permissions' => $permissions
+                ]
             ]);
         } catch (Exception $e) {
             return response()->json([
@@ -78,9 +88,9 @@ class UserProfileController extends Controller
     {
         try {
             $user = User::with(['wallet.transactions', 'wallet.transactions.withdraw', 'wallet.transactions.rechargeBank', "wallet.transactions.rechargeCard", 'wallet.transactions.order'])
-                        ->where('id', '=', $request->user_id)
-                        ->where('web_id', '=', $request->web_id)
-                        ->first();
+                ->where('id', '=', $request->user_id)
+                ->where('web_id', '=', $request->web_id)
+                ->first();
 
             if (!$user) {
                 return response()->json([
@@ -264,14 +274,14 @@ class UserProfileController extends Controller
         $user = User::where('id', '=', $request->user_id)
             ->where('web_id', '=', $request->web_id)
             ->first();
-    
+
         if (!$user) {
             return response()->json([
                 'message' => 'Unauthorized or User not found.',
                 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'
             ], 401);
         }
-    
+
         $affiliate = Affiliate::where('affiliated_by', $user->id)->first();
         //  return response()->json([
         //     'message' => 'Get affiliate history successfully.',
@@ -284,16 +294,15 @@ class UserProfileController extends Controller
                 'data' => []
             ], 200);
         }
-    
+
         // Lấy lịch sử hoa hồng
         $histories = AffiliateHistory::where('affiliate_id', $affiliate->id)
             ->orderBy('created_at', 'desc')
             ->get();
-    
+
         return response()->json([
             'message' => 'Get affiliate history successfully.',
             'data' => $histories
         ], 200);
     }
-    
 }

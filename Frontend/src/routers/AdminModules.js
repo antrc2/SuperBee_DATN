@@ -145,7 +145,7 @@ export const adminModules = [
     create: NotFound,
     edit: NotFound,
     show: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "discountcode",
@@ -153,7 +153,7 @@ export const adminModules = [
     create: CreateDiscountCodePage,
     edit: EditDiscountCodePage,
     show: ShowDiscountCodePage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "categories",
@@ -161,7 +161,7 @@ export const adminModules = [
     create: CreateCategoryPage,
     edit: EditCategoryPage,
     show: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "users",
@@ -169,7 +169,7 @@ export const adminModules = [
     show: ShowAccountPage,
     edit: NotFound,
     create: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "post",
@@ -177,7 +177,7 @@ export const adminModules = [
     show: ShowPostPage,
     create: CreatePostPage,
     edit: EditPostPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "products",
@@ -185,7 +185,11 @@ export const adminModules = [
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
+    permissions: {
+      create: "products.create", // Quyền cần có để vào trang "new"
+      edit: "products.edit", // Quyền cần có để vào trang "edit"
+    },
   },
   {
     name: "pendingProducts",
@@ -193,7 +197,7 @@ export const adminModules = [
     show: UpdateProductBrowse,
     edit: NotFound,
     create: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "banners",
@@ -201,7 +205,7 @@ export const adminModules = [
     show: BannerDetailPage,
     create: CreateBanners,
     edit: EditBanner,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "orders",
@@ -209,7 +213,7 @@ export const adminModules = [
     show: ShowOrderPage,
     create: NotFound,
     edit: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "agent",
@@ -217,7 +221,7 @@ export const adminModules = [
     show: ShowOrderPage,
     create: NotFound,
     edit: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
   {
     name: "categoryPost",
@@ -225,6 +229,6 @@ export const adminModules = [
     create: CreateCategoryPostPage,
     edit: EditCategoryPost,
     show: NotFound,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "super-admin"],
   },
 ];

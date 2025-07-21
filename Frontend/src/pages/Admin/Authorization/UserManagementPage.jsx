@@ -2,7 +2,19 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../utils/http";
 
-// --- Component con ---
+const TabButton = ({ activeTab, tabName, children, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-all
+        ${
+          activeTab === tabName
+            ? "border-indigo-500 text-indigo-600 dark:text-indigo-400"
+            : "border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600"
+        }`}
+  >
+    {children}
+  </button>
+);
 const PermissionGroup = ({
   groupName,
   permissions,
@@ -76,10 +88,10 @@ export default function UserManagementPage() {
   const [userData, setUserData] = useState(null);
   const [allSystemRoles, setAllSystemRoles] = useState([]);
   const [allSystemPermissions, setAllSystemPermissions] = useState({});
-  const [allUserPermissions, setAllUserPermissions] = useState([]);
   const [assignedRoles, setAssignedRoles] = useState([]);
   const [directPermissions, setDirectPermissions] = useState([]);
   const [activeTab, setActiveTab] = useState("summary");
+  const [allUserPermissions, setAllUserPermissions] = useState([]);
 
   const clearMessages = () => {
     setTimeout(() => {
@@ -151,11 +163,10 @@ export default function UserManagementPage() {
 
   if (loading)
     return (
-      <div className="text-center p-8 animate-pulse dark:text-gray-400">
-        Đang tải...
+      <div className="p-8 text-center animate-pulse dark:text-gray-400">
+        Đang tải chi tiết người dùng...
       </div>
     );
-
   if (error && !userData)
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4">
@@ -167,16 +178,17 @@ export default function UserManagementPage() {
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-200">
       <div className="mb-6">
         <Link
-          to="/admin/authorization"
+          to="/admin/authorization/dashboard"
           className="text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           &larr; Quay lại Dashboard
         </Link>
       </div>
 
+      {/* Thông báo động */}
       {error && (
         <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4"
+          className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
           role="alert"
         >
           {error}
@@ -184,64 +196,59 @@ export default function UserManagementPage() {
       )}
       {success && (
         <div
-          className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4"
+          className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4"
           role="alert"
         >
           {success}
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8 flex items-center">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl mb-8 flex flex-col md:flex-row items-center">
         <img
           src={
             userData.avatar_url ||
             `https://i.pravatar.cc/150?u=${userData.email}`
           }
           alt={userData.username}
-          className="h-20 w-20 rounded-full object-cover mr-6"
+          className="h-24 w-24 rounded-full object-cover mr-0 md:mr-6 mb-4 md:mb-0"
         />
         <div>
-          <h1 className="text-3xl font-bold">{userData.username}</h1>
-          <p className="text-gray-500 dark:text-gray-400">{userData.email}</p>
+          <h1 className="text-3xl font-bold text-center md:text-left">
+            {userData.username}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-center md:text-left">
+            {userData.email}
+          </p>
         </div>
       </div>
 
       <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          <button
+        <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
+          <TabButton
+            activeTab={activeTab}
+            tabName="summary"
             onClick={() => setActiveTab("summary")}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "summary"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
           >
             Tổng hợp Quyền
-          </button>
-          <button
+          </TabButton>
+          <TabButton
+            activeTab={activeTab}
+            tabName="roles"
             onClick={() => setActiveTab("roles")}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "roles"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
           >
             Quản lý Vai trò
-          </button>
-          <button
+          </TabButton>
+          <TabButton
+            activeTab={activeTab}
+            tabName="permissions"
             onClick={() => setActiveTab("permissions")}
-            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-              activeTab === "permissions"
-                ? "border-indigo-500 text-indigo-600"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            }`}
           >
-            Quản lý Quyền trực tiếp
-          </button>
+            Quyền trực tiếp
+          </TabButton>
         </nav>
       </div>
 
-      <div>
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
         {activeTab === "summary" && (
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
             <h2 className="text-2xl font-semibold mb-4">

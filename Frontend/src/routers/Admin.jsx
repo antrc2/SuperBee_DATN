@@ -21,7 +21,7 @@ const adminRoutes = [
     path: "/admin",
     element: (
       <ThemeProvider>
-        <ProtectedRoute allowedRoles={["admin"]}>
+        <ProtectedRoute allowedRoles={["admin", "super-admin"]}>
           <AppLayout />
         </ProtectedRoute>
       </ThemeProvider>
@@ -31,8 +31,6 @@ const adminRoutes = [
         index: true,
         element: (
           <Suspense fallback={<div>Đang tải Dashboard Admin...</div>}>
-            {" "}
-            {/* Suspense cho Home */}
             <Home />
           </Suspense>
         ),
@@ -65,6 +63,7 @@ const adminRoutes = [
           edit: Edit,
           show: Show,
           allowedRoles,
+          permissions,
         }) => ({
           path: name,
           element: (
@@ -76,33 +75,50 @@ const adminRoutes = [
             {
               index: true,
               element: (
-                <Suspense fallback={<div>Đang tải danh sách...</div>}>
-                  <List />
-                </Suspense>
+                <ProtectedRoute allowedRoles={allowedRoles}>
+                  <Suspense fallback={<div>Đang tải danh sách...</div>}>
+                    <List />
+                  </Suspense>
+                </ProtectedRoute>
               ),
             },
             {
               path: "new",
               element: (
-                <Suspense fallback={<div>Đang tải trang tạo mới...</div>}>
-                  <Create />
-                </Suspense>
+                <ProtectedRoute
+                  allowedRoles={allowedRoles}
+                  requiredPermission={permissions?.create}
+                >
+                  <Suspense fallback={<div>Đang tải trang tạo mới...</div>}>
+                    <Create />
+                  </Suspense>
+                </ProtectedRoute>
               ),
             },
             {
               path: ":id",
               element: (
-                <Suspense fallback={<div>Đang tải chi tiết...</div>}>
-                  <Show />
-                </Suspense>
+                <ProtectedRoute
+                  allowedRoles={allowedRoles}
+                  requiredPermission={permissions?.show}
+                >
+                  <Suspense fallback={<div>Đang tải chi tiết...</div>}>
+                    <Show />
+                  </Suspense>
+                </ProtectedRoute>
               ),
             },
             {
               path: ":id/edit",
               element: (
-                <Suspense fallback={<div>Đang tải trang chỉnh sửa...</div>}>
-                  <Edit />
-                </Suspense>
+                <ProtectedRoute
+                  allowedRoles={allowedRoles}
+                  requiredPermission={permissions?.edit}
+                >
+                  <Suspense fallback={<div>Đang tải trang chỉnh sửa...</div>}>
+                    <Edit />
+                  </Suspense>
+                </ProtectedRoute>
               ),
             },
             {

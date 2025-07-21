@@ -114,6 +114,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['jwt'])->group(function () {
         // đăng xuất
         Route::post("/logout", [AuthController::class, 'logout']);
+        Route::post('/notifications/personal/{id}/read', [AdminNotificationController::class, 'markPersonalAsRead']);
+        // Đánh dấu thông báo chung
+        Route::post('/notifications/global/{id}/read', [AdminNotificationController::class, 'markGlobalAsRead']);
         // info
         Route::prefix('/user')->group(function () {
             Route::get('/profile', [UserProfileController::class, 'show']);
@@ -182,8 +185,8 @@ Route::middleware('auth')->group(function () {
 
 // admin
 Route::middleware(['jwt'])->group(function () {
-    Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
-        Route::prefix('/discountcode')->group(function () {
+    Route::prefix('/admin')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('/discountcode')->group(function () {
             Route::get('/', [AdminDiscountCodeController::class, 'index']);
             Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
             Route::post('/', [AdminDiscountCodeController::class, 'store']);
@@ -193,22 +196,14 @@ Route::middleware(['jwt'])->group(function () {
             Route::get('/user/{id}', [AdminDiscountCodeController::class, 'getUserByWebId']);
             Route::get('/web/{id}', [AdminDiscountCodeController::class, 'getWebId']);
         });
-        // Route::prefix('/discountcode')->group(function () {
-        //     Route::get('/', [AdminDiscountCodeController::class, 'index']);
-        //     Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
-        //     Route::post('/', [AdminDiscountCodeController::class, 'store']);
-        //     Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
-        //     Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
-        //     Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
-        // });
-        Route::prefix('categories')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/', [CategoryController::class, 'store']);
             Route::put('/{id}', [CategoryController::class, 'update']);
             Route::delete('/{id}', [CategoryController::class, 'destroy']);
             Route::get('/{id}', [CategoryController::class, 'show']);
         });
-        Route::prefix('/accounts')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('/accounts')->group(function () {
             Route::get('/', [UserController::class, 'index']);
             Route::get('/{id}', [UserController::class, 'show']);
             Route::delete('/{id}', [UserController::class, 'destroy']); // Sửa thành {id} và kiểm tra method cho delete
@@ -216,9 +211,7 @@ Route::middleware(['jwt'])->group(function () {
             Route::patch('/{id}', [UserController::class, 'restore']); // Sửa thành {id}
             Route::put('/{id}/role', [UserController::class, 'updateRoles']); // Cập nhật roles cho user
         });
-
-
-        Route::prefix("/products")->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix("/products")->group(function () {
             Route::get("/", [AdminProductController::class, 'index']);
             Route::get("/browse", [AdminProductController::class, 'getProductsBrowse']);
             Route::get("/{id}", [AdminProductController::class, 'show']);
@@ -229,13 +222,13 @@ Route::middleware(['jwt'])->group(function () {
             Route::post("/{id}/cancel", [AdminProductController::class, 'cancel']); // Người bán hủy bán
             Route::put('/{id}', [AdminProductController::class, 'update']);
         });
-        Route::prefix("/orders")->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix("/orders")->group(function () {
             Route::get("/", [AdminOrderController::class, 'index']);
             Route::get("/{id}", [AdminOrderController::class, 'show']);
             // Route::get("/", [OrderController::class, 'index']);
             // Route::get("/{id}", [OrderController::class, 'show']);
         });
-        Route::prefix("/notifications")->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix("/notifications")->group(function () {
             // thông báo cá nhân thêm
             Route::post('/personal', [AdminNotificationController::class, 'addPersonalNotification']);
             // thông báo chung thêm
@@ -243,14 +236,14 @@ Route::middleware(['jwt'])->group(function () {
             // sửa thông báo chung 
             Route::put('/global/{id}', [AdminNotificationController::class, 'updateGlobalNotification']);
         });
-        Route::prefix('/banners')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('/banners')->group(function () {
             Route::get('/', [AdminBannerController::class, 'index']);
             Route::get('/{slug}', [AdminBannerController::class, 'show']);
             Route::post('/', [AdminBannerController::class, 'store']);
             Route::put('/{id}', [AdminBannerController::class, 'update']);
             Route::delete('/{id}', [AdminBannerController::class, 'destroy']);
         });
-        Route::prefix('/post')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('/post')->group(function () {
             Route::get('/', [AdminPostController::class, 'index']);
             Route::post('/upload', [AdminPostController::class, 'upload']);
             Route::get('/load-images', [AdminPostController::class, 'loadImages']);
@@ -269,53 +262,35 @@ Route::middleware(['jwt'])->group(function () {
             // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)
             // Tùy chọn: Route để xóa ảnh từ Image Manager
         });
-        Route::prefix('/categoryPost')->group(function () {
+        Route::middleware(['role:admin|super-admin'])->prefix('/categoryPost')->group(function () {
             Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
             Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost']);
             Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug']);
             Route::Post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost']);
             Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost']);
         });
-        Route::prefix('/authorization')->group(function () {
+       Route::middleware(['role:admin'])->prefix('/authorization')->group(function () {
 
-            // --- Dashboard ---
+            // Route cho Dashboard tổng quan
             Route::get('dashboard', [AuthorizationDashboardController::class, 'index']);
-
-            // --- Quản lý Permissions ---
-            // GET /admin/authorization/permissions -> Lấy danh sách quyền
-            Route::get('permissions', [PermissionController::class, 'index']);
-            // POST /admin/authorization/permissions -> Tạo quyền mới
-            Route::post('permissions', [PermissionController::class, 'store']);
-            // PUT /admin/authorization/permissions/{permission} -> Cập nhật quyền
-            Route::put('permissions/{permission}', [PermissionController::class, 'update']);
-            // DELETE /admin/authorization/permissions/{permission} -> Xóa quyền
-            Route::delete('permissions/{permission}', [PermissionController::class, 'destroy']);
-
-            // --- Quản lý Roles ---
-            // GET /admin/authorization/roles -> Lấy danh sách vai trò
-            Route::get('roles', [RoleController::class, 'index']);
-            // POST /admin/authorization/roles -> Tạo vai trò mới
-            Route::post('roles', [RoleController::class, 'store']);
-            // GET /admin/authorization/roles/{role} -> Xem chi tiết một vai trò
-            Route::get('roles/{role}', [RoleController::class, 'show']);
-            // PUT /admin/authorization/roles/{role} -> Cập nhật vai trò
-            Route::put('roles/{role}', [RoleController::class, 'update']);
-            // DELETE /admin/authorization/roles/{role} -> Xóa vai trò
-            Route::delete('roles/{role}', [RoleController::class, 'destroy']);
-            // POST /admin/authorization/roles/{role}/permissions -> Gán quyền cho vai trò
-            Route::post('roles/{role}/permissions', [RoleController::class, 'assignPermissions']);
-
-            // --- Quản lý User và Role (cũ) ---
-            Route::get('users', [UserPermissionController::class, 'index']);
-            Route::get('users/{user}/roles', [UserPermissionController::class, 'getUserRoles']);
-            Route::post('users/{user}/roles', [UserPermissionController::class, 'assignRolesToUser']);
-
-            // --- Quản lý User chi tiết (mới) ---
+            
+            // Routes để quản lý chi tiết một người dùng
             Route::get('users/{id}/manage', [AuthorizationDashboardController::class, 'getUserDetails']);
-            Route::post('users/{user}/manage/roles', [AuthorizationDashboardController::class, 'syncRoles']);
-            Route::post('users/{user}/manage/permissions', [AuthorizationDashboardController::class, 'syncDirectPermissions']);
-        });
+            Route::post('users/{id}/manage/roles', [AuthorizationDashboardController::class, 'syncRoles']);
+            Route::post('users/{id}/manage/permissions', [AuthorizationDashboardController::class, 'syncDirectPermissions']);
+
+            // --- QUẢN LÝ ROLES & PERMISSIONS (CHỈ ADMIN TỐI CAO) ---
+            // Chỉ tài khoản có vai trò 'admin' mới được phép định nghĩa/sửa/xóa Vai trò và Quyền
+            Route::middleware(['role:admin'])->group(function () {
+                // apiResource sẽ tự động tạo các route index, store, update, destroy
+                Route::apiResource('permissions', PermissionController::class)->except(['show']);
+                Route::apiResource('roles', RoleController::class)->except(['show']);
+                
+                // Route để gán quyền cho một vai trò
+                Route::post('roles/{role}/permissions', [RoleController::class, 'assignPermissions']);
+            });
     });
+});
 });
 
 Route::middleware(['jwt'])->group(function () {

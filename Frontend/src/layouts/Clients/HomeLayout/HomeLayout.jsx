@@ -16,7 +16,7 @@ export default function HomeLayout() {
     markChatAsRead,
     unreadCount,
   } = useChat();
-  console.log("🚀 ~ HomeLayout ~ unreadCount:", unreadCount);
+
   const toggleChat = async () => {
     if (!isChatOpen) {
       if (isLoggedIn && !agentChatRoom) {

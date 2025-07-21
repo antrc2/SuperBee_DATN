@@ -231,12 +231,10 @@ abstract class Controller
         
         ?string $link = null,
         ?int $user_id = null,
-        ?Carbon $published_at = null,
-        ?Carbon $expires_at = null
     ): bool {
         try {
-            $published_at = $published_at ?? Carbon::now();
-            $expires_at = $expires_at ?? Carbon::now()->addDays(3);
+            $published_at =  Carbon::now();
+            $expires_at =  Carbon::now()->addDays(3);
 
             if ($user_id !== null) {
                 // Gửi thông báo riêng cho user

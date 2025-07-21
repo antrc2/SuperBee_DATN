@@ -314,8 +314,8 @@ export async function sendOrderConfirmationEmail(
             <td>${item.name}</td>
             <td>${item.quantity}</td>
             <td style="text-align: right;">${item.price.toLocaleString(
-              "vi-VN"
-            )} VND</td>
+        "vi-VN"
+      )} VND</td>
         </tr>
     `
     )
@@ -341,8 +341,8 @@ export async function sendOrderConfirmationEmail(
                 <tr>
                     <td colspan="2" style="text-align: right; font-weight: bold;">Tổng cộng:</td>
                     <td style="text-align: right; font-weight: bold;">${totalPrice.toLocaleString(
-                      "vi-VN"
-                    )} VND</td>
+    "vi-VN"
+  )} VND</td>
                 </tr>
             </tbody>
         </table>
@@ -639,6 +639,40 @@ export async function sendSupportConfirmationEmail(
     console.error("Error sending support confirmation email:", error);
     throw new Error("Could not send support confirmation email.");
   }
+}
+
+export async function sendMailDonate(userEmail, { username, amount }) {
+  const transporter = createTransporter();
+  const subject = `Cảm ơn bạn đã ủng hộ ${APP_NAME}`;
+  const htmlContent = `
+        <p>Xin chào <span class="highlight">${username}</span>,</p>
+        <p>Chúng tôi rất cảm kích sự ủng hộ của bạn với số tiền <span class="highlight">${amount}
+    "vi-VN"
+   VND</span>.</p>
+          "vi-VN"
+        )} VND</span>.</p>
+        <p>Sự đóng góp của bạn sẽ giúp chúng tôi tiếp tục phát triển và cung cấp dịch vụ tốt nhất cho cộng đồng game thủ.</p>
+        <p>Cảm ơn bạn đã đồng hành cùng chúng tôi!</p>
+        <p>Trân trọng,<br>Đội ngũ ${APP_NAME}</p>
+    `;
+
+  const mailOptions = {
+    from: `"${MAIL_FROM_NAME}" <${MAIL_FROM_ADDRESS}>`,
+    to: userEmail,
+    subject: subject,
+    html: getStyledEmailTemplate(htmlContent, subject),
+  };
+// console.log("Mail options:", mailOptions);
+  try {
+    console.log(`Sending donation email to ${userEmail}...`);
+    await transporter.sendMail(mailOptions);
+    console.log("Donation email sent successfully!");
+  } catch (error) {
+    console.error("Error sending donation email:", error);
+    throw new Error("Could not send donation email.");
+  }
+
+
 }
 
 /**

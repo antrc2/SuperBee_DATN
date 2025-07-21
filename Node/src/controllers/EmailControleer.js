@@ -10,6 +10,7 @@ const EmailType = {
   EMAIL_FEEDBACK: "EMAIL_FEEDBACK",
   EMAIL_PROMOTIONAL: "EMAIL_PROMOTIONAL",
   EMAIL_SUPPORT: "EMAIL_SUPPORT",
+  EMAIL_DONATE: "EMAIL_DONATE", // Email thông báo về ủng hộ
 };
 import * as email from "../services/Email.js";
 async function sendEmail(type, data) {
@@ -20,6 +21,7 @@ async function sendEmail(type, data) {
   const domainName = data?.domainName;
   const message = data?.message;
   const changedFields = data?.changedFields;
+  const amount = data?.amount;
   switch (type) {
     case EmailType.EMAIL_WELCOME:
       if (toEmail && username && loginUrl) {
@@ -88,6 +90,15 @@ async function sendEmail(type, data) {
         });
       }
       break;
+    
+    case EmailType.EMAIL_DONATE:
+      // email_donate: Email thông báo về ủng hộ
+      if (toEmail && username && amount) {
+        console.log("Gửi email thông báo ủng hộ (EMAIL_DONATE)");
+        await email.sendMailDonate(toEmail, { username, amount });
+      }   
+      break;
+
 
     case EmailType.EMAIL_FEEDBACK:
       // email_feedback: Email khảo sát/phản hồi

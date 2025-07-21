@@ -29,7 +29,7 @@ async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: b
 
     response = await s3_client.add(file,object_name,thread)
 
-    return response
+    return response 
 
 @app.post("/upload_files")
 async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
@@ -50,7 +50,9 @@ async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), t
     #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
+    print(files)
     response = await s3_client.uploads(files,object_name,thread)
+    print(response)
     return response
     # return "Xong"
 

@@ -16,8 +16,7 @@ export function ClientThemeProvider({ children }) {
     if (!isInitialized) return;
 
     const root = document.documentElement;
-    root.classList.remove("dark", "theme-pink", "theme-blue"); // Xóa các class theme cũ
-
+    root.classList.remove("dark", "theme-pink", "theme-blue","theme-green","theme-purple"); // Xóa các class theme cũ
     if (theme !== "light") {
       root.classList.add(theme); // Thêm class của theme hiện tại (vd: 'dark', 'theme-pink')
     }

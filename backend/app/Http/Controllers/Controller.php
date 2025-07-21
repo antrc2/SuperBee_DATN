@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GlobalNotification;
+use App\Models\Notification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request; // Không cần thiết nếu đây là abstract Controller và Request không được dùng trong hàm này
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log; // Import facade Log
 
@@ -30,7 +33,7 @@ abstract class Controller
      * @return string|null Đường dẫn công khai của file đã lưu, hoặc null nếu có lỗi.
      */
 
-    public function uploadFiles(array $files, string $directory): array
+    public function uploadFiles(array $files, string $directory,bool $thread = True ): array
     {
         try {
             $apiUrl = env('PYTHON_API');
@@ -54,7 +57,7 @@ abstract class Controller
 
             // Gửi 1 lần duy nhất
             $response = $request->post("{$apiUrl}/upload_files", [
-                'folder' => $directory,
+                'folder' => $directory, "thread"=>$thread
             ]);
 
             $response = $response->json();
@@ -161,4 +164,78 @@ abstract class Controller
     //         return false;
     //     }
     // }
+/**
+ * /**
+ * Gửi thông báo riêng cho user.
+ *
+ * @param array $data [
+ *     'user_id' => int, // ID người nhận thông báo
+ *     'type' => int,
+ *  // 1: Hoạt động cá nhân, 2: Đơn hàng, 3: Điểm thưởng, 4: Cảnh báo, 5: Tin nhắn từ Admin
+ *     'content' => string, // Nội dung thông báo
+ *     'link' => string|null, // Đường dẫn khi click vào
+ *     'published_at' => Carbon|null, // Thời gian phát hành
+ *     'expires_at' => Carbon|null // Hết hạn thông báo
+ * ]
+ * @return bool
+ */
+public function sendPrivateNotification(array $data)
+{
+    try {
+        Notification::create([
+            'user_id' => $data['user_id'],
+            'type' => $data['type'],
+            'content' => $data['content'],
+            'link' => $data['link'] ?? null,
+            'is_read' => 0,
+            'published_at' => $data['published_at'] ?? Carbon::now(),
+            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
+        ]);
+    } catch (\Throwable $th) {
+        Log::error('SendPrivateNotification error: '.$th->getMessage());
+        return false;
+    }
+}
+/**
+ * Gửi thông báo toàn cục (public).
+ *
+ * @param array $data [
+ *     'type' => int, // Kiểu thông báo toàn cục:
+ *                    // 1: Khuyến mãi - Giảm giá
+ *                    // 2: Bảo trì hệ thống
+ *                    // 3: Sự kiện toàn hệ thống
+ *                    // 4: Tin tức - Cập nhật mới
+ *                    // 5: Quy định - Chính sách mới
+ * 
+ *     'content' => string, // Nội dung thông báo
+ * 
+ *     'link' => string|null, // (optional) Đường dẫn khi click vào thông báo.
+ *                             // VD: '/promotions' hoặc '/events/123'
+ * 
+ *     'published_at' => Carbon|null, // (optional) Thời gian phát hành thông báo
+ *                                     // Mặc định: Carbon::now()
+ * 
+ *     'expires_at' => Carbon|null // (optional) Thời gian hết hạn thông báo
+ *                                 // Mặc định: Carbon::now()->addDays(3)
+ * ]
+ * 
+ * @return bool
+ */
+
+public function sendGlobalNotification(array $data)
+{
+    try {
+        GlobalNotification::create([
+            'type' => $data['type'],
+            'content' => $data['content'],
+            'link' => $data['link'] ?? null,
+            'published_at' => $data['published_at'] ?? Carbon::now(),
+            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
+        ]);
+    } catch (\Throwable $th) {
+        Log::error('SendGlobalNotification error: '.$th->getMessage());
+        return false;
+    }
+}
+  
 }

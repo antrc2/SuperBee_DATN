@@ -1,12 +1,11 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { User, Lock, Wallet, Package, LogOut, Coins } from "lucide-react";
+import { User, Lock, Wallet, Package, LogOut, Coins, Copy, X } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
-
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
@@ -61,6 +60,11 @@ export default function Sidebar() {
             <NavLink to="/info/change-password" className={navLinkClass}>
               <Lock className="h-5 w-5" />
               <span>Đổi mật khẩu</span>
+            </NavLink>
+            {/* Affiliate Link */}
+            <NavLink to="/info/affiliate-history" className={navLinkClass}>
+              <Copy className="h-5 w-5" />
+              <span>Tiếp thị liên kết</span>
             </NavLink>
           </div>
         </div>

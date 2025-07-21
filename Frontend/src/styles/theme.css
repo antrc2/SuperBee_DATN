@@ -104,7 +104,98 @@
   --color-scrollbar-thumb: #ffc6c7;
   --color-scrollbar-thumb-hover: #ff8ba7;
 }
+.theme-blue{
+    --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #e7faf5;
+  --color-text-primary: #33272a;
+  --color-text-secondary: #594a4e;
+  --color-text-placeholder: #594a4e;
+  --color-accent: #09adff;
+  --color-accent-text: #33272a;
+  --color-highlight: #09b1ff;
+  --color-secondary: #c6feff;
+  --color-tertiary: #c3f0ca;
+  --color-stroke: #33272a;
+  --color-main-white: #feffff;
+  --gradient-header: linear-gradient(135deg, #afdffb, #e7faf7);
+  --gradient-button: linear-gradient(to right, #58ddee, #c6f8ff);
+  --gradient-logo: linear-gradient(to right, #3b8dc8, #33272a);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #c3f0ca, #a1e2a6);
+  --gradient-warning: linear-gradient(to right, #99f6ff, #85d9fa);
+  --gradient-info: linear-gradient(to right, #a2d2ff, #bde0fe);
+  --color-input-bg: #fefbf9;
+  --color-input-text: #33272a;
+  --color-border: #c6f8ff;
+  --color-border-hover: #8bcbff;
+  --color-dropdown-bg: rgba(231, 244, 250, 0.9);
+  --color-notification-unread-bg: #c6f7ff;
+  --color-scrollbar-thumb: #c6f3ff;
+  --color-scrollbar-thumb-hover: #8beaff;
+}
 
+.theme-green {
+    --font-heading: "Outfit", sans-serif;
+    --font-body: "Nunito", sans-serif;
+    --color-background: #e8f9e7;
+    --color-text-primary: #2a3d2f;
+    --color-text-secondary: #4a5c4e;
+    --color-text-placeholder: #4a5c4e;
+    --color-accent: #34c759;
+    --color-accent-text: #2a3d2f;
+    --color-highlight: #34c759;
+    --color-secondary: #c8ffd7;
+    --color-tertiary: #b3e8c0;
+    --color-stroke: #2a3d2f;
+    --color-main-white: #fffffe;
+    --gradient-header: linear-gradient(135deg, #c8ffd7, #e8f9e7);
+    --gradient-button: linear-gradient(to right, #34c759, #c8ffd7);
+    --gradient-logo: linear-gradient(to right, #34c759, #2a3d2f);
+    --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+    --gradient-success: linear-gradient(to right, #b3e8c0, #8cd698);
+    --gradient-warning: linear-gradient(to right, #a3e635, #bef264);
+    --gradient-info: linear-gradient(to right, #86efac, #a7f3d0);
+    --color-input-bg: #f8fff7;
+    --color-input-text: #2a3d2f;
+    --color-border: #c8ffd7;
+    --color-border-hover: #34c759;
+    --color-dropdown-bg: rgba(232, 249, 231, 0.9);
+    --color-notification-unread-bg: #c8ffd7;
+    --color-scrollbar-thumb: #c8ffd7;
+    --color-scrollbar-thumb-hover: #34c759;
+}
+
+.theme-purple {
+    --font-heading: "Outfit", sans-serif;
+    --font-body: "Nunito", sans-serif;
+    --color-background: #f3e8ff;
+    --color-text-primary: #3c2f4b;
+    --color-text-secondary: #5c4a6b;
+    --color-text-placeholder: #5c4a6b;
+    --color-accent: #9e35ff;
+    --color-accent-text: #3c2f4b;
+    --color-highlight: #a855f7;
+    --color-secondary: #e9d5ff;
+    --color-tertiary: #d8b4fe;
+    --color-stroke: #3c2f4b;
+    --color-main-white: #fffffe;
+    --gradient-header: linear-gradient(135deg, #e9d5ff, #f3e8ff);
+    --gradient-button: linear-gradient(to right, #a855f7, #e9d5ff);
+    --gradient-logo: linear-gradient(to right, #a855f7, #3c2f4b);
+    --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+    --gradient-success: linear-gradient(to right, #b4fecb, #beffb6);
+    --gradient-warning: linear-gradient(to right, #d4b2ff, #e9d5ff);
+    --gradient-info: linear-gradient(to right, #c4b5fd, #ddd6fe);
+    --color-input-bg: #faf8ff;
+    --color-input-text: #3c2f4b;
+    --color-border: #e9d5ff;
+    --color-border-hover: #a855f7;
+    --color-dropdown-bg: rgba(243, 232, 255, 0.9);
+    --color-notification-unread-bg: #e9d5ff;
+    --color-scrollbar-thumb: #e9d5ff;
+    --color-scrollbar-thumb-hover: #a855f7;
+}
 /* =====================================================================
   GLOBAL STYLES & UTILITY CLASSES
 ===================================================================== */

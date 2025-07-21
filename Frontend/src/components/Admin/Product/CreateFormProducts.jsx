@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from "react";
 import api from "../../../utils/http";
 import { ImagePlus, PlusCircle, X, Eye, EyeOff } from "lucide-react";
 
-
 const MAX_IMAGES = 15;
 
 export default function CreateFormProducts({
@@ -14,7 +13,7 @@ export default function CreateFormProducts({
   const [formData, setFormData] = useState({
     category_id: "",
     price: "",
-    import_price:"",
+    import_price: "",
     sale: "",
     username: "",
     password: "",
@@ -76,7 +75,7 @@ export default function CreateFormProducts({
   // Load initial data for editing
   useEffect(() => {
     if (initialData) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         category_id: initialData.category_id || "",
         import_price: initialData.import_price || "",
@@ -177,11 +176,13 @@ export default function CreateFormProducts({
       "image/svg+xml",
       "image/avif",
       "image/heic",
-      "image/heif"
+      "image/heif",
     ];
-    const validFiles = files.filter(f => allowedTypes.includes(f.type));
+    const validFiles = files.filter((f) => allowedTypes.includes(f.type));
     if (validFiles.length !== files.length) {
-      alert("Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic");
+      alert(
+        "Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic"
+      );
     }
     const total = existingImages.length + newImages.length + validFiles.length;
     if (total > MAX_IMAGES) return alert(`Chỉ được tối đa ${MAX_IMAGES} ảnh.`);
@@ -233,7 +234,7 @@ export default function CreateFormProducts({
   const renderCategory = (cats, lvl = 0) =>
     cats.flatMap((cat) => [
       <option key={cat.id} value={cat.id}>
-        {" ".repeat(lvl * 4)}
+        {"".repeat(lvl * 4)}
         {cat.name}
       </option>,
       ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
@@ -243,8 +244,8 @@ export default function CreateFormProducts({
     <form onSubmit={handleSubmit} className="space-y-8">
       {/* Game selection optional, FE-only */}
       {!isEditing && (
-        <div className="p-6 border bg-white rounded shadow-sm">
-          <h3 className="mb-4 font-medium text-gray-900">
+        <div className="p-6 border shadow transition-all border-themed/50 p-6 rounded shadow-sm">
+          <h3 className="mb-4 font-medium text-sm-900">
             Chọn trò chơi (tuỳ chọn)
           </h3>
           <div className="flex gap-4">
@@ -277,7 +278,7 @@ export default function CreateFormProducts({
       )}
 
       {/* Basic info */}
-      <div className="p-6 border bg-white rounded shadow-sm">
+      <div className="p-6 border shadow transition-all border-themed/50 p-6 rounded shadow-sm">
         <h3 className="mb-4 font-medium text-gray-900">Thông tin cơ bản</h3>
         <div className="grid md:grid-cols-2 gap-6">
           {/* <div>
@@ -359,15 +360,15 @@ export default function CreateFormProducts({
         </div>
       </div>
       {/* Phần thông tin đăng nhập */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className="p-6 border shadow transition-all border-themed/50 p-6 shadow-sm">
+        <h3 className="text-lg font-medium leading-6 text-xl-900 mb-4">
           Thông tin đăng nhập
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-sm-700 mb-1"
             >
               Tài khoản đăng nhập
             </label>
@@ -384,7 +385,7 @@ export default function CreateFormProducts({
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-sm-700 mb-1"
             >
               Mật khẩu {isEditing && "(Bỏ trống nếu không đổi)"}
             </label>
@@ -411,8 +412,8 @@ export default function CreateFormProducts({
       </div>
 
       {/* Phần thuộc tính sản phẩm */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className="p-6 border shadow transition-all p-6 shadow-sm">
+        <h3 className="text-lg font-medium leading-6 text-xl-900 mb-4">
           Thuộc tính sản phẩm
         </h3>
         <div className="space-y-4">
@@ -424,7 +425,7 @@ export default function CreateFormProducts({
                 placeholder="Tên thuộc tính"
                 value={attr.attribute_key}
                 onChange={(e) => handleAttributeChange(index, e)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                className="w-full p-2 rounded border"
               />
               <input
                 type="text"
@@ -432,7 +433,7 @@ export default function CreateFormProducts({
                 placeholder="Giá trị"
                 value={attr.attribute_value}
                 onChange={(e) => handleAttributeChange(index, e)}
-                className="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2"
+                className="w-full p-2 rounded border"
               />
               <button
                 type="button"
@@ -454,8 +455,8 @@ export default function CreateFormProducts({
       </div>
 
       {/* Phần hình ảnh sản phẩm */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium leading-6 text-gray-900 mb-4">
+      <div className="p-6 border shadow transition-all border-themed/50 p-6 shadow-sm">
+        <h3 className="text-lg font-medium leading-6 text-xl-900 mb-4">
           Hình ảnh minh họa
         </h3>
         <input

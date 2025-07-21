@@ -122,6 +122,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/order', [UserProfileController::class, 'order']);
             Route::post('/profile-update', [UserProfileController::class, 'update']);
             Route::post('/change-password', [UserProfileController::class, 'changePassword']);
+            Route::get('/getHistoryAff', [UserProfileController::class, 'getAllAffHistory']);
         });
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [DiscountCodeController::class, 'index']);
@@ -190,6 +191,8 @@ Route::middleware(['jwt'])->group(function () {
             Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
             Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
             Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
+            Route::get('/user/{id}', [AdminDiscountCodeController::class, 'getUserByWebId']);
+            Route::get('/web/{id}', [AdminDiscountCodeController::class, 'getWebId']);
         });
         Route::prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
@@ -259,6 +262,16 @@ Route::middleware(['jwt'])->group(function () {
             // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)
             // Tùy chọn: Route để xóa ảnh từ Image Manager
         });
+
+        Route::prefix("/donate_promotions")->group(function(){
+            Route::get("/",[AdminDonatePromotionController::class,'index']);
+            Route::get("/{id}",[AdminDonatePromotionController::class,'show']);
+            Route::post("/",[AdminDonatePromotionController::class,'store']);
+            Route::delete("/{id}",[AdminDonatePromotionController::class,'destroy']);
+            Route::post("/{id}/undo",[AdminDonatePromotionController::class,'undo']);
+        });
+
+
         Route::prefix('/categoryPost')->group(function () {
             Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost']);
             Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost']);

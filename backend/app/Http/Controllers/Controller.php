@@ -6,6 +6,7 @@ use App\Models\GlobalNotification;
 use App\Models\Notification;
 use App\Models\RechargeBank;
 use App\Models\RechargeCard;
+use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -194,78 +195,94 @@ abstract class Controller
     //         return false;
     //     }
     // }
-/**
- * /**
- * Gửi thông báo riêng cho user.
- *
- * @param array $data [
- *     'user_id' => int, // ID người nhận thông báo
- *     'type' => int,
- *  // 1: Hoạt động cá nhân, 2: Đơn hàng, 3: Điểm thưởng, 4: Cảnh báo, 5: Tin nhắn từ Admin
- *     'content' => string, // Nội dung thông báo
- *     'link' => string|null, // Đường dẫn khi click vào
- *     'published_at' => Carbon|null, // Thời gian phát hành
- *     'expires_at' => Carbon|null // Hết hạn thông báo
- * ]
- * @return bool
- */
-public function sendPrivateNotification(array $data)
-{
-    try {
-        Notification::create([
-            'user_id' => $data['user_id'],
-            'type' => $data['type'],
-            'content' => $data['content'],
-            'link' => $data['link'] ?? null,
-            'is_read' => 0,
-            'published_at' => $data['published_at'] ?? Carbon::now(),
-            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
-        ]);
-    } catch (\Throwable $th) {
-        Log::error('SendPrivateNotification error: '.$th->getMessage());
-        return false;
-    }
-}
-/**
- * Gửi thông báo toàn cục (public).
- *
- * @param array $data [
- *     'type' => int, // Kiểu thông báo toàn cục:
- *                    // 1: Khuyến mãi - Giảm giá
- *                    // 2: Bảo trì hệ thống
- *                    // 3: Sự kiện toàn hệ thống
- *                    // 4: Tin tức - Cập nhật mới
- *                    // 5: Quy định - Chính sách mới
- * 
- *     'content' => string, // Nội dung thông báo
- * 
- *     'link' => string|null, // (optional) Đường dẫn khi click vào thông báo.
- *                             // VD: '/promotions' hoặc '/events/123'
- * 
- *     'published_at' => Carbon|null, // (optional) Thời gian phát hành thông báo
- *                                     // Mặc định: Carbon::now()
- * 
- *     'expires_at' => Carbon|null // (optional) Thời gian hết hạn thông báo
- *                                 // Mặc định: Carbon::now()->addDays(3)
- * ]
- * 
- * @return bool
- */
+// /**
 
-public function sendGlobalNotification(array $data)
-{
-    try {
-        GlobalNotification::create([
-            'type' => $data['type'],
-            'content' => $data['content'],
-            'link' => $data['link'] ?? null,
-            'published_at' => $data['published_at'] ?? Carbon::now(),
-            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
-        ]);
-    } catch (\Throwable $th) {
-        Log::error('SendGlobalNotification error: '.$th->getMessage());
-        return false;
+ /* Gửi thông báo (riêng cho user hoặc toàn bộ).
+ *
+ * @param array $data [
+ *     'user_id' => int|null, // Nếu có -> gửi riêng, nếu không -> gửi toàn bộ
+ *     'type' => int,          // 
+ *         Với thông báo riêng (Notification):
+ *             1: Hoạt động cá nhân
+ *             2: Đơn hàng
+ *             3: Điểm thưởng
+ *             4: Cảnh báo
+ *             5: Tin nhắn từ Admin
+ * 
+ *         Với thông báo toàn bộ (GlobalNotification):
+ *             1: Khuyến mãi - Giảm giá
+ *             2: Bảo trì hệ thống
+ *             3: Sự kiện toàn hệ thống
+ *             4: Tin tức - Cập nhật mới
+ *             5: Quy định - Chính sách mới
+ * 
+ *     'content' => string,     // Nội dung thông báo
+ *     'link' => string|null,   // Link khi người dùng click
+ *     'published_at' => Carbon|null, // Thời gian hiển thị (default: now)
+ *     'expires_at' => Carbon|null    // Thời gian hết hạn (default: +3 ngày)
+ * ]
+ *
+ * @return bool Trả về true nếu tạo thành công, false nếu có lỗi
+ */
+    public function sendNotification(
+        int $type,
+        string $content,
+        ?string $link = null,
+        ?int $user_id = null,
+        ?Carbon $published_at = null,
+        ?Carbon $expires_at = null
+    ): bool {
+        try {
+            $published_at = $published_at ?? Carbon::now();
+            $expires_at = $expires_at ?? Carbon::now()->addDays(3);
+
+            if ($user_id !== null) {
+                // Gửi thông báo riêng cho user
+                if (!User::where('id', $user_id)->exists()) {
+                    Log::warning("Gửi thông báo thất bại: người dùng không tồn tại - $user_id");
+                    return false;
+                }
+                return Notification::create([
+                    'user_id'      => $user_id,
+                    'type'         => $type,
+                    'content'      => $content,
+                    'link'         => $link,
+                    'is_read'      => 0,
+                    'published_at' => $published_at,
+                    'expires_at'   => $expires_at,
+                ]) ? true : false;
+            } else {
+                // Gửi thông báo toàn bộ
+                return GlobalNotification::create([
+                    'type'         => $type,
+                    'content'      => $content,
+                    'link'         => $link,
+                    'published_at' => $published_at,
+                    'expires_at'   => $expires_at,
+                ]) ? true : false;
+            }
+        } catch (\Throwable $e) {
+            Log::error('Lỗi khi gửi thông báo: ' . $e->getMessage());
+            return false;
+        }
     }
-}
-  
+
+    // Ví dụ: 
+   /* Gửi thông báo toàn bộ
+    $this->sendNotification(
+        type: 1,
+        content: "Bạn có vâu chờ mới",
+        link: "/vaucho"
+    );
+
+    // Gửi thông báo với user chỉ định
+    $this->sendNotification(
+        user_id: 7,
+        type: 1,
+        content: "Thêm giỏ hàng thành công",
+        link: "/cart"
+    );
+
+    */
+
 }

@@ -232,13 +232,19 @@ export default function CreateFormProducts({
 
   // Render category options
   const renderCategory = (cats, lvl = 0) =>
-    cats.flatMap((cat) => [
-      <option key={cat.id} value={cat.id}>
-        {"".repeat(lvl * 4)}
-        {cat.name}
-      </option>,
-      ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
-    ]);
+    cats.flatMap((cat) => {
+      // Bỏ qua danh mục có id là 1
+      if (cat.id === 1) return [];
+      // Nếu là danh mục gốc (parent_id === null), disabled
+      const isRoot = cat.parent_id === null;
+      const prefix = lvl > 0 ? `${">".repeat(lvl * 1)} ` : "";
+      return [
+        <option key={cat.id} value={cat.id} disabled={isRoot}>
+          {prefix}{cat.name}
+        </option>,
+        ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
+      ];
+    });
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">

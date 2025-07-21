@@ -84,10 +84,11 @@ export default function CategoryForm({
       if (isEditing && initialData && cat.id === initialData.id) {
         return [];
       }
+      // Tạo tiền tố cho từng cấp
+      const prefix = lvl > 0 ? `${"-".repeat(lvl * 2)} ` : "";
       return [
         <option key={cat.id} value={cat.id}>
-          {" ".repeat(lvl * 4)}
-          {cat.name}
+          {prefix}{cat.name}
         </option>,
         ...(cat.children ? renderCategory(cat.children, lvl + 1) : []),
       ];

@@ -1,8 +1,8 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../../utils/http';
 import TurndownService from 'turndown';
+import $ from 'jquery'; // Đảm bảo jQuery được import để Froala có thể sử dụng
 
 // --- IMPORT CSS CỦA FROALA EDITOR ---
 import 'froala-editor/css/froala_editor.pkgd.min.css';
@@ -33,14 +33,10 @@ import 'froala-editor/js/plugins/video.min.js';
 import 'froala-editor/js/plugins/line_breaker.min.js';
 import 'froala-editor/js/plugins/word_paste.min.js';
 import 'froala-editor/js/plugins/save.min.js';
-import { useNotification } from '../../../contexts/NotificationContext';
+// *** MỚI: IMPORT PLUGIN CHO FILE UPLOAD ***
+import 'froala-editor/js/plugins/file.min.js';
 
-// Khởi tạo TurndownService
-const turndownService = new TurndownService({
-    headingStyle: 'atx',
-    bulletListMarker: '*',
-    codeBlockStyle: 'fenced',
-});
+import { useNotification } from '../../../contexts/NotificationContext';
 
 // Hàm chuyển đổi chuỗi thành slug
 const slugify = (text) => {
@@ -60,23 +56,100 @@ const isContentEmpty = (htmlContent) => {
     return htmlContent === null || htmlContent.trim() === '' || htmlContent.replace(/<[^>]*>/g, '').trim() === '';
 };
 
-// Hàm xử lý nội dung HTML để đảm bảo ảnh căn giữa
-const processImageContent = (htmlContent) => {
+// Hàm xử lý nội dung HTML để đảm bảo ảnh và video căn giữa
+// Hàm này chỉ nên dùng để *đọc* nội dung từ Froala hoặc chuẩn bị trước khi đưa vào Froala
+// Froala Events sẽ xử lý việc chèn và styling tốt hơn.
+const processMediaContentForDisplayOrSave = (htmlContent) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(htmlContent || '<div></div>', 'text/html');
+
+    // Xử lý hình ảnh
     const images = doc.querySelectorAll('img');
     images.forEach((img) => {
         img.style.display = 'block';
         img.style.marginLeft = 'auto';
         img.style.marginRight = 'auto';
-        img.classList.remove('fr-fic', 'fr-dib', 'fr-fil', 'fr-fir');
+        img.classList.remove('fr-fic', 'fr-dib', 'fr-fil', 'fr-fir'); // Xóa class căn chỉnh của Froala nếu có
     });
+
+    // Xử lý video (bao gồm cả iframe)
+    const videos = doc.querySelectorAll('video, iframe'); // Chọn cả video và iframe
+    videos.forEach((media) => {
+        // Đảm bảo video có controls (chỉ áp dụng cho thẻ video)
+        if (media.tagName === 'VIDEO' && !media.getAttribute('controls')) {
+            media.setAttribute('controls', '');
+        }
+        // Áp dụng styling căn giữa cho cả video và iframe
+        media.style.display = 'block';
+        media.style.marginLeft = 'auto';
+        media.style.marginRight = 'auto';
+        media.style.width = '100%';
+        // Đối với iframe, có thể cần chiều cao cụ thể hoặc tỷ lệ aspect ratio
+        if (media.tagName === 'IFRAME') {
+            media.style.height = 'auto'; // Hoặc một giá trị cố định nếu cần
+            // Để giữ tỷ lệ khung hình tốt hơn cho iframe, có thể bao bọc nó trong một div responsiv
+            // Tuy nhiên, việc này phức tạp hơn và thường được xử lý bằng CSS bên ngoài
+            // Đối với mục đích căn giữa, các thuộc tính trên là đủ.
+        }
+    });
+
     return doc.body.innerHTML;
 };
 
 export default function CreatePostPage() {
     const navigate = useNavigate();
-    const { pop, conFim } = useNotification();
+    const { pop } = useNotification(); // Chỉ cần pop cho thông báo
+
+    // Khởi tạo TurndownService và các quy tắc chỉ một lần bằng useMemo
+    const turndownService = useMemo(() => {
+        const td = new TurndownService({
+            headingStyle: 'atx',
+            bulletListMarker: '*',
+            codeBlockStyle: 'fenced',
+        });
+
+        // Quy tắc cho Video: Chuyển đổi thẻ <video> thành Markdown link
+        td.addRule('videoLink', {
+            filter: function (node) {
+                return node.nodeName === 'VIDEO' && (node.getAttribute('src') || node.querySelector('source'));
+            },
+            replacement: function (content, node) {
+                const src = node.getAttribute('src') || (node.querySelector('source') ? node.querySelector('source').getAttribute('src') : null);
+                return src ? `![Video](${src})` : '';
+            }
+        });
+
+        // *** MỚI: Quy tắc cho IFRAME (Video nhúng) ***
+        td.addRule('iframeEmbed', {
+            filter: function (node) {
+                return node.nodeName === 'IFRAME' && (node.getAttribute('src') || node.getAttribute('data-src'));
+            },
+            replacement: function (content, node) {
+                const src = node.getAttribute('src') || node.getAttribute('data-src');
+                const width = node.getAttribute('width') || '560'; // Giữ lại kích thước nếu có
+                const height = node.getAttribute('height') || '315';
+                // Trả về thẻ iframe nguyên bản hoặc một biểu diễn Markdown đơn giản
+                // Lưu ý: Markdown không hỗ trợ iframe trực tiếp, nên chúng ta sẽ giữ lại HTML
+                return `<iframe src="${src}" width="${width}" height="${height}" frameborder="0" allowfullscreen></iframe>`;
+            }
+        });
+
+
+        // Quy tắc cho File Links: Chuy đổi các liên kết file được chèn bởi Froala
+        td.addRule('fileLink', {
+            filter: function (node) {
+                return node.nodeName === 'A' && node.classList.contains('fr-file');
+            },
+            replacement: function (content, node) {
+                const href = node.getAttribute('href');
+                const text = node.textContent.trim();
+                return `[${text}](${href})`;
+            }
+        });
+
+        return td;
+    }, []);
+
     // State cho danh mục
     const [categories, setCategories] = useState([]);
     const [selectedCategoryId, setSelectedCategoryId] = useState('');
@@ -91,6 +164,7 @@ export default function CreatePostPage() {
     const [postContent, setPostContent] = useState('');
     const [postImageFile, setPostImageFile] = useState(null);
     const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+
     // State chung
     const [loadingCategories, setLoadingCategories] = useState(true);
     const [submittingPost, setSubmittingPost] = useState(false);
@@ -113,8 +187,8 @@ export default function CreatePostPage() {
                 buttonsVisible: 5
             },
             moreRich: {
-                buttons: ['insertLink', 'insertImage', 'insertVideo', 'insertTable', 'emoticons', 'specialCharacters', 'insertHR', 'undo', 'redo'],
-                buttonsVisible: 5
+                buttons: ['insertLink', 'insertImage', 'insertVideo', 'insertFile', 'insertTable', 'emoticons', 'specialCharacters', 'insertHR', 'undo', 'redo'],
+                buttonsVisible: 6
             },
             moreMisc: {
                 buttons: ['quote', 'codeView', 'fullscreen', 'help', 'selectAll', 'print', 'getPDF', 'html', 'save'],
@@ -133,15 +207,51 @@ export default function CreatePostPage() {
         imageAllowedTypes: ['jpeg', 'jpg', 'png', 'gif'],
         imageMaxSize: 5 * 1024 * 1024,
         imageEditButtons: [
-            'imageDisplay',
-            'imageAlign',
-            'imageSize',
-            'imageRemove',
-            'imageLink',
-            'imageAlt',
+            'imageDisplay', 'imageAlign', 'imageSize', 'imageRemove', 'imageLink', 'imageAlt',
         ],
         imageDefaultAlign: 'center',
         imageDefaultDisplay: 'block',
+
+        // --- CẤU HÌNH VIDEO ---
+        videoUpload: true,
+        videoUploadURL: `${BACKEND_API_BASE_URL}/admin/post/upload`,
+        videoUploadMethod: 'POST',
+        videoAllowedTypes: ['mp4', 'webm', 'ogg', 'avi', 'mov'],
+        videoMaxSize: 50 * 1024 * 1024,
+        videoEditButtons: [
+            'videoDisplay', 'videoAlign', 'videoSize', 'videoRemove', 'videoLink'
+        ],
+        videoDefaultAlign: 'center',
+        videoDefaultDisplay: 'block',
+        // *** Quan trọng cho chèn video qua URL / Embed ***
+        videoAllowedProviders: ['youtube', 'vimeo', 'dailymotion', 'tiktok'], // Có thể thêm 'tiktok' nếu Froala hỗ trợ
+        videoInsertButtons: ['videoBack', '|', 'videoByURL', 'videoEmbed', 'videoUpload'], // 'videoByURL' và 'videoEmbed' là quan trọng
+
+        // --- Cấu hình File Upload ---
+        fileUpload: true,
+        fileUploadURL: `${BACKEND_API_BASE_URL}/admin/post/upload`,
+        fileUploadMethod: 'POST',
+        fileAllowedTypes: [
+            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'zip', 'rar', 'txt', 'csv',
+            'application/pdf',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'application/zip',
+            'application/x-rar-compressed',
+            'text/plain',
+            'text/csv'
+        ],
+        fileMaxSize: 20 * 1024 * 1024,
+
+        // *** Cấu hình HTML allowed tags/attrs/empty tags để cho phép IFRAME ***
+        htmlAllowedTags: ['.*'],
+        htmlAllowedAttrs: ['.*'],
+        htmlAllowedEmptyTags: ['video', 'source', 'iframe'], // *** Đảm bảo 'iframe' có ở đây ***
+
         events: {
             'image.inserted': function ($img, response) {
                 $img.css({
@@ -159,6 +269,107 @@ export default function CreatePostPage() {
                 });
                 $img.removeClass('fr-fic fr-dib fr-fil fr-fir');
             },
+            // --- Cải thiện EVENT CHO VIDEO ---
+            // Event này xử lý cả video tải lên và video chèn từ URL (nếu Froala chuyển đổi thành <video>)
+            'video.inserted': function ($video, response) {
+                try {
+                    // response có thể là string (từ upload) hoặc object (từ URL/embed)
+                    let videoLink = null;
+                    if (typeof response === 'string') {
+                        const serverResponse = JSON.parse(response);
+                        videoLink = serverResponse.link;
+                    } else if (response && response.link) {
+                        videoLink = response.link;
+                    } else if ($video.attr('src')) { // Video chèn từ URL có thể đã có src
+                        videoLink = $video.attr('src');
+                    } else if ($video.find('source').length) { // Hoặc có thẻ source
+                        videoLink = $video.find('source').attr('src');
+                    }
+
+
+                    if (videoLink) {
+                        // Đảm bảo là thẻ <video> và đặt thuộc tính
+                        if ($video[0].tagName === 'VIDEO') {
+                            $video.attr('controls', 'true');
+                            $video.css({
+                                display: 'block',
+                                'margin-left': 'auto',
+                                'margin-right': 'auto',
+                                width: '100%',
+                                height: 'auto'
+                            });
+                            $video.removeClass('fr-fic fr-dib fr-fil fr-fir');
+                            pop('Video đã được chèn thành công!', 's');
+                        }
+                    } else if ($video[0].tagName === 'IFRAME') {
+                        // *** Xử lý IFRAME khi chèn từ URL/Embed ***
+                        $video.css({
+                            display: 'block',
+                            'margin-left': 'auto',
+                            'margin-right': 'auto',
+                            width: '100%',
+                            height: 'auto', // Hoặc có thể đặt height cố định hoặc responsive
+                            border: 'none' // Loại bỏ border mặc định
+                        });
+                        pop('Video nhúng đã được chèn thành công!', 's');
+                    } else {
+                        console.warn("Không xác định được loại video được chèn:", $video, response);
+                        pop('Có lỗi xảy ra: Không xác định được loại video được chèn.', 'e');
+                    }
+
+
+                } catch (err) {
+                    console.error('Lỗi khi chèn video Froala:', err);
+                    pop('Có lỗi xảy ra khi chèn video. Vui lòng thử lại.', 'e');
+                }
+            },
+            'video.replaced': function ($video, response) {
+                // Áp dụng lại style khi video/iframe được thay thế
+                $video.css({
+                    display: 'block',
+                    'margin-left': 'auto',
+                    'margin-right': 'auto',
+                    width: '100%',
+                    height: 'auto',
+                });
+                if ($video[0].tagName === 'VIDEO') {
+                    $video.attr('controls', 'true');
+                } else if ($video[0].tagName === 'IFRAME') {
+                    $video.css('border', 'none');
+                }
+                $video.removeClass('fr-fic fr-dib fr-fil fr-fir');
+            },
+            'video.error': function (error, response) {
+                console.error('Lỗi Froala Video:', error);
+                pop(`Có lỗi khi tải lên/chèn video: ${error.message || 'Không rõ lỗi'}. Vui lòng thử lại.`, 'e');
+            },
+            // --- Event cho File Upload ---
+            'file.inserted': function ($file, response) {
+                try {
+                    const serverResponse = typeof response === 'string' ? JSON.parse(response) : response;
+                    const fileLink = serverResponse.link;
+                    const fileName = serverResponse.name || 'Tệp đính kèm';
+
+                    if (!fileLink) {
+                        pop('Có lỗi xảy ra: Không nhận được liên kết tệp từ máy chủ.', 'e');
+                        return;
+                    }
+
+                    $file.html(`<i class="fas fa-file-alt"></i> ${fileName}`);
+                    $file.attr('href', fileLink);
+                    $file.attr('target', '_blank');
+                    $file.attr('download', fileName);
+
+                    pop(`Tệp "${fileName}" đã được chèn.`, 's');
+                } catch (err) {
+                    console.error('Lỗi khi chèn file:', err);
+                    pop('Có lỗi xảy ra khi chèn tệp. Vui lòng thử lại.', 'e');
+                }
+            },
+            'file.error': function (error, response) {
+                console.error('Lỗi Froala File:', error);
+                pop(`Có lỗi khi tải lên/chèn tệp: ${error.message || 'Không rõ lỗi'}. Vui lòng thử lại.`, 'e');
+            }
         },
         heightMin: 400,
         heightMax: 800,
@@ -176,6 +387,7 @@ export default function CreatePostPage() {
             } catch (error) {
                 console.error('Lỗi khi lấy danh mục:', error.response?.data || error.message);
                 setGlobalError('Không thể tải danh mục. Vui lòng thử lại.');
+                pop('Không thể tải danh mục. Vui lòng thử lại.', 'e');
             } finally {
                 setLoadingCategories(false);
             }
@@ -206,7 +418,7 @@ export default function CreatePostPage() {
             setShowNewCategoryForm(false);
             setNewCategoryName('');
             setNewCategoryDescription('');
-            pop('Danh mục đã được tạo thành công!','s');
+            pop('Danh mục đã được tạo thành công!', 's');
         } catch (error) {
             console.error('Lỗi khi tạo danh mục:', error.response?.data || error.message);
             if (error.response && error.response.status === 422) {
@@ -221,6 +433,7 @@ export default function CreatePostPage() {
                     error.response?.data?.message || 'Không thể tạo danh mục. Vui lòng thử lại.'
                 );
             }
+            pop('Không thể tạo danh mục.', 'e');
         } finally {
             setSubmittingPost(false);
         }
@@ -250,6 +463,7 @@ export default function CreatePostPage() {
         e.preventDefault();
 
         if (!validatePostForm()) {
+            pop('Vui lòng kiểm tra lại các trường bị lỗi.', 'e');
             return;
         }
 
@@ -257,9 +471,8 @@ export default function CreatePostPage() {
         setGlobalError(null);
 
         try {
-            // Xử lý HTML để đảm bảo ảnh căn giữa
-            const processedHtml = processImageContent(postContent);
-            // Chuyển HTML sang Markdown
+            // Xử lý nội dung HTML trước khi chuyển đổi sang Markdown
+            const processedHtml = processMediaContentForDisplayOrSave(postContent);
             const markdownContent = turndownService.turndown(processedHtml);
 
             const formData = new FormData();
@@ -281,8 +494,9 @@ export default function CreatePostPage() {
             });
 
             if (response.status === 201 || response.status === 200) {
-                pop('Bài viết đã được tạo thành công!','s');
+                pop('Bài viết đã được tạo thành công!', 's');
                 navigate("/admin/post");
+                // Reset form sau khi tạo thành công
                 setPostTitle('');
                 setPostContent('');
                 setPostDescription('');
@@ -294,6 +508,7 @@ export default function CreatePostPage() {
                 setNewCategoryDescription('');
             }
         } catch (err) {
+            console.error("Lỗi khi tạo bài viết:", err.response?.data || err.message);
             setGlobalError(
                 err.response?.data?.message || "Có lỗi xảy ra khi tạo bài viết, vui lòng thử lại."
             );
@@ -304,6 +519,7 @@ export default function CreatePostPage() {
                 }
                 setErrors((prev) => ({ ...prev, ...backendErrors }));
             }
+            pop(err.response?.data?.message || "Có lỗi xảy ra khi tạo bài viết.", 'e');
         } finally {
             setSubmittingPost(false);
         }
@@ -435,12 +651,67 @@ export default function CreatePostPage() {
                                     {category.name}
                                 </option>
                             ))}
-                           
+                            <option value="new">-- Thêm danh mục mới --</option>
                         </select>
                     )}
                     {errors.category && <p className="text-red-500 text-xs italic mt-2">{errors.category}</p>}
                 </div>
-                
+                {showNewCategoryForm && (
+                    <div className="border border-dashed border-gray-400 p-6 rounded-lg bg-blue-50">
+                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Tạo Danh Mục Mới</h3>
+                        <div className="space-y-4">
+                            <div>
+                                <label htmlFor="newCategoryName" className="block text-gray-700 text-sm font-bold mb-2">
+                                    Tên danh mục:
+                                </label>
+                                <input
+                                    type="text"
+                                    id="newCategoryName"
+                                    value={newCategoryName}
+                                    onChange={(e) => setNewCategoryName(e.target.value)}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+                                    placeholder="Nhập tên danh mục mới"
+                                />
+                                {newCategoryError && <p className="text-red-500 text-xs italic mt-2">{newCategoryError}</p>}
+                            </div>
+                            <div>
+                                <label htmlFor="newCategoryDescription" className="block text-gray-700 text-sm font-bold mb-2">
+                                    Mô tả:
+                                </label>
+                                <textarea
+                                    id="newCategoryDescription"
+                                    value={newCategoryDescription}
+                                    onChange={(e) => setNewCategoryDescription(e.target.value)}
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent h-24 resize-y"
+                                    placeholder="Mô tả ngắn về danh mục"
+                                ></textarea>
+                            </div>
+                            <div className="flex justify-end space-x-3 mt-4">
+                                <button
+                                    type="button"
+                                    onClick={handleCreateCategory}
+                                    disabled={submittingPost}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
+                                >
+                                    Tạo Danh Mục
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowNewCategoryForm(false);
+                                        setNewCategoryName('');
+                                        setNewCategoryDescription('');
+                                        setNewCategoryError('');
+                                    }}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition duration-200"
+                                >
+                                    Hủy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <div className="flex justify-end pt-4">
                     <button
                         type="submit"

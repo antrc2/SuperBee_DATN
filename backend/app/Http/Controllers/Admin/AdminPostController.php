@@ -271,21 +271,21 @@ class AdminPostController extends Controller
      */
     public function upload(Request $request)
     {
-        // Validate request
-        $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-        ], [
-            'file.required' => 'Vui lòng chọn một file ảnh.',
-            'file.image' => 'File tải lên phải là một ảnh.',
-            'file.mimes' => 'Định dạng ảnh không hợp lệ. Chỉ chấp nhận jpeg, png, jpg, gif, svg.',
-            'file.max' => 'Kích thước ảnh không được vượt quá 5MB.',
-        ]);
+        // // Validate request
+        // $request->validate([
+        //     'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
+        // ], [
+        //     'file.required' => 'Vui lòng chọn một file ảnh.',
+        //     'file.image' => 'File tải lên phải là một ảnh.',
+        //     'file.mimes' => 'Định dạng ảnh không hợp lệ. Chỉ chấp nhận jpeg, png, jpg, gif, svg.',
+        //     'file.max' => 'Kích thước ảnh không được vượt quá 5MB.',
+        // ]);
 
         // Kiểm tra và lưu file
 
         if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
-            $imageUrl = $this->uploadFile($uploadedFile, 'froala_image',false);
+            $imageUrl = $this->uploadFile($uploadedFile, 'froala_image', false);
 
             if ($imageUrl) {
                 return response()->json(['link' => $imageUrl], 200);

@@ -287,12 +287,12 @@ class CategoryController extends Controller
     {
         try {
             // Không cho phép xóa danh mục mặc định
-            // if ($id == 1) {
-            //     return response()->json([
-            //         'status' => false,
-            //         'message' => 'Không thể xóa danh mục mặc định'
-            //     ], 400);
-            // }
+            if ($id == 1) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không thể xóa danh mục mặc định'
+                ], 400);
+            }
 
             // Tìm danh mục cần xóa
             $category = Category::findOrFail($id);

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import CategoryForm from "@components/Admin/Category/CategoryForm";
 import { LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";
+import { useNotification } from "@contexts/NotificationContext";
+import { ArrowLeft } from "lucide-react";
 
 export default function EditCategoryPage() {
   const { id } = useParams();
@@ -11,6 +13,7 @@ export default function EditCategoryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState(null);
+  const notification = useNotification();
 
   useEffect(() => {
     const fetchCategory = async () => {
@@ -41,10 +44,11 @@ export default function EditCategoryPage() {
         },
       });
       if (response.status === 201 || response.status === 200) {
+        notification.pop("Cập nhật danh mục thành công!", "s");
         navigate("/admin/categories");
       }
     } catch (err) {
-      console.error(err);
+      notification.pop(err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.", "e");
       setError(
         err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại."
       );
@@ -63,13 +67,21 @@ export default function EditCategoryPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700">
-        Chỉnh sửa danh mục: {category?.name}
-      </h2>
+      <div className="flex items-center h-14 mb-4 gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-secondary hover:text-primary px-2 py-1 rounded"
+        >
+          <ArrowLeft size={20} />
+          Quay lại
+        </button>
+        <h2 className="text-2xl font-semibold text-primary text-center flex-1">
+          Chỉnh sửa danh mục: {category?.name}
+        </h2>
+        <div className="w-[120px]" />
+      </div>
       {error && (
-        <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4">
-          {error}
-        </div>
+        <div className="alert alert-danger mb-4">{error}</div>
       )}
       {category ? (
         <CategoryForm

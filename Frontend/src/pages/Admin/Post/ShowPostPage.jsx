@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../../utils/http";
@@ -77,17 +76,58 @@ export default function ShowPostPage() {
     }
   };
 
+  // Renderer tùy chỉnh cho hình ảnh và video
+  const CustomRenderer = (props) => {
+  const src = props.src || "";
+  const alt = props.alt || "";
+
+  if (/\.(mp4|webm|ogg)$/i.test(src)) {
+    return (
+      <video
+        controls
+        style={{
+          display: "block",
+          marginLeft: "auto",
+          marginRight: "auto",
+          maxWidth: "100%",
+          height: "auto",
+        }}
+      >
+        <source src={src} type={`video/${src.split(".").pop()}`} />
+        Trình duyệt của bạn không hỗ trợ HTML5 video.
+      </video>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{
+        display: "block",
+        marginLeft: "auto",
+        marginRight: "auto",
+        maxWidth: "100%",
+        height: "auto",
+      }}
+    />
+  );
+};
+
+
   if (loading) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f9fafb",
-        fontSize: "1.2rem",
-        color: "#4b5563",
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+          fontSize: "1.2rem",
+          color: "#4b5563",
+        }}
+      >
         Đang tải bài viết...
       </div>
     );
@@ -95,18 +135,20 @@ export default function ShowPostPage() {
 
   if (error) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f9fafb",
-        fontSize: "1.2rem",
-        color: "#dc2626",
-        padding: "20px",
-        textAlign: "center",
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+          fontSize: "1.2rem",
+          color: "#dc2626",
+          padding: "20px",
+          textAlign: "center",
+        }}
+      >
         <p>Lỗi: {error}</p>
         <button
           onClick={() => navigate("/")}
@@ -134,15 +176,17 @@ export default function ShowPostPage() {
 
   if (!postData) {
     return (
-      <div style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        backgroundColor: "#f9fafb",
-        fontSize: "1.2rem",
-        color: "#4b5563",
-      }}>
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f9fafb",
+          fontSize: "1.2rem",
+          color: "#4b5563",
+        }}
+      >
         Không có dữ liệu bài viết để hiển thị.
       </div>
     );
@@ -304,18 +348,27 @@ export default function ShowPostPage() {
           </div>
 
           {/* Thumbnail and Description Section */}
-          <div style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-            padding: "32px",
-            borderBottom: "1px solid #e5e7eb",
-            backgroundColor: "#ffffff",
-            borderRadius: "12px",
-            boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
-          }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "24px",
+              padding: "32px",
+              borderBottom: "1px solid #e5e7eb",
+              backgroundColor: "#ffffff",
+              borderRadius: "12px",
+              boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
+            }}
+          >
             <div style={{ borderRadius: "12px", overflow: "hidden" }}>
-              <p style={{ fontSize: "18px", fontWeight: "600", color: "#1f2937", marginBottom: "12px" }}>
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  marginBottom: "12px",
+                }}
+              >
                 Ảnh bìa:
               </p>
               <img
@@ -330,16 +383,27 @@ export default function ShowPostPage() {
                 }}
               />
             </div>
-            <div style={{
-              padding: "20px",
-              backgroundColor: "#f9fafb",
-              borderRadius: "12px",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-            }}>
-              <p style={{ fontSize: "18px", fontWeight: "600", color: "#1f2937", marginBottom: "12px" }}>
+            <div
+              style={{
+                padding: "20px",
+                backgroundColor: "#f9fafb",
+                borderRadius: "12px",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
+              }}
+            >
+              <p
+                style={{
+                  fontSize: "18px",
+                  fontWeight: "600",
+                  color: "#1f2937",
+                  marginBottom: "12px",
+                }}
+              >
                 Mô tả:
               </p>
-              <p style={{ fontSize: "16px", lineHeight: "1.6", color: "#4b5563" }}>
+              <p
+                style={{ fontSize: "16px", lineHeight: "1.6", color: "#4b5563" }}
+              >
                 {postData.description || "Không có mô tả"}
               </p>
             </div>
@@ -347,25 +411,35 @@ export default function ShowPostPage() {
 
           {/* Content Section */}
           <div style={{ padding: "32px", borderBottom: "1px solid #e5e7eb" }}>
-            <h2 style={{
-              fontSize: "28px",
-              fontWeight: "700",
-              marginBottom: "20px",
-              color: "#1f2937",
-            }}>
+            <h2
+              style={{
+                fontSize: "28px",
+                fontWeight: "700",
+                marginBottom: "20px",
+                color: "#1f2937",
+              }}
+            >
               Nội dung bài viết
             </h2>
-            <div style={{
-              backgroundColor: "#f9fafb",
-              padding: "28px",
-              borderRadius: "10px",
-              border: "1px solid #e5e7eb",
-              lineHeight: "1.7",
-            }}>
+            <div
+              style={{
+                backgroundColor: "#f9fafb",
+                padding: "28px",
+                borderRadius: "10px",
+                border: "1px solid #e5e7eb",
+                lineHeight: "1.7",
+              }}
+            >
               <div className="prose">
-                <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+                <ReactMarkdown
+                  rehypePlugins={[rehypeRaw]}
+                  components={{
+                    img: CustomRenderer
+                  }}
+                >
                   {postData.content || "Không có nội dung"}
                 </ReactMarkdown>
+
               </div>
             </div>
           </div>
@@ -373,45 +447,62 @@ export default function ShowPostPage() {
           {/* Category Section */}
           {postData.category && (
             <div style={{ padding: "32px", borderBottom: "1px solid #e5e7eb" }}>
-              <h3 style={{
-                fontSize: "22px",
-                fontWeight: "700",
-                marginBottom: "20px",
-                color: "#1f2937",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}>
+              <h3
+                style={{
+                  fontSize: "22px",
+                  fontWeight: "700",
+                  marginBottom: "20px",
+                  color: "#1f2937",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
                 <span style={{ fontSize: "24px" }}>📚</span> Thông tin danh mục
               </h3>
-              <div style={{
-                background: "linear-gradient(to right, #e0f7fa, #e0f2f7)",
-                padding: "28px",
-                borderRadius: "12px",
-                border: "1px solid #b2ebf2",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-              }}>
+              <div
+                style={{
+                  background: "linear-gradient(to right, #e0f7fa, #e0f2f7)",
+                  padding: "28px",
+                  borderRadius: "12px",
+                  border: "1px solid #b2ebf2",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
                   <div style={{ flex: 1 }}>
-                    <h4 style={{
-                      fontSize: "22px",
-                      fontWeight: "bold",
-                      color: "#00796b",
-                      marginBottom: "10px",
-                    }}>
+                    <h4
+                      style={{
+                        fontSize: "22px",
+                        fontWeight: "bold",
+                        color: "#00796b",
+                        marginBottom: "10px",
+                      }}
+                    >
                       {postData.category.name}
                     </h4>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                      gap: "10px",
-                      fontSize: "15px",
-                      color: "#4b5563",
-                    }}>
-                      <p><strong>Slug:</strong> {postData.category.slug}</p>
-                      <p><strong>ID:</strong> {postData.category.id}</p>
-                      <p><strong>Trạng thái:</strong> {postData.category.status === 1 ? "Hoạt động" : "Không hoạt động"}</p>
-                      <p><strong>Tạo bởi:</strong> Admin {postData.category.created_by}</p>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "10px",
+                        fontSize: "15px",
+                        color: "#4b5563",
+                      }}
+                    >
+                      <p>
+                        <strong>Slug:</strong> {postData.category.slug}
+                      </p>
+                      <p>
+                        <strong>ID:</strong> {postData.category.id}
+                      </p>
+                      <p>
+                        <strong>Trạng thái:</strong>{" "}
+                        {postData.category.status === 1 ? "Hoạt động" : "Không hoạt động"}
+                      </p>
+                      <p>
+                        <strong>Tạo bởi:</strong> Admin {postData.category.created_by}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -422,24 +513,28 @@ export default function ShowPostPage() {
           {/* Author Section */}
           {postData.author && (
             <div style={{ padding: "32px" }}>
-              <h3 style={{
-                fontSize: "22px",
-                fontWeight: "700",
-                marginBottom: "20px",
-                color: "#1f2937",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}>
+              <h3
+                style={{
+                  fontSize: "22px",
+                  fontWeight: "700",
+                  marginBottom: "20px",
+                  color: "#1f2937",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
                 <span style={{ fontSize: "24px" }}>👨‍💻</span> Thông tin chi tiết tác giả
               </h3>
-              <div style={{
-                background: "linear-gradient(to right, #ecfdf5, #d1fae5)",
-                padding: "28px",
-                borderRadius: "12px",
-                border: "1px solid #a7f3d0",
-                boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-              }}>
+              <div
+                style={{
+                  background: "linear-gradient(to right, #ecfdf5, #d1fae5)",
+                  padding: "28px",
+                  borderRadius: "12px",
+                  border: "1px solid #a7f3d0",
+                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
+                }}
+              >
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "28px" }}>
                   <div style={{ position: "relative" }}>
                     <img
@@ -454,42 +549,50 @@ export default function ShowPostPage() {
                         border: "3px solid #34d399",
                       }}
                     />
-                    <div style={{
-                      position: "absolute",
-                      bottom: "0px",
-                      right: "0px",
-                      width: "28px",
-                      height: "28px",
-                      backgroundColor: "#10b981",
-                      borderRadius: "50%",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "2px solid white",
-                    }}>
-                      <div style={{
-                        width: "14px",
-                        height: "14px",
-                        backgroundColor: "white",
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "0px",
+                        right: "0px",
+                        width: "28px",
+                        height: "28px",
+                        backgroundColor: "#10b981",
                         borderRadius: "50%",
-                      }}></div>
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px solid white",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "14px",
+                          height: "14px",
+                          backgroundColor: "white",
+                          borderRadius: "50%",
+                        }}
+                      ></div>
                     </div>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <h4 style={{
-                      fontSize: "26px",
-                      fontWeight: "bold",
-                      color: "#1f2937",
-                      marginBottom: "16px",
-                    }}>
+                    <h4
+                      style={{
+                        fontSize: "26px",
+                        fontWeight: "bold",
+                        color: "#1f2937",
+                        marginBottom: "16px",
+                      }}
+                    >
                       {postData.author.username}
                     </h4>
-                    <div style={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                      gap: "16px",
-                      fontSize: "15px",
-                    }}>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
+                        gap: "16px",
+                        fontSize: "15px",
+                      }}
+                    >
                       <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                         <span style={{ fontSize: "22px" }}>📧</span>
                         <div>
@@ -508,15 +611,17 @@ export default function ShowPostPage() {
                         <span style={{ fontSize: "22px" }}>💰</span>
                         <div>
                           <p style={{ fontWeight: "600", color: "#1f2937" }}>Mã donate</p>
-                          <p style={{
-                            color: "#4b5563",
-                            fontFamily: "monospace",
-                            backgroundColor: "#e5e7eb",
-                            padding: "6px 10px",
-                            borderRadius: "6px",
-                            display: "inline-block",
-                            fontWeight: "bold",
-                          }}>
+                          <p
+                            style={{
+                              color: "#4b5563",
+                              fontFamily: "monospace",
+                              backgroundColor: "#e5e7eb",
+                              padding: "6px 10px",
+                              borderRadius: "6px",
+                              display: "inline-block",
+                              fontWeight: "bold",
+                            }}
+                          >
                             {postData.author.donate_code || "Không có"}
                           </p>
                         </div>
@@ -545,11 +650,13 @@ export default function ShowPostPage() {
                         </div>
                       </div>
                     </div>
-                    <div style={{
-                      marginTop: "20px",
-                      paddingTop: "20px",
-                      borderTop: "1px solid #d1d5db",
-                    }}>
+                    <div
+                      style={{
+                        marginTop: "20px",
+                        paddingTop: "20px",
+                        borderTop: "1px solid #d1d5db",
+                      }}
+                    >
                       <p style={{ fontSize: "13px", color: "#9ca3af" }}>
                         Tham gia từ: {formatDate(postData.author.created_at)}
                       </p>
@@ -561,33 +668,37 @@ export default function ShowPostPage() {
           )}
 
           {/* Footer */}
-          <div style={{
-            padding: "24px",
-            backgroundColor: "#f9fafb",
-            borderTop: "1px solid #e5e7eb",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            fontSize: "14px",
-            color: "#9ca3af",
-            flexWrap: "wrap",
-            gap: "16px",
-            borderRadius: "0 0 12px 12px",
-          }}>
+          <div
+            style={{
+              padding: "24px",
+              backgroundColor: "#f9fafb",
+              borderTop: "1px solid #e5e7eb",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: "14px",
+              color: "#9ca3af",
+              flexWrap: "wrap",
+              gap: "16px",
+              borderRadius: "0 0 12px 12px",
+            }}
+          >
             <p>Bài viết #{postData.id} • Slug: {postData.slug}</p>
             <p>Cập nhật lần cuối: {formatDate(postData.updated_at)}</p>
           </div>
         </div>
       </div>
 
-      {/* Inline CSS để căn giữa ảnh */}
+      {/* Inline CSS để căn giữa ảnh và video */}
       <style>
         {`
-          .prose img {
+          .prose img,
+          .prose video {
             display: block;
             margin-left: auto;
             margin-right: auto;
             max-width: 100%;
+            height: auto;
           }
           .prose {
             color: #374151;

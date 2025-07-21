@@ -139,7 +139,7 @@ export default function News() {
         </aside>
 
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 ">
           {/* News Grid - 2 columns, 3 rows */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {currentArticles.length > 0 ? (

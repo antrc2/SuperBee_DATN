@@ -291,10 +291,11 @@ class AdminDiscountCodeController extends Controller
             ], 500);
         }
     }
-    public function getUserByWebId($id)
+    public function getUserByWebId(Request $request)
     {
         try {
-            $user = User::where('web_id', $id)->get();
+            $user = User::where('web_id', $request->web_id)->get();
+
             if (!$user) {
                 return response()->json([
                     'message' => 'Lấy danh sách user không thành công.',
@@ -305,28 +306,6 @@ class AdminDiscountCodeController extends Controller
                 'message' => 'Lấy danh sách user thành công.',
                 'status' => true,
                 'data' => $user
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
-                'status' => false
-            ], 500);
-        }
-    }
-    public function getWebId($api_key)
-    {
-        try {
-            $web = Web::where('api_key', $api_key)->first();
-            if (!$web) {
-                return response()->json([
-                    'message' => 'Lấy web_id không thành công.',
-                    'status' => false
-                ], 400);
-            }
-            return response()->json([
-                'message' => 'Lấy web_id thành công.',
-                'status' => true,
-                'data' => $web
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

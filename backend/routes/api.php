@@ -185,6 +185,7 @@ Route::middleware(['jwt'])->group(function () {
     Route::middleware(['role:admin'])->prefix('/admin')->group(function () {
         Route::prefix('/discountcode')->group(function () {
             Route::get('/', [AdminDiscountCodeController::class, 'index']);
+            Route::get('/user', [AdminDiscountCodeController::class, 'getUserByWebId']);
             Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
             Route::post('/', [AdminDiscountCodeController::class, 'store']);
             Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
@@ -193,14 +194,6 @@ Route::middleware(['jwt'])->group(function () {
             Route::get('/user/{id}', [AdminDiscountCodeController::class, 'getUserByWebId']);
             Route::get('/web/{id}', [AdminDiscountCodeController::class, 'getWebId']);
         });
-        // Route::prefix('/discountcode')->group(function () {
-        //     Route::get('/', [AdminDiscountCodeController::class, 'index']);
-        //     Route::get('/{id}', [AdminDiscountCodeController::class, 'show']); // Sửa thành {id}
-        //     Route::post('/', [AdminDiscountCodeController::class, 'store']);
-        //     Route::put('/{id}', [AdminDiscountCodeController::class, 'update']); // Sửa thành {id}
-        //     Route::patch('/{id}', [AdminDiscountCodeController::class, 'patch']); // Sửa thành {id}
-        //     Route::delete('/{id}', [AdminDiscountCodeController::class, 'destroy']); // Sửa thành {id}
-        // });
         Route::prefix('categories')->group(function () {
             Route::get('/', [CategoryController::class, 'index']);
             Route::post('/', [CategoryController::class, 'store']);

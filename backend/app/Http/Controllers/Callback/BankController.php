@@ -23,6 +23,7 @@ class BankController extends Controller
                 ],403);
             };
             $contents = explode(" ", $request->content);
+            $frontend_link = env("FRONTEND_URL");
             foreach ($contents as $donate_code){
                 $user = User::where("donate_code",$donate_code)->with('wallet')->first();
                 if (!$user){
@@ -63,6 +64,7 @@ class BankController extends Controller
                             "related_id"=>$recharge_bank->id
                         ]
                         );
+                    $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
                     return response()->json([
                         "status"=>True,
                         "success"=>True,

@@ -2,16 +2,48 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GlobalNotification;
 use App\Models\Notification;
+use App\Models\RechargeBank;
+use App\Models\RechargeCard;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request; // Không cần thiết nếu đây là abstract Controller và Request không được dùng trong hàm này
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log; // Import facade Log
 
 abstract class Controller
 {
+    public function donate_promotion($donate_promotion,$user_id)
+    {
+        if ($donate_promotion !== NULL) {
+            if ($donate_promotion->usage_limit == -1) {
+
+            } else {
+                if ($donate_promotion->total_used >= $donate_promotion->usage_limit){
+                    return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+                }
+            }
+
+            $card = RechargeCard::where("user_id",$user_id)->where("donate_promotion_id",$donate_promotion->id)->where('status',1)->get()->count();
+            $bank = RechargeBank::where('user_id',$user_id)->where("donate_promotion_id",$donate_promotion->id)->get()->count();
+
+            $total_used = $card + $bank;
+
+            if ($donate_promotion->per_user_limit != -1 && $total_used >= $donate_promotion->per_user_limit) {
+                return ['donate_promotion_id'=> null, 'donate_promotion_amount'=> 0];
+            }
+            $donate_promotion->total_used += 1;
+            $donate_promotion->save();
+            return ['donate_promotion_id'=>$donate_promotion->id,"donate_promotion_amount"=>$donate_promotion->amount];
+            // $donate_promotion_id = $donate_promotion->id;
+            // $donate_promotion_amount = $donate_promotion->amount;
+        } else {
+            return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+            // $donate_promotion_id = NULL;
+            // $donate_promotion_amount = 0;
+        }
+    }
+    
     public function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -162,6 +194,78 @@ abstract class Controller
     //         return false;
     //     }
     // }
+/**
+ * /**
+ * Gửi thông báo riêng cho user.
+ *
+ * @param array $data [
+ *     'user_id' => int, // ID người nhận thông báo
+ *     'type' => int,
+ *  // 1: Hoạt động cá nhân, 2: Đơn hàng, 3: Điểm thưởng, 4: Cảnh báo, 5: Tin nhắn từ Admin
+ *     'content' => string, // Nội dung thông báo
+ *     'link' => string|null, // Đường dẫn khi click vào
+ *     'published_at' => Carbon|null, // Thời gian phát hành
+ *     'expires_at' => Carbon|null // Hết hạn thông báo
+ * ]
+ * @return bool
+ */
+public function sendPrivateNotification(array $data)
+{
+    try {
+        Notification::create([
+            'user_id' => $data['user_id'],
+            'type' => $data['type'],
+            'content' => $data['content'],
+            'link' => $data['link'] ?? null,
+            'is_read' => 0,
+            'published_at' => $data['published_at'] ?? Carbon::now(),
+            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
+        ]);
+    } catch (\Throwable $th) {
+        Log::error('SendPrivateNotification error: '.$th->getMessage());
+        return false;
+    }
+}
+/**
+ * Gửi thông báo toàn cục (public).
+ *
+ * @param array $data [
+ *     'type' => int, // Kiểu thông báo toàn cục:
+ *                    // 1: Khuyến mãi - Giảm giá
+ *                    // 2: Bảo trì hệ thống
+ *                    // 3: Sự kiện toàn hệ thống
+ *                    // 4: Tin tức - Cập nhật mới
+ *                    // 5: Quy định - Chính sách mới
+ * 
+ *     'content' => string, // Nội dung thông báo
+ * 
+ *     'link' => string|null, // (optional) Đường dẫn khi click vào thông báo.
+ *                             // VD: '/promotions' hoặc '/events/123'
+ * 
+ *     'published_at' => Carbon|null, // (optional) Thời gian phát hành thông báo
+ *                                     // Mặc định: Carbon::now()
+ * 
+ *     'expires_at' => Carbon|null // (optional) Thời gian hết hạn thông báo
+ *                                 // Mặc định: Carbon::now()->addDays(3)
+ * ]
+ * 
+ * @return bool
+ */
 
+public function sendGlobalNotification(array $data)
+{
+    try {
+        GlobalNotification::create([
+            'type' => $data['type'],
+            'content' => $data['content'],
+            'link' => $data['link'] ?? null,
+            'published_at' => $data['published_at'] ?? Carbon::now(),
+            'expires_at' => $data['expires_at'] ?? Carbon::now()->addDays(3),
+        ]);
+    } catch (\Throwable $th) {
+        Log::error('SendGlobalNotification error: '.$th->getMessage());
+        return false;
+    }
+}
   
 }

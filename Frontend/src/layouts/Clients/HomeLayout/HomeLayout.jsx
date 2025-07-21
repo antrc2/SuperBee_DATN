@@ -6,6 +6,7 @@ import ChatComponent from "../../../pages/Chat/Chat";
 import { useChat } from "../../../contexts/ChatContext";
 import { ClientThemeProvider } from "../../../contexts/ClientThemeContext";
 import { MessageSquareText, X } from "lucide-react"; // Import icon
+import ChatWidget from "../../../pages/Clients/Chatbot/ChatWidget";
 
 export default function HomeLayout() {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -16,7 +17,6 @@ export default function HomeLayout() {
     markChatAsRead,
     unreadCount,
   } = useChat();
-
   const toggleChat = async () => {
     if (!isChatOpen) {
       if (isLoggedIn && !agentChatRoom) {
@@ -35,7 +35,8 @@ export default function HomeLayout() {
           <Outlet />
         </main>
         <Footer />
-
+        <ChatWidget />
+    
         <div className="fixed bottom-5 right-5 z-[1000]">
           {isChatOpen && (
             <div className="absolute bottom-[75px] right-0 w-[24rem] min-h-[450px] max-h-[80vh] animate-fade-in-up">

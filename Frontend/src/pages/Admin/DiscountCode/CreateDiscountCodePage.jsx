@@ -28,24 +28,7 @@ const CreateDiscountCodePage = () => {
   useEffect(() => {
   const fetchUsers = async () => {
     try {
-      setUserLoading(true); // bật loading
-      const apiKey = sessionStorage.getItem("web");
-     if (!apiKey) {
-        console.error("Không tìm thấy API key trong sessionStorage");
-        return;
-      }
-
-      // Gọi API để lấy web info dựa trên api_key
-      const webRes = await api.get(`/admin/discountcode/web/${apiKey}`);
-      const webId = webRes.data?.data?.id;
-
-      if (!webId) {
-        console.error("Không tìm thấy web_id tương ứng");
-        return;
-      }
-
-      // Dùng web_id để lấy danh sách người dùng
-      const userRes = await api.get(`/admin/discountcode/user/${webId}`);
+      const userRes = await api.get(`/admin/discountcode/user`);
       setUsers(userRes.data?.data);
     } catch (err) {
       console.error("Lỗi khi tải danh sách người dùng:", err);

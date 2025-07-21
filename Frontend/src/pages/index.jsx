@@ -9,7 +9,9 @@ import DiscountCodePage from "./Admin/DiscountCode/DiscountCodePage";
 import ShowDiscountCodePage from "./Admin/DiscountCode/ShowDiscountCodePage";
 import EditDiscountCodePage from "./Admin/DiscountCode/EditDiscountCodePage";
 import CreateDonatePromotionPage from "./Admin/DonatePromotion/CreateDonatePromotionPage";
+import DonatePromotionDashboard from "./Admin/DonatePromotion/DonatePromotionDashboard";
 import DonatePromotionPage from "./Admin/DonatePromotion/DonatePromotionPage";
+import DonatePromotionDetail from "./Admin/DonatePromotion/DonatePromotionDetail";
 import EditDonatePromotionPage from "./Admin/DonatePromotion/EditDonatePromotionPage";
 import BannersListPage from "../pages/Admin/Banners/BannersListPage";
 import BannerDetailPage from "../pages/Admin/Banners/BannerDetailPage";
@@ -91,7 +93,9 @@ export {
   EditDiscountCodePage,
   CreateDonatePromotionPage,
   DonatePromotionPage,
+  DonatePromotionDashboard,
   EditDonatePromotionPage,
+  DonatePromotionDetail,
   Login,
   ActiveDomain,
   Home,

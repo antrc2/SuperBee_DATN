@@ -36,6 +36,11 @@ const navItems = [
     path: "/admin/discountcode",
   },
   {
+    icon: <TicketPercent />,
+    name: "Donate Promotion", // Sửa lại tên cho dễ đọc
+    path: "/admin/donatePromotions",
+  },
+  {
     icon: <LayoutList />, // Biểu tượng phù hợp hơn cho Categories
     name: "Categories",
     path: "/admin/categories",

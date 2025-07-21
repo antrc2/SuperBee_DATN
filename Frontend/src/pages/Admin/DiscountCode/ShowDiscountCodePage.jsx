@@ -50,6 +50,9 @@ export default function ShowDiscountCodePage() {
     const fetchDiscountCode = async () => {
       try {
         const response = await api.get(`/admin/discountcode/${id}`)
+        
+        console.log(response.data.data);
+        
         setDiscountCode(response.data.data)
       } catch (err) {
         setError(err.response?.data?.message || "Không thể tải chi tiết mã giảm giá!")

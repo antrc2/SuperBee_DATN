@@ -17,6 +17,21 @@ const availableThemes = [
     name: "Hồng",
     colorClass: "bg-pink-400",
   },
+  {
+    id: "theme-blue",
+    name: "Xanh biển",
+    colorClass: "bg-blue-400",
+  },
+  {
+    id: "theme-green",
+    name: "Xanh lá",
+    colorClass: "bg-green-400",
+  },
+  {
+    id: "theme-purple",
+    name: "Tím",
+    colorClass: "bg-purple-400",
+  },
 ];
 
 // Thêm prop 'isOpen' để điều khiển hiển thị

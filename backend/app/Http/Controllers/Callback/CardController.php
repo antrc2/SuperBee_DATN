@@ -37,10 +37,10 @@ class CardController extends Controller
             $web_id = $recharge_card->web_id;
             $user_info = User::with("wallet")->where("id", $user_id)->first();
             $wallet_id = $user_info->wallet->id;
-            $common = new CommonController();
+            // $common = new CommonController();
             $donate_promotion = DonatePromotion::where('id',$donate_promotion_id)->first();
             // print_r($donate_promotion);
-            $result = $common->donate_promotion($donate_promotion,$user_id);
+            $result = $this->donate_promotion($donate_promotion,$user_id);
             // print_r($result);
             // return;
             $donate_promotion_id = $result['donate_promotion_id'];

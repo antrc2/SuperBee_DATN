@@ -20,64 +20,69 @@ class AdminNotificationController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function getNotificationsForUser(Request $request)
+      public function getNotificationsForUser(Request $request)
     {
         $user = Auth::user();
         $response = [
             'message' => 'Lỗi không xác định khi lấy thông báo.',
             'personal_notifications' => [],
             'global_notifications' => [],
-            'error' => true // Thêm trường error để dễ dàng kiểm tra ở frontend
+            'error' => true
         ];
 
         try {
             // Lấy các thông báo chung đang hoạt động
-            // CHỈ LẤY CÁC TRƯỜNG CỤ THỂ: id, content, published_at, type
             $globalNotifications = GlobalNotification::active()
-                ->select('id', 'content', 'published_at', 'type','link')
+                ->select('id', 'content', 'published_at', 'type', 'link')
                 ->orderBy('published_at', 'desc')
                 ->get();
 
             if ($user) {
-                // Nếu người dùng đã đăng nhập, lấy thông báo cá nhân
-                // CHỈ LẤY CÁC TRƯỜNG CỤ THỂ: id, content, published_at, type, is_read
-                // (Giả sử 'is_read' có sẵn trong bảng Notification)
+                // Lấy thông báo cá nhân
                 $personalNotifications = Notification::where('user_id', $user->id)
-                    ->select('id', 'content', 'published_at', 'type', 'is_read','link')
+                    ->select('id', 'content', 'published_at', 'type', 'is_read', 'link')
                     ->orderBy('published_at', 'desc')
-                    ->get();
+                    ->get()
+                    ->map(function ($notification) {
+                        // Thêm trường 'notification_scope' để FE phân biệt
+                        $notification->notification_scope = 'personal';
+                        return $notification;
+                    });
 
-                // Lấy trạng thái đã đọc của các thông báo chung cho người dùng hiện tại
+                // Lấy ID các thông báo chung đã đọc
                 $readGlobalNotificationIds = UserGlobalNotificationStatus::where('user_id', $user->id)
                     ->pluck('global_notification_id')
                     ->toArray();
 
-                // Kết hợp thông báo chung với trạng thái đã đọc
+                // Kết hợp thông báo chung với trạng thái đã đọc và thêm scope
                 $globalNotificationsWithStatus = $globalNotifications->map(function ($notification) use ($readGlobalNotificationIds) {
                     $notification->is_read = in_array($notification->id, $readGlobalNotificationIds);
+                    // Thêm trường 'notification_scope' để FE phân biệt
+                    $notification->notification_scope = 'global';
                     return $notification;
                 });
 
                 $response['personal_notifications'] = $personalNotifications;
                 $response['global_notifications'] = $globalNotificationsWithStatus;
-                $response['message'] = 'Danh sách thông báo cá nhân và thông báo chung cho người dùng đã đăng nhập.';
-                $response['error'] = false; // Đặt lỗi là false khi thành công
+                $response['message'] = 'Lấy danh sách thông báo thành công.';
+                $response['error'] = false;
 
             } else {
-                // Nếu người dùng chưa đăng nhập, chỉ trả về thông báo chung (không có trạng thái đã đọc theo user)
-                // Vẫn chọn các trường cụ thể
+                // Nếu là khách, chỉ trả về thông báo chung
                 $response['global_notifications'] = $globalNotifications->map(function ($notification) {
-                    $notification->is_read = false; // Mặc định là chưa đọc cho khách
+                    $notification->is_read = false; // Mặc định là chưa đọc
+                    // Thêm trường 'notification_scope' để FE phân biệt
+                    $notification->notification_scope = 'global';
                     return $notification;
                 });
                 $response['message'] = 'Danh sách thông báo chung cho khách.';
-                $response['error'] = false; // Đặt lỗi là false khi thành công
+                $response['error'] = false;
             }
             return response()->json($response);
         } catch (\Exception $e) {
-            $response['message'] = 'Đã xảy ra lỗi trong quá trình lấy thông báo: ' . $e->getMessage();
-            $response['error'] = true; 
-            return response()->json($response, 500); // Trả về mã lỗi 500
+            $response['message'] = 'Đã xảy ra lỗi: ' . $e->getMessage();
+            $response['error'] = true;
+            return response()->json($response, 500);
         }
     }
     /**
@@ -252,5 +257,41 @@ class AdminNotificationController extends Controller
         return response()->json([
             'message' => 'Thông báo chung đã được đánh dấu là đã đọc.'
         ]);
+    }
+    public function markPersonalAsRead(Request $request, $id)
+    {
+        $user = Auth::user();
+        $notification = Notification::where('id', $id)->where('user_id', $user->id)->first();
+
+        if (!$notification) {
+            return response()->json(['message' => 'Thông báo không tồn tại hoặc bạn không có quyền.'], 404);
+        }
+
+        $notification->is_read = true;
+        $notification->save();
+
+        return response()->json(['message' => 'Đã đánh dấu thông báo cá nhân là đã đọc.']);
+    }
+
+    /**
+     * Đánh dấu thông báo chung là đã đọc.
+     */
+    public function markGlobalAsRead(Request $request, $id)
+    {
+        $user = Auth::user();
+        
+        // Kiểm tra xem thông báo chung có tồn tại không
+        $globalNotificationExists = GlobalNotification::where('id', $id)->exists();
+        if (!$globalNotificationExists) {
+            return response()->json(['message' => 'Thông báo chung không tồn tại.'], 404);
+        }
+
+        // Tạo hoặc cập nhật bản ghi trạng thái
+        UserGlobalNotificationStatus::updateOrCreate(
+            ['user_id' => $user->id, 'global_notification_id' => $id],
+            ['read_at' => now()]
+        );
+
+        return response()->json(['message' => 'Đã đánh dấu thông báo chung là đã đọc.']);
     }
 }

@@ -83,7 +83,20 @@ const navItems = [
   {
     icon: <Newspaper />,
     name: "Authorization",
-    path: "/admin/authorization",
+    // path: "/admin/authorization",
+    subItems: [
+      {
+        name: " Dashboard ",
+        path: "/admin/authorization",
+        pro: false,
+      },
+      { name: "Roles", path: "/admin/authorization/roles", pro: false },
+      {
+        name: "Permissions",
+        path: "/admin/authorization/permissions",
+        pro: false,
+      },
+    ],
   },
 ];
 

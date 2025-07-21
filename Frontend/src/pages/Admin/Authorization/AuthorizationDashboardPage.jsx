@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import axios from "axios"; // Hoặc import từ file cấu hình axios của bạn
-import { useTheme } from "../../../contexts/ThemeContext";
 import api from "../../../utils/http";
 
 // Component Card để hiển thị số liệu thống kê
@@ -51,13 +49,13 @@ export default function AuthorizationDashboardPage() {
 
   if (isLoading)
     return (
-      <div className="text-center p-8 animate-pulse dark:text-gray-400">
+      <div className="p-8 text-center animate-pulse dark:text-gray-400">
         Đang tải...
       </div>
     );
   if (error)
     return (
-      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4">
         {error}
       </div>
     );
@@ -77,71 +75,23 @@ export default function AuthorizationDashboardPage() {
           title="Tổng số Vai trò"
           value={stats?.role_count ?? 0}
           linkTo="/admin/authorization/roles"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-          }
         />
         <StatCard
           title="Tổng số Quyền hạn"
           value={stats?.permission_count ?? 0}
           linkTo="/admin/authorization/permissions"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H5v-2H3v-2H1v-4a6 6 0 017.743-5.743z"
-              />
-            </svg>
-          }
         />
         <StatCard
           title="Tài khoản có quyền"
           value={stats?.power_user_count ?? 0}
-          linkTo="/admin/authorization/users"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21v-2a4 4 0 00-4-4H9a4 4 0 00-4 4v2"
-              />
-            </svg>
-          }
+          linkTo="#"
         />
       </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
         <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-            Danh sách Tài khoản được gán quyền
+            Danh sách Tài khoản có quyền quản trị
           </h2>
         </div>
         <div className="overflow-x-auto">
@@ -164,7 +114,7 @@ export default function AuthorizationDashboardPage() {
                 power_users.map((user) => (
                   <tr
                     key={user.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
@@ -190,15 +140,29 @@ export default function AuthorizationDashboardPage() {
                         {user.roles.map((role) => (
                           <span
                             key={role.id}
-                            className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300 capitalize"
+                            className={`px-2 py-1 text-xs font-semibold rounded-full capitalize 
+                          ${
+                            role.name === "admin"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                              : ""
+                          }
+                          ${
+                            role.name === "super-admin"
+                              ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                              : ""
+                          }
+                          ${
+                            role.name !== "admin" && role.name !== "super-admin"
+                              ? "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300"
+                              : ""
+                          }`}
                           >
-                            {role.name}
+                            {role.name.replace("_", " ")}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      {/* ĐÂY LÀ ĐƯỜNG DẪN ĐƯỢC CẬP NHẬT */}
                       <Link
                         to={`/admin/authorization/users/${user.id}/manage`}
                         className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"

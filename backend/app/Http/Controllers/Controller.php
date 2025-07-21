@@ -4,16 +4,46 @@ namespace App\Http\Controllers;
 
 use App\Models\GlobalNotification;
 use App\Models\Notification;
+use App\Models\RechargeBank;
+use App\Models\RechargeCard;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use Illuminate\Http\Request; // Không cần thiết nếu đây là abstract Controller và Request không được dùng trong hàm này
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log; // Import facade Log
 
 abstract class Controller
 {
+    public function donate_promotion($donate_promotion,$user_id)
+    {
+        if ($donate_promotion !== NULL) {
+            if ($donate_promotion->usage_limit == -1) {
+
+            } else {
+                if ($donate_promotion->total_used >= $donate_promotion->usage_limit){
+                    return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+                }
+            }
+
+            $card = RechargeCard::where("user_id",$user_id)->where("donate_promotion_id",$donate_promotion->id)->where('status',1)->get()->count();
+            $bank = RechargeBank::where('user_id',$user_id)->where("donate_promotion_id",$donate_promotion->id)->get()->count();
+
+            $total_used = $card + $bank;
+
+            if ($donate_promotion->per_user_limit != -1 && $total_used >= $donate_promotion->per_user_limit) {
+                return ['donate_promotion_id'=> null, 'donate_promotion_amount'=> 0];
+            }
+            $donate_promotion->total_used += 1;
+            $donate_promotion->save();
+            return ['donate_promotion_id'=>$donate_promotion->id,"donate_promotion_amount"=>$donate_promotion->amount];
+            // $donate_promotion_id = $donate_promotion->id;
+            // $donate_promotion_amount = $donate_promotion->amount;
+        } else {
+            return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+            // $donate_promotion_id = NULL;
+            // $donate_promotion_amount = 0;
+        }
+    }
+    
     public function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

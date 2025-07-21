@@ -32,8 +32,7 @@ class BankController extends Controller
                     $web_id = $user->web_id;
                     $wallet_id = $user->wallet->id;
                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate   )->where('status', 1)->orderBy('id', 'desc')->first();
-                    $common = new CommonController();
-                    $result = $common->donate_promotion($donate_promotion,$user_id);
+                    $result = $this->donate_promotion($donate_promotion,$user_id);
                     $donate_promotion_id = $result['donate_promotion_id'];
                     $donate_promotion_amount = $result['donate_promotion_amount'];
                     $amount = $request->transferAmount;

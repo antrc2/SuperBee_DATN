@@ -404,10 +404,17 @@ class AdminProductController extends Controller
             // }
             $response = $this->uploadFiles($images,'product_images/'.$sku);
             foreach ($response as $image){
-                if (is_null($image['url'])){
+                if ($image['url'] == ""){
                     DB::rollBack();
-                    return response()->json(['message' => $image['messsage'],'status'=>False], 500);
+                    return response()->json([
+                        "status"=>False,
+                        "message"=>$image['message'],
+                    ],500);
                 }
+                // if (is_null($image['url'])){
+                //     DB::rollBack();
+                //     return response()->json(['message' => $image['messsage'],'status'=>False], 500);
+                // }
 
                 ProductImage::create([
                     'product_id'=>$product->id,
@@ -453,7 +460,7 @@ class AdminProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Đã có lỗi xảy ra",
-                // "error" => $th->getMessage(),
+                "error" => $th->getMessage(),
             ], 500);
         }
     }

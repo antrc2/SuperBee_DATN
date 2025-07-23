@@ -649,20 +649,24 @@ export async function sendMailDonate(userEmail, { username, amount }) {
         <p>Chúng tôi rất cảm kích sự ủng hộ của bạn với số tiền <span class="highlight">${amount}
     "vi-VN"
    VND</span>.</p>
-          "vi-VN"
-        )} VND</span>.</p>
         <p>Sự đóng góp của bạn sẽ giúp chúng tôi tiếp tục phát triển và cung cấp dịch vụ tốt nhất cho cộng đồng game thủ.</p>
         <p>Cảm ơn bạn đã đồng hành cùng chúng tôi!</p>
         <p>Trân trọng,<br>Đội ngũ ${APP_NAME}</p>
     `;
-
+  console.log({
+    MAIL_HOST: process.env.MAIL_HOST,
+    MAIL_PORT: process.env.MAIL_PORT,
+    MAIL_USER: process.env.MAIL_USER ? "[OK]" : "[MISSING]",
+    MAIL_PASS: process.env.MAIL_PASS ? "[OK]" : "[MISSING]",
+  });
+  await transporter.verify(); // kiểm tra kết nối SMTP
   const mailOptions = {
     from: `"${MAIL_FROM_NAME}" <${MAIL_FROM_ADDRESS}>`,
     to: userEmail,
     subject: subject,
     html: getStyledEmailTemplate(htmlContent, subject),
   };
-// console.log("Mail options:", mailOptions);
+  // console.log("Mail options:", mailOptions);
   try {
     console.log(`Sending donation email to ${userEmail}...`);
     await transporter.sendMail(mailOptions);

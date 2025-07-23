@@ -10,6 +10,7 @@ use App\Models\ProductGameAttribute;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class PartnerProductController extends Controller
 {
@@ -151,19 +152,72 @@ class PartnerProductController extends Controller
             }
 
             // Validate dữ liệu
-            $validated = $request->validate([
-                'category_id' => 'nullable|integer|exists:categories,id',
-                // 'price' => 'nullable|numeric|min:0',
-                'import_price' => "nullable|numeric|min:0",
-                // 'sale' => 'nullable|numeric|min:0',
-                'username' => 'nullable|string',
-                'password' => 'nullable|string',
-                'attributes' => 'nullable|array',
-                'attributes.*.attribute_key' => 'required_with:attributes|string',
-                'attributes.*.attribute_value' => 'required_with:attributes|string',
-                'images' => 'nullable|array',
-                'images.*' => 'required_with:images|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
-            ]);
+            $rules = [
+                'category_id'                 => 'required|integer|exists:categories,id',
+                // 'sku'                      => 'required|string|unique:products,sku',
+                'import_price'                => 'required|numeric|min:0',
+                'price'                       => 'required|numeric|min:0',
+                'sale'                        => 'nullable|numeric|min:0',
+                'username'                    => 'required|string',
+                'password'                    => 'required|string',
+                'attributes'                  => 'required|array',
+                'attributes.*.attribute_key'  => 'required|string',
+                'attributes.*.attribute_value' => 'required|string',
+                'images'                      => 'required|array',
+                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'description'                 => 'nullable|string',
+            ];
+            $messages = [
+                'category_id.required' => 'Vui lòng chọn danh mục.',
+                'category_id.integer'  => 'Danh mục không hợp lệ.',
+                'category_id.exists'   => 'Danh mục đã chọn không tồn tại.',
+
+                // 'sku.required'        => 'Vui lòng nhập SKU.',
+                // 'sku.string'          => 'SKU phải là chuỗi ký tự.',
+                // 'sku.unique'          => 'SKU này đã tồn tại.',
+
+                'import_price.required' => 'Giá nhập bắt buộc.',
+                'import_price.numeric'  => 'Giá nhập phải là số.',
+                'import_price.min'      => 'Giá nhập không được âm.',
+
+                'price.required' => 'Giá bán bắt buộc.',
+                'price.numeric'  => 'Giá bán phải là số.',
+                'price.min'      => 'Giá bán không được âm.',
+
+                'sale.numeric' => 'Giảm giá phải là số.',
+                'sale.min'     => 'Giảm giá không được âm.',
+
+                'username.required' => 'Vui lòng nhập username.',
+                'username.string'   => 'Username phải là chuỗi ký tự.',
+
+                'password.required' => 'Vui lòng nhập mật khẩu.',
+                'password.string'   => 'Mật khẩu phải là chuỗi ký tự.',
+
+                'attributes.required'                 => 'Bạn phải nhập ít nhất một thuộc tính.',
+                'attributes.array'                    => 'Thuộc tính phải ở dạng mảng.',
+                'attributes.*.attribute_key.required' => 'Thiếu tên thuộc tính.',
+                'attributes.*.attribute_key.string'   => 'Tên thuộc tính phải là chuỗi.',
+                'attributes.*.attribute_value.required' => 'Thiếu giá trị thuộc tính.',
+                'attributes.*.attribute_value.string'   => 'Giá trị thuộc tính phải là chuỗi.',
+
+                'images.required' => 'Bạn phải tải lên ít nhất một ảnh.',
+                'images.array'    => 'Danh sách ảnh phải là mảng.',
+                'images.*.image'  => 'Tệp tải lên phải là hình ảnh.',
+                'images.*.mimes'  => 'Ảnh phải có định dạng: jpeg, png, jpg, gif hoặc svg.',
+                'images.*.max'    => 'Ảnh không được lớn hơn 10MB.',
+
+                'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                // Trả về JSON (API)
+                return response()->json([
+                    'status'  => false,
+                    'message' => $validator->errors()->first(), // message đầu tiên
+                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
+                ], 422);
+            }
+            $validated = $validator->validated();
             // if (isset($validated['sale']) && $validated['sale'] == 0) {
             //     $validated['sale'] = null;
             // }
@@ -366,18 +420,72 @@ class PartnerProductController extends Controller
             $request->merge(['attributes' => $attributes]);
 
             // Validate dữ liệu gửi lên
-            $validatedData = $request->validate([
-                'category_id' => 'required|integer|exists:categories,id',
-                // 'sku' => 'required|string|unique:products,sku',
-                'import_price' => "required|numeric|min:0",
-                'username' => 'required|string',
-                'password' => 'required|string',
-                'attributes' => 'required|array',
-                'attributes.*.attribute_key' => 'required|string',
+            $rules = [
+                'category_id'                 => 'required|integer|exists:categories,id',
+                // 'sku'                      => 'required|string|unique:products,sku',
+                'import_price'                => 'required|numeric|min:0',
+                'price'                       => 'required|numeric|min:0',
+                'sale'                        => 'nullable|numeric|min:0',
+                'username'                    => 'required|string',
+                'password'                    => 'required|string',
+                'attributes'                  => 'required|array',
+                'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
-                'images' => 'required',
-                'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
-            ]);     
+                'images'                      => 'required|array',
+                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'description'                 => 'nullable|string',
+            ];
+            $messages = [
+                'category_id.required' => 'Vui lòng chọn danh mục.',
+                'category_id.integer'  => 'Danh mục không hợp lệ.',
+                'category_id.exists'   => 'Danh mục đã chọn không tồn tại.',
+
+                // 'sku.required'        => 'Vui lòng nhập SKU.',
+                // 'sku.string'          => 'SKU phải là chuỗi ký tự.',
+                // 'sku.unique'          => 'SKU này đã tồn tại.',
+
+                'import_price.required' => 'Giá nhập bắt buộc.',
+                'import_price.numeric'  => 'Giá nhập phải là số.',
+                'import_price.min'      => 'Giá nhập không được âm.',
+
+                'price.required' => 'Giá bán bắt buộc.',
+                'price.numeric'  => 'Giá bán phải là số.',
+                'price.min'      => 'Giá bán không được âm.',
+
+                'sale.numeric' => 'Giảm giá phải là số.',
+                'sale.min'     => 'Giảm giá không được âm.',
+
+                'username.required' => 'Vui lòng nhập username.',
+                'username.string'   => 'Username phải là chuỗi ký tự.',
+
+                'password.required' => 'Vui lòng nhập mật khẩu.',
+                'password.string'   => 'Mật khẩu phải là chuỗi ký tự.',
+
+                'attributes.required'                 => 'Bạn phải nhập ít nhất một thuộc tính.',
+                'attributes.array'                    => 'Thuộc tính phải ở dạng mảng.',
+                'attributes.*.attribute_key.required' => 'Thiếu tên thuộc tính.',
+                'attributes.*.attribute_key.string'   => 'Tên thuộc tính phải là chuỗi.',
+                'attributes.*.attribute_value.required' => 'Thiếu giá trị thuộc tính.',
+                'attributes.*.attribute_value.string'   => 'Giá trị thuộc tính phải là chuỗi.',
+
+                'images.required' => 'Bạn phải tải lên ít nhất một ảnh.',
+                'images.array'    => 'Danh sách ảnh phải là mảng.',
+                'images.*.image'  => 'Tệp tải lên phải là hình ảnh.',
+                'images.*.mimes'  => 'Ảnh phải có định dạng: jpeg, png, jpg, gif hoặc svg.',
+                'images.*.max'    => 'Ảnh không được lớn hơn 10MB.',
+
+                'description.string' => 'Mô tả phải là chuỗi ký tự.',
+            ];
+            $validator = Validator::make($request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                // Trả về JSON (API)
+                return response()->json([
+                    'status'  => false,
+                    'message' => $validator->errors()->first(), // message đầu tiên
+                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
+                ], 422);
+            }
+            $validatedData = $validator->validated();     
             // Bắt đầu transaction
             DB::beginTransaction();
             function generate_sku($length = 20)

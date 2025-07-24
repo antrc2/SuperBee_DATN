@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Business_setting;
 use App\Models\Categorypost;
 use App\Models\Post;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class AdminPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi lấy danh sách bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -48,7 +49,7 @@ class AdminPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi lấy bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -64,7 +65,7 @@ class AdminPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi xóa bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -142,7 +143,7 @@ class AdminPostController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi tạo bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -160,12 +161,7 @@ class AdminPostController extends Controller
                 'content' => 'required|string',
                 'descriptionPost' => 'nullable|string|max:500',
                 'author_id' => 'required|exists:users,id',
-
-                // Chỉ yêu cầu 1 trong 2: category_id hoặc category_name
                 'category_id' => 'nullable|exists:categories,id',
-                'category_name' => 'nullable|required_without:category_id|string|max:255',
-                'category_slug' => 'nullable|required_with:category_name|string|max:255|unique:categories,slug,' . $post->category_id,
-                'category_description' => 'nullable|string',
             ]);
             if ($validator->fails()) {
                 return response()->json([
@@ -174,24 +170,8 @@ class AdminPostController extends Controller
                     "errors" => $validator->errors()
                 ], 422);
             }
-            // 2. Xử lý danh mục: chọn sẵn hoặc tạo mới
+
             $categoryId = $request->input('category_id');
-            if (!$categoryId && $request->filled('category_name') && $request->filled('category_slug')) {
-                $category = Categorypost::updateOrCreate(
-                    ['slug' => $request->input('category_slug')],
-                    [
-                        'name' => $request->input('category_name'),
-                        'description' => $request->input('category_description', ''),
-                    ]
-                );
-                $categoryId = $category->id;
-            }
-            if (!$categoryId) {
-                return response()->json([
-                    "message" => "Bạn cần chọn danh mục có sẵn hoặc nhập danh mục mới",
-                    "status" => false
-                ], 422);
-            }
             // 3. Upload ảnh nếu có
             $imageUrl = $post->image_thumbnail_url; // Giữ nguyên ảnh cũ nếu không có ảnh mới
             if ($request->hasFile('image_thumbnail')) {
@@ -218,7 +198,7 @@ class AdminPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi cập nhật bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -238,7 +218,7 @@ class AdminPostController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi đổi trạng thái bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra. ",
                 "status" => false
             ], 500);
         }
@@ -258,7 +238,7 @@ class AdminPostController extends Controller
             }
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi đổi trạng thái bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -271,18 +251,6 @@ class AdminPostController extends Controller
      */
     public function upload(Request $request)
     {
-        // // Validate request
-        // $request->validate([
-        //     'file' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:5120',
-        // ], [
-        //     'file.required' => 'Vui lòng chọn một file ảnh.',
-        //     'file.image' => 'File tải lên phải là một ảnh.',
-        //     'file.mimes' => 'Định dạng ảnh không hợp lệ. Chỉ chấp nhận jpeg, png, jpg, gif, svg.',
-        //     'file.max' => 'Kích thước ảnh không được vượt quá 5MB.',
-        // ]);
-
-        // Kiểm tra và lưu file
-
         if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
             $imageUrl = $this->uploadFile($uploadedFile, 'froala_image', false);
@@ -377,7 +345,7 @@ class AdminPostController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi đổi trạng thái bài viết: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
             ], 500);
         }
@@ -399,8 +367,78 @@ class AdminPostController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Tải bài viết thất bại: " . $e->getMessage(),
+                "message" => "Đã có lỗi xảy ra.",
                 "status" => false
+            ], 500);
+        }
+    }
+    public function auToPost(Request $request)
+    {
+        try {
+            $web = Business_setting::where('web_id', $request->web_id)->first();
+            if (!$web) {
+                return response()->json([
+                    'message' => "Không tìm thấy thông tin web.",
+                    'status' => false
+                ], 404);
+            }
+            $web->auto_post = 1;
+            $web->save();
+            return response()->json([
+                'message' => "Đã bật tự động đăng bài viết.",
+                'status' => true,
+                'data' => $web
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => "Đã có lỗi xảy ra." . $e->getMessage(),
+                'status' => false,
+            ], 500);
+        }
+    }
+    public function Business(Request $request)
+    {
+        try {
+            $web = Business_setting::where('web_id', $request->web_id)->first();
+            if (!$web) {
+                return response()->json([
+                    'message' => "Không tìm thấy thông tin web.",
+                    'status' => false
+                ], 404);
+            }
+            return response()->json([
+                'message' => "Thông tin đã được lấy thành công.",
+                'status' => true,
+                'data' => $web
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => "Đã có lỗi xảy ra." . $e->getMessage(),
+                'status' => false,
+            ], 500);
+        }
+    }
+    public function RefreshAuto(Request $request)
+    {
+        try {
+            $web = Business_setting::where('web_id', $request->web_id)->first();
+            if (!$web) {
+                return response()->json([
+                    'message' => "Không tìm thấy thông tin web.",
+                    'status' => false
+                ], 404);
+            }
+            $web->auto_post = 0; // Tắt tự động đăng bài
+            $web->save();
+            return response()->json([
+                'message' => "Đã tắt tự động đăng bài viết.",
+                'status' => true,
+                'data' => $web
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => "Đã có lỗi xảy ra.",
+                'status' => false,
             ], 500);
         }
     }

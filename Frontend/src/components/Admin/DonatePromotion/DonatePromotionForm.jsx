@@ -51,7 +51,7 @@ export default function CreateFormDonatePromotion({
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="amount" className="block mb-1 text-sm">
-              Giá trị khuyến mãi (VNĐ)
+              Giá trị khuyến mãi (%)
             </label>
             <input
               name="amount"

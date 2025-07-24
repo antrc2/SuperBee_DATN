@@ -24,7 +24,7 @@ class ProductSeeder extends Seeder
     }
     public function run(): void
     {
-   // Tạo danh mục cha và con
+        // Tạo danh mục cha và con
         $parent_categories = [];
         for ($i = 1; $i <= 7; $i++) {
             $parent_categories[] = DB::table('categories')->insertGetId([
@@ -94,45 +94,6 @@ class ProductSeeder extends Seeder
                     'alt_text' => 'Ảnh sản phẩm ' . $product_id . ' - ' . $j,
                 ]);
             }
-        }
-
-        $categories = [
-            [
-                'name' => 'Tin tức Game',
-                'description' => 'Cập nhật các tin tức mới nhất về game, sự kiện và giải đấu.',
-            ],
-            [
-                'name' => 'Hướng dẫn & Mẹo chơi',
-                'description' => 'Các bài viết hướng dẫn chi tiết, mẹo và chiến thuật giúp người chơi nâng cao kỹ năng.',
-            ],
-            [
-                'name' => 'Review & Đánh giá',
-                'description' => 'Đánh giá chuyên sâu về các tựa game, nhân vật, trang bị và trải nghiệm chơi game.',
-            ],
-            [
-                'name' => 'Cộng đồng & Văn hóa Game',
-                'description' => 'Khám phá những câu chuyện, phỏng vấn và xu hướng trong cộng đồng game thủ.',
-            ],
-            [
-                'name' => 'Ưu đãi Website',
-                'description' => 'Thông tin về các chương trình khuyến mãi, giảm giá và cập nhật dịch vụ trên website.',
-            ],
-            [
-                'name' => 'Phân tích Meta',
-                'description' => 'Phân tích xu hướng meta game và các thay đổi quan trọng trong lối chơi.',
-            ],
-            [
-                'name' => 'Giải đấu Esports',
-                'description' => 'Tổng hợp tin tức, lịch thi đấu và kết quả các giải đấu Esports lớn nhỏ.',
-            ],
-        ];
-
-        foreach ($categories as $categoryData) {
-            Categorypost::create([
-                'name' => $categoryData['name'],
-                'slug' => Str::slug($categoryData['name']), // Tự động tạo slug từ tên
-                'description' => $categoryData['description'],
-            ]);
         }
     }
 }

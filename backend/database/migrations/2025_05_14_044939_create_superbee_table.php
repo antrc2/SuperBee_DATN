@@ -58,6 +58,8 @@ return new class extends Migration
             $table->string('template_name')->default('default');
             $table->json('header_settings')->nullable();
             $table->json('footer_settings')->nullable();
+            $table->boolean('auto_post')->default(false)->comment('0: Tắt, 1: Bật');
+            $table->unsignedInteger('auto_post_interval')->default(90)->comment('Khoảng thời gian đăng bài tự động (phút)');
             $table->timestamps();
         });
 

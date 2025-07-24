@@ -24,6 +24,10 @@ export function AuthProvider({ children }) {
         }
       : null;
   });
+  const [auth, setAuth] = useState({
+    roles: [],
+    permissions: [],
+  });
   const [loading, setLoading] = useState(false);
   const [token, setToken] = useState(sessionStorage.getItem("access_token"));
   const [error, setError] = useState(null); // Trạng thái lỗi riêng cho các thao tác auth
@@ -111,7 +115,6 @@ export function AuthProvider({ children }) {
         });
         pop("Đăng nhập thành công", "s");
         const savedLocation = await checkLocation();
-        console.log("🚀 ~ login ~ savedLocation:", savedLocation);
         if (savedLocation) {
           localStorage.removeItem("location");
           window.location.href = `${savedLocation}`;
@@ -212,8 +215,12 @@ export function AuthProvider({ children }) {
       if (res.data && res.data.status) {
         setUser((prevUser) => ({
           ...prevUser,
-          money: res.data.money,
+          money: res.data.data.money,
         }));
+        setAuth({
+          roles: res.data.data.roles || [],
+          permissions: res.data.data.permissions || [],
+        });
       } else {
         console.error("Failed to fetch user money:", res.data.message);
       }
@@ -236,6 +243,7 @@ export function AuthProvider({ children }) {
         logout,
         setUser,
         fetchUserMoney,
+        ...auth,
       }}
     >
       {children}

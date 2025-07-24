@@ -58,7 +58,8 @@ class S3Controller:
                 return {
                     "status": False,
                     "message": f"File {file.filename} chứa nội dung không hợp lệ",
-                    "url": ""
+                    "url": "",
+                    "filename": file.filename
                 }
         if (thread):
 

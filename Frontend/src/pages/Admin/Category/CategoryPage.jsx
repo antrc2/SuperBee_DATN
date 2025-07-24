@@ -23,6 +23,7 @@ import {
 } from "@heroicons/react/24/outline";
 
 import Image from "@components/Client/Image/Image.jsx"
+import { useNotification } from "@contexts/NotificationContext";
 
 const CategoryPage = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const CategoryPage = () => {
   const [categoriesData, setCategoriesData] = useState();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState();
+  const notification = useNotification();
 
   const getCategories = async () => {
     try {
@@ -92,12 +94,14 @@ const CategoryPage = () => {
           categoriesData.data = updatedCategories;
         }
         getCategories();
+        notification.pop("Xóa danh mục thành công!", "s");
 
       }
     } catch (error) {
       setDeleteError(
         error.response?.data?.message || "Failed to delete category"
       );
+      notification.pop(error.response?.data?.message || "Xóa danh mục thất bại!", "e");
       console.error("Error deleting category:", error);
     } finally {
       setIsDeleting(false);
@@ -276,151 +280,98 @@ const CategoryPage = () => {
         </CardBody>
       </Card>
 
-      {/* Delete Confirmation Dialog */}
-      <div className="">
-        <Dialog
-          open={openDeleteDialog}
-          handler={() => setOpenDeleteDialog(false)}
-          className="flex items-center justify-center"
-          animate={{
-            mount: { scale: 1, y: 0, opacity: 1 },
-            unmount: { scale: 0.9, y: -100, opacity: 0 },
+      {/* Delete Confirmation Popup */}
+      {openDeleteDialog && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setOpenDeleteDialog(false);
+              setDeleteError(null);
+            }
           }}
         >
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-auto overflow-hidden">
-            <DialogHeader className="justify-between py-4 px-6 bg-gradient-to-r from-red-500 to-red-600">
-              <Typography
-                variant="h6"
-                color="white"
-                className="text-center w-full font-semibold"
-              >
-                Delete Category
-              </Typography>
-              <IconButton
-                color="white"
-                size="sm"
-                variant="text"
+          <div className="bg-input rounded-lg shadow-themed w-full max-w-xs mx-auto flex flex-col items-center justify-center p-6 text-center relative">
+            {/* Close (X) button */}
+            <button
+              className="absolute top-2 right-2 text-secondary hover:text-primary p-1 rounded-full focus:outline-none"
+              onClick={() => {
+                setOpenDeleteDialog(false);
+                setDeleteError(null);
+              }}
+              aria-label="Đóng"
+              type="button"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            {/* Icon */}
+            <div className="mb-2">
+              <div className="bg-gradient-danger p-2 rounded-full flex items-center justify-center mx-auto">
+                <TrashIcon className="h-7 w-7 text-accent-contrast" />
+              </div>
+            </div>
+            {/* Title & Description */}
+            <div className="mb-3">
+              <span className="block font-semibold text-primary text-base mb-1">Xác nhận xóa danh mục?</span>
+              <span className="block text-xs text-secondary">Hành động này không thể hoàn tác.</span>
+            </div>
+            {/* Error message */}
+            {deleteError && (
+              <div className="alert alert-danger mb-2 text-xs">{deleteError}</div>
+            )}
+            {/* Action buttons */}
+            <div className="flex gap-2 justify-center w-full mt-2">
+              <Button
+                variant="outlined"
+                color="blue-gray"
                 onClick={() => {
                   setOpenDeleteDialog(false);
                   setDeleteError(null);
                 }}
-                className="absolute right-4 top-4 hover:bg-white/20"
+                className="text-xs font-medium px-4 py-1 min-w-[70px]"
+                disabled={isDeleting}
               >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="h-5 w-5"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </IconButton>
-            </DialogHeader>
-            <DialogBody className="px-6 py-6">
-              {deleteError ? (
-                <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                Hủy
+              </Button>
+              <Button
+                variant="gradient"
+                color="red"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-1 text-xs text-primary font-medium px-4 py-1 min-w-[70px] shadow-themed hover:shadow-lg transition-all duration-200"
+              >
+                {isDeleting ? (
                   <svg
+                    className="animate-spin h-4 w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+                    fill="none"
+                    viewBox="0 0 24 24"
                   >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
                     <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
-                  {deleteError}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center text-center gap-4">
-                  <div className="bg-red-100 p-4 rounded-full ring-4 ring-red-50">
-                    <TrashIcon className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div>
-                    <Typography
-                      variant="h6"
-                      color="blue-gray"
-                      className="font-semibold mb-2"
-                    >
-                      Are you sure?
-                    </Typography>
-                    <Typography
-                      variant="small"
-                      color="gray"
-                      className="font-normal max-w-[240px]"
-                    >
-                      This action cannot be undone. This will permanently delete
-                      the category and all its subcategories.
-                    </Typography>
-                  </div>
-                </div>
-              )}
-            </DialogBody>
-            <DialogFooter className="px-6 py-4 border-t border-gray-100">
-              <div className="flex justify-end gap-3 w-full">
-                <Button
-                  variant="outlined"
-                  color="blue-gray"
-                  onClick={() => {
-                    setOpenDeleteDialog(false);
-                    setDeleteError(null);
-                  }}
-                  className="text-sm font-medium"
-                  disabled={isDeleting}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="gradient"
-                  color="red"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="flex items-center gap-2 text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200"
-                >
-                  {isDeleting ? (
-                    <>
-                      <svg
-                        className="animate-spin h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Deleting...
-                    </>
-                  ) : (
-                    <>
-                      <TrashIcon color="black" className="h-4 w-4" />
-                      <span className="text-black">Delete</span>
-                    </>
-                  )}
-                </Button>
-              </div>
-            </DialogFooter>
+                ) : (
+                  <TrashIcon color="black" className="h-4 w-4" />
+                )}
+                {isDeleting ? "Đang xóa..." : "Xóa"}
+              </Button>
+            </div>
           </div>
-        </Dialog>
-      </div>
+        </div>
+      )}
     </div>
   );
 };

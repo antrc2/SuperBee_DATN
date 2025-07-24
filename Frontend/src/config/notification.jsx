@@ -1,61 +1,66 @@
+import React from "react";
 import { Bell, Gift, AlertTriangle, Info, Wrench } from "lucide-react";
 
+/**
+ * Đối tượng cấu hình trung tâm cho tất cả các loại thông báo.
+ * - key: Một định danh duy nhất (string) cho loại thông báo, sẽ được trả về từ API.
+ * - id: Định danh.
+ * - label: Tên hiển thị trong bộ lọc trên trang thông báo.
+ * - icon: Component icon sẽ được hiển thị.
+ * - alertClass: Class CSS (ví dụ từ DaisyUI/Tailwind) để tạo kiểu cho nền của item.
+ * - showInFilter: Có hiển thị loại này trong bộ lọc hay không.
+ * - badge: (Tùy chọn) Một nhãn nhỏ để làm nổi bật thông báo.
+ */
 export const NOTIFICATION_TYPES = {
-  // Mỗi key là một định danh duy nhất cho loại thông báo (nên dùng string)
-  promotion: {
+  1: {
     id: "promotion",
-    label: "Khuyến mãi", // Tên hiển thị trong bộ lọc
-    icon: <Gift size={20} className="text-highlight" />,
-    alertClass: "alert-warning", // Class CSS cho trang chi tiết
-    isClickable: true, // Có thể click để xem chi tiết hay không
-    showInFilter: true, // Có hiển thị trong bộ lọc không
+    label: "Khuyến mãi",
+    icon: <Gift size={20} className="text-yellow-500" />,
+    alertClass: "alert-warning",
+    showInFilter: true,
     badge: {
       text: "HOT",
       className:
-        "px-2 py-0.5 text-xs font-semibold rounded-full bg-gradient-warning text-accent-contrast",
+        "px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white",
     },
   },
-  system: {
+  2: {
     id: "system",
     label: "Hệ thống",
-    icon: <Bell size={20} className="text-info" />,
+    icon: <Bell size={20} className="text-blue-500" />,
     alertClass: "alert-info",
-    isClickable: true,
     showInFilter: true,
   },
   alert: {
     id: "alert",
     label: "Cảnh báo",
-    icon: <AlertTriangle size={20} className="text-red-500" />,
+    icon: <AlertTriangle size={20} className="text-red-600" />,
     alertClass: "alert-danger",
-    isClickable: true,
     showInFilter: true,
   },
   info: {
     id: "info",
     label: "Thông tin",
-    icon: <Info size={20} />,
+    icon: <Info size={20} className="text-green-500" />,
     alertClass: "alert-success",
-    isClickable: false, // Loại này không thể click xem chi tiết
     showInFilter: true,
   },
-  // Ví dụ thêm một loại mới dễ dàng
-  // maintenance: {
-  //   id: "maintenance",
-  //   label: "Bảo trì",
-  //   icon: <Wrench size={20} />,
-  //   alertClass: "alert-info",
-  //   isClickable: false,
-  //   showInFilter: false, // Ẩn khỏi bộ lọc
-  // }
+  // Loại mặc định, sử dụng khi API trả về một type không xác định
+  default: {
+    id: "default",
+    label: "Chung",
+    icon: <Bell size={20} />,
+    alertClass: "alert-secondary",
+    showInFilter: false,
+  },
 };
 
 /**
  * Hàm tiện ích để lấy cấu hình một cách an toàn.
- * Nếu không tìm thấy loại `type`, sẽ trả về cấu hình của 'info' làm mặc định.
- * @param {string} type - Định danh của loại thông báo (ví dụ: "system", "promotion")
+ * Nếu không tìm thấy `type`, sẽ trả về cấu hình mặc định.
+ * @param {string} type - Định danh của loại thông báo (ví dụ: "system", "promotion").
  * @returns {object} - Đối tượng cấu hình cho loại thông báo đó.
  */
 export const getNotificationConfig = (type) => {
-  return NOTIFICATION_TYPES[type] || NOTIFICATION_TYPES.info;
+  return NOTIFICATION_TYPES[type] || NOTIFICATION_TYPES.default;
 };

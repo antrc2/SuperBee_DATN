@@ -23,6 +23,7 @@ class BankController extends Controller
                 ],403);
             };
             $contents = explode(" ", $request->content);
+            $frontend_link = env("FRONTEND_URL");
             foreach ($contents as $donate_code){
                 $user = User::where("donate_code",$donate_code)->with('wallet')->first();
                 if (!$user){
@@ -32,8 +33,7 @@ class BankController extends Controller
                     $web_id = $user->web_id;
                     $wallet_id = $user->wallet->id;
                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate   )->where('status', 1)->orderBy('id', 'desc')->first();
-                    $common = new CommonController();
-                    $result = $common->donate_promotion($donate_promotion,$user_id);
+                    $result = $this->donate_promotion($donate_promotion,$user_id);
                     $donate_promotion_id = $result['donate_promotion_id'];
                     $donate_promotion_amount = $result['donate_promotion_amount'];
                     $amount = $request->transferAmount;
@@ -64,6 +64,7 @@ class BankController extends Controller
                             "related_id"=>$recharge_bank->id
                         ]
                         );
+                    $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
                     return response()->json([
                         "status"=>True,
                         "success"=>True,

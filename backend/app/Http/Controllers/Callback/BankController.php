@@ -57,7 +57,7 @@ class BankController extends Controller
                         "transaction_reference"=>$request->referenceCode,
                         "status"=>1,
                         "donate_promotion_id"=>$donate_promotion_id,
-                        "donate_amount"=>$donate_amount
+                        // "donate_amount"=>$donate_amount
                     ]);
                     WalletTransaction::where("id",$wallet_transaction_id)->update(
                         [

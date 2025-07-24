@@ -102,7 +102,7 @@ class CardController extends Controller
                 "declared_value" => $declared_value,
                 "status" => $status,
                 'message' => $message,
-                "donate_amount"=>$donate_amount
+                // "donate_amount"=>$donate_amount
             ]);
             // $this->sendNotification(1,"Nạp số dư thành công",$user_id = $user_id);
             // $frontend_url = env("FRONTEND_URL");

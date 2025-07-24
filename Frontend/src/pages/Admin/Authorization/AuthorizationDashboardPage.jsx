@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import api from "../../../utils/http";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 // Component Card để hiển thị số liệu thống kê
 function StatCard({ title, value, icon, linkTo }) {
@@ -47,12 +48,7 @@ export default function AuthorizationDashboardPage() {
     fetchData();
   }, []);
 
-  if (isLoading)
-    return (
-      <div className="p-8 text-center animate-pulse dark:text-gray-400">
-        Đang tải...
-      </div>
-    );
+  if (isLoading) return <LoadingDomain />;
   if (error)
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4">

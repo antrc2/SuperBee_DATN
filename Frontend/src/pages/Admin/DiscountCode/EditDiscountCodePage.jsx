@@ -6,12 +6,12 @@ import { useNotification } from "../../../contexts/NotificationContext";
 const EditDiscountCodePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [pop,confirm]=useNotification();
+  const { pop, confirm } = useNotification();
   const [users, setUsers] = useState([]);
   const [form, setForm] = useState({
     code: "",
     usage_limit: "",
-    description:"",
+    description: "",
     per_user_limit: "",
     discount_value: "",
     min_discount_amount: "",
@@ -25,46 +25,50 @@ const EditDiscountCodePage = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-  const fetchData = async () => {
-    try {
-      // 1. Load mã giảm giá
-      const response = await api.get(`/admin/discountcode/${id}`);
-      const data = response.data?.data || {};
-      setForm({
-        code: data.code || "",
-        description: data.description || "",
-        usage_limit: data.usage_limit || "",
-        per_user_limit: data.per_user_limit || "",
-        discount_value: data.discount_value || "",
-        min_discount_amount: data.min_discount_amount || "",
-        max_discount_amount: data.max_discount_amount || "",
-        start_date: data.start_date ? new Date(data.start_date).toISOString().slice(0, 16) : "",
-        end_date: data.end_date ? new Date(data.end_date).toISOString().slice(0, 16) : "",
-        status: data.status !== undefined ? data.status : 1,
-        target_user_id: data.target_user_id ?? -1, // Nếu có
-      });
+    const fetchData = async () => {
+      try {
+        // 1. Load mã giảm giá
+        const response = await api.get(`/admin/discountcode/${id}`);
+        const data = response.data?.data || {};
+        setForm({
+          code: data.code || "",
+          description: data.description || "",
+          usage_limit: data.usage_limit || "",
+          per_user_limit: data.per_user_limit || "",
+          discount_value: data.discount_value || "",
+          min_discount_amount: data.min_discount_amount || "",
+          max_discount_amount: data.max_discount_amount || "",
+          start_date: data.start_date
+            ? new Date(data.start_date).toISOString().slice(0, 16)
+            : "",
+          end_date: data.end_date
+            ? new Date(data.end_date).toISOString().slice(0, 16)
+            : "",
+          status: data.status !== undefined ? data.status : 1,
+          target_user_id: data.target_user_id ?? -1, // Nếu có
+        });
 
-      // 2. Lấy api_key từ sessionStorage
-      const apiKey = sessionStorage.getItem("web");
-      if (!apiKey) return;
+        // 2. Lấy api_key từ sessionStorage
+        const apiKey = sessionStorage.getItem("web");
+        if (!apiKey) return;
 
-      // 3. Lấy web_id
-      const webRes = await api.get(`/admin/discountcode/web/${apiKey}`);
-      const webId = webRes.data?.data?.id;
-      if (!webId) return;
+        // 3. Lấy web_id
+        const webRes = await api.get(`/admin/discountcode/web/${apiKey}`);
+        const webId = webRes.data?.data?.id;
+        if (!webId) return;
 
-      // 4. Lấy danh sách người dùng
-      const userRes = await api.get(`/admin/discountcode/user/${webId}`);
-      setUsers(userRes.data?.data || []);
-    } catch (err) {
-      setError(err.response?.data?.message || "Lỗi khi tải dữ liệu!");
-    } finally {
-      setLoading(false);
-    }
-  };
+        // 4. Lấy danh sách người dùng
+        const userRes = await api.get(`/admin/discountcode/user/${webId}`);
+        setUsers(userRes.data?.data || []);
+      } catch (err) {
+        setError(err.response?.data?.message || "Lỗi khi tải dữ liệu!");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  fetchData();
-}, [id]);
+    fetchData();
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -85,7 +89,11 @@ const EditDiscountCodePage = () => {
       return;
     }
 
-    if (form.start_date && form.end_date && new Date(form.start_date) > new Date(form.end_date)) {
+    if (
+      form.start_date &&
+      form.end_date &&
+      new Date(form.start_date) > new Date(form.end_date)
+    ) {
       setError("Ngày kết thúc phải sau ngày bắt đầu");
       setLoading(false);
       return;
@@ -95,15 +103,22 @@ const EditDiscountCodePage = () => {
       const payload = {
         ...form,
         usage_limit: form.usage_limit !== "" ? Number(form.usage_limit) : -1,
-        per_user_limit: form.per_user_limit !== "" ? Number(form.per_user_limit) : -1,
-        discount_value: form.discount_value ? Number(form.discount_value) : null,
-        min_discount_amount: form.min_discount_amount ? Number(form.min_discount_amount) : null,
-        max_discount_amount: form.max_discount_amount ? Number(form.max_discount_amount) : null,
+        per_user_limit:
+          form.per_user_limit !== "" ? Number(form.per_user_limit) : -1,
+        discount_value: form.discount_value
+          ? Number(form.discount_value)
+          : null,
+        min_discount_amount: form.min_discount_amount
+          ? Number(form.min_discount_amount)
+          : null,
+        max_discount_amount: form.max_discount_amount
+          ? Number(form.max_discount_amount)
+          : null,
         target_user_id: Number(form.target_user_id),
       };
 
       await api.put(`/admin/discountcode/${id}`, payload);
-      pop("Cập nhật mã giảm giá thành công!",'s');
+      pop("Cập nhật mã giảm giá thành công!", "s");
       navigate("/admin/discountcode");
     } catch (err) {
       setError(err.response?.data?.message || "Có lỗi xảy ra!");
@@ -116,9 +131,23 @@ const EditDiscountCodePage = () => {
     return (
       <div className="p-6 flex justify-center items-center min-h-screen">
         <div className="flex items-center">
-          <svg className="animate-spin h-8 w-8 text-blue-600 mr-2" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z" />
+          <svg
+            className="animate-spin h-8 w-8 text-blue-600 mr-2"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+            />
           </svg>
           <span>Đang tải...</span>
         </div>
@@ -129,7 +158,9 @@ const EditDiscountCodePage = () => {
   return (
     <div className="p-6 bg-gray-100 min-h-screen">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-4">Chỉnh sửa mã giảm giá: {form.code || `#${id}`}</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">
+          Chỉnh sửa mã giảm giá: {form.code || `#${id}`}
+        </h1>
         <div className="bg-white rounded-lg shadow-lg p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -139,7 +170,9 @@ const EditDiscountCodePage = () => {
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mã giảm giá</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mã giảm giá
+                </label>
                 <input
                   type="text"
                   name="code"
@@ -150,7 +183,9 @@ const EditDiscountCodePage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phần trăm giảm (%)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phần trăm giảm (%)
+                </label>
                 <input
                   type="number"
                   name="discount_value"
@@ -165,7 +200,9 @@ const EditDiscountCodePage = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Số lượt sử dụng tối đa</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Số lượt sử dụng tối đa
+                </label>
                 <input
                   type="number"
                   name="usage_limit"
@@ -177,7 +214,9 @@ const EditDiscountCodePage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Số lượt mỗi người dùng</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Số lượt mỗi người dùng
+                </label>
                 <input
                   type="number"
                   name="per_user_limit"
@@ -190,7 +229,9 @@ const EditDiscountCodePage = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Áp dụng cho</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Áp dụng cho
+              </label>
               <select
                 name="target_user_id"
                 value={form.target_user_id}
@@ -208,7 +249,9 @@ const EditDiscountCodePage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giảm giá tối thiểu (VNĐ)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giảm giá tối thiểu (VNĐ)
+                </label>
                 <input
                   type="number"
                   name="min_discount_amount"
@@ -218,7 +261,9 @@ const EditDiscountCodePage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Giảm giá tối đa (VNĐ)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giảm giá tối đa (VNĐ)
+                </label>
                 <input
                   type="number"
                   name="max_discount_amount"
@@ -230,7 +275,9 @@ const EditDiscountCodePage = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày bắt đầu</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ngày bắt đầu
+                </label>
                 <input
                   type="datetime-local"
                   name="start_date"
@@ -240,7 +287,9 @@ const EditDiscountCodePage = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ngày kết thúc</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ngày kết thúc
+                </label>
                 <input
                   type="datetime-local"
                   name="end_date"
@@ -251,7 +300,9 @@ const EditDiscountCodePage = () => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mô tả</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Mô tả
+              </label>
               <textarea
                 name="description"
                 value={form.description}
@@ -262,7 +313,9 @@ const EditDiscountCodePage = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Trạng thái</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Trạng thái
+              </label>
               <select
                 name="status"
                 value={form.status}
@@ -277,7 +330,9 @@ const EditDiscountCodePage = () => {
               type="submit"
               disabled={loading}
               className={`w-full py-2 px-4 rounded-md text-white font-medium transition-colors duration-200 ${
-                loading ? "bg-blue-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+                loading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
               {loading ? "Đang lưu..." : "Cập nhật"}

@@ -21,7 +21,15 @@ const adminRoutes = [
     path: "/admin",
     element: (
       <ThemeProvider>
-        <ProtectedRoute allowedRoles={["admin", "super-admin"]}>
+        <ProtectedRoute
+          allowedRoles={[
+            "admin",
+            "admin-super",
+            "ke-toan",
+            "nv-ho-tro",
+            "nv-marketing",
+          ]}
+        >
           <AppLayout />
         </ProtectedRoute>
       </ThemeProvider>

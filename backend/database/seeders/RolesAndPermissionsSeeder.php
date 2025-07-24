@@ -1,7 +1,4 @@
 <?php
-
-// FILE: database/seeders/RolesAndPermissionsSeeder.php
-
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -12,10 +9,12 @@ use App\Models\User;
 use App\Models\Web;
 use App\Models\Wallet;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class RolesAndPermissionsSeeder extends Seeder
 {
+    /**
+     * A helper function to generate a random code.
+     */
     private function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -27,6 +26,11 @@ class RolesAndPermissionsSeeder extends Seeder
         return $code;
     }
 
+    /**
+     * Run the database seeds.
+     *
+     * @return void
+     */
     public function run(): void
     {
         // === PHẦN 1: THIẾT LẬP CƠ SỞ DỮ LIỆU ===
@@ -43,90 +47,98 @@ class RolesAndPermissionsSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
         $this->command->info('Đã xóa dữ liệu cũ trong các bảng liên quan.');
 
-
         // === PHẦN 2: ĐỊNH NGHĨA VÀ TẠO TẤT CẢ CÁC QUYỀN (PERMISSIONS) ===
         $this->command->info('Bắt đầu tạo Permissions...');
-        
+
         $permissionsByGroup = [
-            'Quản lý Hệ thống & Phân quyền' => [
-                'system.manage-settings' => 'Quản lý cài đặt chung của website',
-                'system.view-logs'       => 'Xem nhật ký hệ thống',
-                'roles.manage'           => 'Quản lý vai trò (tạo/sửa/xóa)',
-                'roles.assign'           => 'Gán vai trò và quyền cho người dùng',
+            'Quản lý Phân quyền' => [
+                'roles.view' => 'Xem vai trò',
+                'roles.create' => 'Tạo vai trò',
+                'roles.edit' => 'Sửa vai trò',
+                'roles.delete' => 'Xóa vai trò',
+                'permissions.view' => 'Xem quyền hạn',
             ],
             'Quản lý Người dùng' => [
-                'users.manage'         => 'Quản lý người dùng (bao gồm tất cả quyền con)',
-                'users.view'           => 'Xem danh sách người dùng',
-                'users.create'         => 'Tạo người dùng mới',
-                'users.edit'           => 'Sửa thông tin người dùng',
-                'users.delete'         => 'Xóa người dùng',
-                'users.manage-status'  => 'Kích hoạt/Vô hiệu hóa người dùng',
-                'users.reset-password' => 'Đặt lại mật khẩu cho người dùng',
+                'users.view' => 'Xem danh sách người dùng',
+                'users.create' => 'Tạo người dùng mới',
+                'users.edit' => 'Sửa thông tin người dùng',
+                'users.delete' => 'Xóa người dùng',
+                'profile.view_own' => 'Xem hồ sơ cá nhân',
+                'profile.edit_own' => 'Sửa hồ sơ cá nhân',
             ],
-            'Quản lý Sản phẩm & Dịch vụ' => [
-                'products.manage'            => 'Quản lý sản phẩm (bao gồm tất cả quyền con)',
-                'products.view'              => 'Xem danh sách sản phẩm/dịch vụ',
-                'products.create'            => 'Tạo sản phẩm/dịch vụ mới',
-                'products.edit'              => 'Sửa sản phẩm/dịch vụ',
-                'products.delete'            => 'Xóa sản phẩm/dịch vụ',
-                'products.approve'           => 'Duyệt (chấp nhận/từ chối) sản phẩm',
-                'categories.manage'          => 'Quản lý danh mục sản phẩm',
+            'Quản lý Web con' => [
+                'webs.view' => 'Xem danh sách web con',
+                'webs.create' => 'Tạo web con',
+                'webs.edit' => 'Sửa web con',
+                'webs.delete' => 'Xóa web con',
+                'business_settings.view' => 'Xem cài đặt web',
+                'business_settings.edit' => 'Sửa cài đặt web',
             ],
-            'Quản lý Bán hàng & Đơn hàng' => [
-                'orders.manage'        => 'Quản lý đơn hàng (bao gồm tất cả quyền con)',
-                'orders.view-all'      => 'Xem tất cả đơn hàng',
-                'orders.view-own'      => 'Chỉ xem đơn hàng của bản thân',
-                'orders.create'        => 'Tạo đơn hàng mới',
-                'orders.edit'          => 'Sửa thông tin đơn hàng',
-                'orders.delete'        => 'Xóa đơn hàng',
-                'orders.update-status' => 'Cập nhật trạng thái đơn hàng',
+            'Quản lý Sản phẩm' => [
+                'products.view' => 'Xem sản phẩm',
+                'products.create' => 'Tạo sản phẩm',
+                'products.edit' => 'Sửa sản phẩm',
+                'products.delete' => 'Xóa sản phẩm',
             ],
-            'Quản lý Nội dung & Bài viết' => [
-                'posts.manage'         => 'Quản lý bài viết (bao gồm tất cả quyền con)',
-                'posts.view'           => 'Xem danh sách bài viết',
-                'posts.create'         => 'Tạo bài viết mới',
-                'posts.edit'           => 'Sửa bài viết',
-                'posts.delete'         => 'Xóa bài viết',
-                'posts.publish'        => 'Xuất bản/Hủy xuất bản bài viết',
-                'post-categories.manage' => 'Quản lý danh mục bài viết',
-                'banners.manage'       => 'Quản lý banner (bao gồm tất cả quyền con)',
-                'banners.view'         => 'Xem danh sách banner',
-                'banners.create'       => 'Tạo banner mới',
-                'banners.edit'         => 'Sửa banner',
-                'banners.delete'       => 'Xóa banner',
+            'Quản lý Đơn hàng' => [
+                'orders.view' => 'Xem đơn hàng',
+                'orders.create' => 'Tạo đơn hàng',
+                'orders.edit' => 'Sửa đơn hàng',
+                'orders.delete' => 'Xóa đơn hàng',
             ],
-            'Quản lý Mã giảm giá' => [
-                'discounts.manage' => 'Quản lý toàn bộ mã giảm giá',
-                'discounts.view'   => 'Xem danh sách mã giảm giá',
-                'discounts.create' => 'Tạo mã giảm giá mới',
-                'discounts.edit'   => 'Sửa mã giảm giá',
-                'discounts.delete' => 'Xóa mã giảm giá',
+             'Quản lý Tài chính' => [
+                'recharges.view' => 'Xem giao dịch nạp tiền',
+                'recharges.create' => 'Tạo yêu cầu nạp tiền',
+                'recharges.edit' => 'Duyệt/từ chối nạp tiền',
+                'withdrawals.view' => 'Xem yêu cầu rút tiền',
+                'withdrawals.create' => 'Tạo yêu cầu rút tiền',
+                'withdrawals.edit' => 'Duyệt/từ chối rút tiền',
+                'transactions.view' => 'Xem lịch sử giao dịch',
+                'wallet.view' => 'Xem ví tiền',
             ],
-            'Quản lý Rút tiền' => [
-                'withdrawals.manage'      => 'Quản lý toàn bộ yêu cầu rút tiền',
-                'withdrawals.view-all'    => 'Xem tất cả yêu cầu rút tiền',
-                'withdrawals.approve'     => 'Duyệt yêu cầu rút tiền',
-                'withdrawals.reject'      => 'Từ chối yêu cầu rút tiền',
-                'withdrawals.create'      => 'Tạo yêu cầu rút tiền (cho bản thân)',
-                'withdrawals.view-own'    => 'Xem lịch sử rút tiền của bản thân',
+            'Quản lý Nội dung' => [
+                'posts.view' => 'Xem bài viết',
+                'posts.create' => 'Tạo bài viết',
+                'posts.edit' => 'Sửa bài viết',
+                'posts.delete' => 'Xóa bài viết',
+                'comments.view' => 'Xem bình luận',
+                'comments.create' => 'Tạo bình luận',
+                'comments.edit' => 'Sửa/duyệt bình luận',
+                'comments.delete' => 'Xóa bình luận',
             ],
-            'Quản lý Tiếp thị liên kết (Affiliate)' => [
-                'affiliates.manage'       => 'Quản lý toàn bộ hệ thống affiliate',
-                'affiliates.view-all'     => 'Xem tất cả các đối tác affiliate',
-                'affiliates.view-history' => 'Xem lịch sử hoa hồng của tất cả đối tác',
-                'affiliates.view-own-history' => 'Xem lịch sử hoa hồng của bản thân',
+            'Quản lý Quảng bá' => [
+                'banners.view' => 'Xem banner',
+                'banners.create' => 'Tạo banner',
+                'banners.edit' => 'Sửa banner',
+                'banners.delete' => 'Xóa banner',
+                'promotions.view' => 'Xem khuyến mãi sản phẩm',
+                'promotions.create' => 'Tạo khuyến mãi sản phẩm',
+                'promotions.edit' => 'Sửa khuyến mãi sản phẩm',
+                'promotions.delete' => 'Xóa khuyến mãi sản phẩm',
+                'donate_promotions.view' => 'Xem khuyến mãi nạp thẻ',      
+                'donate_promotions.create' => 'Tạo khuyến mãi nạp thẻ',     
+                'donate_promotions.edit' => 'Sửa khuyến mãi nạp thẻ',       
+                'donate_promotions.delete' => 'Xóa khuyến mãi nạp thẻ',     
+                'notifications.view' => 'Xem thông báo',
+                'notifications.create' => 'Tạo thông báo',
+                'notifications.edit' => 'Sửa thông báo',
+                'notifications.delete' => 'Xóa thông báo',
             ],
-            'Quản lý Tương tác người dùng' => [
-                'reviews.create'           => 'Tạo đánh giá cho sản phẩm',
-                'reviews.manage'           => 'Quản lý (duyệt/xóa) đánh giá',
-                'product-reports.create'   => 'Tạo báo cáo lỗi cho sản phẩm',
-                'product-reports.manage'   => 'Quản lý (xem/xử lý) báo cáo lỗi',
+            'Quản lý Tương tác' => [
+                'reviews.create' => 'Tạo đánh giá',
+                'reviews.view' => 'Xem đánh giá',
+                'reviews.edit' => 'Duyệt/sửa đánh giá',
+                'reviews.delete' => 'Xóa đánh giá',
+                'product_reports.create' => 'Tạo khiếu nại sản phẩm',
+                'product_reports.view' => 'Xem khiếu nại sản phẩm',
+                'product_reports.edit' => 'Xử lý khiếu nại sản phẩm',
             ],
-            'Quản lý Báo cáo' => [
-                'reports.manage'         => 'Quản lý báo cáo (bao gồm tất cả quyền con)',
-                'reports.view-sales'     => 'Xem báo cáo doanh thu',
-                'reports.view-user-activity' => 'Xem báo cáo hoạt động người dùng',
-            ]
+             'Hỗ trợ & Báo cáo' => [
+                'chat.view' => 'Xem tin nhắn hỗ trợ',
+                'chat.create' => 'Bắt đầu chat hỗ trợ',
+                'chat.edit' => 'Trả lời/đóng chat',
+                'reports.view' => 'Xem báo cáo',
+             ],
         ];
 
         foreach ($permissionsByGroup as $group => $permissions) {
@@ -141,104 +153,137 @@ class RolesAndPermissionsSeeder extends Seeder
         }
         $this->command->info('Đã tạo tất cả Permissions chi tiết.');
 
-
         // === PHẦN 3: TẠO CÁC VAI TRÒ (ROLES) VÀ GÁN QUYỀN TƯƠNG ỨNG ===
         $this->command->info('Bắt đầu tạo Roles và gán Permissions...');
 
-        // Cấp 1: Admin (Tối cao, có mọi quyền)
-        $adminRole = Role::create(['name' => 'admin', 'description' => 'Quản trị viên tối cao, có mọi quyền hạn.', 'guard_name' => 'api']);
-        $adminRole->givePermissionTo(Permission::all());
-        $this->command->info('Role "admin" đã được tạo.');
+        // Cấp 1: Admin Tổng (Toàn quyền)
+        $roleAdminTong = Role::create(['name' => 'admin', 'description' => 'Quản trị viên tối cao, có mọi quyền hạn.', 'guard_name' => 'api']);
+        $roleAdminTong->givePermissionTo(Permission::all());
 
-        // Cấp 2: Super Admin (Quản trị viên cấp cao)
-        $superAdminRole = Role::create(['name' => 'super-admin', 'description' => 'Quản trị viên cấp cao, có gần như toàn bộ quyền trừ quản lý phân quyền.', 'guard_name' => 'api']);
-        $permissionsForSuperAdmin = Permission::where('group_name', '!=', 'Quản lý Hệ thống & Phân quyền')->pluck('name');
-        $superAdminRole->givePermissionTo($permissionsForSuperAdmin);
-        $this->command->info('Role "super-admin" đã được tạo.');
+        // Cấp 2: Admin Super (Quản lý cấp cao)
+        $roleAdminSuper = Role::create(['name' => 'admin-super', 'description' => 'Quản lý cấp cao, có mọi quyền trừ phân quyền.', 'guard_name' => 'api']);
+        $roleAdminSuper->givePermissionTo(Permission::where('group_name', '!=', 'Quản lý Phân quyền')->get());
 
-        // Cấp 3: Partner (Đối tác bán hàng)
-        $partnerRole = Role::create(['name' => 'partner', 'description' => 'Đối tác bán sản phẩm trên nền tảng.', 'guard_name' => 'api']);
-        $partnerRole->givePermissionTo([
-            'products.create',
-            'products.edit',
-            'products.delete',
-            'discounts.create',
-            'discounts.edit',
+        // Cấp 3: Reseller (Quản lý Web con)
+        $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Quản trị viên của một trang web con.', 'guard_name' => 'api']);
+        $roleReseller->givePermissionTo([
+            'users.view', 'users.create', 'users.edit', 'users.delete',
+            'products.view', 'products.create', 'products.edit', 'products.delete',
+            'orders.view', 'orders.edit',
+            'business_settings.view', 'business_settings.edit',
+            'banners.view', 'banners.create', 'banners.edit', 'banners.delete',
+            'promotions.view', 'promotions.create', 'promotions.edit', 'promotions.delete',
+            'donate_promotions.view', 'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete', // <-- BỔ SUNG
+            'withdrawals.create', 'withdrawals.view',
+            'reports.view',
         ]);
-        $this->command->info('Role "partner" đã được tạo.');
 
-        // Cấp 4: Affiliate (Đối tác tiếp thị liên kết)
-        $affiliateRole = Role::create(['name' => 'affiliate', 'description' => 'Đối tác tiếp thị liên kết, nhận hoa hồng.', 'guard_name' => 'api']);
-        $affiliateRole->givePermissionTo([
-            'affiliates.view-own-history',
+        // Cấp 4: Partner (Đối tác bán hàng)
+        $rolePartner = Role::create(['name' => 'partner', 'description' => 'Đối tác bán hàng, chỉ quản lý sản phẩm của mình.', 'guard_name' => 'api']);
+        $rolePartner->givePermissionTo([
+            'products.view', 'products.create', 'products.edit', 'products.delete',
+            'withdrawals.create', 'withdrawals.view',
+            'product_reports.view',"chat.view"
         ]);
-        $this->command->info('Role "affiliate" đã được tạo.');
-
-        // Cấp 5: Nhân viên Kinh doanh (Sales Staff)
-        $salesStaffRole = Role::create(['name' => 'sales_staff', 'description' => 'Nhân viên Kinh doanh', 'guard_name' => 'api']);
-        $salesStaffRole->givePermissionTo(['products.view', 'orders.view-all', 'orders.edit', 'orders.update-status']);
-        $this->command->info('Role "sales_staff" đã được tạo.');
-
-        // Cấp 6: Nhân viên Nội dung (Content Creator)
-        $contentCreatorRole = Role::create(['name' => 'content_creator', 'description' => 'Nhân viên Nội dung/Marketing', 'guard_name' => 'api']);
-        $contentCreatorRole->givePermissionTo(['posts.manage', 'banners.manage', 'discounts.view']);
-        $this->command->info('Role "content_creator" đã được tạo.');
-
-        // Cấp 7: Người dùng thông thường (User)
-        $userRole = Role::create(['name' => 'user', 'description' => 'Người dùng thông thường của website.', 'guard_name' => 'api']);
-        $userRole->givePermissionTo([
-            'orders.view-own',
-            'withdrawals.create',
-            'withdrawals.view-own',
-            'discounts.create',
-            'reviews.create',
-            'product-reports.create',
+        
+        // Cấp 5: User (Người dùng)
+        $roleUser = Role::create(['name' => 'user', 'description' => 'Người dùng/khách hàng thông thường.', 'guard_name' => 'api']);
+        $roleUser->givePermissionTo([
+            'profile.view_own', 'profile.edit_own',
+            'orders.create', 'orders.view',
+            'wallet.view', 'recharges.create', 'withdrawals.create', 'transactions.view',
+            'comments.create', 'reviews.create', 'product_reports.create',
+            'promotions.view', 'donate_promotions.view', // User có thể xem danh sách khuyến mãi
         ]);
-        $this->command->info('Role "user" đã được tạo.');
 
+        // --- Nhóm vai trò nhân viên ---
+
+        // Kế toán
+        $roleKeToan = Role::create(['name' => 'ke-toan', 'description' => 'Nhân viên tài chính, duyệt giao dịch.', 'guard_name' => 'api']);
+        $roleKeToan->givePermissionTo([
+            'recharges.view', 'recharges.edit',
+            'withdrawals.view', 'withdrawals.edit',
+            'transactions.view',
+            'reports.view',"wallet.view","chat.view"
+        ]);
+
+        // Nhân viên Hỗ trợ
+        $roleHoTro = Role::create(['name' => 'nv-ho-tro', 'description' => 'Nhân viên hỗ trợ, tư vấn khách hàng.', 'guard_name' => 'api']);
+        $roleHoTro->givePermissionTo([
+            'chat.view', 'chat.create', 'chat.edit',
+            'users.view', 'orders.view', 'products.view', 'transactions.view',
+            'product_reports.view', 'product_reports.edit',"wallet.view","chat.view",
+            'promotions.view', 'donate_promotions.view', // <-- BỔ SUNG: để hỗ trợ khách
+        ]);
+        
+        // Nhân viên Marketing
+        $roleMarketing = Role::create(['name' => 'nv-marketing', 'description' => 'Nhân viên marketing và nội dung.', 'guard_name' => 'api']);
+        $roleMarketing->givePermissionTo([
+            'posts.view', 'posts.create', 'posts.edit', 'posts.delete',
+            'comments.view', 'comments.edit', 'comments.delete',
+            'promotions.view', 'promotions.create', 'promotions.edit', 'promotions.delete',
+            'donate_promotions.view', 'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete', // <-- BỔ SUNG
+            'banners.view', 'banners.create', 'banners.edit', 'banners.delete',
+            'notifications.view', 'notifications.create', 'notifications.edit', 'notifications.delete',"wallet.view","chat.view"
+        ]);
+
+        $this->command->info('Đã tạo và gán quyền cho tất cả các Roles.');
 
         // === PHẦN 4: TẠO DỮ LIỆU MẪU (WEBS, USERS, WALLETS) ===
         $this->command->info('Bắt đầu tạo dữ liệu mẫu...');
 
-        $mainWeb = Web::create(['subdomain' => 'main-site', 'user_id' => null, 'api_key' => "D9BD170B6093FF737C754C8A5070FC97", 'status' => 1, 'is_customized' => true]);
-        $Web = Web::create(['subdomain' => 'sub-site', 'user_id' => null, 'api_key' => "D9BD170B6093FF737C754C8A50703333", 'status' => 1, 'is_customized' => true]);
+        $mainWeb = Web::create(['subdomain' => 'main-site', 'api_key' => 'D9BD170B6093FF737C754C8A5070FC97', 'status' => 1]);
+        $resellerWeb = Web::create(['subdomain' => 'reseller-site', 'api_key' => 'RESELLER-API-KEY-HERE', 'status' => 1]);
         $this->command->info('Đã tạo web mẫu.');
 
-        // Tài khoản Admin Tối cao
-        $adminUser = User::create(['username' => 'admin', 'email' => 'admin@app.com', 'password' => Hash::make('password'), 'web_id' => $mainWeb->id, 'status' => 1, 'phone' => '0900000001', 'donate_code' => $this->generateCode(16)]);
-        $adminUser->assignRole('admin');
-        Wallet::create(["user_id" => $adminUser->id, "balance" => "999999999", "currency" => "VND"]);
-        $this->command->info('Đã tạo tài khoản Admin.');
+        $userList = [
+            ['username' => 'admin', 'role' => 'admin', 'web_id' => $mainWeb->id],
+            ['username' => 'adminsuper', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
+            ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $resellerWeb->id],
+            ['username' => 'partner', 'role' => 'partner', 'web_id' => $resellerWeb->id],
+            ['username' => 'user', 'role' => 'user', 'web_id' => $resellerWeb->id],
+            ['username' => 'ketoan', 'role' => 'ke-toan', 'web_id' => $mainWeb->id],
+            ['username' => 'hotro', 'role' => 'nv-ho-tro', 'web_id' => $mainWeb->id],
+            ['username' => 'marketing', 'role' => 'nv-marketing', 'web_id' => $mainWeb->id],
+        ];
 
-        // Tài khoản Super Admin
-        $superAdminUser = User::create(['username' => 'superadmin', 'email' => 'superadmin@app.com', 'password' => Hash::make('password'), 'web_id' => $mainWeb->id, 'status' => 1, 'phone' => '0900000002', 'donate_code' => $this->generateCode(16)]);
-        $superAdminUser->assignRole('super-admin', 'user');
-        Wallet::create(["user_id" => $superAdminUser->id, "balance" => "10000000", "currency" => "VND"]);
-        $this->command->info('Đã tạo tài khoản Super Admin.');
+        foreach ($userList as $userData) {
+            $user = User::create([
+                'username' => $userData['username'],
+                'email' => $userData['username'] . '@app.com',
+                'password' => Hash::make('password'),
+                'web_id' => $userData['web_id'],
+                'status' => 1,
+                'phone' => '090000000' . (count(User::all())),
+                'donate_code' => $this->generateCode(16),
+            ]);
 
-        // Tài khoản Partner
-        $partnerUser = User::create(['username' => 'partner', 'email' => 'partner@app.com', 'password' => Hash::make('password'), 'web_id' => $mainWeb->id, 'status' => 1, 'phone' => '0900000003', 'donate_code' => $this->generateCode(16)]);
-        $partnerUser->assignRole('partner', 'user');
-        Wallet::create(["user_id" => $partnerUser->id, "balance" => "1000000", "currency" => "VND"]);
-        $this->command->info('Đã tạo tài khoản Partner.');
+            $user->assignRole($userData['role']);
+            
+            if (in_array($userData['role'], ['partner', 'reseller'])) {
+                $user->assignRole('user');
+            }
 
-        // Tài khoản Affiliate
-        $affiliateUser = User::create(['username' => 'affiliate', 'email' => 'affiliate@app.com', 'password' => Hash::make('password'), 'web_id' => $mainWeb->id, 'status' => 1, 'phone' => '0900000004', 'donate_code' => $this->generateCode(16)]);
-        $affiliateUser->assignRole('affiliate', 'user');
-        Wallet::create(["user_id" => $affiliateUser->id, "balance" => "200000", "currency" => "VND"]);
-        $this->command->info('Đã tạo tài khoản Affiliate.');
+            Wallet::create([
+                "user_id" => $user->id,
+                "balance" => "1000000",
+                "currency" => "VND"
+            ]);
 
-        // Tài khoản User cơ bản
-        $basicUser = User::create(['username' => 'user', 'email' => 'user@app.com', 'password' => Hash::make('password'), 'web_id' => $mainWeb->id, 'status' => 1, 'phone' => '0900000005', 'donate_code' => $this->generateCode(16)]);
-        $basicUser->assignRole('user');
-        Wallet::create(["user_id" => $basicUser->id, "balance" => "50000", "currency" => "VND"]);
-        $this->command->info('Đã tạo tài khoản Basic User.');
+            $this->command->info("Đã tạo tài khoản: {$userData['username']} với vai trò: {$userData['role']}");
+        }
 
-
-        // Cập nhật lại chủ sở hữu cho web chính
-        $mainWeb->user_id = $adminUser->id;
-        $mainWeb->save();
-        $this->command->info('Đã cập nhật chủ sở hữu cho web.');
+        $adminUser = User::where('username', 'admintong')->first();
+        if ($adminUser) {
+            $mainWeb->user_id = $adminUser->id;
+            $mainWeb->save();
+        }
+        $resellerUser = User::where('username', 'reseller')->first();
+        if ($resellerUser) {
+            $resellerWeb->user_id = $resellerUser->id;
+            $resellerWeb->save();
+        }
+        $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
 
         $this->command->info('Hoàn tất Seeder!');
     }

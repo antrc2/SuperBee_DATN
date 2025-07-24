@@ -49,28 +49,34 @@ class AuthorizationDashboardController extends Controller
         }
     }
 
-    public function getUserDetails($id)
-    {
-        try {
-            $user = User::findOrFail($id);
-            $allRoles = Role::where('guard_name', 'api')->select('id', 'name', 'description')->get();
-            $allPermissions = Permission::where('guard_name', 'api')->orderBy('group_name')->get()->groupBy('group_name');
-            
-            return response()->json([
-                'status' => true,
-                'data' => [
-                    'user' => $user->only(['id', 'username', 'email', 'avatar_url']),
-                    'assigned_roles' => $user->getRoleNames(),
-                    'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
-                    'all_user_permissions' => $user->getAllPermissions()->pluck('name'),
-                    'all_system_roles' => $allRoles,
-                    'all_system_permissions' => $allPermissions,
-                ]
-            ]);
-        } catch (ModelNotFoundException) {
-            return response()->json(['status' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
-        }
+public function getUserDetails($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        $allRoles = Role::where('guard_name', 'api')->select('id', 'name', 'description')->get();
+
+        // [SỬA LỖI BẢO MẬT]
+        // Lọc bỏ nhóm quyền 'Quản lý Phân quyền' khi lấy danh sách để gán trực tiếp.
+        // Đây là thay đổi quan trọng nhất để vá lỗ hổng.
+        $allPermissions = Permission::where('guard_name', 'api')
+            ->where('group_name', '!=', 'Quản lý Phân quyền') // <-- DÒNG SỬA LỖI
+            ->orderBy('group_name')->get()->groupBy('group_name');
+        
+        return response()->json([
+            'status' => true,
+            'data' => [
+                'user' => $user->only(['id', 'username', 'email', 'avatar_url']),
+                'assigned_roles' => $user->getRoleNames(),
+                'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
+                'all_user_permissions' => $user->getAllPermissions()->pluck('name'),
+                'all_system_roles' => $allRoles,
+                'all_system_permissions' => $allPermissions, // Trả về danh sách đã được lọc an toàn
+            ]
+        ]);
+    } catch (ModelNotFoundException) {
+        return response()->json(['status' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
     }
+}
 
     public function syncRoles(Request $request, $id)
     {

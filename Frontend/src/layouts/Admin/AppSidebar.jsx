@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Logo from "@assets/icons/logo.png";
 import { useSidebar } from "@contexts/SidebarContext";
-
+import { usePermissions } from "@utils/usePermissions.js";
 // Cập nhật navItems với các biểu tượng từ lucide-react
 const navItems = [
   {
@@ -107,12 +107,33 @@ const AppSidebar = () => {
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [subMenuHeight, setSubMenuHeight] = useState({});
   const subMenuRefs = useRef({});
+  const admin = useRef(false);
+  const adminsuper = useRef(false);
+  const reseller = useRef(false);
+  const partner = useRef(false);
+  const ketoan = useRef(false);
+  const hotro = useRef(false);
+  const marketing = useRef(false);
 
   const isActive = useCallback(
     (path) => location.pathname === path,
     [location.pathname]
   );
-
+  const { hasRole } = usePermissions();
+  admin.current = hasRole("admin");
+  adminsuper.current = hasRole("admin-super");
+  reseller.current = hasRole("reseller");
+  partner.current = hasRole("partner");
+  ketoan.current = hasRole("ke-toan");
+  hotro.current = hasRole("nv-ho-tro");
+  marketing.current = hasRole("nv-marketing");
+  console.log("🚀 ~ AppSidebar ~ admin:", admin.current);
+  console.log("🚀 ~ AppSidebar ~ adminsuper:", adminsuper.current);
+  console.log("🚀 ~ AppSidebar ~ reseller:", reseller.current);
+  console.log("🚀 ~ AppSidebar ~ partner:", partner.current);
+  console.log("🚀 ~ AppSidebar ~ ketoan:", ketoan.current);
+  console.log("🚀 ~ AppSidebar ~ hotro:", hotro.current);
+  console.log("🚀 ~ AppSidebar ~ marketing:", marketing.current);
   useEffect(() => {
     let submenuMatched = false;
     // Giả sử 'menuType' được định nghĩa ở đâu đó, nếu không, chúng ta sẽ mặc định là 'main'

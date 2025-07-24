@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../../../utils/http";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 // Trang danh sách người dùng
 export function UserListPage() {
@@ -160,8 +161,7 @@ export function UserAssignRolesPage() {
     }
   };
 
-  if (isLoading)
-    return <div className="text-center p-8 animate-pulse">Đang tải...</div>;
+  if (isLoading) return <LoadingDomain />;
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">

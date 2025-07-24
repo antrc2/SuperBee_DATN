@@ -555,7 +555,7 @@ class AuthController extends Controller
                         'code' => 'NO_ACTIVE'
                     ], 200);
 
-                case 3: // Locked account
+                case 2: // Locked account
                     return response()->json([
                         'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
                         'status' => false,

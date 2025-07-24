@@ -8,6 +8,7 @@ use App\Models\Notification;
 use App\Models\RechargeBank;
 use App\Models\RechargeCard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class AdminDonatePromotionController extends Controller
 {
@@ -98,14 +99,52 @@ class AdminDonatePromotionController extends Controller
                     "message" => "Khuyến mãi nạp thẻ đã tồn tại"
                 ], 409);
             }
-            $validatedData = $request->validate([
-                'amount'      => 'required|integer',
-                'start_date'  => 'required|date|before:end_date',
-                'end_date'    => 'required|date|after:start_date',
-                "usage_limit" => 'nullable',
-                "per_user_limit" => 'nullable',
-                "total_used" => 'nullable'
-            ]);
+            $rules = [
+                'amount'           => 'required|integer',
+                'start_date'       => 'required|date|before:end_date',
+                'end_date'         => 'required|date|after:start_date',
+                'usage_limit'      => 'nullable|integer',
+                'per_user_limit'   => 'nullable|integer',
+                'total_used'       => 'nullable|integer',
+                'status'           => 'nullable|string',
+            ];
+
+            $messages = [
+                'amount.required'         => 'Vui lòng nhập số tiền.',
+                'amount.integer'          => 'Số tiền phải là số nguyên.',
+
+                'start_date.required'     => 'Vui lòng chọn ngày bắt đầu.',
+                'start_date.date'         => 'Ngày bắt đầu không đúng định dạng.',
+                'start_date.before'       => 'Ngày bắt đầu phải trước ngày kết thúc.',
+
+                'end_date.required'       => 'Vui lòng chọn ngày kết thúc.',
+                'end_date.date'           => 'Ngày kết thúc không đúng định dạng.',
+                'end_date.after'          => 'Ngày kết thúc phải sau ngày bắt đầu.',
+
+                'usage_limit.integer'     => 'Giới hạn sử dụng phải là số nguyên.',
+                'usage_limit.min'         => 'Giới hạn sử dụng phải ≥ 0.',
+
+                'per_user_limit.integer'  => 'Giới hạn mỗi người dùng phải là số nguyên.',
+                'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
+
+                'total_used.integer'      => 'Tổng số đã sử dụng phải là số nguyên.',
+                'total_used.min'          => 'Tổng số đã sử dụng phải ≥ 0.',
+
+                'status.string'           => 'Trạng thái phải là chuỗi ký tự.',
+            ];
+
+
+            $validator = Validator::make($request->all(), $rules, $messages);
+            if ($validator->fails()) {
+                // Trả về JSON (API)
+                return response()->json([
+                    'status'  => false,
+                    'message' => $validator->errors()->first(), // message đầu tiên
+                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
+                ], 422);
+            }
+            $validatedData = $validator->validated();
+
             $donate_promotion = DonatePromotion::create([
                 'web_id'      => $web_id,
                 'amount'      => $validatedData['amount'],
@@ -115,7 +154,8 @@ class AdminDonatePromotionController extends Controller
                 "per_user_limit" => $validatedData['per_user_limit'],
                 "total_used" => $validatedData['total_used'],
                 'created_by' => $request->user_id,
-                "updated_by" => $request->user_id
+                "updated_by" => $request->user_id,
+                "status" => $validatedData['status']
             ]);
 
             return response()->json([

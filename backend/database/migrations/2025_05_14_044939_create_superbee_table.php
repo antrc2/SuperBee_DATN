@@ -237,7 +237,7 @@ return new class extends Migration
             $table->integer('amount'); // Số tiền bạn nhận về (VND)
             $table->integer('value'); // Giá trị thực của thẻ
             $table->integer('declared_value'); // Giá trị khai báo (ví dụ 50k, 100k)
-            $table->integer("donate_amount");
+            // $table->integer("donate_amount");
             $table->string('telco', 50); // Nhà mạng
             $table->string('serial', 50); // Serial thẻ
             $table->string('code', 50); // Mã thẻ
@@ -261,7 +261,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // Ai nạp tiền
             $table->unsignedBigInteger('web_id'); // Nạp cho web nào
             $table->decimal('amount', 15, 0); // Số tiền nạp
-            $table->integer("donate_amount");
+            // $table->integer("donate_amount");
             // $table->string('bank_account_number', 50); // Số tài khoản ngân hàng của người nạp
             // $table->string('bank_name', 100); // Tên ngân hàng của người nạp
             $table->string('transaction_reference', 100)->nullable(); // Mã giao dịch của ngân hàng (có thể null nếu chưa có)
@@ -278,7 +278,7 @@ return new class extends Migration
             $table->decimal('amount', 15, 0); // Số tiền rút
             $table->string('bank_account_number', 50); // Số tài khoản nhận
             $table->string('bank_name', 100); // Tên ngân hàng nhận
-            // $table->string('account_holder_name', 255)->nullable(); // Tên chủ tài khoản (nên có)
+            $table->string('account_holder_name', 255); // Tên chủ tài khoản (nên có)
             $table->string("withdraw_code", 16)->unique();
             $table->text('note')->nullable(); // Ghi chú thêm
             $table->integer('status')->default(0); // Trạng thái (0: pending, 1: completed, 2: rejected)

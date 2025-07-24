@@ -15,7 +15,7 @@ class Withdraw extends Model
         'amount',
         'bank_account_number',
         'bank_name',
-        // 'account_holder_name',
+        'account_holder_name',
         "withdraw_code",
         'note',
         'status',

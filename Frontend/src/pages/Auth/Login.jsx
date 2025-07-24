@@ -1,15 +1,21 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
-import { checkLocation } from "../../utils/hook";
+
+const SITE_KEY = "0x4AAAAAABmKRcSZmW-oLLtG";
 
 export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaReady, setCaptchaReady] = useState(false);
+  const captchaRef = useRef(null);
+  const turnstileWidgetId = useRef(null);
   const { login, loading, user } = useAuth();
   const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -18,13 +24,73 @@ export default function LoginForm() {
     clearErrors,
   } = useForm();
 
-  if (user) {
-    return <Navigate to="/" replace />;
-  }
+  // Load turnstile script
+  useEffect(() => {
+    if (window.turnstile) {
+      setCaptchaReady(true);
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src =
+      "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
+    script.async = true;
+    script.defer = true;
+    document.body.appendChild(script);
+
+    window.onloadTurnstileCallback = () => {
+      setCaptchaReady(true);
+    };
+
+    return () => {
+      if (window.turnstile && turnstileWidgetId.current) {
+        window.turnstile.remove(turnstileWidgetId.current);
+      }
+      delete window.onloadTurnstileCallback;
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  // Render CAPTCHA widget
+  useEffect(() => {
+    if (captchaReady && window.turnstile && captchaRef.current) {
+      if (turnstileWidgetId.current) {
+        window.turnstile.remove(turnstileWidgetId.current);
+      }
+
+      turnstileWidgetId.current = window.turnstile.render(captchaRef.current, {
+        sitekey: SITE_KEY,
+        callback: setCaptchaToken,
+        "expired-callback": () => setCaptchaToken(""),
+        "error-callback": () => setCaptchaToken(""),
+      });
+    }
+  }, [captchaReady]);
+
+  const resetCaptcha = () => {
+    if (window.turnstile && turnstileWidgetId.current) {
+      window.turnstile.reset(turnstileWidgetId.current);
+      setCaptchaToken("");
+    }
+  };
+
+  if (user) return <Navigate to="/" replace />;
 
   const onSubmit = async (data) => {
     clearErrors();
-    const result = await login(data);
+
+    if (!captchaToken) {
+      setError("captcha", {
+        type: "manual",
+        message: "Vui lòng xác thực CAPTCHA",
+      });
+      return;
+    }
+
+    const result = await login({
+      ...data,
+      "cf-turnstile-response": captchaToken,
+    });
 
     if (!result.success && result.validationErrors) {
       Object.entries(result.validationErrors).forEach(([field, messages]) => {
@@ -33,6 +99,7 @@ export default function LoginForm() {
           message: Array.isArray(messages) ? messages[0] : messages,
         });
       });
+      resetCaptcha(); // reset nếu login lỗi
     }
   };
 
@@ -117,11 +184,7 @@ export default function LoginForm() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute z-10 -translate-y-1/2 cursor-pointer right-4 top-1/2 text-secondary"
                   >
-                    {showPassword ? (
-                      <Eye className="size-5" />
-                    ) : (
-                      <EyeOff className="size-5" />
-                    )}
+                    {showPassword ? <Eye className="size-5" /> : <EyeOff className="size-5" />}
                   </span>
                 </div>
                 {errors.password && (
@@ -131,12 +194,22 @@ export default function LoginForm() {
                 )}
               </div>
 
-              {/* Submit Button */}
+              {/* CAPTCHA */}
+              <div>
+                <div ref={captchaRef} id="captcha" className="mb-2" />
+                {errors.captcha && (
+                  <p className="mt-1 text-sm text-red-500">
+                    {errors.captcha.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Submit */}
               <div>
                 <button
-                  type="submit"
+                  type="submit" 
                   className="font-heading flex items-center justify-center w-full px-4 py-3 text-sm font-bold rounded-lg transition-all text-accent-contrast bg-gradient-button hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
+                  disabled={loading || !captchaToken}
                 >
                   {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </button>

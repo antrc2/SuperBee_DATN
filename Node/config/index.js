@@ -7,7 +7,11 @@ const config = {
   redis: {
     host: process.env.REDIS_HOST || "127.0.0.1",
     port: process.env.REDIS_PORT || 6379,
+    // path: process.env.REDIS_PATH || "redis.sock"
   },
+  // redis: {
+    // path: process.env.REDIS_PATH || "redis.sock"
+  // },
   notificationChannel: "global_notifications_channel",
 };
 

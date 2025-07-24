@@ -75,12 +75,12 @@ class UserController extends Controller
                 ]);
             }
 
-            $query->status = 0;
+            $query->status = 2;
             $query->save();
 
             return response()->json([
                 'status' => true,
-                'message' => 'Xóa tài khoản',
+                'message' => 'Khóa tài khoản',
             ], 200);
         } catch (Exception $e) {
             return response()->json([

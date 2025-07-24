@@ -167,7 +167,7 @@ class AdminDonatePromotionController extends Controller
             return response()->json([
                 "status" => False,
                 "message" => "Đã có lỗi xảy ra",
-                "hehe" => $th->getMessage()
+                // "hehe" => $th->getMessage()
             ], 500);
         }
     }

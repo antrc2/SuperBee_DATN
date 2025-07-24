@@ -37,9 +37,8 @@ class AdminDiscountCodeController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Đã có lỗi xảy ra',
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false,
-                'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
             ], 500);
         }
     }
@@ -65,7 +64,7 @@ class AdminDiscountCodeController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi khi lấy chi tiết mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -138,7 +137,7 @@ class AdminDiscountCodeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi tạo mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -208,7 +207,7 @@ class AdminDiscountCodeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi cập nhật mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -238,7 +237,7 @@ class AdminDiscountCodeController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -286,7 +285,7 @@ class AdminDiscountCodeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi xóa mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -309,7 +308,7 @@ class AdminDiscountCodeController extends Controller
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra. ',
                 'status' => false
             ], 500);
         }

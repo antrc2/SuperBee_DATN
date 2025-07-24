@@ -247,6 +247,9 @@ Route::middleware(['jwt'])->group(function () {
         });
         Route::middleware(['role:admin|super-admin'])->prefix('/post')->group(function () {
             Route::get('/', [AdminPostController::class, 'index']);
+            Route::get('/business', [AdminPostController::class, 'Business']);
+            Route::post('/auto', [AdminPostController::class, 'auToPost']);
+            Route::post('/RefreshAuto', [AdminPostController::class, 'RefreshAuto']);
             Route::post('/upload', [AdminPostController::class, 'upload']);
             Route::get('/load-images', [AdminPostController::class, 'loadImages']);
             Route::post('/delete-image', [AdminPostController::class, 'deleteImage']);
@@ -264,12 +267,12 @@ Route::middleware(['jwt'])->group(function () {
             // Tùy chọn: Route để tải danh sách ảnh đã upload (cho Image Manager của Froala)
             // Tùy chọn: Route để xóa ảnh từ Image Manager
         });
-        Route::prefix("/donate_promotions")->group(function(){
-            Route::get("/",[AdminDonatePromotionController::class,'index']);
-            Route::get("/{id}",[AdminDonatePromotionController::class,'show']);
-            Route::post("/",[AdminDonatePromotionController::class,'store']);
-            Route::delete("/{id}",[AdminDonatePromotionController::class,'destroy']);
-            Route::post("/{id}/undo",[AdminDonatePromotionController::class,'undo']);
+        Route::prefix("/donate_promotions")->group(function () {
+            Route::get("/", [AdminDonatePromotionController::class, 'index']);
+            Route::get("/{id}", [AdminDonatePromotionController::class, 'show']);
+            Route::post("/", [AdminDonatePromotionController::class, 'store']);
+            Route::delete("/{id}", [AdminDonatePromotionController::class, 'destroy']);
+            Route::post("/{id}/undo", [AdminDonatePromotionController::class, 'undo']);
         });
 
         Route::middleware(['role:admin|super-admin'])->prefix('/categoryPost')->group(function () {
@@ -279,11 +282,11 @@ Route::middleware(['jwt'])->group(function () {
             Route::Post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost']);
             Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost']);
         });
-       Route::middleware(['role:admin'])->prefix('/authorization')->group(function () {
+        Route::middleware(['role:admin'])->prefix('/authorization')->group(function () {
 
             // Route cho Dashboard tổng quan
             Route::get('dashboard', [AuthorizationDashboardController::class, 'index']);
-            
+
             // Routes để quản lý chi tiết một người dùng
             Route::get('users/{id}/manage', [AuthorizationDashboardController::class, 'getUserDetails']);
             Route::post('users/{id}/manage/roles', [AuthorizationDashboardController::class, 'syncRoles']);
@@ -295,12 +298,12 @@ Route::middleware(['jwt'])->group(function () {
                 // apiResource sẽ tự động tạo các route index, store, update, destroy
                 Route::apiResource('permissions', PermissionController::class)->except(['show']);
                 Route::apiResource('roles', RoleController::class)->except(['show']);
-                
+
                 // Route để gán quyền cho một vai trò
                 Route::post('roles/{role}/permissions', [RoleController::class, 'assignPermissions']);
             });
+        });
     });
-});
 });
 
 Route::middleware(['jwt'])->group(function () {

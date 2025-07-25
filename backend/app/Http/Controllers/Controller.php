@@ -15,37 +15,36 @@ use Illuminate\Support\Facades\Log; // Import facade Log
 
 abstract class Controller
 {
-    public function donate_promotion($donate_promotion,$user_id)
+    public function donate_promotion($donate_promotion, $user_id)
     {
         if ($donate_promotion !== NULL) {
             if ($donate_promotion->usage_limit == -1) {
-
             } else {
-                if ($donate_promotion->total_used >= $donate_promotion->usage_limit){
-                    return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+                if ($donate_promotion->total_used >= $donate_promotion->usage_limit) {
+                    return ['donate_promotion_id' => Null, "donate_promotion_amount" => 0];
                 }
             }
 
-            $card = RechargeCard::where("user_id",$user_id)->where("donate_promotion_id",$donate_promotion->id)->where('status',1)->get()->count();
-            $bank = RechargeBank::where('user_id',$user_id)->where("donate_promotion_id",$donate_promotion->id)->get()->count();
+            $card = RechargeCard::where("user_id", $user_id)->where("donate_promotion_id", $donate_promotion->id)->where('status', 1)->get()->count();
+            $bank = RechargeBank::where('user_id', $user_id)->where("donate_promotion_id", $donate_promotion->id)->get()->count();
 
             $total_used = $card + $bank;
 
             if ($donate_promotion->per_user_limit != -1 && $total_used >= $donate_promotion->per_user_limit) {
-                return ['donate_promotion_id'=> null, 'donate_promotion_amount'=> 0];
+                return ['donate_promotion_id' => null, 'donate_promotion_amount' => 0];
             }
             $donate_promotion->total_used += 1;
             $donate_promotion->save();
-            return ['donate_promotion_id'=>$donate_promotion->id,"donate_promotion_amount"=>$donate_promotion->amount];
+            return ['donate_promotion_id' => $donate_promotion->id, "donate_promotion_amount" => $donate_promotion->amount];
             // $donate_promotion_id = $donate_promotion->id;
             // $donate_promotion_amount = $donate_promotion->amount;
         } else {
-            return ['donate_promotion_id'=>Null,"donate_promotion_amount"=>0];
+            return ['donate_promotion_id' => Null, "donate_promotion_amount" => 0];
             // $donate_promotion_id = NULL;
             // $donate_promotion_amount = 0;
         }
     }
-    
+
     public function generateCode(int $length = 16): string
     {
         $characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -65,7 +64,7 @@ abstract class Controller
      * @return string|null Đường dẫn công khai của file đã lưu, hoặc null nếu có lỗi.
      */
 
-    public function uploadFiles(array $files, string $directory,bool $thread = True ): array
+    public function uploadFiles(array $files, string $directory, bool $thread = True): array
     {
         try {
             $apiUrl = env('PYTHON_API');
@@ -89,7 +88,8 @@ abstract class Controller
 
             // Gửi 1 lần duy nhất
             $response = $request->post("{$apiUrl}/upload_files", [
-                'folder' => $directory, "thread"=>$thread
+                'folder' => $directory,
+                "thread" => $thread
             ]);
 
             $response = $response->json();
@@ -111,7 +111,7 @@ abstract class Controller
                 'file',
                 file_get_contents($file->getRealPath()),
                 $file->getClientOriginalName()
-            )->post("{$api_url}/upload_file", ["folder" => $directory,'thread' => $thread ? 'true' : 'false',]);
+            )->post("{$api_url}/upload_file", ["folder" => $directory, 'thread' => $thread ? 'true' : 'false',]);
             $response = json_decode($response);
             return $response->url;
         } catch (\Throwable $th) {
@@ -196,9 +196,9 @@ abstract class Controller
     //         return false;
     //     }
     // }
-// /**
+    // /**
 
- /* Gửi thông báo (riêng cho user hoặc toàn bộ).
+    /* Gửi thông báo (riêng cho user hoặc toàn bộ).
  *
  * @param array $data [
  *     'user_id' => int|null, // Nếu có -> gửi riêng, nếu không -> gửi toàn bộ
@@ -228,64 +228,95 @@ abstract class Controller
     public function sendNotification(
         int $type,
         string $content,
-        
+
         ?string $link = null,
         ?int $user_id = null,
+        ?string $permission = null,
     ): bool {
         try {
             $published_at =  Carbon::now();
             $expires_at =  Carbon::now()->addDays(3);
+            if ($permission == null) {
 
-            if ($user_id !== null) {
-                // Gửi thông báo riêng cho user
-                if (!User::where('id', $user_id)->exists()) {
-                    Log::warning("Gửi thông báo thất bại: người dùng không tồn tại - $user_id");
-                    return false;
-                }
-                $noti = Notification::create([
-                    'user_id'      => $user_id,
-                    'type'         => $type,
-                    'content'      => $content,
-                    'link'         => $link,
-                    'is_read'      => 0,
-                    'published_at' => $published_at,
-                    'expires_at'   => $expires_at,
-                ]);
-                event(new SystemNotification(
-                'NOTIFICATION_PRIVATE', // Loại thông báo
-                [
-                    "id"=> $noti->id,
-                    "type"=> $type,
-                    "content"=> $content,
-                    "published_at"=> $published_at,
-                    "link"=> $link,
-                    "is_read"=> 0,
-                    'user_id'=>$user_id
-                ]
-            ));
-                return true;
-            } else {
-                // Gửi thông báo toàn bộ
-                $global_noti =  GlobalNotification::create([
-                    'type'         => $type,
-                    'content'      => $content,
-                    'link'         => $link,
-                    'published_at' => $published_at,
-                    'expires_at'   => $expires_at,
-                ]);
+
+
+
+                if ($user_id !== null) {
+                    // Gửi thông báo riêng cho user
+                    if (!User::where('id', $user_id)->exists()) {
+                        Log::warning("Gửi thông báo thất bại: người dùng không tồn tại - $user_id");
+                        return false;
+                    }
+                    $noti = Notification::create([
+                        'user_id'      => $user_id,
+                        'type'         => $type,
+                        'content'      => $content,
+                        'link'         => $link,
+                        'is_read'      => 0,
+                        'published_at' => $published_at,
+                        'expires_at'   => $expires_at,
+                    ]);
                     event(new SystemNotification(
-        'NOTIFICATION_PUBLIC', // Loại thông báo
-        [
-            "id"=> $global_noti->id,
-            "type"=> $type,
-            "content"=> $content,
-            "published_at"=> $published_at,
-            "link"=> $link,
-            "is_read"=> 0,
-        
-        ]
-    ));
-    return true;
+                        'NOTIFICATION_PRIVATE', // Loại thông báo
+                        [
+                            "id" => $noti->id,
+                            "type" => $type,
+                            "content" => $content,
+                            "published_at" => $published_at,
+                            "link" => $link,
+                            "is_read" => 0,
+                            'user_id' => $user_id
+                        ]
+                    ));
+                    return true;
+                } else {
+                    // Gửi thông báo toàn bộ
+                    $global_noti =  GlobalNotification::create([
+                        'type'         => $type,
+                        'content'      => $content,
+                        'link'         => $link,
+                        'published_at' => $published_at,
+                        'expires_at'   => $expires_at,
+                    ]);
+                    event(new SystemNotification(
+                        'NOTIFICATION_PUBLIC', // Loại thông báo
+                        [
+                            "id" => $global_noti->id,
+                            "type" => $type,
+                            "content" => $content,
+                            "published_at" => $published_at,
+                            "link" => $link,
+                            "is_read" => 0,
+
+                        ]
+                    ));
+                    return true;
+                }
+            } else {
+                $users = User::permission('posts.*')->get();
+                foreach ($users as $user) {
+                    $noti = Notification::create([
+                        'user_id'      => $user->id,
+                        'type'         => $type,
+                        'content'      => $content,
+                        'link'         => $link,
+                        'is_read'      => 0,
+                        'published_at' => $published_at,
+                        'expires_at'   => $expires_at,
+                    ]);
+                    event(new SystemNotification(
+                        'NOTIFICATION_PRIVATE', // Loại thông báo
+                        [
+                            "id" => $noti->id,
+                            "type" => $type,
+                            "content" => $content,
+                            "published_at" => $published_at,
+                            "link" => $link,
+                            "is_read" => 0,
+                            'user_id' => $user_id
+                        ]
+                    ));
+                }
             }
         } catch (\Throwable $e) {
             Log::error('Lỗi khi gửi thông báo: ' . $e->getMessage());
@@ -294,7 +325,7 @@ abstract class Controller
     }
 
     // Ví dụ: 
-   /* Gửi thông báo toàn bộ
+    /* Gửi thông báo toàn bộ
     $this->sendNotification(
         type: 1,
         content: "Bạn có vâu chờ mới",
@@ -310,5 +341,4 @@ abstract class Controller
     );
 
     */
-
 }

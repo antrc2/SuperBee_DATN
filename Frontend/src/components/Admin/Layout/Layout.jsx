@@ -14,6 +14,7 @@ const Layout = ({
   showBrowse = false,
   onBack,
   onAdd,
+  onshow, // Giả sử bạn có hàm này để hiển thị sản phẩm
   onApprove, // Giả sử bạn có hàm này để duyệt sản phẩm  
   onLocalSearch,
   initialSearchTermLocal,
@@ -24,7 +25,9 @@ const Layout = ({
   activeFilterCount,
   initialFilters,
   filterConfig,
+  autoPostButtonLabel,
   showfilter = true,
+  showAuToPost= false, // Giả sử bạn có tùy chọn này
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
@@ -90,6 +93,19 @@ const Layout = ({
                   {/* Thay đổi: Sử dụng icon <Plus /> */}
                   <Plus size={18} />
                   Thêm mới
+                </button>
+
+               
+              )}
+              {showAuToPost && (
+              
+                <button
+                  onClick={onshow}
+                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {/* Thay đổi: Sử dụng icon <Plus /> */}
+                  <Plus size={18} />
+                  {autoPostButtonLabel || "Bật tự động đăng bài"}
                 </button>
 
                

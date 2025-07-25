@@ -13,7 +13,7 @@ export default function CategoryCha({ item, onClose }) {
   return (
     // 'group' và 'category-card-glow' vẫn được giữ lại để có hiệu ứng hover
     <Link
-      to={`mua-acc/${category.slug}`}
+      to={`/mua-acc/${category.slug}`}
       onClick={onClose}
       className="group block category-card-glow rounded-xl"
     >

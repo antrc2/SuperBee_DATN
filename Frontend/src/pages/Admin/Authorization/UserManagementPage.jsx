@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import api from "../../../utils/http";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 const TabButton = ({ activeTab, tabName, children, onClick }) => (
   <button
@@ -161,12 +162,7 @@ export default function UserManagementPage() {
     }
   };
 
-  if (loading)
-    return (
-      <div className="p-8 text-center animate-pulse dark:text-gray-400">
-        Đang tải chi tiết người dùng...
-      </div>
-    );
+  if (loading) return <LoadingDomain />;
   if (error && !userData)
     return (
       <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded m-4">
@@ -175,13 +171,13 @@ export default function UserManagementPage() {
     );
 
   return (
-    <div className="container mx-auto p-4 md:p-6 bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-200">
-      <div className="mb-6">
+    <div className="container mx-auto p-4 md:p-6 bg-gray-100 dark:bg-gray-900 min-h-screen text-gray-900 dark:text-gray-200">
+      <div className="flex justify-start mb-6">
         <Link
-          to="/admin/authorization/dashboard"
-          className="text-indigo-600 dark:text-indigo-400 hover:underline"
+          to="/admin/authorization"
+          className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
         >
-          &larr; Quay lại Dashboard
+          &larr; Về Dashboard
         </Link>
       </div>
 
@@ -203,14 +199,14 @@ export default function UserManagementPage() {
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl mb-8 flex flex-col md:flex-row items-center">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mb-8 flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
         <img
           src={
             userData.avatar_url ||
             `https://i.pravatar.cc/150?u=${userData.email}`
           }
           alt={userData.username}
-          className="h-24 w-24 rounded-full object-cover mr-0 md:mr-6 mb-4 md:mb-0"
+          className="h-24 w-24 rounded-full object-cover ring-4 ring-indigo-300 dark:ring-indigo-500"
         />
         <div>
           <h1 className="text-3xl font-bold text-center md:text-left">
@@ -222,134 +218,142 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-4 sm:space-x-8" aria-label="Tabs">
-          <TabButton
-            activeTab={activeTab}
-            tabName="summary"
-            onClick={() => setActiveTab("summary")}
-          >
-            Tổng hợp Quyền
-          </TabButton>
-          <TabButton
-            activeTab={activeTab}
-            tabName="roles"
-            onClick={() => setActiveTab("roles")}
-          >
-            Quản lý Vai trò
-          </TabButton>
-          <TabButton
-            activeTab={activeTab}
-            tabName="permissions"
-            onClick={() => setActiveTab("permissions")}
-          >
-            Quyền trực tiếp
-          </TabButton>
-        </nav>
-      </div>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="flex space-x-4 sm:space-x-8 px-6" aria-label="Tabs">
+            <TabButton
+              activeTab={activeTab}
+              tabName="summary"
+              onClick={() => setActiveTab("summary")}
+            >
+              Tổng hợp Quyền
+            </TabButton>
+            <TabButton
+              activeTab={activeTab}
+              tabName="roles"
+              onClick={() => setActiveTab("roles")}
+            >
+              Quản lý Vai trò
+            </TabButton>
+            <TabButton
+              activeTab={activeTab}
+              tabName="permissions"
+              onClick={() => setActiveTab("permissions")}
+            >
+              Quyền trực tiếp
+            </TabButton>
+          </nav>
+        </div>
 
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl">
-        {activeTab === "summary" && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <h2 className="text-2xl font-semibold mb-4">
-              Tất cả quyền người dùng đang có
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Bao gồm quyền từ vai trò và quyền trực tiếp. Đây là quyền hạn cuối
-              cùng của người dùng.
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {allUserPermissions.sort().map((p) => (
-                <span
-                  key={p}
-                  className="font-mono text-xs bg-gray-100 dark:bg-gray-700 p-2 rounded"
+        <div className="p-6">
+          {activeTab === "summary" && (
+            <div className="">
+              <h2 className="text-2xl font-semibold mb-4">
+                Tất cả quyền người dùng đang có
+              </h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Bao gồm quyền từ vai trò và quyền trực tiếp. Đây là quyền hạn
+                cuối cùng của người dùng.
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                {allUserPermissions.sort().map((p) => (
+                  <span
+                    key={p}
+                    className="font-mono text-xs bg-gray-100 dark:bg-gray-700 p-2 rounded"
+                  >
+                    {p}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {activeTab === "roles" && (
+            <div>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold">Quản lý Vai trò</h2>
+                <button
+                  onClick={() => handleSaveChanges("roles")}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
                 >
-                  {p}
-                </span>
-              ))}
+                  Lưu Vai trò
+                </button>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {allSystemRoles.map((role) => (
+                  <div key={role.id} className="flex items-center">
+                    <input
+                      id={`role-${role.id}`}
+                      type="checkbox"
+                      className="h-4 w-4 text-indigo-600 rounded"
+                      checked={assignedRoles.includes(role.name)}
+                      onChange={() =>
+                        setAssignedRoles((prev) =>
+                          prev.includes(role.name)
+                            ? prev.filter((r) => r !== role.name)
+                            : [...prev, role.name]
+                        )
+                      }
+                    />
+                    <label
+                      htmlFor={`role-${role.id}`}
+                      className="ml-2 block text-sm"
+                    >
+                      <span className="capitalize font-medium">
+                        {role.name}
+                      </span>
+                      <p className="text-xs text-gray-500">
+                        {role.description}
+                      </p>
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
-        )}
-        {activeTab === "roles" && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">Quản lý Vai trò</h2>
-              <button
-                onClick={() => handleSaveChanges("roles")}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Lưu Vai trò
-              </button>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {allSystemRoles.map((role) => (
-                <div key={role.id} className="flex items-center">
-                  <input
-                    id={`role-${role.id}`}
-                    type="checkbox"
-                    className="h-4 w-4 text-indigo-600 rounded"
-                    checked={assignedRoles.includes(role.name)}
-                    onChange={() =>
-                      setAssignedRoles((prev) =>
-                        prev.includes(role.name)
-                          ? prev.filter((r) => r !== role.name)
-                          : [...prev, role.name]
+          )}
+          {activeTab === "permissions" && (
+            <div className="">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-semibold">
+                  Quản lý Quyền trực tiếp
+                </h2>
+                <button
+                  onClick={() => handleSaveChanges("permissions")}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                >
+                  Lưu Quyền
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Các quyền này được gán thêm, ngoài các quyền đã có từ vai trò.
+              </p>
+              {Object.entries(allSystemPermissions).map(
+                ([groupName, permissions]) => (
+                  <PermissionGroup
+                    key={groupName}
+                    groupName={groupName}
+                    permissions={permissions}
+                    selected={directPermissions}
+                    onCheckboxChange={(p) =>
+                      setDirectPermissions((prev) =>
+                        prev.includes(p)
+                          ? prev.filter((i) => i !== p)
+                          : [...prev, p]
                       )
                     }
+                    onSelectAll={(groupPerms, isSelected) =>
+                      setDirectPermissions((prev) => {
+                        const other = prev.filter(
+                          (p) => !groupPerms.includes(p)
+                        );
+                        return isSelected ? [...other, ...groupPerms] : other;
+                      })
+                    }
                   />
-                  <label
-                    htmlFor={`role-${role.id}`}
-                    className="ml-2 block text-sm"
-                  >
-                    <span className="capitalize font-medium">{role.name}</span>
-                    <p className="text-xs text-gray-500">{role.description}</p>
-                  </label>
-                </div>
-              ))}
+                )
+              )}
             </div>
-          </div>
-        )}
-        {activeTab === "permissions" && (
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-semibold">
-                Quản lý Quyền trực tiếp
-              </h2>
-              <button
-                onClick={() => handleSaveChanges("permissions")}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-              >
-                Lưu Quyền
-              </button>
-            </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Các quyền này được gán thêm, ngoài các quyền đã có từ vai trò.
-            </p>
-            {Object.entries(allSystemPermissions).map(
-              ([groupName, permissions]) => (
-                <PermissionGroup
-                  key={groupName}
-                  groupName={groupName}
-                  permissions={permissions}
-                  selected={directPermissions}
-                  onCheckboxChange={(p) =>
-                    setDirectPermissions((prev) =>
-                      prev.includes(p)
-                        ? prev.filter((i) => i !== p)
-                        : [...prev, p]
-                    )
-                  }
-                  onSelectAll={(groupPerms, isSelected) =>
-                    setDirectPermissions((prev) => {
-                      const other = prev.filter((p) => !groupPerms.includes(p));
-                      return isSelected ? [...other, ...groupPerms] : other;
-                    })
-                  }
-                />
-              )
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import api from "../../../utils/http";
+import { Link } from "react-router-dom";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 const API_URL = "/admin/authorization/permissions";
 
@@ -143,7 +145,6 @@ export default function PermissionsPage() {
   const [success, setSuccess] = useState("");
   const [editingPermission, setEditingPermission] = useState(null);
   const [permissionToDelete, setPermissionToDelete] = useState(null);
-
   const clearMessages = () => {
     setTimeout(() => {
       setError("");
@@ -235,19 +236,24 @@ export default function PermissionsPage() {
     }
   };
 
-  if (isLoading)
-    return (
-      <div className="text-center p-8 animate-pulse">Đang tải dữ liệu...</div>
-    );
+  if (isLoading) return <LoadingDomain />;
 
   const permissionGroups = Object.keys(permissions);
 
   return (
-    <div className="container mx-auto p-4 md:p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl md:text-3xl font-bold mb-6 text-gray-800">
-        Quản lý Quyền (Permissions)
-      </h1>
-
+    <div className="container mx-auto p-4 md:p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200">
+          Danh sách Quyền Hệ Thống
+        </h1>
+        {/* Nút quay lại Dashboard */}
+        <Link
+          to="/admin/authorization"
+          className="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+        >
+          &larr; Về Dashboard
+        </Link>
+      </div>
       {error && (
         <div
           className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
@@ -265,6 +271,8 @@ export default function PermissionsPage() {
         </div>
       )}
 
+      {/* --- PHẦN TẠO MỚI ĐÃ ĐƯỢC ẨN ĐI ---
+      <p className="text-sm text-center text-gray-500 mb-4">Chức năng tạo quyền mới đã bị vô hiệu hóa. Chỉ hiển thị danh sách. </p>
       <PermissionForm
         permission={editingPermission}
         onSave={handleSavePermission}
@@ -273,20 +281,31 @@ export default function PermissionsPage() {
           permissionGroups.length > 0 ? permissionGroups : ["Chưa có nhóm"]
         }
       />
+      */}
 
-      <div className="bg-white shadow-md rounded-lg overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-100">
+      {/* Nếu có quyền đang được sửa thì hiển thị form */}
+      {editingPermission && (
+        <PermissionForm
+          permission={editingPermission}
+          onSave={handleSavePermission}
+          onCancel={() => setEditingPermission(null)}
+          groups={permissionGroups}
+        />
+      )}
+
+      <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead className="bg-gray-50 dark:bg-gray-700/50">
             <tr>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Quyền
               </th>
               <th
                 scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
               >
                 Guard
               </th>
@@ -295,7 +314,8 @@ export default function PermissionsPage() {
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+            {" "}
             {permissionGroups.length > 0 ? (
               permissionGroups.map((groupName) => (
                 <React.Fragment key={groupName}>

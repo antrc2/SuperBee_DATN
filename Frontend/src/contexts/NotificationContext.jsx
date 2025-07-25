@@ -1,4 +1,3 @@
-// src/contexts/NotificationContext.jsx
 import React, {
   createContext,
   useState,
@@ -8,7 +7,7 @@ import React, {
   useEffect,
 } from "react";
 import clsx from "clsx";
-import { Info, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Info, CheckCircle, XCircle, AlertCircle, X } from "lucide-react";
 
 const NotificationContext = createContext();
 
@@ -16,39 +15,45 @@ const NotificationContext = createContext();
 function Toast({ toast, onRemove }) {
   const [isExiting, setIsExiting] = useState(false);
 
+  // Hàm xử lý đóng toast (khi click nút X hoặc hết giờ)
+  const handleClose = useCallback(() => {
+    setIsExiting(true); // Bắt đầu hiệu ứng thoát
+    // Sau khi hiệu ứng thoát hoàn thành (500ms), thực sự xóa toast khỏi DOM
+    const removeTimer = setTimeout(() => onRemove(toast.id), 500);
+    // Cleanup timer này nếu component bị unmount sớm
+    return () => clearTimeout(removeTimer);
+  }, [onRemove, toast.id]);
+
+  // useEffect giờ sẽ gọi handleClose
   useEffect(() => {
     // Bắt đầu timer để tự động ẩn
-    const timer = setTimeout(() => {
-      setIsExiting(true); // Bắt đầu hiệu ứng thoát
-      // Sau khi hiệu ứng thoát hoàn thành (500ms), thực sự xóa toast khỏi DOM
-      setTimeout(() => onRemove(toast.id), 500);
-    }, toast.duration);
+    const timer = setTimeout(handleClose, toast.duration);
 
     return () => {
       clearTimeout(timer);
     };
-  }, [toast, onRemove]);
+  }, [toast.duration, handleClose]); // Thêm handleClose vào dependency array
 
   const toastTypes = {
     s: {
-      className: "alert-success", //
+      className: "alert-success",
       Icon: CheckCircle,
-      progressClass: "bg-tertiary", //
+      progressClass: "bg-tertiary",
     },
     e: {
-      className: "alert-danger", //
+      className: "alert-danger",
       Icon: XCircle,
-      progressClass: "bg-gradient-danger", //
+      progressClass: "bg-gradient-danger",
     },
     i: {
-      className: "alert-info", //
+      className: "alert-info",
       Icon: Info,
-      progressClass: "bg-gradient-info", //
+      progressClass: "bg-gradient-info",
     },
     w: {
-      className: "alert-warning", //
+      className: "alert-warning",
       Icon: AlertCircle,
-      progressClass: "bg-gradient-warning", //
+      progressClass: "bg-gradient-warning",
     },
   };
 
@@ -70,6 +75,16 @@ function Toast({ toast, onRemove }) {
       <span className="flex-1 whitespace-pre-wrap font-semibold">
         {toast.message}
       </span>
+
+      {/* Nút X để đóng toast */}
+      <button
+        onClick={handleClose}
+        className="ml-2 p-1 rounded-full  hover:bg-opacity-20 flex-shrink-0"
+        aria-label="Đóng thông báo"
+      >
+        <X size={18} />
+      </button>
+
       <div
         className={clsx(
           "absolute bottom-0 left-0 h-1 progress-bar-animate",
@@ -131,13 +146,13 @@ export function NotificationProvider({ children }) {
       {children}
 
       {/* Container cho các thông báo Toast */}
-      <div className="fixed top-16 right-4 z-[9999] flex flex-col items-end space-y-3">
+      <div className="fixed top-20 right-4 z-[9999] flex flex-col items-end space-y-3">
         {visibleToasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onRemove={remove} />
         ))}
       </div>
 
-      {/* Hộp thoại xác nhận (Confirm Modal) - Đã cập nhật giao diện */}
+      {/* Hộp thoại xác nhận (Confirm Modal) */}
       {confirmState && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
           <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">
@@ -160,7 +175,7 @@ export function NotificationProvider({ children }) {
         </div>
       )}
 
-      {/* Hộp thoại thông báo (Alert Modal) - Đã cập nhật giao diện */}
+      {/* Hộp thoại thông báo (Alert Modal) */}
       {alertState && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
           <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">

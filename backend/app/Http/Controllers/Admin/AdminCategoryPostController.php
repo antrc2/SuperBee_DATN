@@ -31,7 +31,7 @@ class AdminCategoryPostController extends Controller
             ]);
         } catch (\Exception $th) {
             return response()->json([
-                "message" => "Lỗi khi lấy danh mục bài viết: " . $th->getMessage(),
+                "message" => "Đã xảy ra lỗi.",
                 "status" => false
             ], 500);
         }
@@ -53,7 +53,7 @@ class AdminCategoryPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi lấy danh mục bài viết: " . $e->getMessage(),
+                "message" => "Đã xảy ra lỗi. ",
                 "status" => false
             ], 500);
         }
@@ -95,7 +95,7 @@ class AdminCategoryPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi cập nhật danh mục bài viết: " . $e->getMessage(),
+                "message" => "Đã xảy ra lỗi.",
                 "status" => false
             ], 500);
         }
@@ -117,7 +117,7 @@ class AdminCategoryPostController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi xoá danh mục bài viết: " . $e->getMessage(),
+                "message" => "Đã xảy ra lỗi.",
                 "status" => false
             ], 500);
         }
@@ -152,7 +152,7 @@ class AdminCategoryPostController extends Controller
             ], 201);
         } catch (\Exception $e) {
             return response()->json([
-                "message" => "Lỗi khi tạo danh mục bài viết: " . $e->getMessage(),
+                "message" => "Đã xảy ra lỗi.",
                 "status" => false
             ], 500);
         }

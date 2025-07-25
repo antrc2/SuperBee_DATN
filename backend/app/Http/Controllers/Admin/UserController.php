@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\SystemNotification;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -61,12 +62,10 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Đã xảy ra lỗi khi lấy dữ liệu tài khoản.',
-                'error' => $e->getMessage(),
-                // 'trace' => $e->getTraceAsString() // Chỉ bật trong môi trường dev để debug
             ], 500); // Trả về 500 cho lỗi server
         }
     }
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $query = User::find($id);
@@ -77,18 +76,32 @@ class UserController extends Controller
                 ]);
             }
 
-            $query->status = 0;
-            $query->save();
+            if ($request->user_id == $id) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Bạn không thể tự khóa tài khoản của mình"
+                ], 422);
+            }
 
+            $query->status = 2;
+            $query->save();
+            event(new SystemNotification(
+                "EMAIL_BAN_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
+            // event(new SystemNotification())
             return response()->json([
                 'status' => true,
-                'message' => 'Xóa tài khoản',
+                'message' => 'Khóa tài khoản thành công',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi xóa tài khoản',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -105,16 +118,22 @@ class UserController extends Controller
 
             $query->status = 1;
             $query->save();
-
+            event(new SystemNotification(
+                "EMAIL_RESTORE_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
             return response()->json([
                 'status' => true,
-                'message' => 'Đã Khôi phục tài khoản',
+                'message' => 'Khôi phục tài khoản thành công',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi khôi phục tài khoản',
-                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -126,10 +145,10 @@ class UserController extends Controller
                 'roles' => 'required',
                 'user_id' => 'required|integer|exists:users,id',
             ]);
-    
+
             // Chuyển roles thành mảng nếu là chuỗi
             $roles = is_array($request->roles) ? $request->roles : [$request->roles];
-    
+
             // Chỉ chấp nhận admin, user, partner
             $allowedRoles = ['admin', 'user', 'partner'];
             foreach ($roles as $role) {
@@ -140,7 +159,7 @@ class UserController extends Controller
                     ], 422);
                 }
             }
-    
+
             // Lấy user bị cập nhật
             $targetUser = User::find($id);
             if (!$targetUser) {
@@ -149,7 +168,7 @@ class UserController extends Controller
                     'message' => 'Không tìm thấy tài khoản'
                 ], 404);
             }
-    
+
             // Lấy user thực hiện
             $authUser = User::find($request->user_id);
             if (!$authUser || !$authUser->hasRole('admin')) {
@@ -158,7 +177,7 @@ class UserController extends Controller
                     'message' => 'Bạn không có quyền thực hiện hành động này'
                 ], 403);
             }
-    
+
             // Nếu người bị chỉnh sửa là admin thì không được cập nhật roles nữa (vì ngang cấp)
             if ($targetUser->hasRole('admin')) {
                 return response()->json([
@@ -166,28 +185,27 @@ class UserController extends Controller
                     'message' => 'Đã có lỗi xảy ra!'
                 ], 403);
             }
-    
+
             // Gán quyền mới
             $targetUser->syncRoles($roles);
             $targetUser->load('roles');
-    
+
             return response()->json([
                 'status' => true,
                 'message' => 'Cập nhật quyền thành công',
             ], 200);
-    
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Dữ liệu không hợp lệ',
-                'errors' => $e->errors()
+
             ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,
                 'message' => 'Có lỗi xảy ra khi cập nhật quyền',
-                'error' => $e->getMessage()
+
             ], 500);
         }
-    }    
+    }
 }

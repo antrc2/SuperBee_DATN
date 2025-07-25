@@ -34,6 +34,7 @@ use App\Http\Controllers\User\UserCommentPostController;
 use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
 use App\Http\Controllers\User\UserPostController;
 use App\Http\Controllers\User\UserProfileController;
+use App\Http\Controllers\User\UserWithdrawController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -160,6 +161,13 @@ Route::middleware('auth')->group(function () {
             Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
+        Route::prefix('user/withdraws')->group(function () {
+            Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance');
+            Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request');
+            Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history');
+            Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel');
+        });
+
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });
@@ -287,13 +295,13 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     /**
      * Quản lý Khuyến mãi Nạp thẻ (Donate Promotions)
      */
-    Route::prefix("/donate_promotions")->group(function(){
-        Route::get("/",[AdminDonatePromotionController::class,'index'])->middleware('permission:donate_promotions.view');
-        Route::get("/{id}",[AdminDonatePromotionController::class,'show'])->middleware('permission:donate_promotions.view');
-        Route::post("/",[AdminDonatePromotionController::class,'store'])->middleware('permission:donate_promotions.create');
-        Route::delete("/{id}",[AdminDonatePromotionController::class,'destroy'])->middleware('permission:donate_promotions.delete');
+    Route::prefix("/donate_promotions")->group(function () {
+        Route::get("/", [AdminDonatePromotionController::class, 'index'])->middleware('permission:donate_promotions.view');
+        Route::get("/{id}", [AdminDonatePromotionController::class, 'show'])->middleware('permission:donate_promotions.view');
+        Route::post("/", [AdminDonatePromotionController::class, 'store'])->middleware('permission:donate_promotions.create');
+        Route::delete("/{id}", [AdminDonatePromotionController::class, 'destroy'])->middleware('permission:donate_promotions.delete');
         // undo là hành động sửa
-        Route::post("/{id}/undo",[AdminDonatePromotionController::class,'undo'])->middleware('permission:donate_promotions.edit');
+        Route::post("/{id}/undo", [AdminDonatePromotionController::class, 'undo'])->middleware('permission:donate_promotions.edit');
     });
 
     /**

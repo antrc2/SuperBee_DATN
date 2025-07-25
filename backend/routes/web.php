@@ -30,11 +30,11 @@ Route::get('/', function () {
 //         ],
 //     ));
 event(new SystemNotification(
-    "EMAIL_DONATE",
+    "EMAIL_RESTORE_ACCOUNT",
     [
         "email"=>'antrc2gamer@gmail.com',
         "username"=>"Nguyen Ngoc An",
-        "amount"=>9000
+        // "amount"=>9000
     ]
     ));
     // event(new SystemNotification(

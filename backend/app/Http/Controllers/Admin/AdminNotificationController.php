@@ -111,11 +111,13 @@ class AdminNotificationController extends Controller
             $validatedData['published_at'] = now();
         }
 
-        $notification = Notification::create($validatedData);
+        // $notification = Notification::create($validatedData);
+        $this->sendNotification($request->type,$request->content,$request->link,$request->user_id);
 
         return response()->json([
+            "status"=>True,
             'message' => 'Thông báo cá nhân đã được thêm thành công.',
-            'data' => $notification
+            // 'data' => $notification
         ], 201);
     }
 

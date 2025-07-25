@@ -82,6 +82,7 @@ class CallbackPartnerController extends Controller
                     "related_type"=>"App\Models\Product",
                     "status"=>1
                 ]);
+                $this->sendNotification(1,"Bạn đã nhận được {$import_price} từ sản phẩm {$item->product->sku}",null,$created_by);
             }
             OrderQueue::where("id",$response['id'])->update([
                 "status"=>1

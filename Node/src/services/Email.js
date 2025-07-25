@@ -251,6 +251,65 @@ export async function sendVerificationEmail(
  * @param {string} data.resetToken The unique token for resetting the password.
  * @returns {Promise<void>}
  */
+
+export async function ban_account(userEmail, {
+  username
+}) {
+  const transporter = createTransporter();
+  const subject = `Tài khoản của bạn đã bị cấm`;
+  const htmlContent = `
+        <p>Xin chào <span class="highlight">${username}</span>,</p>
+        <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã bị cấm do vi phạm các điều khoản dịch vụ của chúng tôi.</p>
+        <p>Nếu bạn tin rằng đây là một sai lầm, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+        <p>Trân trọng,<br>Đội ngũ ${APP_NAME}</p>
+    `;
+
+  const mailOptions = {
+    from: `"${MAIL_FROM_NAME}" <${MAIL_FROM_ADDRESS}>`,
+    to: userEmail,
+    subject: subject,
+    html: getStyledEmailTemplate(htmlContent, subject),
+  };
+
+  try {
+    console.log(`Sending ban account email to ${userEmail}...`);
+    await transporter.sendMail(mailOptions);
+    console.log("Ban account email sent successfully!");
+  } catch (error) {
+    console.error("Error sending ban account email:", error);
+    throw new Error("Could not send ban account email.");
+  }
+}
+
+export async function restore_account(userEmail, {
+  username
+}) {
+  const transporter = createTransporter();
+  const subject = `Tài khoản của bạn đã được khôi phục`;
+  const htmlContent = `
+        <p>Xin chào <span class="highlight">${username}</span>,</p>
+        <p>Chúng tôi xin thông báo rằng tài khoản của bạn đã được khôi phục thành công.</p>
+        <p>Nếu bạn gặp bất kỳ vấn đề nào, vui lòng liên hệ với bộ phận hỗ trợ của chúng tôi.</p>
+        <p>Trân trọng,<br>Đội ngũ ${APP_NAME}</p>
+    `;
+
+  const mailOptions = {
+    from: `"${MAIL_FROM_NAME}" <${MAIL_FROM_ADDRESS}>`,
+    to: userEmail,
+    subject: subject,
+    html: getStyledEmailTemplate(htmlContent, subject),
+  };
+
+  try {
+    console.log(`Sending restore account email to ${userEmail}...`);
+    await transporter.sendMail(mailOptions);
+    console.log("Restore account email sent successfully!");
+  } catch (error) {
+    console.error("Error sending restore account email:", error);
+    throw new Error("Could not send restore account email.");
+  }
+}
+
 export async function sendPasswordResetEmail(
   userEmail,
   { username, verificationToken }

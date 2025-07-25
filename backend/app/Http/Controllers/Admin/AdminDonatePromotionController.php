@@ -157,7 +157,7 @@ class AdminDonatePromotionController extends Controller
                 "updated_by" => $request->user_id,
                 "status" => $validatedData['status']
             ]);
-
+            $this->sendNotification(1,"Khuyến mãi {$request->amount}% khi nạp số dư từ {$request->start_date} đến {$request->end_date}");
             return response()->json([
                 "status" => True,
                 "message" => "Tạo khuyến mãi nạp thẻ thành công",

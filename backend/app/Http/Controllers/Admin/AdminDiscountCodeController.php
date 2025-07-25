@@ -163,7 +163,11 @@ class AdminDiscountCodeController extends Controller
             DB::beginTransaction();
             $code = Promotion::create($validated);
             DB::commit();
-
+            if ($request->target_user_id == -1) {
+                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
+            } else {
+                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}",null,$request->user_id);
+            }
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
                 'status' => true,

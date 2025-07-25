@@ -11,6 +11,8 @@ const EmailType = {
   EMAIL_PROMOTIONAL: "EMAIL_PROMOTIONAL",
   EMAIL_SUPPORT: "EMAIL_SUPPORT",
   EMAIL_DONATE: "EMAIL_DONATE", // Email thông báo về ủng hộ
+  EMAIL_BAN_ACCOUNT: "EMAIL_BAN_ACCOUNT", // Email thông báo tài khoản bị cấm
+  EMAIL_RESTORE_ACCOUNT: "EMAIL_RESTORE_ACCOUNT", // Email thông báo tài khoản được khôi phục
 };
 import * as email from "../services/Email.js";
 async function sendEmail(type, data) {
@@ -65,7 +67,16 @@ async function sendEmail(type, data) {
         });
       }
       break;
-
+    case EmailType.EMAIL_BAN_ACCOUNT:
+      // email_ban_account: Email thông báo tài khoản bị cấm
+      console.log("Gửi email thông báo tài khoản bị cấm (EMAIL_BAN_ACCOUNT)");
+      await email.ban_account(toEmail, { username });
+      break;
+    case EmailType.EMAIL_RESTORE_ACCOUNT:
+      // email_restore_account: Email thông báo tài khoản được khôi phục
+      console.log("Gửi email thông báo tài khoản được khôi phục (EMAIL_RESTORE_ACCOUNT)");
+      await email.restore_account(toEmail, { username });
+      break;
     case EmailType.EMAIL_ORDER_CONFIRMATION:
       // email_order_confirmation: Email xác nhận đơn hàng
       console.log("Gửi email xác nhận đơn hàng (EMAIL_ORDER_CONFIRMATION)");

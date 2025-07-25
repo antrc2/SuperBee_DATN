@@ -161,7 +161,7 @@ class AdminProductController extends Controller
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
-
+            $sku = $product->sku;
             // Nếu attributes là JSON string, decode nó
             $attrs = $request->input('attributes');
             if (is_string($attrs)) {
@@ -235,7 +235,7 @@ class AdminProductController extends Controller
                     // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
                 ], 422);
             }
-            $validatedData = $validator->validated();
+            $validated = $validator->validated();
 
             // Kiểm tra sale < price
             if (
@@ -352,7 +352,8 @@ class AdminProductController extends Controller
             }
 
             DB::commit();
-
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}/edit",null,'products.*');
             return response()->json([
                 'status'  => true,
                 'message' => 'Cập nhật sản phẩm thành công',
@@ -566,7 +567,8 @@ class AdminProductController extends Controller
 
             // Commit transaction
             DB::commit();
-
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.*');
             return response()->json([
                 "status" => true,
                 "message" => "Thêm sản phẩm thành công",

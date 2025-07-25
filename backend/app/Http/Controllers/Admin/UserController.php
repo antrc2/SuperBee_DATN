@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\SystemNotification;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -64,7 +65,7 @@ class UserController extends Controller
             ], 500); // Trả về 500 cho lỗi server
         }
     }
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             $query = User::find($id);
@@ -75,12 +76,27 @@ class UserController extends Controller
                 ]);
             }
 
+            if ($request->user_id == $id) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Bạn không thể tự khóa tài khoản của mình"
+                ], 422);
+            }
+
             $query->status = 2;
             $query->save();
-
+            event(new SystemNotification(
+                "EMAIL_BAN_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
+            // event(new SystemNotification())
             return response()->json([
                 'status' => true,
-                'message' => 'Khóa tài khoản',
+                'message' => 'Khóa tài khoản thành công',
             ], 200);
         } catch (Exception $e) {
             return response()->json([
@@ -102,10 +118,17 @@ class UserController extends Controller
 
             $query->status = 1;
             $query->save();
-
+            event(new SystemNotification(
+                "EMAIL_RESTORE_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
             return response()->json([
                 'status' => true,
-                'message' => 'Đã Khôi phục tài khoản',
+                'message' => 'Khôi phục tài khoản thành công',
             ], 200);
         } catch (Exception $e) {
             return response()->json([

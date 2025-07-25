@@ -28,6 +28,7 @@ const adminRoutes = [
             "ke-toan",
             "nv-ho-tro",
             "nv-marketing",
+            "nv-kiem-duyet",
           ]}
         >
           <AppLayout />

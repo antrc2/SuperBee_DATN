@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\AdminDiscountCodeController;
 use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPostController;
+use App\Http\Controllers\Admin\AdminWithdrawController;
 use App\Http\Controllers\Admin\AuthorizationDashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -161,11 +162,13 @@ Route::middleware('auth')->group(function () {
             Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
-        Route::prefix('user/withdraws')->group(function () {
-            Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance');
-            Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request');
-            Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history');
-            Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel');
+        Route::prefix('/withdraws')->group(function () {
+            Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
+            Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
+            Route::get('/', [UserWithdrawController::class, 'index'])->name('user.withdraws.history');
+            // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
+            Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
+            Route::put("/{id}",[UserWithdrawController::class,'update']);
         });
 
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
@@ -324,6 +327,12 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:roles.edit');
         Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete');
         Route::post('roles/{role}/permissions', [RoleController::class, 'assignPermissions'])->middleware('permission:roles.edit');
+    });
+
+
+    Route::prefix("/withdraws")->group(function(){
+        Route::get('/',[AdminWithdrawController::class,'index']);
+        Route::post("/export",[AdminWithdrawController::class,'export']);
     });
 });
 

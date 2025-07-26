@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useParams, useNavigate } from "react-router-dom";
 import { getDecodedToken } from "@utils/tokenUtils";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 // Helper để format số tiền
 const formatCurrency = (amount, currency = "VND") => {
@@ -90,6 +91,7 @@ const ShowAccountPage = () => {
   const [updatingRole, setUpdatingRole] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  const { pop } = useNotification();
 
   useEffect(() => {
     const fetchAccount = async () => {
@@ -102,12 +104,13 @@ const ShowAccountPage = () => {
         setSelectedRole(userData.roles?.[0]?.name || "");
       } catch (err) {
         setError(err);
+        pop("Lỗi khi tải thông tin tài khoản", "e");
       } finally {
         setLoading(false);
       }
     };
     fetchAccount();
-  }, [id]);
+  }, [id, pop]);
 
   // Lấy thông tin user hiện tại từ token
   useEffect(() => {
@@ -124,24 +127,24 @@ const ShowAccountPage = () => {
   // Hàm cập nhật quyền
   const handleUpdateRole = async () => {
     if (!currentUser) {
-      alert("Không tìm thấy thông tin người dùng hiện tại");
+      pop("Không tìm thấy thông tin người dùng hiện tại", "e");
       return;
     }
 
     if (!selectedRole) {
-      alert("Vui lòng chọn quyền");
+      pop("Vui lòng chọn quyền", "w");
       return;
     }
 
     // Kiểm tra nếu user hiện tại là reseller thì không cho cập nhật
     if (account.roles?.[0]?.name === "reseller") {
-      alert("Không thể cập nhật quyền của đại lý");
+      pop("Không thể cập nhật quyền của đại lý", "w");
       return;
     }
 
     // Kiểm tra nếu user hiện tại là admin và user bị cập nhật cũng là admin
     if (account.roles?.[0]?.name === "admin") {
-      alert("Không thể cập nhật quyền của admin");
+      pop("Không thể cập nhật quyền của admin", "w");
       return;
     }
 
@@ -153,17 +156,18 @@ const ShowAccountPage = () => {
       });
 
       if (response.data.status) {
-        console.log("Cập nhật thành công");
+        pop("Cập nhật quyền thành công", "s");
         // Cập nhật lại dữ liệu account
         const res = await api.get(`/admin/accounts/${id}`);
         const userData = res.data?.data?.user || res.data;
         setAccount(userData);
         setSelectedRole(userData.roles?.[0]?.name || "");
       } else {
-        console.log("Cập nhật thất bại");
+        pop("Cập nhật quyền thất bại", "e");
       }
     } catch (err) {
       console.error("Lỗi cập nhật quyền:", err);
+      pop("Lỗi khi cập nhật quyền", "e");
     } finally {
       setUpdatingRole(false);
     }

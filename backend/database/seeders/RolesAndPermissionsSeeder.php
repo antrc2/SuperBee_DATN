@@ -195,14 +195,10 @@ class RolesAndPermissionsSeeder extends Seeder
         // Cấp 4: Partner (Đối tác bán hàng)
         $rolePartner = Role::create(['name' => 'partner', 'description' => 'Đối tác bán hàng, chỉ quản lý sản phẩm của mình.', 'guard_name' => 'api']);
         $rolePartner->givePermissionTo([
-            'products.view',
-            'products.create',
-            'products.edit',
-            'products.delete',
-            'withdrawals.create',
-            'withdrawals.view',
-            'product_reports.view',
-            "chat.view"
+            'products.view', 'products.create', 'products.edit', 'products.delete',
+            'withdrawals.create', 'withdrawals.view',
+            'product_reports.view',"chat.view",
+            'wallet.view'
         ]);
 
         // Cấp 5: User (Người dùng)

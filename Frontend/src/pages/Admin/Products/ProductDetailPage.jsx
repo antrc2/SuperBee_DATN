@@ -124,6 +124,10 @@ export default function ProductDetailPage() {
             }
           />
           <DetailItem
+            label="Mô tả"
+            value={product.description || "Không có mô tả"}
+          />
+          <DetailItem
   label="Trạng thái"
   value={
     (() => {

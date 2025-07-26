@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import api from "../../../utils/http";
 import { ImagePlus, PlusCircle, X, Eye, EyeOff } from "lucide-react";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 const MAX_IMAGES = 15;
 
@@ -10,11 +11,13 @@ export default function CreateFormProductsPartner({
   isEditing = false,
   isLoading = false,
 }) {
+  const { pop } = useNotification();
   const [formData, setFormData] = useState({
     category_id: "",
     import_price: "",
     username: "",
     password: "",
+    description: "",
     attributes: [],
   });
 
@@ -23,6 +26,8 @@ export default function CreateFormProductsPartner({
   const [categories, setCategories] = useState([]);
   const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef(null);
+  // Thêm state lưu lỗi
+  const [formErrors, setFormErrors] = useState({});
 
   // Fetch categories
   useEffect(() => {
@@ -46,6 +51,7 @@ export default function CreateFormProductsPartner({
         import_price: initialData.import_price || "",
         username: initialData.credentials?.[0]?.username || "",
         password: initialData.credentials?.[0]?.password || "",
+        description: initialData.description || "",
         attributes:
           initialData.game_attributes?.map((attr) => ({
             attribute_key: attr.attribute_key,
@@ -101,10 +107,13 @@ export default function CreateFormProductsPartner({
     ];
     const validFiles = files.filter(f => allowedTypes.includes(f.type));
     if (validFiles.length !== files.length) {
-      alert("Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic");
+      pop("Chỉ chấp nhận các định dạng ảnh: jpg, jpeg, png, webp, gif, svg, avif, heic", "w");
     }
     const total = existingImages.length + newImages.length + validFiles.length;
-    if (total > MAX_IMAGES) return alert(`Chỉ được tối đa ${MAX_IMAGES} ảnh.`);
+    if (total > MAX_IMAGES) {
+      pop(`Chỉ được tối đa ${MAX_IMAGES} ảnh.`, "w");
+      return;
+    }
     const withPreview = validFiles.map((f) =>
       Object.assign(f, { preview: URL.createObjectURL(f) })
     );
@@ -125,18 +134,49 @@ export default function CreateFormProductsPartner({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.category_id) return alert("Vui lòng chọn danh mục.");
-    if (!formData.import_price) return alert("Vui lòng nhập giá bán.");
-    if(formData.import_price > 999999999) return alert("Giá phải nhỏ hơn 999.999.999đ");
-    if (!formData.username) return alert("Vui lòng nhập username.");
-    if (!isEditing && !formData.password)
-      return alert("Vui lòng nhập password.");
+    let errors = {};
+    if (!formData.category_id) {
+      errors.category_id = "Danh mục không được để trống";
+    }
+    if (!formData.import_price) {
+      errors.import_price = "Giá bán không được để trống";
+    } else if(formData.import_price > 999999999) {
+      errors.import_price = "Giá phải nhỏ hơn 999.999.999đ";
+    }
+    if (!formData.username) {
+      errors.username = "Username không được để trống";
+    }
+    if (!isEditing && !formData.password) {
+      errors.password = "Password không được để trống";
+    }
+        if (!isEditing && existingImages.length + newImages.length === 0) {
+      errors.images = "Cần chọn ít nhất 1 ảnh";
+    }
+    // Validate thuộc tính sản phẩm
+    if(!formData.attributes.length){
+      errors.attributes = "Cần có ít nhất 1 thuộc tính";
+    }
+    formData.attributes.forEach((attr, idx) => {
+      if (!attr.attribute_key) {
+        errors[`attribute_key_${idx}`] = "Tên thuộc tính không được để trống";
+      }
+      if (!attr.attribute_value) {
+        errors[`attribute_value_${idx}`] = "Giá trị thuộc tính không được để trống";
+      }
+    });
+    // Validate ảnh (chỉ khi tạo mới)
+    if (!isEditing && existingImages.length + newImages.length === 0) {
+      errors.images = "Cần chọn ít nhất 1 ảnh";
+    }
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
 
     const data = new FormData();
     data.append("category_id", formData.category_id);
     data.append("import_price", formData.import_price);
     data.append("username", formData.username);
     data.append("password", formData.password);
+    data.append("description", formData.description);
     data.append("attributes", JSON.stringify(formData.attributes));
     newImages.forEach((f) => data.append("images[]", f));
     if (isEditing)
@@ -188,12 +228,14 @@ export default function CreateFormProductsPartner({
               id="category_id"
               value={formData.category_id}
               onChange={handleChange}
-              required
               className={inputClass}
             >
               <option value="">-- Chọn --</option>
               {renderCategory(categories)}
             </select>
+            {formErrors.category_id && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.category_id}</p>
+            )}
           </div>
           <div>
             <label htmlFor="import_price" className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
@@ -204,15 +246,31 @@ export default function CreateFormProductsPartner({
               type="number"
               value={formData.import_price}
               onChange={handleChange}
-              required
               className={inputClass}
               disabled={isEditing && (initialData?.status === 1 || initialData?.status === 4)}
               placeholder="Nhập giá bán"
             />
+            {formErrors.import_price && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.import_price}</p>
+            )}
             {isEditing && (initialData?.status === 1 || initialData?.status === 4) && (
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Không thể sửa giá khi sản phẩm đang bán hoặc đã bán.</p>
             )}
           </div>
+        </div>
+        <div className="mt-6">
+          <label htmlFor="description" className="block mb-1 text-sm text-gray-700 dark:text-gray-200">
+            Mô tả (tùy chọn)
+          </label>
+          <textarea
+            name="description"
+            id="description"
+            value={formData.description}
+            onChange={handleChange}
+            rows={3}
+            className={inputClass}
+            placeholder="Nhập mô tả sản phẩm (không bắt buộc)"
+          />
         </div>
       </div>
       {/* Phần thông tin đăng nhập */}
@@ -231,10 +289,12 @@ export default function CreateFormProductsPartner({
               id="username"
               value={formData.username}
               onChange={handleChange}
-              required
               className={inputClass}
               placeholder="Nhập tài khoản"
             />
+            {formErrors.username && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.username}</p>
+            )}
           </div>
           <div>
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
@@ -247,7 +307,6 @@ export default function CreateFormProductsPartner({
                 id="password"
                 value={formData.password}
                 onChange={handleChange}
-                required={!isEditing}
                 className={inputClass}
                 placeholder="Nhập mật khẩu"
               />
@@ -260,6 +319,9 @@ export default function CreateFormProductsPartner({
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {formErrors.password && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.password}</p>
+            )}
           </div>
         </div>
       </div>
@@ -268,25 +330,38 @@ export default function CreateFormProductsPartner({
         <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
           Thuộc tính sản phẩm
         </h3>
+        {formErrors.attributes && (
+              <p className="text-xs text-red-500 mt-1">{formErrors.attributes}</p>
+            )}
         <div className="space-y-4">
           {formData.attributes.map((attr, index) => (
             <div key={index} className="flex items-center gap-4">
-              <input
-                type="text"
-                name="attribute_key"
-                placeholder="Tên thuộc tính"
-                value={attr.attribute_key}
-                onChange={(e) => handleAttributeChange(index, e)}
-                className={inputClass}
-              />
-              <input
-                type="text"
-                name="attribute_value"
-                placeholder="Giá trị"
-                value={attr.attribute_value}
-                onChange={(e) => handleAttributeChange(index, e)}
-                className={inputClass}
-              />
+              <div className="w-full">
+                <input
+                  type="text"
+                  name="attribute_key"
+                  placeholder="Tên thuộc tính"
+                  value={attr.attribute_key}
+                  onChange={(e) => handleAttributeChange(index, e)}
+                  className={inputClass}
+                />
+                {formErrors[`attribute_key_${index}`] && (
+                  <p className="text-xs text-red-500 mt-1">{formErrors[`attribute_key_${index}`]}</p>
+                )}
+              </div>
+              <div className="w-full">
+                <input
+                  type="text"
+                  name="attribute_value"
+                  placeholder="Giá trị"
+                  value={attr.attribute_value}
+                  onChange={(e) => handleAttributeChange(index, e)}
+                  className={inputClass}
+                />
+                {formErrors[`attribute_value_${index}`] && (
+                  <p className="text-xs text-red-500 mt-1">{formErrors[`attribute_value_${index}`]}</p>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => removeAttribute(index)}
@@ -327,6 +402,9 @@ export default function CreateFormProductsPartner({
         >
           <ImagePlus size={18} className={iconClass} /> Chọn ảnh từ máy tính
         </button>
+        {formErrors.images && (
+          <p className="text-xs text-red-500 mb-2">{formErrors.images}</p>
+        )}
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
           Đã chọn: {existingImages.length + newImages.length} / {MAX_IMAGES} ảnh.
         </p>

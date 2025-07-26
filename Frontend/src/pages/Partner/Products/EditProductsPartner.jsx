@@ -4,10 +4,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import CreateFormProductsPartner from "@components/Partner/Product/CreateFormProductsPartner";
 import { LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function EditProductsPartner() {
   const { id } = useParams(); // Lấy id từ URL, ví dụ: /edit/123
   const navigate = useNavigate();
+  const { pop } = useNotification();
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -35,16 +37,19 @@ export default function EditProductsPartner() {
         } else {
           setProduct(null);
           setError("Sản phẩm không tồn tại.");
+          pop("Sản phẩm không tồn tại.", "e");
         }
       } catch (err) {
         console.error(err);
-        setError("Không tìm thấy sản phẩm hoặc có lỗi xảy ra.");
+        const errorMessage = "Không tìm thấy sản phẩm hoặc có lỗi xảy ra.";
+        setError(errorMessage);
+        pop(errorMessage, "e");
       } finally {
         setIsFetching(false);
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id, pop]);
 
   const handleUpdateSubmit = async (formData) => {
     setIsLoading(true);
@@ -63,17 +68,13 @@ export default function EditProductsPartner() {
           "Content-Type": "multipart/form-data",
         },
       });
-      // if (response.status === 201 || response.status === 200) {
-      //   navigate("/admin/categories");
-      // }
-      // toast.success("Cập nhật sản phẩm thành công!");
+      pop("Cập nhật sản phẩm thành công!", "s");
       navigate("/partner/products");
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại."
-      );
-      // toast.error(err.response?.data?.message || "Cập nhật thất bại!");
+      const errorMessage = err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
+      setError(errorMessage);
+      pop(errorMessage, "e");
     } finally {
       setIsLoading(false);
     }

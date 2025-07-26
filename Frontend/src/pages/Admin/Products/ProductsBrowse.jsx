@@ -50,13 +50,13 @@ export default function ProductsBrowse({products }) {
               </td>
               <td className="py-3 px-4 text-center">
                 <div className="flex justify-center gap-4">
-                  <Link to={`/admin/products/${product.id}`} title="Xem chi tiết">
+                  <Link to={`/admin/pendingProducts/${product.id}`} title="Xem chi tiết">
                     <Eye className="text-green-500 hover:text-green-700 cursor-pointer" size={20} />
                   </Link>
 
-                  <Link to={`/admin/products/${product.id}/update`} title="Chỉnh sửa">
+                  {/* <Link to={`/admin/pendingProducts/${product.id}/update`} title="Chỉnh sửa">
                     <ShieldCheck className="text-blue-500 hover:text-blue-700 cursor-pointer" size={20} />
-                  </Link>
+                  </Link> */}
 
                   {/* {product.status === 1 || product.status === 2 ? (
                     <button onClick={() => handleLock(product.id)} title="Hủy Bán">

@@ -3,9 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import CreateFormProductsPartner from "@components/Partner/Product/CreateFormProductsPartner";
 import api from "@utils/http";
 import { ArrowLeft } from "lucide-react";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function CreateProductsPartner() {
   const navigate = useNavigate();
+  const { pop } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -19,14 +21,15 @@ export default function CreateProductsPartner() {
         },
       });
       if (response.status === 201 || response.status === 200) {
+        pop("Tạo sản phẩm thành công!", "s");
         navigate("/partner/products");
       }
       return response.data;
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại."
-      );
+      const errorMessage = err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
+      setError(errorMessage);
+      pop(errorMessage, "e");
     } finally {
       setIsLoading(false);
     }

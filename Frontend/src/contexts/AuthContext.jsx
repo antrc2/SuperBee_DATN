@@ -65,6 +65,7 @@ export function AuthProvider({ children }) {
         username: credentials.username,
         password: credentials.password,
         web_id: credentials.web_id,
+        "cf-turnstile-response": credentials["cf-turnstile-response"],
       });
 
       if (!res?.data?.status) {

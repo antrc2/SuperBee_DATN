@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 // Helper để map tên quyền
 const getRoleDisplayName = (roleName) => {
@@ -25,6 +26,7 @@ const AccountListPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { pop } = useNotification();
 
   useEffect(() => {
     const fetchAccounts = async () => {
@@ -39,20 +41,23 @@ const AccountListPage = () => {
         // Log lỗi chi tiết để debug
         console.error("Lỗi khi tải danh sách:", err, err.response?.data);
         setError(err);
+        pop("Lỗi khi tải danh sách tài khoản", "e");
       } finally {
         setLoading(false);
       }
     };
 
     fetchAccounts();
-  }, []);
+  }, [pop]);
 
   const handleToggleStatus = async (id, status) => {
     try {
       if (status === 1) {
         await api.delete(`/admin/accounts/${id}`);
+        pop("Khóa tài khoản thành công", "s");
       } else {
         await api.patch(`/admin/accounts/${id}`);
+        pop("Khôi phục tài khoản thành công", "s");
       }
       setAccounts((prev) =>
         prev.map((acc) =>
@@ -60,7 +65,7 @@ const AccountListPage = () => {
         )
       );
     } catch (err) {
-      alert("Thao tác thất bại");
+      pop("Thao tác thất bại", "e");
       console.error(err);
     }
   };

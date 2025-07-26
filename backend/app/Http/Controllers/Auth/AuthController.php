@@ -544,7 +544,10 @@ class AuthController extends Controller
                 Log::info('Turnstile Request Data: ' . json_encode($requestData));
                 
                 $verifyResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', $requestData);
-                
+                // var_dump($verifyResponse);
+                // return response()->json([
+                //     'hehe'=>$verifyResponse
+                // ]);
                 Log::info('Turnstile Response Status: ' . $verifyResponse->status());
                 Log::info('Turnstile Response Body: ' . $verifyResponse->body());
                 Log::info('Turnstile Response JSON: ' . json_encode($verifyResponse->json()));

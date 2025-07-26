@@ -48,6 +48,7 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "7.6.0",
     "react-toastify": "^11.0.5",
+    "react-turnstile": "^1.1.4",
     "rehype-raw": "^7.0.0",
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.21.0",

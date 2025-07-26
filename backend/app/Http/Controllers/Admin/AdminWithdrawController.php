@@ -13,12 +13,7 @@ class AdminWithdrawController extends Controller
     public function index(Request $request)
     {
         try {
-            $withdraws = Withdraw::with([
-                'user:id,username,email',
-                'walletTransaction:id,type,amount,status'
-            ])
-                ->orderBy('created_at', 'desc')
-                ->paginate(20); 
+            $withdraws = Withdraw::with('user')->get();
 
             return response()->json([
                 'status' => true,
@@ -29,7 +24,8 @@ class AdminWithdrawController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Đã xảy ra lỗi khi truy vấn rút tiền',
-                'error' => $e->getMessage()
+                'data'=>[]
+                // 'error' => $e->getMessage()
             ], 500);
         }
     }

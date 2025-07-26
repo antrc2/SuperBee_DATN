@@ -65,8 +65,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'users.delete' => 'Xóa người dùng',
                 'profile.view_own' => 'Xem hồ sơ cá nhân',
                 'profile.edit_own' => 'Sửa hồ sơ cá nhân',
-                                'withdrawals.view' => 'Xem yêu cầu rút tiền',
-                'withdrawals.create' => 'Tạo yêu cầu rút tiền',
             ],
             'Quản lý Web con' => [
                 'webs.view' => 'Xem danh sách web con',
@@ -208,6 +206,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'wallet.view', 'recharges.create', 'withdrawals.create', 'transactions.view',
             'comments.create', 'reviews.create', 'product_reports.create',
             'promotions.view', 'donate_promotions.view', 
+            'withdrawals.create', 'withdrawals.view',
         ]);
 
         // --- Nhóm vai trò nhân viên ---

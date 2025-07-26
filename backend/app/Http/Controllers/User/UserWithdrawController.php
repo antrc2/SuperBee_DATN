@@ -11,21 +11,23 @@ use Illuminate\Support\Str;
 
 class UserWithdrawController extends Controller
 {
-    public function balance(Request $request){
+    public function balance(Request $request)
+    {
         try {
-            $wallet = Wallet::where("user_id",$request->user_id)->get();
-                    return response()->json(
-            [
-                "status" => True,
-                "message" => "Lấy số dư thành công",
-                "data" => $wallet->balance
-            ]);
+            $wallet = Wallet::where("user_id", $request->user_id)->get();
+            return response()->json(
+                [
+                    "status" => True,
+                    "message" => "Lấy số dư thành công",
+                    "data" => $wallet->balance
+                ]
+            );
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
-                'status'=>false,
-                "message"=>"Đã xảy ra lỗi",
-            ],500);
+                'status' => false,
+                "message" => "Đã xảy ra lỗi",
+            ], 500);
         }
     }
     // public function showBalance(Request $request)
@@ -67,7 +69,7 @@ class UserWithdrawController extends Controller
 
             if (!$wallet || $wallet->balance < $request->amount) {
                 return response()->json([
-                    "status"=>False,
+                    "status" => False,
                     'message' => 'Số dư không đủ để rút.',
                     // 'current_balance' => $wallet?->balance ?? 0,
                     // 'errorCode' => 'INSUFFICIENT_FUNDS'
@@ -101,7 +103,7 @@ class UserWithdrawController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                "status"=>False,
+                "status" => False,
                 'message' => 'Lỗi khi tạo yêu cầu rút tiền.',
                 // 'error' => $e->getMessage(),
                 // 'errorCode' => 'WITHDRAW_FAILED'
@@ -109,30 +111,61 @@ class UserWithdrawController extends Controller
         }
     }
 
-    public function update(Request $request,$id){
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:withdraws,user_id',
+            'note' => 'nullable|string|max:500',
+        ]);
+
         try {
-            //code...
+            $withdraw = Withdraw::where('id', $id)
+                ->where('user_id', $request->user_id)
+                ->where('status', 0)
+                ->first();
+
+            if (!$withdraw) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không thể cập nhật. Yêu cầu không tồn tại hoặc đã được xử lý.',
+                ], 400);
+            }
+
+            $withdraw->note = $request->note;
+            $withdraw->save();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Cập nhật yêu cầu rút tiền thành công.',
+                'data' => $withdraw
+            ]);
         } catch (\Throwable $th) {
-            //throw $th;
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi khi cập nhật yêu cầu rút tiền.',
+            ], 500);
         }
     }
+
 
 
     public function index(Request $request)
     {
         try {
-            $withdraws = Withdraw::where("user_id");
+            $withdraws = Withdraw::where("user_id", $request->user_id)
+                ->orderBy('created_at', 'desc')
+                ->get();
             return response()->json([
-                "status"=>True,
-                "message"=>"Lấy danh sách rút tiền thành công",
-                "data"=>$withdraws
+                "status" => True,
+                "message" => "Lấy danh sách rút tiền thành công",
+                "data" => $withdraws
             ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
-                "status"=>False,
-                "message"=>"Đã xảy ra lỗi"
-            ],500);
+                "status" => False,
+                "message" => "Đã xảy ra lỗi"
+            ], 500);
         }
         // $request->validate([
         //     'user_id' => 'required|exists:withdraws,user_id',
@@ -145,14 +178,14 @@ class UserWithdrawController extends Controller
         //     ->get();
 
         // return response()->json([
-            
+
         //     'withdraws' => $withdraws,
         //     'total' => Withdraw::where('user_id', $request->user_id)->count(),
         // ]);
     }
 
 
-    public function cancel(Request $request,$id)
+    public function cancel(Request $request, $id)
     {
 
         DB::beginTransaction();
@@ -164,8 +197,8 @@ class UserWithdrawController extends Controller
 
             if (!$withdraw) {
                 return response()->json([
-                    'message' => 'Không thể hủy. Yêu cầu không tồn tại hoặc đã xử lý.',
-                    'errorCode' => 'CANNOT_CANCEL'
+                    'status' => false,
+                    'message' => 'Không thể hủy. Yêu cầu không tồn tại hoặc đã được xử lý.',
                 ], 400);
             }
 
@@ -178,17 +211,14 @@ class UserWithdrawController extends Controller
             DB::commit();
 
             return response()->json([
-                "status"=>true,
+                "status" => true,
                 'message' => 'Đã hủy yêu cầu rút và hoàn tiền thành công.',
-                // 'withdraw' => $withdraw->fresh()
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                "status"=>False,
+                "status" => False,
                 'message' => 'Lỗi khi hủy yêu cầu rút.',
-                // 'error' => $e->getMessage(),
-                // 'errorCode' => 'CANCEL_WITHDRAW_FAILED'
             ], 500);
         }
     }

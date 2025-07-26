@@ -162,6 +162,13 @@ Route::middleware('auth')->group(function () {
             Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
+
+//         Route::prefix('user/withdraws')->group(function () {
+//             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
+//             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
+//             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
+//             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
+
         Route::prefix('/withdraws')->group(function () {
             Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
             Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
@@ -169,6 +176,7 @@ Route::middleware('auth')->group(function () {
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
             Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
             Route::put("/{id}",[UserWithdrawController::class,'update']);
+
         });
 
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
@@ -197,14 +205,14 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
     /**
-     * Quản lý Danh mục sản phẩm - Gán vào quyền sản phẩm
+     * Quản lý Danh mục sản phẩm - === BỔ SUNG: SỬ DỤNG QUYỀN categories.* ===
      */
     Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:products.view');
-        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:products.create');
-        Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:products.edit');
-        Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:products.delete');
-        Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:products.view');
+        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:categories.view');
+        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:categories.create');
+        Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:categories.edit');
+        Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete');
+        Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:categories.view');
     });
 
     /**
@@ -285,14 +293,14 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
     /**
-     * Quản lý Danh mục Bài viết - Gán vào quyền bài viết
+     * Quản lý Danh mục Bài viết - === BỔ SUNG: SỬ DỤNG QUYỀN post_categories.* ===
      */
     Route::prefix('/categoryPost')->group(function () {
-        Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost'])->middleware('permission:posts.view');
-        Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost'])->middleware('permission:posts.create');
-        Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug'])->middleware('permission:posts.view');
-        Route::post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost'])->middleware('permission:posts.edit');
-        Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost'])->middleware('permission:posts.delete');
+        Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost'])->middleware('permission:post_categories.view');
+        Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost'])->middleware('permission:post_categories.create');
+        Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug'])->middleware('permission:post_categories.view');
+        Route::post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost'])->middleware('permission:post_categories.edit');
+        Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost'])->middleware('permission:post_categories.delete');
     });
 
     /**
@@ -337,17 +345,19 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
 });
 
 // =================== PARTNER ROUTES ===================
+// === BỔ SUNG: THÊM MIDDLEWARE PERMISSION CHI TIẾT ===
 Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function () {
-    // Các quyền của partner được định nghĩa sẵn trong vai trò, không cần middleware permission chi tiết ở đây
+    // Các quyền của partner được định nghĩa sẵn trong vai trò, nhưng kiểm tra chi tiết sẽ chặt chẽ hơn
     Route::prefix("/orders")->group(function () {
-        Route::post("/purchase", [UserOrderController::class, 'purchase']);
+        // Partner có thể không tự mua hàng, nhưng nếu có thì cần quyền orders.create
+        Route::post("/purchase", [UserOrderController::class, 'purchase'])->middleware('permission:orders.create');
     });
     Route::prefix('/products')->group(function () {
-        Route::get('/', [PartnerProductController::class, 'index']);
-        Route::get('/{id}', [PartnerProductController::class, 'show']);
-        Route::post('/', [PartnerProductController::class, 'store']);
-        Route::put('/{id}', [PartnerProductController::class, 'update']);
-        Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
-        Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);
+        Route::get('/', [PartnerProductController::class, 'index'])->middleware('permission:products.view');
+        Route::get('/{id}', [PartnerProductController::class, 'show'])->middleware('permission:products.view');
+        Route::post('/', [PartnerProductController::class, 'store'])->middleware('permission:products.create');
+        Route::put('/{id}', [PartnerProductController::class, 'update'])->middleware('permission:products.edit');
+        Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel'])->middleware('permission:products.edit');
+        Route::post('/{id}/restore', [PartnerProductController::class, 'restore'])->middleware('permission:products.edit');
     });
 });

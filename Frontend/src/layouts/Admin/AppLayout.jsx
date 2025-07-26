@@ -5,6 +5,7 @@ import Backdrop from "./Backdrop";
 import AppSidebar from "./AppSidebar";
 import { SidebarProvider } from "../../contexts/SidebarContext";
 import "@styles/admin.css";
+
 const LayoutContent = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
 

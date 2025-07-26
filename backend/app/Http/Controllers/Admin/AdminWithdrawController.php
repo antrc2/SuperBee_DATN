@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
-
+use App\Models\Withdraw;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
@@ -10,10 +10,30 @@ class AdminWithdrawController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $withdraws = Withdraw::with([
+                'user:id,username,email',
+                'walletTransaction:id,type,amount,status'
+            ])
+                ->orderBy('created_at', 'desc')
+                ->paginate(20); 
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh sách yêu cầu rút tiền thành công',
+                'data' => $withdraws
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Đã xảy ra lỗi khi truy vấn rút tiền',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -62,7 +82,8 @@ class AdminWithdrawController extends Controller
     {
         //
     }
-    public function export(){
-        
+    public function export()
+    {
+
     }
 }

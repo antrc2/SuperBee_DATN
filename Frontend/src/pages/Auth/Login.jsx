@@ -5,14 +5,14 @@ import { ChevronLeft, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 import LoadingDomain from "../../components/Loading/LoadingDomain";
 
-const SITE_KEY = "0x4AAAAAABmlu6buU9jQ8_Df"; //dùng test trên localhost
-// const SITE_KEY = "0x4AAAAAABmbwPkYMazVEtre"; //dùng trên server thật (chưa test đâu)
+
 export default function LoginForm() {
   const [captchaRefreshKey, setCaptchaRefreshKey] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaReady, setCaptchaReady] = useState(false);
   const captchaRef = useRef(null);
+  const sitekey = import.meta.env.VITE_SITE_KEY;
   const turnstileWidgetId = useRef(null);
   const { login, loading, user } = useAuth();
   // const navigate = useNavigate();
@@ -58,9 +58,9 @@ export default function LoginForm() {
       if (turnstileWidgetId.current) {
         window.turnstile.remove(turnstileWidgetId.current);
       }
-  
+
       turnstileWidgetId.current = window.turnstile.render(captchaRef.current, {
-        sitekey: SITE_KEY,
+        sitekey: sitekey,
         callback: (token) => {
           setCaptchaToken(token);
         },
@@ -72,8 +72,8 @@ export default function LoginForm() {
         },
       });
     }
-  }, [captchaReady, captchaRefreshKey]); 
-  
+  }, [captchaReady, captchaRefreshKey]);
+
 
   const resetCaptcha = () => {
     if (window.turnstile && turnstileWidgetId.current) {
@@ -115,7 +115,7 @@ export default function LoginForm() {
           });
         });
       }
-      
+
       // Xử lý lỗi CAPTCHA
       if (result.code === 'CAPTCHA_FAILED' || result.code === 'CAPTCHA_ERROR') {
         setError("captcha", {
@@ -126,7 +126,7 @@ export default function LoginForm() {
       if (result.code === "VALIDATION_ERROR" && result.validationErrors?.["cf-turnstile-response"]) {
         resetCaptcha();
       }
-      
+
       // Xử lý lỗi thông tin đăng nhập sai
       if (result.code === 'INVALID_CREDENTIALS') {
         setError("username", {
@@ -138,7 +138,7 @@ export default function LoginForm() {
           message: result.message || "Tên đăng nhập hoặc mật khẩu không đúng",
         });
       }
-      
+
       // Xử lý các lỗi khác
       if (result.code === 'NO_ACTIVE' || result.code === 'LOCKED_ACCOUNT' || result.code === 'INVALID_STATUS') {
         setError("username", {
@@ -253,7 +253,7 @@ export default function LoginForm() {
               {/* Submit */}
               <div>
                 <button
-                  type="submit" 
+                  type="submit"
                   className="font-heading flex items-center justify-center w-full px-4 py-3 text-sm font-bold rounded-lg transition-all text-accent-contrast bg-gradient-button hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading || !captchaToken}
                 >

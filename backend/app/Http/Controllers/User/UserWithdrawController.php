@@ -153,7 +153,6 @@ class UserWithdrawController extends Controller
     {
         try {
             $withdraws = Withdraw::where("user_id", $request->user_id)
-                ->orderBy('created_at', 'desc')
                 ->get();
             return response()->json([
                 "status" => True,

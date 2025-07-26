@@ -1,4 +1,5 @@
 <?php
+
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
@@ -97,7 +98,7 @@ class RolesAndPermissionsSeeder extends Seeder
                 'orders.edit' => 'Sửa đơn hàng',
                 'orders.delete' => 'Xóa đơn hàng',
             ],
-             'Quản lý Tài chính' => [
+            'Quản lý Tài chính' => [
                 'recharges.view' => 'Xem giao dịch nạp tiền',
                 'recharges.create' => 'Tạo yêu cầu nạp tiền',
                 'recharges.edit' => 'Duyệt/từ chối nạp tiền',
@@ -126,10 +127,10 @@ class RolesAndPermissionsSeeder extends Seeder
                 'promotions.create' => 'Tạo khuyến mãi sản phẩm',
                 'promotions.edit' => 'Sửa khuyến mãi sản phẩm',
                 'promotions.delete' => 'Xóa khuyến mãi sản phẩm',
-                'donate_promotions.view' => 'Xem khuyến mãi nạp thẻ',      
-                'donate_promotions.create' => 'Tạo khuyến mãi nạp thẻ',     
-                'donate_promotions.edit' => 'Sửa khuyến mãi nạp thẻ',       
-                'donate_promotions.delete' => 'Xóa khuyến mãi nạp thẻ',     
+                'donate_promotions.view' => 'Xem khuyến mãi nạp thẻ',
+                'donate_promotions.create' => 'Tạo khuyến mãi nạp thẻ',
+                'donate_promotions.edit' => 'Sửa khuyến mãi nạp thẻ',
+                'donate_promotions.delete' => 'Xóa khuyến mãi nạp thẻ',
                 'notifications.view' => 'Xem thông báo',
                 'notifications.create' => 'Tạo thông báo',
                 'notifications.edit' => 'Sửa thông báo',
@@ -144,12 +145,12 @@ class RolesAndPermissionsSeeder extends Seeder
                 'product_reports.view' => 'Xem khiếu nại sản phẩm',
                 'product_reports.edit' => 'Xử lý khiếu nại sản phẩm',
             ],
-             'Hỗ trợ & Báo cáo' => [
+            'Hỗ trợ & Báo cáo' => [
                 'chat.view' => 'Xem tin nhắn hỗ trợ',
                 'chat.create' => 'Bắt đầu chat hỗ trợ',
                 'chat.edit' => 'Trả lời/đóng chat',
                 'reports.view' => 'Xem báo cáo',
-             ],
+            ],
         ];
 
         foreach ($permissionsByGroup as $group => $permissions) {
@@ -178,6 +179,7 @@ class RolesAndPermissionsSeeder extends Seeder
         // Cấp 3: Reseller (Quản lý Web con)
         $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Quản trị viên của một trang web con.', 'guard_name' => 'api']);
         $roleReseller->givePermissionTo([
+
             'users.view', 'users.create', 'users.edit', 'users.delete',
             'categories.view', 'categories.create', 'categories.edit', 'categories.delete', // <-- BỔ SUNG QUYỀN DANH MỤC SP
             'products.view', 'products.create', 'products.edit', 'products.delete',
@@ -197,8 +199,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'withdrawals.create', 'withdrawals.view',
             'product_reports.view',"chat.view",
             'wallet.view'
+
         ]);
-        
+
         // Cấp 5: User (Người dùng)
         $roleUser = Role::create(['name' => 'user', 'description' => 'Người dùng/khách hàng thông thường.', 'guard_name' => 'api']);
         $roleUser->givePermissionTo([
@@ -208,6 +211,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'comments.create', 'reviews.create', 'product_reports.create',
             'promotions.view', 'donate_promotions.view', 
             'withdrawals.create', 'withdrawals.view',
+
         ]);
 
         // --- Nhóm vai trò nhân viên ---
@@ -215,21 +219,27 @@ class RolesAndPermissionsSeeder extends Seeder
         // Kế toán
         $roleKeToan = Role::create(['name' => 'ke-toan', 'description' => 'Nhân viên tài chính, duyệt giao dịch.', 'guard_name' => 'api']);
         $roleKeToan->givePermissionTo([
-            'recharges.view', 'recharges.edit',
-            'withdrawals.view', 'withdrawals.edit',
+            'recharges.view',
+            'recharges.edit',
+            'withdrawals.view',
+            'withdrawals.edit',
             'transactions.view',
-            'reports.view',"wallet.view","chat.view"
+            'reports.view',
+            "wallet.view",
+            "chat.view"
         ]);
 
         // Nhân viên Hỗ trợ
         $roleHoTro = Role::create(['name' => 'nv-ho-tro', 'description' => 'Nhân viên hỗ trợ, tư vấn khách hàng.', 'guard_name' => 'api']);
         $roleHoTro->givePermissionTo([
+
             'chat.view', 'chat.create', 'chat.edit',
             'users.view', 'orders.view', 'products.view', 'transactions.view',
             'product_reports.view', 'product_reports.edit',"wallet.view","chat.view",
             'promotions.view', 'donate_promotions.view', 
+
         ]);
-        
+
         // Nhân viên Marketing
         $roleMarketing = Role::create(['name' => 'nv-marketing', 'description' => 'Nhân viên marketing và nội dung.', 'guard_name' => 'api']);
         $roleMarketing->givePermissionTo([
@@ -240,6 +250,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'donate_promotions.view', 'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete',
             'banners.view', 'banners.create', 'banners.edit', 'banners.delete',
             'notifications.view', 'notifications.create', 'notifications.edit', 'notifications.delete',"wallet.view","chat.view"
+
         ]);
 
         // === BỔ SUNG / CHỈNH SỬA ===: Thêm vai trò mới và gán quyền
@@ -287,7 +298,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ]);
 
             $user->assignRole($userData['role']);
-            
+
             if (in_array($userData['role'], ['partner', 'reseller'])) {
                 $user->assignRole('user');
             }

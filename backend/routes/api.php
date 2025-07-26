@@ -44,6 +44,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
 

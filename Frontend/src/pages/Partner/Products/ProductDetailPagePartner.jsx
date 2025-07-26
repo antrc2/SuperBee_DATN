@@ -106,7 +106,11 @@ export default function ProductDetailPagePartner() {
               label="Giá Bán"
               value={`${product.import_price.toLocaleString()}đ`}
             />
-            <DetailItem
+           <DetailItem
+            label="Mô tả"
+            value={product.description || "Không có mô tả"}
+          />
+          <DetailItem
               label="Giá khuyến mãi"
               value={
                 product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"

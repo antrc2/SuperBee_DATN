@@ -195,7 +195,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $rolePartner->givePermissionTo([
             'products.view', 'products.create', 'products.edit', 'products.delete',
             'withdrawals.create', 'withdrawals.view',
-            'product_reports.view',"chat.view"
+            'product_reports.view',"chat.view",
+            'wallet.view'
         ]);
         
         // Cấp 5: User (Người dùng)

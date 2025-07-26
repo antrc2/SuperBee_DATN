@@ -181,8 +181,8 @@ class AdminProductController extends Controller
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
-                'images'                      => 'required|array',
-                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'images'                      => 'nullable|array',
+                'images.*'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
                 'description'                 => 'nullable|string',
             ];
             $messages = [
@@ -253,6 +253,7 @@ class AdminProductController extends Controller
             // Cập nhật fields cơ bản
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
+                'description' => $validated['description'] ?? $product->description,
                 'price'       => $validated['price'] ?? $product->price,
                 'sale' => (isset($validatedData['sale']) && $validatedData['sale'] != 0) ? $validatedData['sale'] : null,
                 'updated_by'  => $request->user_id,
@@ -506,7 +507,7 @@ class AdminProductController extends Controller
                 'status' => 1, // Mặc định là 1 (có sẵn)
                 "created_by" => $request->user_id,
                 "updated_by" => $request->user_id,
-                "description" => $validatedData['description']
+                "description" => $validatedData['description'] ?? $request->description
             ]);
 
             // Xử lý upload hình ảnh

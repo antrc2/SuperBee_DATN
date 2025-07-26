@@ -117,7 +117,7 @@ class CategoryController extends Controller
                 'updated_by' => $request->user_id ?? null
             ]);
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Danh mục {$request->name} đã được tạo thành công","{$frontend_link}/admin/categories/{$category->id}/edit",null,'products.*')
+            $this->sendNotification(1,"Danh mục {$request->name} đã được tạo thành công","{$frontend_link}/admin/categories/{$category->id}/edit",null,'products.*');
             return response()->json([
                 'status' => true,
                 'message' => 'Tạo danh mục thành công',

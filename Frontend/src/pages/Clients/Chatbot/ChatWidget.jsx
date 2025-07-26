@@ -29,7 +29,7 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
-  const python_url = import.meta.env.PYTHON_URL;
+  const python_url = import.meta.env.VITE_PYTHON_URL;
   // const [product, setProduct] = useState(null);
   const toggleChat = async () => {
     if (!open) {

@@ -51,14 +51,76 @@ class UserWithdrawController extends Controller
     //         // ]
     //     );
     // }
+    private function getAllowedBanks()
+    {
+        return [
+            'Nông nghiệp và Phát triển nông thôn (VBA)',
+            'Ngoại thương Việt Nam (VCB)',
+            'Đầu tư và phát triển (BIDV)',
+            'Công Thương Việt Nam (VIETINBANK)',
+            'Việt Nam Thịnh Vượng (VPB)',
+            'Quốc tế (VIB)',
+            'Xuất nhập khẩu (EIB)',
+            'Sài Gòn Hà Nội (SHB)',
+            'Tiên Phong (TPB)',
+            'Kỹ Thương (TCB)',
+            'Hàng hải (MSB)',
+            'Ngân hàng Thương mại Cổ phần Lộc Phát Việt Nam',
+            'Đông Á (DAB)',
+            'Bắc Á (NASB)',
+            'Sài Gòn Công thương (SGB)',
+            'Việt Nam Thương tín (VIETBANK)',
+            'BVBank – Ngân hàng TMCP Bản Việt',
+            'Kiên Long (KLB)',
+            'Ngân hàng TMCP Thịnh vượng và Phát triển (PGBank)',
+            'Đại chúng Việt Nam (PVC)',
+            'Á Châu (ACB)',
+            'Nam Á (NAMABANK)',
+            'Sài Gòn (SCB)',
+            'Đông Nam Á (SEAB)',
+            'Phương Đông (OCB)',
+            'Việt Á (VAB)',
+            'Quốc Dân (NCB)',
+            'Liên doanh VID Public Bank (VID)',
+            'Bảo Việt (BVB)',
+            'Ngân hàng TNHH MTV Việt Nam Hiện Đại (MBV)',
+            'Phát triển nhà TP HCM (HDB)',
+            'Dầu khí toàn cầu (GPB)',
+            'Sacombank (STB)',
+            'An Bình (ABBANK)',
+            'TNHH MTV Hong Leong VN (HLB)',
+            'MTV Shinhan Việt Nam (SHBVN)',
+            'Liên Doanh Việt Nga (VRB)',
+            'Xây dựng Việt Nam (CBB)',
+            'United Overseas Bank Việt Nam (UOB)',
+            'Woori Việt Nam (Woori)',
+            'Indovina (IVB)',
+            'Việt Nam Thịnh Vượng CAKE BANK(VPB)',
+            'Việt Nam Thịnh Vượng UBANK(VPB)',
+            'Quân đội (MB)'
+        ];
+    }
+
+
 
     public function store(Request $request)
     {
+        $allowedBanks = $this->getAllowedBanks();
+
         $request->validate([
             'user_id' => 'required|exists:wallets,user_id',
             'amount' => 'required|numeric|min:10000',
             'bank_account_number' => 'required|string|max:50',
-            'bank_name' => 'required|string|max:100',
+            'bank_name' => [
+                'required',
+                'string',
+                'max:100',
+                function ($attribute, $value, $fail) use ($allowedBanks) {
+                    if (!in_array($value, $allowedBanks)) {
+                        $fail("Trường {$attribute} không hợp lệ. Vui lòng chọn từ danh sách ngân hàng được phép.");
+                    }
+                }
+            ],
             'account_holder_name' => 'required|string|max:255',
             'note' => 'nullable|string|max:500',
         ]);
@@ -69,13 +131,10 @@ class UserWithdrawController extends Controller
 
             if (!$wallet || $wallet->balance < $request->amount) {
                 return response()->json([
-                    "status" => False,
+                    "status" => false,
                     'message' => 'Số dư không đủ để rút.',
-                    // 'current_balance' => $wallet?->balance ?? 0,
-                    // 'errorCode' => 'INSUFFICIENT_FUNDS'
                 ], 400);
             }
-
 
             $wallet->balance -= $request->amount;
             $wallet->save();
@@ -103,18 +162,31 @@ class UserWithdrawController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                "status" => False,
+                "status" => false,
                 'message' => 'Lỗi khi tạo yêu cầu rút tiền.',
-                // 'error' => $e->getMessage(),
-                // 'errorCode' => 'WITHDRAW_FAILED'
             ], 500);
         }
     }
 
     public function update(Request $request, $id)
     {
+        $allowedBanks = $this->getAllowedBanks();
+
         $request->validate([
             'user_id' => 'required|exists:withdraws,user_id',
+            'amount' => 'nullable|numeric|min:10000',
+            'bank_account_number' => 'nullable|string|max:50',
+            'bank_name' => [
+                'nullable',
+                'string',
+                'max:100',
+                function ($attribute, $value, $fail) use ($allowedBanks) {
+                    if ($value && !in_array($value, $allowedBanks)) {
+                        $fail("Trường {$attribute} không hợp lệ. Vui lòng chọn từ danh sách ngân hàng được phép.");
+                    }
+                }
+            ],
+            'account_holder_name' => 'nullable|string|max:255',
             'note' => 'nullable|string|max:500',
         ]);
 
@@ -131,7 +203,22 @@ class UserWithdrawController extends Controller
                 ], 400);
             }
 
-            $withdraw->note = $request->note;
+            if ($request->has('amount')) {
+                $withdraw->amount = $request->amount;
+            }
+            if ($request->has('bank_account_number')) {
+                $withdraw->bank_account_number = $request->bank_account_number;
+            }
+            if ($request->has('bank_name')) {
+                $withdraw->bank_name = $request->bank_name;
+            }
+            if ($request->has('account_holder_name')) {
+                $withdraw->account_holder_name = $request->account_holder_name;
+            }
+            if ($request->has('note')) {
+                $withdraw->note = $request->note;
+            }
+
             $withdraw->save();
 
             return response()->json([
@@ -147,6 +234,15 @@ class UserWithdrawController extends Controller
         }
     }
 
+
+    public function getAllowedBanksList()
+    {
+        return response()->json([
+            'status' => true,
+            'message' => 'Danh sách ngân hàng được phép',
+            'data' => $this->getAllowedBanks()
+        ]);
+    }
 
 
     public function index(Request $request)

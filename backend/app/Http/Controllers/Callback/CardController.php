@@ -38,9 +38,9 @@ class CardController extends Controller
             $user_info = User::with("wallet")->where("id", $user_id)->first();
             $wallet_id = $user_info->wallet->id;
             // $common = new CommonController();
-            $donate_promotion = DonatePromotion::where('id',$donate_promotion_id)->first();
+            $donate_promotion = DonatePromotion::where('id', $donate_promotion_id)->first();
             // print_r($donate_promotion);
-            $result = $this->donate_promotion($donate_promotion,$user_id);
+            $result = $this->donate_promotion($donate_promotion, $user_id);
             // print_r($result);
             // return;
             $donate_promotion_id = $result['donate_promotion_id'];
@@ -52,6 +52,9 @@ class CardController extends Controller
             // }
             $frontend_link = env("FRONTEND_URL");
             DB::beginTransaction();
+            $wallet = Wallet::find($wallet_id);
+            $wallet->increment('balance', $donate_amount);
+            $wallet->increment("promotion_balance", $bonus);
             if ($declared_value == $value) { // Thẻ đúng
 
 
@@ -66,10 +69,9 @@ class CardController extends Controller
                         "related_type" => "App\Models\RechargeCard"
                     ]
                 );
-                $wallet = Wallet::find($wallet_id);
-                $wallet->increment('balance', $amount);
+
                 $wallet_transaction_id = $wallet_transaction->id;
-                $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
+                $this->sendNotification(1, "Nạp {$amount} thành công", $frontend_link . "/info/transactions", $user_id);
             } elseif ($value == 0) { // Thẻ sai
                 $wallet_transaction = WalletTransaction::create(
                     [
@@ -81,7 +83,7 @@ class CardController extends Controller
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;
-                $this->sendNotification(0,"Nạp số dư thất bại",$frontend_link . "/info/transactions",$user_id);
+                $this->sendNotification(0, "Nạp số dư thất bại", $frontend_link . "/info/transactions", $user_id);
             } else { // Thẻ đúng nhưng sai mệnh giá
                 $wallet_transaction = WalletTransaction::create(
                     [
@@ -93,11 +95,11 @@ class CardController extends Controller
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;
-                $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
+                $this->sendNotification(1, "Nạp {$amount} thành công", $frontend_link . "/info/transactions", $user_id);
             }
             RechargeCard::where("id", $recharge_card_id)->update([
                 "wallet_transaction_id" => $wallet_transaction_id,
-                "amount" => $amount,
+                "amount" => $request->amount,
                 "value" => $value,
                 "declared_value" => $declared_value,
                 "status" => $status,
@@ -129,9 +131,9 @@ class CardController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
-                "status"=>False,
-                'message'=>"Đã có lỗi xảy ra"
-            ],500);
+                "status" => False,
+                'message' => "Đã có lỗi xảy ra"
+            ], 500);
             //throw $th;
             // return response()->json([
             //     "hehe" => $th->getMessage()
@@ -168,7 +170,7 @@ class CardController extends Controller
             }
 
             $donate_promotion = DonatePromotion::where("web_id", $request->web_id)->where("start_date", "<=", now())->where("end_date", ">", now())->where('status', 1)->orderBy('id', 'desc')->first();
-            if ($donate_promotion !== NULL) {
+            if ($donate_promotion != NULL) {
                 $donate_promotion_id = $donate_promotion->id;
             } else {
                 $donate_promotion_id = NULL;
@@ -201,13 +203,11 @@ class CardController extends Controller
                     "user_id" => $request->user_id,
                     "web_id" => $request->web_id,
                     'sign' => $sign,
-                    "donate_amount"=>0,
+                    "donate_amount" => 0,
                     "wallet_transaction_id" => null,
                     "donate_promotion_id" => $donate_promotion_id
                 ]);
-                if ($donate_promotion_id != NULL) {
-                    $response['donate_promotion_id'] = $donate_promotion_id;
-                }
+                $response['donate_promotion_id'] = $donate_promotion_id;
                 return response()->json([
                     "status" => True,
                     "message" => "Đang xử lí thẻ cào",

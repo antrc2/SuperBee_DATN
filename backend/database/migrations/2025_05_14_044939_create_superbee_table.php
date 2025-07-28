@@ -211,6 +211,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->unique(); // Mỗi user có 1 ví duy nhất
             $table->decimal('balance', 15, 0)->default(0.00); // Số dư mặc định 0
             $table->string('currency', 10)->default('VND'); // Đơn vị tiền tệ
+            $table->decimal('promotion_balance',15,0)->default(0.00);
             $table->timestamps();
         });
 

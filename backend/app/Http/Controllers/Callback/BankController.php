@@ -32,7 +32,7 @@ class BankController extends Controller
                     $user_id = $user->id;
                     $web_id = $user->web_id;
                     $wallet_id = $user->wallet->id;
-                    $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate   )->where('status', 1)->orderBy('id', 'desc')->first();
+                    $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate)->where('status', 1)->orderBy('id', 'desc')->first();
                     $result = $this->donate_promotion($donate_promotion,$user_id);
                     $donate_promotion_id = $result['donate_promotion_id'];
                     $donate_promotion_amount = $result['donate_promotion_amount'];
@@ -48,7 +48,8 @@ class BankController extends Controller
                     ]);
                     $wallet_transaction_id = $wallet_transaction->id;
                     $wallet = Wallet::find($wallet_id);
-                    $wallet->increment('balance', $amount);
+                    $wallet->increment('balance', $donate_amount);
+                    $wallet->increment('promotion_balance', $bonus);
                     $recharge_bank =  RechargeBank::create([
                         'wallet_transaction_id' => $wallet_transaction_id,
                         "user_id"=>$user_id,

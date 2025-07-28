@@ -626,11 +626,21 @@ class UserOrderController extends Controller
                     // $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
-                    $wallet->balance -= $total_price;
+                    if ($wallet->promotion_balance >= $total_price){
+                        $wallet->promotion_balance -= $total_price;
+                    } else {
+                        $wallet->promotion_balance = 0;
+                        $wallet->balance -= $total_price - $wallet->promotion_balance;
+                    }
                     $wallet->save();
 
+                    
+
+                    // $wallet->balance -= $total_price;
+                    // $wallet->save();
+
                     if ($promotion_code !== null) {
-                        $promotion = Promotion::where("code", $promotion_code)->get();
+                        $promotion = Promotion::where("code", $promotion_code)->first();
                         $promotion->total_used += 1;
                         $promotion->save();
                     }

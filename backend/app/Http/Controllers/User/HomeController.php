@@ -25,7 +25,10 @@ class HomeController extends Controller
         $category = new UserCategoryController();
         $categories = $category->index()->getData();
         $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
-            ->select('balance', 'user_id')->orderBy('balance', 'desc')->limit(5)->get();
+
+            // Tôi muốn cộng thêm dữ liệu ở cột promotion_balance vào cột balance
+            ->selectRaw('balance + promotion_balance as balance, user_id')
+            ->orderBy('balance', 'desc')->limit(5)->get();
 
         // Lấy 8 sản phẩm nổi bật
         $featuredProducts = Product::with("images", "category", "gameAttributes")

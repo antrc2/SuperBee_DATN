@@ -70,7 +70,7 @@ class UserProfileController extends Controller
                 'status' => true,
                 'message' => 'Lấy dữ liệu thành công',
                 'data' => [
-                    'money' => $user->wallet->balance,
+                    'money' => $user->wallet->balance + $user->wallet->promotion_balance,
                     'roles' => $roles,
                     'permissions' => $permissions
                 ]

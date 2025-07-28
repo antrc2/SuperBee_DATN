@@ -1,9 +1,13 @@
 <?php
 
 namespace App\Http\Controllers\Admin;
+
 use App\Models\Withdraw;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class AdminWithdrawController extends Controller
 {
@@ -24,7 +28,7 @@ class AdminWithdrawController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Đã xảy ra lỗi khi truy vấn rút tiền',
-                'data'=>[]
+                'data' => []
                 // 'error' => $e->getMessage()
             ], 500);
         }
@@ -78,8 +82,54 @@ class AdminWithdrawController extends Controller
     {
         //
     }
-    public function export()
-    {
+    
+public function export(Request $request)
+{
+    try {
+        // Đường dẫn file mẫu
+        $filePath = public_path('Chuyenkhoantheobangke.xlsx');
+        $spreadsheet = IOFactory::load($filePath);
+        $sheet = $spreadsheet->getSheetByName('eMB_BulkPayment');
 
+        // Dữ liệu ghi (bắt đầu từ dòng 3)
+        $data = [
+            [1, '123456789', 'Nguyen Van A', 'Vietcombank - CN Hanoi', 1500000, 'Thanh toan hoa don 123'],
+            [2, '987654321', 'Tran Thi B', 'Techcombank - CN HCM', 2000000, 'Thanh toan hop dong ABC'],
+        ];
+        $startRow = 3;
+        foreach ($data as $index => $row) {
+            $sheet->fromArray($row, null, 'A' . ($startRow + $index));
+        }
+
+        // Ghi file tạm thời ra đĩa
+        $tempFilename = 'Chuyenkhoan_output_' . time() . '.xlsx';
+        $savePath = storage_path($tempFilename);
+        (new Xlsx($spreadsheet))->save($savePath);
+
+        // Tạo đối tượng UploadedFile từ file đã lưu
+        $file = new UploadedFile(
+            $savePath,
+            $tempFilename,
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            null,
+            true // $test mode = true vì đây không phải file upload thực từ HTTP request
+        );
+
+        // Gọi hàm uploadFile
+        $url = $this->uploadFile($file, 'Transaction');
+        // Xoá file tạm
+        if (file_exists($savePath)) {
+            unlink($savePath);
+        }
+
+        return response()->json([
+            'message' => 'Xuất và upload thành công',
+            'url' => $url
+        ]);
+    } catch (\Throwable $th) {
+        return response()->json([
+            "error" => $th->getMessage()
+        ]);
     }
+}
 }

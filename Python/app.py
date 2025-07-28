@@ -6,12 +6,23 @@ from io import BytesIO
 from threading import Thread
 from controller import S3Controller
 from cronjob import queue_money, event
+from controller.ChatAssistance import router as chat_router
+from controller.TransactionController import Transaction
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+username = os.getenv("MBBANK_USERNAME")
+password = os.getenv("MBBANK_PASSWORD")
+print(username)
+print(password)
 app = FastAPI()
 s3_client = S3Controller()
-from controller.ChatAssistance import router as chat_router
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
+    allow_origins=["*"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,9 +30,39 @@ app.add_middleware(
 
 app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
+@app.get('/transaction/bank_list')
+async def getBankList():
+    transaction = Transaction(username=username,password=password)
+    return {
+        "status": True,
+        "message": "Lấy danh sách ngân hàng thành công",
+        "data": transaction.getListBank()
+    }
+
+
+@app.get('/transaction/bulk_payment')
+async def get_bulk_payment():
+    transaction = Transaction(username=username,password=password)
+    bulks = transaction.getBulkPaymentStatus()
+    return {
+        "status": True,
+        'message': "Lấy danh sách chuyển tiền theo lô thành công",
+        'data': bulks
+    }
+
+@app.get('/transaction/bulk_payment_detail/{id}')
+async def get_bulk_payment_detail(id: str):
+    transaction = Transaction(username=username,password=password)
+    bulk_detail = transaction.getBulkPaymentDetail(id) 
+    return {
+        'status': True,
+        'message': "Xem chi tiết chuyển tiền theo lô thành công",
+        "data": bulk_detail
+    }
+
+
 @app.post("/upload_file")
 async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
-    print(thread)
     object_name = f"uploads/{folder}/"
 
     # # Đọc nội dung file vào bộ nhớ
@@ -50,9 +91,7 @@ async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), t
     #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
-    print(files)
     response = await s3_client.uploads(files,object_name,thread)
-    print(response)
     return response
     # return "Xong"
 

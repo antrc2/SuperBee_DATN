@@ -7,6 +7,7 @@ use App\Models\Wallet;
 use App\Models\Withdraw;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class UserWithdrawController extends Controller
@@ -53,54 +54,84 @@ class UserWithdrawController extends Controller
     // }
     private function getAllowedBanks()
     {
-        return [
-            'Nông nghiệp và Phát triển nông thôn (VBA)',
-            'Ngoại thương Việt Nam (VCB)',
-            'Đầu tư và phát triển (BIDV)',
-            'Công Thương Việt Nam (VIETINBANK)',
-            'Việt Nam Thịnh Vượng (VPB)',
-            'Quốc tế (VIB)',
-            'Xuất nhập khẩu (EIB)',
-            'Sài Gòn Hà Nội (SHB)',
-            'Tiên Phong (TPB)',
-            'Kỹ Thương (TCB)',
-            'Hàng hải (MSB)',
-            'Ngân hàng Thương mại Cổ phần Lộc Phát Việt Nam',
-            'Đông Á (DAB)',
-            'Bắc Á (NASB)',
-            'Sài Gòn Công thương (SGB)',
-            'Việt Nam Thương tín (VIETBANK)',
-            'BVBank – Ngân hàng TMCP Bản Việt',
-            'Kiên Long (KLB)',
-            'Ngân hàng TMCP Thịnh vượng và Phát triển (PGBank)',
-            'Đại chúng Việt Nam (PVC)',
-            'Á Châu (ACB)',
-            'Nam Á (NAMABANK)',
-            'Sài Gòn (SCB)',
-            'Đông Nam Á (SEAB)',
-            'Phương Đông (OCB)',
-            'Việt Á (VAB)',
-            'Quốc Dân (NCB)',
-            'Liên doanh VID Public Bank (VID)',
-            'Bảo Việt (BVB)',
-            'Ngân hàng TNHH MTV Việt Nam Hiện Đại (MBV)',
-            'Phát triển nhà TP HCM (HDB)',
-            'Dầu khí toàn cầu (GPB)',
-            'Sacombank (STB)',
-            'An Bình (ABBANK)',
-            'TNHH MTV Hong Leong VN (HLB)',
-            'MTV Shinhan Việt Nam (SHBVN)',
-            'Liên Doanh Việt Nga (VRB)',
-            'Xây dựng Việt Nam (CBB)',
-            'United Overseas Bank Việt Nam (UOB)',
-            'Woori Việt Nam (Woori)',
-            'Indovina (IVB)',
-            'Việt Nam Thịnh Vượng CAKE BANK(VPB)',
-            'Việt Nam Thịnh Vượng UBANK(VPB)',
-            'Quân đội (MB)'
-        ];
+        $python_url = env('PYTHON_API');
+        try {
+            $responses = Http::get("{$python_url}/transaction/bank_list")->json();
+            // $responses = json_encode($responses);
+            // var_dump($responses);
+            $allowedBanks = [];
+            foreach($responses['data'] as $response){
+                $allowedBanks[] = $response['name'];
+            }
+            return $allowedBanks;
+        } catch (\Throwable $th) {
+            //throw $th;
+            return [];
+        }
+        // return [
+        //     'Nông nghiệp và Phát triển nông thôn (VBA)',
+        //     'Ngoại thương Việt Nam (VCB)',
+        //     'Đầu tư và phát triển (BIDV)',
+        //     'Công Thương Việt Nam (VIETINBANK)',
+        //     'Việt Nam Thịnh Vượng (VPB)',
+        //     'Quốc tế (VIB)',
+        //     'Xuất nhập khẩu (EIB)',
+        //     'Sài Gòn Hà Nội (SHB)',
+        //     'Tiên Phong (TPB)',
+        //     'Kỹ Thương (TCB)',
+        //     'Hàng hải (MSB)',
+        //     'Ngân hàng Thương mại Cổ phần Lộc Phát Việt Nam',
+        //     'Đông Á (DAB)',
+        //     'Bắc Á (NASB)',
+        //     'Sài Gòn Công thương (SGB)',
+        //     'Việt Nam Thương tín (VIETBANK)',
+        //     'BVBank – Ngân hàng TMCP Bản Việt',
+        //     'Kiên Long (KLB)',
+        //     'Ngân hàng TMCP Thịnh vượng và Phát triển (PGBank)',
+        //     'Đại chúng Việt Nam (PVC)',
+        //     'Á Châu (ACB)',
+        //     'Nam Á (NAMABANK)',
+        //     'Sài Gòn (SCB)',
+        //     'Đông Nam Á (SEAB)',
+        //     'Phương Đông (OCB)',
+        //     'Việt Á (VAB)',
+        //     'Quốc Dân (NCB)',
+        //     'Liên doanh VID Public Bank (VID)',
+        //     'Bảo Việt (BVB)',
+        //     'Ngân hàng TNHH MTV Việt Nam Hiện Đại (MBV)',
+        //     'Phát triển nhà TP HCM (HDB)',
+        //     'Dầu khí toàn cầu (GPB)',
+        //     'Sacombank (STB)',
+        //     'An Bình (ABBANK)',
+        //     'TNHH MTV Hong Leong VN (HLB)',
+        //     'MTV Shinhan Việt Nam (SHBVN)',
+        //     'Liên Doanh Việt Nga (VRB)',
+        //     'Xây dựng Việt Nam (CBB)',
+        //     'United Overseas Bank Việt Nam (UOB)',
+        //     'Woori Việt Nam (Woori)',
+        //     'Indovina (IVB)',
+        //     'Việt Nam Thịnh Vượng CAKE BANK(VPB)',
+        //     'Việt Nam Thịnh Vượng UBANK(VPB)',
+        //     'Quân đội (MB)'
+        // ];
     }
-
+    public function allowBanks(){
+        try {
+            $allowedBanks = $this->getAllowedBanks();
+            return response()->json([
+                "status"=>True,
+                "message"=>"Lấy danh sách ngân hàng thành công",
+                "data"=>$allowedBanks
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Đã xảy ra lỗi",
+                "data"=>[]
+            ],500);
+        }
+    }
 
 
     public function store(Request $request)

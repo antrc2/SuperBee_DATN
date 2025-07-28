@@ -178,6 +178,7 @@ Route::middleware('auth')->group(function () {
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
             Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
             Route::put("/{id}",[UserWithdrawController::class,'update']);
+            Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);
 
         });
 
@@ -363,3 +364,7 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
         Route::post('/{id}/restore', [PartnerProductController::class, 'restore'])->middleware('permission:products.edit');
     });
 });
+
+
+// Route::post("/export",[AdminWithdrawController::class,'export']);
+Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

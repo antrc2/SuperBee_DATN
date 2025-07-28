@@ -718,6 +718,8 @@ class UserOrderController extends Controller
                     //         "status"=>1
                     //     ]);
                     // }
+                    $wallet_transaction->related_id = $order->id;
+                    $wallet_transaction->save();
                     DB::commit();
                     return response()->json([
                         "status" => True,

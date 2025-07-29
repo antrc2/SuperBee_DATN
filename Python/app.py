@@ -39,95 +39,95 @@ async def doibuonjqk(request: Request):
 
 # app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
-# @app.get('/transaction/bank_list')
-# async def getBankList():
-#     transaction = Transaction(username=username,password=password)
-#     return {
-#         "status": True,
-#         "message": "Lấy danh sách ngân hàng thành công",
-#         "data": transaction.getListBank()
-#     }
+@app.get('/transaction/bank_list')
+async def getBankList():
+    transaction = Transaction(username=username,password=password)
+    return {
+        "status": True,
+        "message": "Lấy danh sách ngân hàng thành công",
+        "data": transaction.getListBank()
+    }
 
 
-# @app.get('/transaction/bulk_payment')
-# async def get_bulk_payment():
-#     transaction = Transaction(username=username,password=password)
-#     bulks = transaction.getBulkPaymentStatus()
-#     return {
-#         "status": True,
-#         'message': "Lấy danh sách chuyển tiền theo lô thành công",
-#         'data': bulks
-#     }
+@app.get('/transaction/bulk_payment')
+async def get_bulk_payment():
+    transaction = Transaction(username=username,password=password)
+    bulks = transaction.getBulkPaymentStatus()
+    return {
+        "status": True,
+        'message': "Lấy danh sách chuyển tiền theo lô thành công",
+        'data': bulks
+    }
 
-# @app.get('/transaction/bulk_payment_detail/{id}')
-# async def get_bulk_payment_detail(id: str):
-#     transaction = Transaction(username=username,password=password)
-#     bulk_detail = transaction.getBulkPaymentDetail(id) 
-#     return {
-#         'status': True,
-#         'message': "Xem chi tiết chuyển tiền theo lô thành công",
-#         "data": bulk_detail
-#     }
+@app.get('/transaction/bulk_payment_detail/{id}')
+async def get_bulk_payment_detail(id: str):
+    transaction = Transaction(username=username,password=password)
+    bulk_detail = transaction.getBulkPaymentDetail(id) 
+    return {
+        'status': True,
+        'message': "Xem chi tiết chuyển tiền theo lô thành công",
+        "data": bulk_detail
+    }
 
 
-# @app.post("/upload_file")
-# async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
-#     object_name = f"uploads/{folder}/"
+@app.post("/upload_file")
+async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
+    object_name = f"uploads/{folder}/"
 
-#     # # Đọc nội dung file vào bộ nhớ
-#     # file_content = BytesIO(await file.read())
+    # # Đọc nội dung file vào bộ nhớ
+    # file_content = BytesIO(await file.read())
 
-#     response = await s3_client.add(file,object_name,thread)
+    response = await s3_client.add(file,object_name,thread)
 
-#     return response 
+    return response 
 
-# @app.post("/upload_files")
-# async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
-#     object_name = f"uploads/{folder}/"
-#     # print(files)
-#     # for file in files:
-#     #     print(f"Name: {file.filename}, Type: {file.content_type}")
+@app.post("/upload_files")
+async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
+    object_name = f"uploads/{folder}/"
+    # print(files)
+    # for file in files:
+    #     print(f"Name: {file.filename}, Type: {file.content_type}")
     
-#     # file_contents = []
-#     # for file in files:
-#         # print(file.)
-#     #     byte_file = BytesIO(await file.read())
-#     #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
-#     #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
-#     #     file_contents.append({
-#     #         "file": byte_file,
-#     #         "filename": file.filename
-#     #     })
-#         # print(file_contents)
-#         # print(type(BytesIO(await file.read())))
-#     response = await s3_client.uploads(files,object_name,thread)
-#     return response
-#     # return "Xong"
+    # file_contents = []
+    # for file in files:
+        # print(file.)
+    #     byte_file = BytesIO(await file.read())
+    #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+    #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
+    #     file_contents.append({
+    #         "file": byte_file,
+    #         "filename": file.filename
+    #     })
+        # print(file_contents)
+        # print(type(BytesIO(await file.read())))
+    response = await s3_client.uploads(files,object_name,thread)
+    return response
+    # return "Xong"
 
 
-# @app.post("/delete_file")
-# async def delete(request: Request):
-#     data = await request.json()
+@app.post("/delete_file")
+async def delete(request: Request):
+    data = await request.json()
 
-#     s3_client.delete(data['path'])
+    s3_client.delete(data['path'])
 
-#     return {"status": True}
+    return {"status": True}
 
-# @app.post("/delete_files")
-# async def deletes(request: Request):
-#     data = await request.json()
-#     # print(data)
-#     s3_client.deletes(data['paths'])
-#     return {'status': True}
+@app.post("/delete_files")
+async def deletes(request: Request):
+    data = await request.json()
+    # print(data)
+    s3_client.deletes(data['paths'])
+    return {'status': True}
 
-# @app.on_event("startup")
-# def start_background_thread():
-#     Thread(target=queue_money, args=(), daemon=True).start()
+@app.on_event("startup")
+def start_background_thread():
+    Thread(target=queue_money, args=(), daemon=True).start()
 
-# @app.on_event("shutdown")
-# def stop_background_thread():
-#     print("Shutting down, stopping background thread...")
-#     event.set()
+@app.on_event("shutdown")
+def stop_background_thread():
+    print("Shutting down, stopping background thread...")
+    event.set()
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

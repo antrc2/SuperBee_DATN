@@ -206,8 +206,8 @@ class BankController extends Controller
             return response()->json([
                 'success'=>False,
                 "message"=>"Đã có lỗi xảy ra",
-                'hehe'=>$th->getMessage(),
-                'line'=>$th->getLine()
+                // 'hehe'=>$th->getMessage(),
+                // 'line'=>$th->getLine()
             ], 200);
         }
     }

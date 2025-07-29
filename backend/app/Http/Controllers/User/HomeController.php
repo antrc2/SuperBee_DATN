@@ -10,7 +10,9 @@ use App\Models\Wallet;
 use App\Models\Category;
 use App\Models\Message;
 use App\Models\Post;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -24,12 +26,33 @@ class HomeController extends Controller
         $banners = Banner::where('web_id', $request->web_id)->where('status', 1)->orderBy('id', 'asc')->get();
         $category = new UserCategoryController();
         $categories = $category->index()->getData();
-        $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
+        // $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
 
-            // Tôi muốn cộng thêm dữ liệu ở cột promotion_balance vào cột balance
-            ->selectRaw('balance + promotion_balance as balance, user_id')
-            ->orderBy('balance', 'desc')->limit(5)->get();
-
+        //     // Tôi muốn cộng thêm dữ liệu ở cột promotion_balance vào cột balance
+        //     ->selectRaw('balance + promotion_balance as balance, user_id')
+        //     ->orderBy('balance', 'desc')->limit(5)->get();
+        $topWallets = DB::table('wallet_transactions')
+            ->select('wallet_id', DB::raw('SUM(amount) as total_amount'))
+            ->where('type', 'like', 'recharge_%')
+            ->groupBy('wallet_id')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+        $topNap = [];
+        foreach ($topWallets as $topWallet) {
+            $wallet = Wallet::where("id",$topWallet->wallet_id)->with("user")->first();
+            $topNap[] = [
+                "wallet_id"=>$topWallet->wallet_id,
+                "balance"=>$topWallet->total_amount,
+                "user_id"=>$wallet->user_id,
+                'user'=>[
+                    "id"=>$wallet->user->id,
+                    "username"=>$wallet->user->username
+                ]
+                ];
+        }
+        
+        // $topNap = [];
         // Lấy 8 sản phẩm nổi bật
         $featuredProducts = Product::with("images", "category", "gameAttributes")
             ->where('status', 1)->whereNotNull('sale')->orderBy('price', 'desc')->limit(8)->get();
@@ -47,6 +70,7 @@ class HomeController extends Controller
                 'top_users' => $topNap,
                 'featured_products' => $featuredProducts,
                 'newest_products' => $newestProducts,
+                'topwallet'=>$topWallets
             ]
         ], 200);
     }

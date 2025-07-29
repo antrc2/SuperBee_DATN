@@ -19,6 +19,8 @@ use App\Http\Controllers\Admin\AuthorizationDashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
+use App\Http\Controllers\Assistant\AssistantCategoryController;
+use App\Http\Controllers\Assistant\AssistantProductController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
@@ -365,6 +367,16 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
     });
 });
 
+Route::prefix('/assistant')->group(function(){
+     Route::prefix("/categories")->group(function () {
+        Route::get("/", [AssistantCategoryController::class, 'index']);
+        // Route::get("/{id}", [UserCategoryController::class, 'show']);
+    });
+    Route::prefix('/products')->group(function(){
+        Route::get("/",[AssistantProductController::class,'index']);
+        Route::get("/{sku}",[AssistantProductController::class,'show']);
+    });
+});
 
 // Route::post("/export",[AdminWithdrawController::class,'export']);
-Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);
+// Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

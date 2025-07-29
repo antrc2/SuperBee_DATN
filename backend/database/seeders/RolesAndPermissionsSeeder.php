@@ -210,6 +210,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'comments.create', 'reviews.create', 'product_reports.create',
             'promotions.view', 'donate_promotions.view', 
             'withdrawals.create', 'withdrawals.view',
+            'chat.create','chat.view',
 
         ]);
 

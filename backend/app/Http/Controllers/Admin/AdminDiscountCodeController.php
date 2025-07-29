@@ -10,7 +10,7 @@ use App\Models\Promotion;
 use App\Models\User;
 use App\Models\Web;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -18,27 +18,51 @@ use Illuminate\Validation\ValidationException;
 class AdminDiscountCodeController extends Controller
 {
     // GET /discount_codes
-    public function index(Request $request)
+  public function index(Request $request)
     {
         try {
-            // $query = DiscountCode::orderBy('created_at', 'desc');
-            $codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
-            if ($codes->count() == 0) {
-                return response()->json([
-                    'message' => 'Không có mã giảm giá nào',
-                    'status' => true,
-                    'data' => []
-                ]);
-            }
+            // Validate request parameters
+            $request->validate([
+                'sort_by' => 'sometimes|in:code,discount_value,end_date,created_at',
+                'sort_direction' => 'sometimes|in:asc,desc',
+                'status' => 'sometimes|in:0,1',
+                'search' => 'sometimes|string|max:50',
+                'page' => 'sometimes|integer|min:1',
+            ]);
+
+            // Start building the query from Promotion model
+            $query = Promotion::query();
+
+            // Handle search by promotion code
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%');
+            });
+
+            // Handle status filtering
+            $query->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+            // Handle sorting
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortDirection = $request->input('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+            
+            // Paginate the results
+            $promotions = $query->paginate(15)->withQueryString();
+
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
                 'status' => true,
-                'data' => $codes
+                'data' => $promotions,
             ]);
+
         } catch (\Exception $e) {
+            Log::error('Error fetching promotions: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Đã có lỗi xảy ra.',
+                'message' => 'Đã có lỗi xảy ra ở phía máy chủ.',
                 'status' => false,
+                'error' => 'Could not fetch promotions.',
             ], 500);
         }
     }

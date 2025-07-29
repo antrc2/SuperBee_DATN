@@ -1,15 +1,19 @@
+// src/components/Admin/header/AppHeader.jsx
 import { useEffect, useRef, useState } from "react";
-
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { useSidebar } from "@contexts/SidebarContext";
 import { ThemeToggleButton } from "@components/Admin/common/ThemeToggleButton";
 import NotificationDropdown from "@components/Admin/header/NotificationDropdown";
-import UserDropdown from "@components/Admin/header/UserDropdown";
-import Logo from "@assets/icons/logo.png";
+import { useAuth } from "@contexts/AuthContext";
+import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
+// THÊM LẠI UserDropdown
+import UserDropdown from "../../components/Admin/header/UserDropdown";
+
 const AppHeader = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
+  const { isLoggedIn } = useAuth();
+  const inputRef = useRef(null);
 
   const handleToggle = () => {
     if (window.innerWidth >= 1024) {
@@ -23,8 +27,6 @@ const AppHeader = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
 
-  const inputRef = useRef(null);
-
   useEffect(() => {
     const handleKeyDown = (event) => {
       if ((event.metaKey || event.ctrlKey) && event.key === "k") {
@@ -32,9 +34,7 @@ const AppHeader = () => {
         inputRef.current?.focus();
       }
     };
-
     document.addEventListener("keydown", handleKeyDown);
-
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
@@ -49,6 +49,7 @@ const AppHeader = () => {
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >
+            {/* SVG icons */}
             {isMobileOpen ? (
               <svg
                 width="24"
@@ -80,22 +81,17 @@ const AppHeader = () => {
                 />
               </svg>
             )}
-            {/* Cross Icon */}
           </button>
 
           <Link to="/admin" className="lg:hidden">
-            <img
-              className="dark:hidden max-h-10  object-fit-cover"
-              src={Logo}
-              alt="Logo"
-            />
-            <img className="hidden dark:block" src={Logo} alt="Logo" />
+            <SuperBeeLogo className="max-h-10" />
           </Link>
 
           <button
             onClick={toggleApplicationMenu}
             className="flex items-center justify-center w-10 h-10 text-gray-700 rounded-lg z-99999 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800 lg:hidden"
           >
+            {/* SVG icon */}
             <svg
               width="24"
               height="24"
@@ -118,14 +114,12 @@ const AppHeader = () => {
           } items-center justify-between w-full gap-4 px-5 py-4 lg:flex shadow-theme-md lg:justify-end lg:px-0 lg:shadow-none`}
         >
           <div className="flex items-center gap-2 2xsm:gap-3">
-            {/* <!-- Dark Mode Toggler --> */}
             <ThemeToggleButton />
-            {/* <!-- Dark Mode Toggler --> */}
             <NotificationDropdown />
-            {/* <!-- Notification Menu Area --> */}
           </div>
-          {/* <!-- User Area --> */}
-          <UserDropdown />
+
+          {/* THAY THẾ KHỐI HIỂN THỊ TRỰC TIẾP BẰNG UserDropdown */}
+          {isLoggedIn && <UserDropdown />}
         </div>
       </div>
     </header>

@@ -10,6 +10,7 @@ load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 chat_model = os.getenv("CHAT_MODEL")
 client = OpenAI(
+
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
     # base_url="https://api.together.xyz/v1",
     # base_url="https://openrouter.ai/api/v1",
@@ -18,6 +19,7 @@ client = OpenAI(
 def now():
     now = datetime.now()
     return now
+
 def search_product_detail_by_sku(id):
     response = requests.get(f"http://localhost:8000/api/assistant/products/{id}").text
     return response
@@ -27,6 +29,7 @@ def get_list_product_by_category(id):
 def execute_agent(agent_name,messages):
     if (agent_name == 'product'):
         print(f"Product message: {messages[1:]}")
+
         response = client.chat.completions.create(
             messages=messages,
             tools = [
@@ -51,6 +54,7 @@ def execute_agent(agent_name,messages):
             tool_choice='required',
             model=chat_model
         )
+
         print(response)
         if (response.choices[0].message.tool_calls == None):
             # return response.choices[0].message
@@ -97,6 +101,7 @@ def execute_agent(agent_name,messages):
                 
             # )
             # return response_.choices[0].message
+
     elif (agent_name == 'category'):
         response = client.chat.completions.create(
             messages=messages,
@@ -105,6 +110,7 @@ def execute_agent(agent_name,messages):
                     "type": "function",
                     "function": {
                         "name": "get_list_product_by_category",
+
                         "description": "Tìm kiếm sản phẩm theo id danh mục",
                         "parameters": {
                             "type": "object",
@@ -124,6 +130,7 @@ def execute_agent(agent_name,messages):
         )
         print(f"Category Response: {response}")
         if (response.choices[0].message.tool_calls == None):
+
             # return response.choices[0].message
             return ""
         else :
@@ -174,6 +181,7 @@ def execute_agent(agent_name,messages):
 
 
 
+
         # print(f"Agent name: {agent_name},Response: {response}")
 # def list_tools(router):
 #     if (router == "product"):
@@ -217,6 +225,7 @@ def chat(messages):
         }
     
     messages = [system_content] + messages
+
     prepare_end = False
     type_ = ['category','product','news','other']
     tool_choice = 'required'
@@ -247,11 +256,12 @@ def chat(messages):
                 }
             }
         ]
-        
+
         response = client.chat.completions.create(
             model=chat_model,
             messages=messages,
             tools=tools,
+
             tool_choice=tool_choice,
             max_tokens=1024,
             stream=True,
@@ -418,6 +428,7 @@ def chat(messages):
     # )
     # for res in response_:
     #     print(res)
+
 
         # break
             # messages.append(

@@ -30,14 +30,15 @@ class AssistantProductController extends Controller
             $product = Product::where("sku",$sku)->with(['category','gameAttributes','images'])->get();
             return response()->json([
                 'status'=>True,
-                'message'=>"Lấy chi tiết sản phẩm theo sku thành công",
-                'data'=>$product
+                'message'=>"Lấy chi tiết sản phẩm theo sku {$sku} thành công",
+                'data'=>$product,
+                'link'=>"http://localhost:5173/acc/{$sku}"
             ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
                 'status'=>False,
-                'message'=>"Lấy chi tiết sản phẩm theo sku thất bại",
+                'message'=>"Lấy chi tiết sản phẩm theo sku {$sku} thất bại",
                 'data'=>[]
             ]);
         }

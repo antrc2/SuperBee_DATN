@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/post')->group(function () {
         Route::get('/', [UserPostController::class, 'index']);
         Route::get('/{id}', [UserPostController::class, 'show']);
+        Route::get('/getcategory/{slug}', [UserPostController::class, 'getByCategory']);
         Route::get('/category/{id}', [UserPostController::class, 'getCategoryById']);
         Route::get('/bycategory/{id}', [UserPostController::class, 'getPostByCategory']);
     });

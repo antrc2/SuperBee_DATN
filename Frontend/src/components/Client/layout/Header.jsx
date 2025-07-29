@@ -61,7 +61,7 @@ export default function Header() {
     { name: " Trang chủ", href: "/", icon: Home },
     { name: " Mua Acc", href: "/mua-acc", icon: Gamepad2 },
     { name: " Dịch vụ", href: "/services", icon: Briefcase },
-    { name: " Tin Tức", href: "/news", icon: Newspaper },
+    { name: " Tin Tức", href: "/tin-tuc", icon: Newspaper },
   ];
 
   const toggleDropdown = useCallback(

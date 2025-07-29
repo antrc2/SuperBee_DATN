@@ -8,20 +8,90 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
     //
     public function index(Request $request)
     {
+        try {
+            // Validate request parameters for sorting
+            $request->validate([
+                'sort_by' => 'sometimes|in:username,email,balance,created_at',
+                'sort_direction' => 'sometimes|in:asc,desc',
+                'status' => 'sometimes|in:0,1,2',
+                'role_id' => 'sometimes|integer|exists:roles,id',
+                'page' => 'sometimes|integer|min:1',
+            ]);
 
-        $user = User::with(['roles', 'wallet'])->get();
-        $roles = Role::all();
-        return response()->json([
-            "message" => "lấy thành công",
-            "status" => true,
-            "data" => ["user" => $user, "roles" => $roles]
-        ]);
+            // Start building the query
+            $query = User::query();
+
+            // Eager load relationships
+            $query->with(['roles', 'wallet']);
+
+            // Handle combined search for username and email
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+                $q->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('username', 'like', $searchTerm)
+                             ->orWhere('email', 'like', $searchTerm);
+                });
+            });
+
+            // Handle status filtering
+            $query->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+            // Handle role filtering
+            $query->when($request->filled('role_id'), function ($q) use ($request) {
+                $q->whereHas('roles', function ($subQuery) use ($request) {
+                    $subQuery->where('id', $request->role_id);
+                });
+            });
+
+            // Handle sorting
+            if ($request->filled('sort_by')) {
+                $direction = $request->input('sort_direction', 'asc');
+                
+                if ($request->sort_by === 'balance') {
+                    // Join with wallets table to sort by balance
+                    $query->leftJoin('wallets', 'users.id', '=', 'wallets.user_id')
+                          ->orderBy('wallets.balance', $direction)
+                          ->select('users.*'); // Avoid ambiguity
+                } else {
+                    $query->orderBy($request->sort_by, $direction);
+                }
+            } else {
+                // Default sort
+                $query->latest(); // Sort by created_at desc
+            }
+            
+            // Paginate the results
+            $users = $query->paginate(15)->withQueryString();
+
+            // Get all roles for the filter dropdown
+            $roles = Role::all(['id', 'name', 'description']);
+
+            return response()->json([
+                'message' => 'Lấy danh sách tài khoản thành công',
+                'status' => true,
+                'data' => [
+                    'users' => $users,
+                    'roles' => $roles,
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error fetching accounts: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Đã có lỗi xảy ra ở phía máy chủ.',
+                'status' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
     public function show($id)
     {

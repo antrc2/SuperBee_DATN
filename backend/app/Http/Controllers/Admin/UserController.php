@@ -10,6 +10,7 @@ use Spatie\Permission\Models\Role;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
+use Illuminate\Support\Facades\Validator;
 class UserController extends Controller
 {
     //
@@ -36,7 +37,7 @@ class UserController extends Controller
                 $searchTerm = '%' . $request->search . '%';
                 $q->where(function ($subQuery) use ($searchTerm) {
                     $subQuery->where('username', 'like', $searchTerm)
-                             ->orWhere('email', 'like', $searchTerm);
+                        ->orWhere('email', 'like', $searchTerm);
                 });
             });
 
@@ -55,12 +56,12 @@ class UserController extends Controller
             // Handle sorting
             if ($request->filled('sort_by')) {
                 $direction = $request->input('sort_direction', 'asc');
-                
+
                 if ($request->sort_by === 'balance') {
                     // Join with wallets table to sort by balance
                     $query->leftJoin('wallets', 'users.id', '=', 'wallets.user_id')
-                          ->orderBy('wallets.balance', $direction)
-                          ->select('users.*'); // Avoid ambiguity
+                        ->orderBy('wallets.balance', $direction)
+                        ->select('users.*'); // Avoid ambiguity
                 } else {
                     $query->orderBy($request->sort_by, $direction);
                 }
@@ -68,7 +69,7 @@ class UserController extends Controller
                 // Default sort
                 $query->latest(); // Sort by created_at desc
             }
-            
+
             // Paginate the results
             $users = $query->paginate(15)->withQueryString();
 
@@ -83,7 +84,6 @@ class UserController extends Controller
                     'roles' => $roles,
                 ],
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching accounts: ' . $e->getMessage());
             return response()->json([
@@ -110,7 +110,7 @@ class UserController extends Controller
                 "web",                   // Website mà user thuộc về
                 "referredUsers", // Các user mà user này đã giới thiệu (nếu cần xem ai)
             ])->find($id);
-
+            $role = Role::where('name', '!=', 'admin')->get();
             if (!$user) {
                 return response()->json([
                     'status' => false,
@@ -125,7 +125,8 @@ class UserController extends Controller
                 'status' => true,
                 'message' => 'Lấy dữ liệu tài khoản người dùng thành công.',
                 'data' => [
-                    'user' => $user->toArray() // Chuyển đổi Eloquent Collection/Model sang array
+                    'user' => $user->toArray(), // Chuyển đổi Eloquent Collection/Model sang array
+                    'role' => $role
                 ]
             ], 200);
         } catch (Exception $e) {
@@ -210,72 +211,57 @@ class UserController extends Controller
     public function updateRoles(Request $request, $id)
     {
         try {
-            // Bước 1: Validate đầu vào
-            $request->validate([
-                'roles' => 'required',
+            // Bước 1: Validate đầu vào một cách chặt chẽ hơn
+            $validator = Validator::make($request->all(), [
+                // 'roles' phải tồn tại và là một mảng. Mảng có thể rỗng (để xóa hết quyền).
+                'roles' => 'present|array', 
+                // Kiểm tra mỗi phần tử trong mảng 'roles' phải là chuỗi và tồn tại trong bảng 'roles'
+                'roles.*' => 'string|exists:roles,name', 
                 'user_id' => 'required|integer|exists:users,id',
             ]);
 
-            // Chuyển roles thành mảng nếu là chuỗi
-            $roles = is_array($request->roles) ? $request->roles : [$request->roles];
-
-            // Chỉ chấp nhận admin, user, partner
-            $allowedRoles = ['admin', 'user', 'partner'];
-            foreach ($roles as $role) {
-                if (!in_array($role, $allowedRoles)) {
-                    return response()->json([
-                        'status' => false,
-                        'message' => "Đã có lỗi xảy ra"
-                    ], 422);
-                }
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Dữ liệu không hợp lệ.',
+                    'errors' => $validator->errors()
+                ], 422);
             }
 
-            // Lấy user bị cập nhật
+            $rolesToSync = $request->input('roles', []);
+
+            // Bước 2: Lấy thông tin các đối tượng
             $targetUser = User::find($id);
             if (!$targetUser) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Không tìm thấy tài khoản'
-                ], 404);
+                return response()->json(['status' => false, 'message' => 'Không tìm thấy tài khoản người dùng.'], 404);
             }
 
-            // Lấy user thực hiện
-            $authUser = User::find($request->user_id);
-            if (!$authUser || !$authUser->hasRole('admin')) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Bạn không có quyền thực hiện hành động này'
-                ], 403);
+            $actingUser = User::find($request->user_id);
+            // Giả sử chỉ user có quyền 'roles.edit' mới được thực hiện
+            if (!$actingUser || !$actingUser->can('roles.edit')) {
+                return response()->json(['status' => false, 'message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
             }
 
-            // Nếu người bị chỉnh sửa là admin thì không được cập nhật roles nữa (vì ngang cấp)
-            if ($targetUser->hasRole('admin')) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Đã có lỗi xảy ra!'
-                ], 403);
+            // Bước 3: Áp dụng các quy tắc nghiệp vụ quan trọng
+            // QUAN TRỌNG: Không cho phép sửa quyền của admin/admin-super khác
+            if ($targetUser->hasRole(['admin', 'admin-super'])) {
+                return response()->json(['status' => false, 'message' => 'Không thể chỉnh sửa quyền của Quản trị viên cấp cao.'], 403);
+            }
+            
+            // QUAN TRỌNG: Ngăn chặn việc gán quyền admin/admin-super qua API để bảo vệ hệ thống
+            if (in_array('admin', $rolesToSync) || in_array('admin-super', $rolesToSync)) {
+                 return response()->json(['status' => false, 'message' => 'Không thể gán quyền Quản trị viên qua giao diện này.'], 403);
             }
 
-            // Gán quyền mới
-            $targetUser->syncRoles($roles);
-            $targetUser->load('roles');
+            // Bước 4: Đồng bộ hóa quyền
+            $targetUser->syncRoles($rolesToSync);
 
-            return response()->json([
-                'status' => true,
-                'message' => 'Cập nhật quyền thành công',
-            ], 200);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Dữ liệu không hợp lệ',
+            return response()->json(['status' => true, 'message' => 'Cập nhật quyền thành công.'], 200);
 
-            ], 422);
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Có lỗi xảy ra khi cập nhật quyền',
-
-            ], 500);
+            // Ghi lại lỗi để debug
+            Log::error('Lỗi khi cập nhật quyền cho user ID ' . $id . ': ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Đã có lỗi máy chủ xảy ra.'], 500);
         }
     }
 }

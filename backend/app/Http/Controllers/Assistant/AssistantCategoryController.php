@@ -48,4 +48,21 @@ class AssistantCategoryController extends Controller
             //throw $th;
         }
     }
+    public function get_category_name(Request $request){
+        try {
+            $categories = Category::all('name');
+            return response()->json([
+                'status'=>True,
+                'message'=>"Lấy danh sách danh mục thành công",
+                'data'=>$categories
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                'status'=>False,
+                'message'=>"Lấy danh sách danh mục thất bại",
+                'data'=> []
+            ]);
+        }
+    }
 }

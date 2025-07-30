@@ -376,7 +376,7 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
 Route::prefix('/assistant')->group(function(){
      Route::prefix("/categories")->group(function () {
         Route::get("/", [AssistantCategoryController::class, 'index']);
-
+        Route::get("/category_name",[AssistantCategoryController::class,'get_category_name']);
         Route::get("/{id}", [AssistantCategoryController::class, 'show']);
     });
     Route::prefix('/products')->group(function(){

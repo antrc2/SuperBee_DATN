@@ -33,7 +33,16 @@ app.add_middleware(
 @app.post("/assistant/chat")
 async def doibuonjqk(request: Request):
     data = await request.json()
-    return chat(data['messages'])
+    return StreamingResponse(
+        chat(data['messages']),
+        media_type="text/event-stream",
+        headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'X-Accel-Buffering': 'no'
+            }
+    )
 
 
 

@@ -38,6 +38,8 @@ use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
 use App\Http\Controllers\User\UserPostController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserWithdrawController;
+use App\Http\Controllers\User\UserReviewController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,7 +48,7 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+Route::get('/post_sitemap.xml', [HomeController::class, 'post_sitemap']);
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
@@ -168,7 +170,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
 
-//         Route::prefix('user/withdraws')->group(function () {
+        //         Route::prefix('user/withdraws')->group(function () {
 //             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
 //             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
 //             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
@@ -179,11 +181,22 @@ Route::middleware('auth')->group(function () {
             Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
             Route::get('/', [UserWithdrawController::class, 'index'])->name('user.withdraws.history');
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
-            Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
-            Route::put("/{id}",[UserWithdrawController::class,'update']);
-            Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);
+            Route::delete("/{id}", [UserWithdrawController::class, 'cancel']);
+            Route::put("/{id}", [UserWithdrawController::class, 'update']);
+            Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
 
         });
+        Route::prefix('/reviews')->group(function () {
+            Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
+            Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
+            Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
+            Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
+            Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
+
+        });
+        
+
+
 
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
@@ -344,9 +357,9 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
 
-    Route::prefix("/withdraws")->group(function(){
-        Route::get('/',[AdminWithdrawController::class,'index']);
-        Route::post("/export",[AdminWithdrawController::class,'export']);
+    Route::prefix("/withdraws")->group(function () {
+        Route::get('/', [AdminWithdrawController::class, 'index']);
+        Route::post("/export", [AdminWithdrawController::class, 'export']);
     });
 });
 
@@ -368,14 +381,14 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
     });
 });
 
-Route::prefix('/assistant')->group(function(){
-     Route::prefix("/categories")->group(function () {
+Route::prefix('/assistant')->group(function () {
+    Route::prefix("/categories")->group(function () {
         Route::get("/", [AssistantCategoryController::class, 'index']);
         Route::get("/{category_name}", [AssistantCategoryController::class, 'show']);
     });
-    Route::prefix('/products')->group(function(){
-        Route::get("/",[AssistantProductController::class,'index']);
-        Route::get("/{sku}",[AssistantProductController::class,'show']);
+    Route::prefix('/products')->group(function () {
+        Route::get("/", [AssistantProductController::class, 'index']);
+        Route::get("/{sku}", [AssistantProductController::class, 'show']);
     });
 });
 

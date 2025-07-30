@@ -9,3 +9,4 @@ openai
 PyJWT
 Pillow
 mbbank-lib
+playwright

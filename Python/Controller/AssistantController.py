@@ -4,11 +4,14 @@ import requests
 import json
 from dotenv import load_dotenv
 from datetime import datetime
-# from collections import defaultdict
+import asyncio
+from playwright.async_api import async_playwright
 import copy
+from threading import Thread
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 chat_model = os.getenv("CHAT_MODEL")
+python_url = os.getenv("PYTHON_URL")
 client = OpenAI(
 
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -26,9 +29,37 @@ def search_product_detail_by_sku(id):
 def get_list_product_by_category(id):
     response = requests.get(f"http://localhost:8000/api/assistant/categories/{id}").text
     return response
+def sitemap_crawl(url):
+    response = requests.get(url).text
+    return response
+async def fetch_body_html(url: str) -> str:
+    print(f"Đang crawl {url}")
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        page = await browser.new_page()
+        try:
+            await page.goto(url, timeout=30000, wait_until="networkidle")
+            return await page.inner_html("main")
+        except asyncio.TimeoutError:
+            return ""
+        finally:
+            await browser.close()
+def url_crawl_sync(url: str) -> str:
+    result = {}
+
+    def _runner():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        result["body"] = loop.run_until_complete(fetch_body_html(url))
+        loop.close()
+
+    t = Thread(target=_runner)
+    t.start()
+    t.join()
+    return result["body"]
 def execute_agent(agent_name,messages):
     if (agent_name == 'product'):
-        print(f"Product message: {messages[1:]}")
+        # print(f"Product message: {messages[1:]}")
 
         response = client.chat.completions.create(
             messages=messages,
@@ -146,6 +177,76 @@ def execute_agent(agent_name,messages):
                     result = get_list_product_by_category(argument['category_id'])
                     response += result
             return response
+    elif (agent_name == 'news'):
+        tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "sitemap_crawl",
+
+                    "description": "Lấy link sitemap con theo link sitemap tổng",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "Link sitemap có đuôi .xml"
+                            },
+                        },
+                        "required": ["url"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "url_crawl",
+
+                    "description": "Crawl dữ liệu của 1 đường link",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "Link dùng để crawl"
+                            },
+                        },
+                        "required": ["url"]
+                    }
+                }
+            }
+        ]
+
+        response = client.chat.completions.create(
+            messages=messages,
+            tools=tools,
+            tool_choice='required',
+            temperature=0.2,
+            max_tokens=1024,
+            model=chat_model
+        )
+        print(f"News Response: {response}")
+        if (response.choices[0].message.tool_calls == None):
+
+            # return response.choices[0].message
+            return ""
+        else :
+            tool_calls = response.choices[0].message.tool_calls
+            response = ""
+            # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
+            print(f"News Tool calls: {tool_calls}")
+            
+            for tool_call in tool_calls:
+                argument = json.loads(tool_call.function.arguments)
+                function_name = tool_call.function.name
+                if (function_name == "sitemap_crawl"):
+                    result =  sitemap_crawl(argument['url'])
+                    # result = Thread
+                    response += result
+                elif (function_name == 'url_crawl'):
+                    result = url_crawl_sync(argument['url'])
+                    response += result
+            return response
             # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
             #     argument = response.choices[0].message.tool_calls[0].function.arguments
             #     data = json.loads(argument)
@@ -208,10 +309,10 @@ def execute_agent(agent_name,messages):
 #         tools = []
 #     return tools
 
-
 def chat(messages):
     categories = requests.get("http://localhost:8000/api/assistant/categories").text
     products = requests.get("http://localhost:8000/api/assistant/products").text
+    post_sitemaps = requests.get("http://localhost:8000/api/tin-tuc.xml").text
     system_content = {
             "role": "system",
             "content": f"""Bạn tên là 13Bee. Trong đó, số '13' là con số tâm linh của FPT, 'Bee' là linh vật của trường Cao đẳng FPT Polytechnic. Bạn là một nhân viên tư vấn và bán hàng của Website bán tài khoản game SuperBee.
@@ -220,6 +321,8 @@ def chat(messages):
             {categories}.
             Dưới đây là danh sách sku của danh sách sản phẩm:
             {products}
+            Dưới đây là danh sách tin tức của trang web:
+            {post_sitemaps}
             Đưa ra link và ảnh ở dạng markdown cho tôi
             """
         }
@@ -227,7 +330,7 @@ def chat(messages):
     messages = [system_content] + messages
 
     prepare_end = False
-    type_ = ['category','product','news','other']
+    type_ = ['category','product','news']
     tool_choice = 'required'
     user_content = copy.deepcopy(messages)
     while True:
@@ -269,16 +372,22 @@ def chat(messages):
         )
         tool_call = True
         generated_text = ""
-
+        response_clone = []
         
 
         for chunk in response:
+            response_clone.append(chunk)
+            print(f"Chunk: {chunk}")
             if chunk.choices:
                 delta = chunk.choices[0].delta
                 if delta.content:
                     tool_call = False
                     generated_text += delta.content
                     messages[-1]['content'] = generated_text
+                    yield {
+                        "id": chunk.id,
+                        "messages": messages
+                    }
                     print(f"Final Message: {messages}")
                     # print(delta.content, end="", flush=True)
                     # print(f"generated_text: {generated_text}")
@@ -296,6 +405,11 @@ def chat(messages):
                                 }
                             }]
                         })
+                        yield {
+                            "id": chunk.id,
+                            "messages": messages
+                        }
+                        print(f"ID Chat: {chunk.id}")
                         # print(f"Message: {messages}")
                         print(f"\n[TOOL CALL]: {tool_call.function.name} - {tool_call.function.arguments}")
                         data = json.loads(tool_call.function.arguments)
@@ -310,6 +424,10 @@ def chat(messages):
                             "content": result
 
                         })
+                        yield {
+                            "id": chunk.id,
+                            "messages": messages
+                        }
                     messages.append(
                         {
                             "role": "assistant",
@@ -323,10 +441,13 @@ def chat(messages):
         if (tool_call):
             pass
         else:
-            
+            print(f"Response: {response_clone}")
             print("Không dùng tool call nữa")
             print(f"Generated_text: {generated_text}")
             break
+    # return {
+    #     "messages": messages[1:]
+    # }
         # break
         # for res in response:
         #     response_clone.append(res)
@@ -511,6 +632,4 @@ def chat(messages):
     # print(response_clone)
 
 
-    return {
-        "messages": messages[1:]
-    }
+    

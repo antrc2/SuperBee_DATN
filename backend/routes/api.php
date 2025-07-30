@@ -26,6 +26,7 @@ use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Partner\PartnerOrderController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
@@ -46,7 +47,11 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+// Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+Route::get("/sitemap.xml",[SitemapController::class,'index']);
+Route::get("/tin-tuc.xml",[SitemapController::class,'post']);
+Route::get('/danh-muc.xml',[SitemapController::class,'category']);
+Route::get("/san-pham.xml",[SitemapController::class,'product']);
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);

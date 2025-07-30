@@ -87,7 +87,10 @@ export default function CategoryPostListPage() {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
             Danh mục Bài viết
-          </h1>
+          </h1>{" "}
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Tạo và quản lý các danh mục cho bài viết.
+          </p>
         </div>
         <Link to="/admin/categoryPost/new">
           <button className="flex items-center justify-center gap-2 w-full sm:w-auto bg-indigo-600 text-white px-4 py-2.5 rounded-lg shadow-md hover:bg-indigo-700 transition-colors">

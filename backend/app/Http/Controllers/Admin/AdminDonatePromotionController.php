@@ -105,7 +105,7 @@ class AdminDonatePromotionController extends Controller
                 'end_date'         => 'required|date|after:start_date',
                 'usage_limit'      => 'nullable|integer',
                 'per_user_limit'   => 'nullable|integer',
-                'total_used'       => 'nullable|integer',
+           
                 'status'           => 'nullable|string',
             ];
 
@@ -126,9 +126,6 @@ class AdminDonatePromotionController extends Controller
 
                 'per_user_limit.integer'  => 'Giới hạn mỗi người dùng phải là số nguyên.',
                 'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
-
-                'total_used.integer'      => 'Tổng số đã sử dụng phải là số nguyên.',
-                'total_used.min'          => 'Tổng số đã sử dụng phải ≥ 0.',
 
                 'status.string'           => 'Trạng thái phải là chuỗi ký tự.',
             ];
@@ -152,7 +149,6 @@ class AdminDonatePromotionController extends Controller
                 'end_date'    => $validatedData['end_date'],
                 'usage_limit' => $validatedData['usage_limit'],
                 "per_user_limit" => $validatedData['per_user_limit'],
-                "total_used" => $validatedData['total_used'],
                 'created_by' => $request->user_id,
                 "updated_by" => $request->user_id,
                 "status" => $validatedData['status']
@@ -224,10 +220,11 @@ class AdminDonatePromotionController extends Controller
                     "message" => "Không thể khôi phục, vì đã có khuyến mãi khác đang hoạt động"
                 ], 400);
             }
-            DonatePromotion::where("id", $id)->update(['status' => 1]);
+        $a=    DonatePromotion::where("id", $id)->update(['status' => 1]);
             return response()->json([
                 'status' => True,
-                'message' => "Khôi phục thành công"
+                'message' => "Khôi phục thành công",
+                "đf"=>$a
             ]);
         } catch (\Throwable $th) {
             return response()->json([

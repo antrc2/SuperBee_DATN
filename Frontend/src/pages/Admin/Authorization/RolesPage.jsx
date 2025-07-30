@@ -27,15 +27,18 @@ function RoleForm({ role, onSave, onCancel }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-8">
-      <h2 className="text-xl font-semibold mb-4 text-gray-700">
+    // Thêm màu nền và màu viền cho chế độ tối
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8 border border-transparent dark:border-gray-700">
+      {/* Thêm màu chữ cho chế độ tối */}
+      <h2 className="text-xl font-semibold mb-4 text-gray-700 dark:text-gray-200">
         {role ? "Chỉnh sửa vai trò" : "Tạo vai trò mới"}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
             htmlFor="roleName"
-            className="block text-sm font-medium text-gray-700"
+            // Thêm màu chữ cho chế độ tối
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Tên vai trò (không dấu, không khoảng trắng)
           </label>
@@ -44,7 +47,8 @@ function RoleForm({ role, onSave, onCancel }) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            // Thêm màu nền, chữ, viền, và placeholder cho chế độ tối
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             placeholder="vi-du: sales_manager"
             required
           />
@@ -52,7 +56,8 @@ function RoleForm({ role, onSave, onCancel }) {
         <div>
           <label
             htmlFor="roleDescription"
-            className="block text-sm font-medium text-gray-700"
+            // Thêm màu chữ cho chế độ tối
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300"
           >
             Mô tả
           </label>
@@ -61,7 +66,8 @@ function RoleForm({ role, onSave, onCancel }) {
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            // Thêm màu nền, chữ, viền, và placeholder cho chế độ tối
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
             placeholder="Mô tả ngắn về vai trò này"
           />
         </div>
@@ -70,14 +76,16 @@ function RoleForm({ role, onSave, onCancel }) {
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              // Thêm màu nền, chữ, viền, và hover cho nút "Hủy" ở chế độ tối
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-600 dark:text-gray-200 dark:border-gray-500 dark:hover:bg-gray-700"
             >
               Hủy
             </button>
           )}
           <button
             type="submit"
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+            // Nút chính thường không cần thay đổi nhiều, nhưng có thể thêm hiệu ứng hover/focus nếu muốn
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800"
           >
             {role ? "Lưu thay đổi" : "Tạo mới"}
           </button>
@@ -390,8 +398,8 @@ export default function RolesPage() {
 
   return (
     <div className="container mx-auto p-4 md:p-6 bg-gray-100 dark:bg-gray-900 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200">
+      <div className=" dark:bg-gray-900 flex justify-between items-center mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 dark:text-gray-200  uppercase">
           Quản lý Vai trò (Roles)
         </h1>
         <Link

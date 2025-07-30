@@ -48,7 +48,10 @@ export default function EditCategoryPage() {
         navigate("/admin/categories");
       }
     } catch (err) {
-      notification.pop(err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.", "e");
+      notification.pop(
+        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.",
+        "e"
+      );
       setError(
         err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại."
       );
@@ -80,9 +83,7 @@ export default function EditCategoryPage() {
         </h2>
         <div className="w-[120px]" />
       </div>
-      {error && (
-        <div className="alert alert-danger mb-4">{error}</div>
-      )}
+      {error && <div className="alert alert-danger mb-4">{error}</div>}
       {category ? (
         <CategoryForm
           initialData={category}

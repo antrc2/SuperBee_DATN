@@ -1,154 +1,286 @@
+// @components/Admin/DonatePromotion/DonatePromotionForm.jsx (Validate lỗi trực tiếp)
+
 import React, { useState } from "react";
-import { CalendarIcon } from "lucide-react";
+import { Calendar as CalendarIcon } from "lucide-react";
 import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 import dayjs from "dayjs";
 
-export default function CreateFormDonatePromotion({
+import "react-datepicker/dist/react-datepicker.css";
+
+// --- CÁC COMPONENT GIAO DIỆN NHỎ ---
+// Thêm prop `hasError` để thay đổi border khi có lỗi
+const Label = ({ children, htmlFor }) => (
+  <label
+    htmlFor={htmlFor}
+    className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+  >
+    {children}
+  </label>
+);
+
+const Input = ({ hasError, ...props }) => (
+  <input
+    {...props}
+    className={`mt-2 block w-full rounded-md border bg-transparent px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 disabled:opacity-50
+      ${
+        hasError
+          ? "border-red-500 text-red-600"
+          : "border-slate-300 dark:border-slate-700"
+      }`}
+  />
+);
+
+const Select = ({ hasError, ...props }) => (
+  <select
+    {...props}
+    className={`mt-2 block w-full rounded-md border bg-white dark:bg-slate-800 px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 disabled:opacity-50
+      ${
+        hasError
+          ? "border-red-500 text-red-600"
+          : "border-slate-300 dark:border-slate-700"
+      }`}
+  >
+    {props.children}
+  </select>
+);
+
+// --- COMPONENT FORM CHÍNH ---
+
+export default function DonatePromotionForm({
   initialData = null,
   onSubmit,
   isEditing = false,
   isLoading = false,
 }) {
+  // --- STATE ---
   const [formData, setFormData] = useState({
     amount: initialData?.amount || "",
-    start_date: initialData?.start_date ? new Date(initialData.start_date) : null,
+    start_date: initialData?.start_date
+      ? new Date(initialData.start_date)
+      : null,
     end_date: initialData?.end_date ? new Date(initialData.end_date) : null,
     usage_limit: initialData?.usage_limit ?? -1,
     per_user_limit: initialData?.per_user_limit ?? -1,
     status: initialData?.status ?? 1,
   });
 
+  // **[MỚI]** State để lưu các lỗi validation
+  const [errors, setErrors] = useState({});
+
+  // --- LOGIC ---
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Xóa lỗi khi người dùng bắt đầu nhập
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
   };
 
+  const handleDateChange = (name, date) => {
+    setFormData((prev) => ({ ...prev, [name]: date }));
+    // Xóa lỗi khi người dùng chọn ngày
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    }
+  };
+
+  // **[CẬP NHẬT]** Hàm validate và submit
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.amount) return alert("Vui lòng nhập số % khuyến mãi.");
-    if (!formData.start_date || !formData.end_date)
-      return alert("Vui lòng chọn thời gian hiệu lực.");
+    // Validate form
+    const newErrors = {};
+    if (!formData.amount || formData.amount <= 0) {
+      newErrors.amount = "Giá trị khuyến mãi phải là số lớn hơn 0.";
+    }
+    if (!formData.start_date) {
+      newErrors.start_date = "Vui lòng chọn ngày bắt đầu.";
+    }
+    if (!formData.end_date) {
+      newErrors.end_date = "Vui lòng chọn ngày kết thúc.";
+    }
+    if (
+      formData.start_date &&
+      formData.end_date &&
+      dayjs(formData.end_date).isBefore(dayjs(formData.start_date))
+    ) {
+      newErrors.end_date = "Ngày kết thúc không được trước ngày bắt đầu.";
+    }
 
-    const data = {
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return; // Dừng lại nếu có lỗi
+    }
+
+    // Nếu không có lỗi, tiến hành submit
+    const dataToSubmit = {
       ...formData,
-      total_used:0,
       start_date: dayjs(formData.start_date).format("YYYY-MM-DD HH:mm:ss"),
       end_date: dayjs(formData.end_date).format("YYYY-MM-DD HH:mm:ss"),
     };
-
-    onSubmit(data);
+    onSubmit(dataToSubmit);
   };
 
+  const CustomDatePickerInput = React.forwardRef(
+    ({ value, onClick, hasError }, ref) => (
+      <button
+        type="button"
+        onClick={onClick}
+        ref={ref}
+        className={`mt-2 flex w-full items-center justify-between rounded-md border bg-transparent px-3 py-2 text-left text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500
+        ${
+          hasError ? "border-red-500" : "border-slate-300 dark:border-slate-700"
+        }`}
+      >
+        <span
+          className={
+            !value
+              ? "text-slate-400"
+              : hasError
+              ? "text-red-600"
+              : "text-slate-800 dark:text-slate-200"
+          }
+        >
+          {value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Chọn ngày..."}
+        </span>
+        <CalendarIcon
+          className={`h-4 w-4 ${hasError ? "text-red-500" : "text-slate-500"}`}
+        />
+      </button>
+    )
+  );
+
+  // -- GIAO DIỆN --
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="p-6 border bg-white rounded shadow-sm">
-        <h3 className="mb-4 font-medium text-gray-900">
-          {isEditing ? "Cập nhật khuyến mãi" : "Tạo khuyến mãi Donate"}
-        </h3>
-
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="amount" className="block mb-1 text-sm">
-              Giá trị khuyến mãi (%)
-            </label>
-            <input
-              name="amount"
-              type="number"
-              value={formData.amount}
-              onChange={handleChange}
-              required
-              className="w-full p-2 rounded border"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="status" className="block mb-1 text-sm">
-              Trạng thái
-            </label>
-            <select
-              name="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-            >
-              <option value={1}>Hoạt động</option>
-              <option value={0}>Tạm tắt</option>
-            </select>
-          </div>
-
-          <div>
-            <label htmlFor="usage_limit" className="block mb-1 text-sm">
-              Giới hạn sử dụng tổng
-            </label>
-            <input
-              name="usage_limit"
-              type="number"
-              value={formData.usage_limit}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-              placeholder="-1 nghĩa là không giới hạn"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="per_user_limit" className="block mb-1 text-sm">
-              Giới hạn mỗi người dùng
-            </label>
-            <input
-              name="per_user_limit"
-              type="number"
-              value={formData.per_user_limit}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-              placeholder="-1 nghĩa là không giới hạn"
-            />
-          </div>
-
-          <div>
-            <label className="block mb-1 text-sm">Thời gian bắt đầu</label>
-            <div className="relative">
-              <DatePicker
-                selected={formData.start_date}
-                onChange={(date) =>
-                  setFormData((prev) => ({ ...prev, start_date: date }))
-                }
-                className="w-full p-2 rounded border"
-                placeholderText="Chọn ngày bắt đầu"
-                showTimeSelect
-                dateFormat="Pp"
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-8">
+        <div className="border-b border-slate-200 dark:border-slate-700 pb-8">
+          <h3 className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
+            Thông tin cơ bản
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Thiết lập giá trị khuyến mãi và trạng thái hoạt động.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div className="sm:col-span-3">
+              <Label htmlFor="amount">Giá trị khuyến mãi (%)</Label>
+              <Input
+                id="amount"
+                name="amount"
+                type="number"
+                value={formData.amount}
+                onChange={handleChange}
+                placeholder="Ví dụ: 10"
+                hasError={!!errors.amount} // **[MỚI]**
               />
-              <CalendarIcon className="absolute right-3 top-3 text-gray-400" size={18} />
+              {errors.amount && (
+                <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+              )}
+            </div>
+            <div className="sm:col-span-3">
+              <Label htmlFor="status">Trạng thái</Label>
+              <Select
+                id="status"
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+              >
+                <option value={1}>Hoạt động</option>
+                <option value={0}>Tạm tắt</option>
+              </Select>
             </div>
           </div>
-
-          <div>
-            <label className="block mb-1 text-sm">Thời gian kết thúc</label>
-            <div className="relative">
+        </div>
+        <div className="border-b border-slate-200 dark:border-slate-700 pb-8">
+          <h3 className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
+            Giới hạn sử dụng
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Đặt giới hạn số lần mã có thể được sử dụng. Nhập -1 để không giới
+            hạn.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div className="sm:col-span-3">
+              <Label htmlFor="usage_limit">Giới hạn sử dụng tổng</Label>
+              <Input
+                id="usage_limit"
+                name="usage_limit"
+                type="number"
+                value={formData.usage_limit}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="sm:col-span-3">
+              <Label htmlFor="per_user_limit">Giới hạn trên mỗi người</Label>
+              <Input
+                id="per_user_limit"
+                name="per_user_limit"
+                type="number"
+                value={formData.per_user_limit}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+        </div>
+        <div className="pb-8">
+          <h3 className="text-base font-semibold leading-7 text-slate-900 dark:text-slate-100">
+            Thời gian hiệu lực
+          </h3>
+          <p className="mt-1 text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Khuyến mãi sẽ chỉ có hiệu lực trong khoảng thời gian này.
+          </p>
+          <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            <div className="sm:col-span-3">
+              <Label>Thời gian bắt đầu</Label>
               <DatePicker
-                selected={formData.end_date}
-                onChange={(date) =>
-                  setFormData((prev) => ({ ...prev, end_date: date }))
-                }
-                className="w-full p-2 rounded border"
-                placeholderText="Chọn ngày kết thúc"
+                selected={formData.start_date}
+                onChange={(date) => handleDateChange("start_date", date)}
                 showTimeSelect
                 dateFormat="Pp"
+                customInput={
+                  <CustomDatePickerInput hasError={!!errors.start_date} />
+                } // **[MỚI]**
               />
-              <CalendarIcon className="absolute right-3 top-3 text-gray-400" size={18} />
+              {errors.start_date && (
+                <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>
+              )}
+            </div>
+            <div className="sm:col-span-3">
+              <Label>Thời gian kết thúc</Label>
+              <DatePicker
+                selected={formData.end_date}
+                onChange={(date) => handleDateChange("end_date", date)}
+                showTimeSelect
+                dateFormat="Pp"
+                customInput={
+                  <CustomDatePickerInput hasError={!!errors.end_date} />
+                } // **[MỚI]**
+              />
+              {errors.end_date && (
+                <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>
+              )}
             </div>
           </div>
         </div>
       </div>
-
-      <div className="pt-6 flex justify-end">
+      <div className="mt-6 flex items-center justify-end gap-x-6">
+        <button
+          type="button"
+          className="text-sm font-semibold leading-6 text-slate-900 dark:text-slate-100"
+        >
+          Hủy
+        </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50"
         >
-          {isLoading ? "Đang lưu..." : isEditing ? "Cập Nhật" : "Tạo Khuyến Mãi"}
+          {isLoading
+            ? "Đang lưu..."
+            : isEditing
+            ? "Cập nhật khuyến mãi"
+            : "Tạo khuyến mãi"}
         </button>
       </div>
     </form>

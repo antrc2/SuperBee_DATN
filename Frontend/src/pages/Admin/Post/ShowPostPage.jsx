@@ -3,9 +3,12 @@ import { useState, useEffect } from "react";
 import api from "../../../utils/http";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
+import { ArrowLeft, Edit } from "lucide-react"; // Icons cho các nút hành động
 
 export default function ShowPostPage() {
+  // Thay đổi: Sử dụng id thay vì id để URL thân thiện hơn
   const { id } = useParams();
+  console.log("🚀 ~ ShowPostPage ~ id:", id);
   const navigate = useNavigate();
 
   const [postData, setPostData] = useState(null);
@@ -14,7 +17,7 @@ export default function ShowPostPage() {
 
   useEffect(() => {
     if (!id) {
-      setError("Không tìm thấy ID trong URL.");
+      setError("Không tìm thấy id bài viết trong URL.");
       setLoading(false);
       return;
     }
@@ -22,13 +25,14 @@ export default function ShowPostPage() {
     const fetchPost = async () => {
       try {
         setLoading(true);
+        // Thay đổi: Gọi API bằng id
         const response = await api.get(`/admin/post/${id}`);
         setPostData(response.data.data);
       } catch (err) {
         if (err.response?.status === 404) {
           setError("Bài viết không tồn tại.");
         } else {
-          setError("Lỗi khi tải bài viết.");
+          setError("Lỗi khi tải bài viết. Vui lòng thử lại.");
         }
         setPostData(null);
       } finally {
@@ -45,668 +49,147 @@ export default function ShowPostPage() {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 0:
-        return "Nháp";
-      case 1:
-        return "Đã xuất bản";
-      case 2:
-        return "Lưu trữ";
-      default:
-        return "Không xác định";
-    }
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 0:
-        return "#6b7280"; // gray
-      case 1:
-        return "#10b981"; // green
-      case 2:
-        return "#ef4444"; // red
-      default:
-        return "#6b7280";
-    }
-  };
-
-  // Renderer tùy chỉnh cho hình ảnh và video
-  const CustomRenderer = (props) => {
-  const src = props.src || "";
-  const alt = props.alt || "";
-
-  if (/\.(mp4|webm|ogg)$/i.test(src)) {
-    return (
-      <video
-        controls
-        style={{
-          display: "block",
-          marginLeft: "auto",
-          marginRight: "auto",
-          maxWidth: "100%",
-          height: "auto",
-        }}
-      >
-        <source src={src} type={`video/${src.split(".").pop()}`} />
-        Trình duyệt của bạn không hỗ trợ HTML5 video.
-      </video>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      style={{
-        display: "block",
-        marginLeft: "auto",
-        marginRight: "auto",
-        maxWidth: "100%",
-        height: "auto",
-      }}
-    />
+  // Các Component con để giao diện sạch sẽ hơn
+  const LoadingSpinner = () => (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400">
+      <div className="w-12 h-12 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin"></div>
+      <p className="mt-4 text-lg">Đang tải bài viết...</p>
+    </div>
   );
-};
 
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#f9fafb",
-          fontSize: "1.2rem",
-          color: "#4b5563",
-        }}
+  const ErrorDisplay = ({ message }) => (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-red-50 dark:bg-gray-900 p-6 text-center">
+      <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
+        Đã xảy ra lỗi
+      </p>
+      <p className="mt-2 text-gray-700 dark:text-gray-300">{message}</p>
+      <button
+        onClick={() => navigate("/admin/post")}
+        className="mt-6 inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition"
       >
-        Đang tải bài viết...
-      </div>
-    );
-  }
+        <ArrowLeft size={18} />
+        Quay lại danh sách
+      </button>
+    </div>
+  );
 
-  if (error) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#f9fafb",
-          fontSize: "1.2rem",
-          color: "#dc2626",
-          padding: "20px",
-          textAlign: "center",
-        }}
-      >
-        <p>Lỗi: {error}</p>
-        <button
-          onClick={() => navigate("/")}
-          style={{
-            marginTop: "20px",
-            padding: "10px 20px",
-            backgroundColor: "#3b82f6",
-            color: "white",
-            borderRadius: "8px",
-            border: "none",
-            cursor: "pointer",
-            fontSize: "1rem",
-            fontWeight: "600",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            transition: "background-color 0.3s ease",
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = "#2563eb")}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = "#3b82f6")}
-        >
-          Quay lại trang chủ
-        </button>
-      </div>
-    );
-  }
-
-  if (!postData) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "#f9fafb",
-          fontSize: "1.2rem",
-          color: "#4b5563",
-        }}
-      >
-        Không có dữ liệu bài viết để hiển thị.
-      </div>
-    );
-  }
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorDisplay message={error} />;
+  if (!postData)
+    return <ErrorDisplay message="Không có dữ liệu bài viết để hiển thị." />;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f9fafb",
-        fontFamily: "Inter, sans-serif",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "960px",
-          margin: "0 auto",
-          padding: "32px 16px",
-        }}
-      >
-        <div
-          style={{
-            backgroundColor: "white",
-            borderRadius: "12px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-            overflow: "hidden",
-          }}
-        >
-          {/* Header Section */}
-          <div style={{ padding: "32px", borderBottom: "1px solid #e5e7eb" }}>
-            <div
-              style={{
-                display: "flex",
-                gap: "8px",
-                marginBottom: "16px",
-                flexWrap: "wrap",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "6px 14px",
-                  backgroundColor: getStatusColor(postData.status),
-                  color: "white",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                }}
-              >
-                {getStatusText(postData.status)}
-              </span>
-              {postData.category && (
-                <span
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    padding: "6px 14px",
-                    backgroundColor: "#e0f2fe",
-                    color: "#0369a1",
-                    borderRadius: "20px",
-                    fontSize: "13px",
-                    fontWeight: "600",
-                    gap: "6px",
-                    border: "1px solid #bfdbfe",
-                  }}
-                >
-                  <span style={{ fontSize: "14px" }}>🏷️</span>
-                  {postData.category.name}
-                </span>
-              )}
-              <span
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "6px 14px",
-                  backgroundColor: "#f3f4f6",
-                  color: "#4b5563",
-                  borderRadius: "20px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  border: "1px solid #e5e7eb",
-                }}
-              >
-                ID: {postData.id}
-              </span>
-            </div>
-            <h1
-              style={{
-                fontSize: "3.2rem",
-                fontWeight: "800",
-                marginBottom: "24px",
-                lineHeight: "1.2",
-                color: "#1f2937",
-                wordBreak: "break-word",
-              }}
-            >
+    <div className="bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 min-h-screen font-sans transition-colors">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Thanh điều hướng nhỏ ở trên cùng */}
+        <nav className="mb-8 flex justify-between items-center">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+          >
+            <ArrowLeft size={18} />
+            Quay lại
+          </button>
+          <button
+            onClick={() => navigate(`/admin/post/${postData.id}/edit`)}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg shadow-sm hover:bg-indigo-700 transition-all"
+          >
+            <Edit size={16} />
+            Chỉnh sửa
+          </button>
+        </nav>
+
+        <article>
+          {/* Header của bài viết */}
+          <header className="mb-8 text-center">
+            {postData.category && (
+              <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-2">
+                {postData.category.name}
+              </p>
+            )}
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white leading-tight break-words">
               {postData.title}
             </h1>
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                alignItems: "center",
-                gap: "28px",
-                fontSize: "15px",
-                color: "#6b7280",
-              }}
-            >
+            <div className="mt-6 flex justify-center items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
               {postData.author && (
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div className="flex items-center gap-3">
                   <img
                     src={postData.author.avatar_url || "/placeholder.svg"}
                     alt={postData.author.username || "Tác giả"}
-                    style={{
-                      width: "48px",
-                      height: "48px",
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid #a78bfa",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                    }}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 dark:border-gray-700"
                   />
-                  <div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "6px",
-                        fontWeight: "700",
-                        color: "#1f2937",
-                        fontSize: "16px",
-                      }}
-                    >
-                      👤 {postData.author.username}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#9ca3af" }}>
-                      {postData.author.email}
-                    </div>
-                  </div>
+                  <span className="font-semibold text-gray-700 dark:text-gray-300">
+                    {postData.author.username}
+                  </span>
                 </div>
               )}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "16px" }}>📅</span> Tạo:{" "}
+              <span className="hidden sm:inline">•</span>
+              <time dateTime={postData.created_at}>
                 {formatDate(postData.created_at)}
-              </div>
-              {postData.created_at !== postData.updated_at && (
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "16px" }}>🔄</span> Cập nhật:{" "}
-                  {formatDate(postData.updated_at)}
-                </div>
-              )}
-              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                <span style={{ fontSize: "16px" }}>💬</span>{" "}
-                {postData.comments?.length || 0} bình luận
-              </div>
+              </time>
             </div>
-          </div>
+          </header>
 
-          {/* Thumbnail and Description Section */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "24px",
-              padding: "32px",
-              borderBottom: "1px solid #e5e7eb",
-              backgroundColor: "#ffffff",
-              borderRadius: "12px",
-              boxShadow: "0 6px 16px rgba(0,0,0,0.1)",
-            }}
-          >
-            <div style={{ borderRadius: "12px", overflow: "hidden" }}>
-              <p
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  marginBottom: "12px",
-                }}
-              >
-                Ảnh bìa:
-              </p>
+          {/* Ảnh bìa */}
+          {postData.image_thumbnail_url && (
+            <figure className="mb-8 rounded-xl overflow-hidden shadow-lg">
               <img
-                src={postData.image_thumbnail_url || "/placeholder.svg"}
+                src={postData.image_thumbnail_url}
                 alt={postData.title}
-                style={{
-                  width: "100%",
-                  height: "auto",
-                  maxHeight: "450px",
-                  objectFit: "cover",
-                  borderRadius: "12px",
-                }}
+                className="w-full h-auto object-cover"
               />
-            </div>
-            <div
-              style={{
-                padding: "20px",
-                backgroundColor: "#f9fafb",
-                borderRadius: "12px",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              <p
-                style={{
-                  fontSize: "18px",
-                  fontWeight: "600",
-                  color: "#1f2937",
-                  marginBottom: "12px",
-                }}
-              >
-                Mô tả:
-              </p>
-              <p
-                style={{ fontSize: "16px", lineHeight: "1.6", color: "#4b5563" }}
-              >
-                {postData.description || "Không có mô tả"}
-              </p>
-            </div>
-          </div>
-
-          {/* Content Section */}
-          <div style={{ padding: "32px", borderBottom: "1px solid #e5e7eb" }}>
-            <h2
-              style={{
-                fontSize: "28px",
-                fontWeight: "700",
-                marginBottom: "20px",
-                color: "#1f2937",
-              }}
-            >
-              Nội dung bài viết
-            </h2>
-            <div
-              style={{
-                backgroundColor: "#f9fafb",
-                padding: "28px",
-                borderRadius: "10px",
-                border: "1px solid #e5e7eb",
-                lineHeight: "1.7",
-              }}
-            >
-              <div className="prose">
-                <ReactMarkdown
-                  rehypePlugins={[rehypeRaw]}
-                  components={{
-                    img: CustomRenderer
-                  }}
-                >
-                  {postData.content || "Không có nội dung"}
-                </ReactMarkdown>
-
-              </div>
-            </div>
-          </div>
-
-          {/* Category Section */}
-          {postData.category && (
-            <div style={{ padding: "32px", borderBottom: "1px solid #e5e7eb" }}>
-              <h3
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  marginBottom: "20px",
-                  color: "#1f2937",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <span style={{ fontSize: "24px" }}>📚</span> Thông tin danh mục
-              </h3>
-              <div
-                style={{
-                  background: "linear-gradient(to right, #e0f7fa, #e0f2f7)",
-                  padding: "28px",
-                  borderRadius: "12px",
-                  border: "1px solid #b2ebf2",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
-                  <div style={{ flex: 1 }}>
-                    <h4
-                      style={{
-                        fontSize: "22px",
-                        fontWeight: "bold",
-                        color: "#00796b",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      {postData.category.name}
-                    </h4>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
-                        gap: "10px",
-                        fontSize: "15px",
-                        color: "#4b5563",
-                      }}
-                    >
-                      <p>
-                        <strong>Slug:</strong> {postData.category.slug}
-                      </p>
-                      <p>
-                        <strong>ID:</strong> {postData.category.id}
-                      </p>
-                      <p>
-                        <strong>Trạng thái:</strong>{" "}
-                        {postData.category.status === 1 ? "Hoạt động" : "Không hoạt động"}
-                      </p>
-                      <p>
-                        <strong>Tạo bởi:</strong> Admin {postData.category.created_by}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </figure>
           )}
 
-          {/* Author Section */}
-          {postData.author && (
-            <div style={{ padding: "32px" }}>
-              <h3
-                style={{
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  marginBottom: "20px",
-                  color: "#1f2937",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                }}
-              >
-                <span style={{ fontSize: "24px" }}>👨‍💻</span> Thông tin chi tiết tác giả
-              </h3>
-              <div
-                style={{
-                  background: "linear-gradient(to right, #ecfdf5, #d1fae5)",
-                  padding: "28px",
-                  borderRadius: "12px",
-                  border: "1px solid #a7f3d0",
-                  boxShadow: "0 4px 10px rgba(0,0,0,0.05)",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "flex-start", gap: "28px" }}>
-                  <div style={{ position: "relative" }}>
-                    <img
-                      src={postData.author.avatar_url || "/placeholder.svg"}
-                      alt={postData.author.username}
-                      style={{
-                        width: "100px",
-                        height: "100px",
-                        borderRadius: "50%",
-                        objectFit: "cover",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                        border: "3px solid #34d399",
-                      }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: "0px",
-                        right: "0px",
-                        width: "28px",
-                        height: "28px",
-                        backgroundColor: "#10b981",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        border: "2px solid white",
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: "14px",
-                          height: "14px",
-                          backgroundColor: "white",
-                          borderRadius: "50%",
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <h4
-                      style={{
-                        fontSize: "26px",
-                        fontWeight: "bold",
-                        color: "#1f2937",
-                        marginBottom: "16px",
-                      }}
-                    >
-                      {postData.author.username}
-                    </h4>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
-                        gap: "16px",
-                        fontSize: "15px",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>📧</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>Email</p>
-                          <p style={{ color: "#4b5563" }}>{postData.author.email}</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>📱</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>Số điện thoại</p>
-                          <p style={{ color: "#4b5563" }}>{postData.author.phone || "Không có"}</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>💰</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>Mã donate</p>
-                          <p
-                            style={{
-                              color: "#4b5563",
-                              fontFamily: "monospace",
-                              backgroundColor: "#e5e7eb",
-                              padding: "6px 10px",
-                              borderRadius: "6px",
-                              display: "inline-block",
-                              fontWeight: "bold",
-                            }}
-                          >
-                            {postData.author.donate_code || "Không có"}
-                          </p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>🆔</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>User ID</p>
-                          <p style={{ color: "#4b5563" }}>{postData.author.id}</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>🌐</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>Web ID</p>
-                          <p style={{ color: "#4b5563" }}>{postData.author.web_id || "Không có"}</p>
-                        </div>
-                      </div>
-                      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                        <span style={{ fontSize: "22px" }}>✅</span>
-                        <div>
-                          <p style={{ fontWeight: "600", color: "#1f2937" }}>Trạng thái</p>
-                          <p style={{ color: "#4b5563" }}>
-                            {postData.author.status === 1 ? "Hoạt động" : "Không hoạt động"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div
-                      style={{
-                        marginTop: "20px",
-                        paddingTop: "20px",
-                        borderTop: "1px solid #d1d5db",
-                      }}
-                    >
-                      <p style={{ fontSize: "13px", color: "#9ca3af" }}>
-                        Tham gia từ: {formatDate(postData.author.created_at)}
-                      </p>
-                    </div>
-                  </div>
+          {/* Nội dung bài viết với định dạng từ Tailwind Typography */}
+          <div className="prose prose-lg lg:prose-xl dark:prose-invert max-w-none prose-img:rounded-lg prose-img:shadow-md prose-video:rounded-lg prose-video:shadow-md prose-a:text-indigo-600 dark:prose-a:text-indigo-400 hover:prose-a:text-indigo-500">
+            <ReactMarkdown rehypePlugins={[rehypeRaw]}>
+              {postData.content || "Không có nội dung"}
+            </ReactMarkdown>
+          </div>
+
+          <hr className="my-12 border-gray-200 dark:border-gray-700" />
+
+          {/* Thông tin thêm ở cuối bài */}
+          <footer className="space-y-10">
+            {/* Thông tin danh mục */}
+            {postData.category && (
+              <div className="p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-bold mb-3 text-gray-800 dark:text-gray-100">
+                  Về danh mục: {postData.category.name}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {postData.category.description ||
+                    "Không có mô tả cho danh mục này."}
+                </p>
+              </div>
+            )}
+
+            {/* Thông tin tác giả */}
+            {postData.author && (
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                <img
+                  src={postData.author.avatar_url || "/placeholder.svg"}
+                  alt={postData.author.username}
+                  className="w-24 h-24 rounded-full object-cover shadow-md border-4 border-white dark:border-gray-800"
+                />
+                <div className="text-center sm:text-left">
+                  <p className="text-xs uppercase text-gray-500">Viết bởi</p>
+                  <h4 className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                    {postData.author.username}
+                  </h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    {postData.author.email}
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Footer */}
-          <div
-            style={{
-              padding: "24px",
-              backgroundColor: "#f9fafb",
-              borderTop: "1px solid #e5e7eb",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              fontSize: "14px",
-              color: "#9ca3af",
-              flexWrap: "wrap",
-              gap: "16px",
-              borderRadius: "0 0 12px 12px",
-            }}
-          >
-            <p>Bài viết #{postData.id} • Slug: {postData.slug}</p>
-            <p>Cập nhật lần cuối: {formatDate(postData.updated_at)}</p>
-          </div>
-        </div>
+            )}
+          </footer>
+        </article>
       </div>
-
-      {/* Inline CSS để căn giữa ảnh và video */}
-      <style>
-        {`
-          .prose img,
-          .prose video {
-            display: block;
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 100%;
-            height: auto;
-          }
-          .prose {
-            color: #374151;
-            font-size: 17px;
-            white-space: pre-wrap;
-          }
-        `}
-      </style>
     </div>
   );
 }

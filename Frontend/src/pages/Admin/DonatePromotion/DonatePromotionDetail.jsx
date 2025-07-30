@@ -1,8 +1,30 @@
+// DonatePromotionDetail.jsx (Phiên bản Dark Mode đơn giản)
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Gift, Users, Lock } from "lucide-react";
 import api from "../../../utils/http";
 import LoadingDomain from "@components/Loading/LoadingDomain";
+
+// Component Card để tái sử dụng, nay dùng màu trực tiếp
+const Card = ({ children, className = "" }) => (
+  <div
+    className={`bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg shadow-sm ${className}`}
+  >
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = "" }) => (
+  <div className={`p-6 ${className}`}>{children}</div>
+);
+const CardContent = ({ children, className = "" }) => (
+  <div className={`p-6 pt-0 ${className}`}>{children}</div>
+);
+const CardTitle = ({ children, className = "" }) => (
+  <h2 className={`text-xl font-semibold tracking-tight ${className}`}>
+    {children}
+  </h2>
+);
 
 export default function DonatePromotionDetailPage() {
   const { id } = useParams();
@@ -11,27 +33,29 @@ export default function DonatePromotionDetailPage() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Logic không đổi
     const fetchPromotion = async () => {
       try {
         const res = await api.get(`/admin/donate_promotions/${id}`);
         setPromotion(res.data.data);
       } catch (err) {
-        console.error("Lỗi khi tải dữ liệu:", err);
         setError("Không thể tải chi tiết khuyến mãi.");
       } finally {
         setLoading(false);
       }
     };
-
     fetchPromotion();
   }, [id]);
 
   if (loading) return <LoadingDomain />;
   if (error || !promotion) {
     return (
-      <div className="text-center text-red-600 bg-red-50 p-4 rounded-md">
+      <div className="text-center bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 p-4 rounded-md">
         <p>{error || "Không tìm thấy dữ liệu khuyến mãi."}</p>
-        <Link to="/admin/donatePromotions" className="mt-4 inline-block text-blue-600 hover:underline">
+        <Link
+          to="/admin/donatePromotions"
+          className="mt-4 inline-block text-blue-600 dark:text-blue-400 hover:underline"
+        >
           Quay lại danh sách
         </Link>
       </div>
@@ -40,107 +64,143 @@ export default function DonatePromotionDetailPage() {
 
   const { creator, web } = promotion;
 
+  const InfoRow = ({ label, value, children }) => (
+    <div>
+      <dt className="text-sm font-medium text-slate-500 dark:text-slate-400">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm text-slate-900 dark:text-slate-50">
+        {children || value}
+      </dd>
+    </div>
+  );
+
+  const StatusBadge = ({ active }) =>
+    active ? (
+      <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
+        Hoạt động
+      </span>
+    ) : (
+      <span className="ml-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300">
+        Tạm tắt
+      </span>
+    );
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Link
-          to="/admin/donatePromotions"
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft size={20} />
-          Quay lại danh sách
-        </Link>
-      </div>
+      <Link
+        to="/admin/donatePromotions"
+        className="flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+      >
+        <ArrowLeft size={20} />
+        Quay lại danh sách
+      </Link>
 
-      <h1 className="text-2xl font-bold text-gray-900">
-        Thông tin khuyến mãi #{promotion.id}
+      <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+        Chi tiết khuyến mãi:{" "}
+        <span className="text-blue-600 dark:text-blue-400">
+          {creator.donate_code}
+        </span>
       </h1>
 
-      {/* Thông tin số liệu */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-lg border transition-all bg-green-400/10 border-green-400/30 shadow">
-          <p className="text-sm text-red-700">Mức giảm</p>
-          <p className="text-2xl font-bold text-red-800">{promotion.amount}%</p>
-        </div>
-        <div className="p-4 rounded-lg border transition-all bg-orange-400/10 border-orange-400/30 shadow">
-          <p className="text-sm text-yellow-700">Đã sử dụng</p>
-          <p className="text-2xl font-bold text-yellow-800">{promotion.total_used} lượt</p>
-        </div>
-        <div className="p-4 rounded-lg border transition-all bg-gray-400/10 border-gray-400/30 shadow">
-          <p className="text-sm text-blue-700">Giới hạn mỗi người</p>
-          <p className="text-2xl font-bold text-blue-800">
-            {promotion.per_user_limit === -1 ? "Không giới hạn" : promotion.per_user_limit}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <h3 className="text-sm font-medium">Mức giảm</h3>
+            <Gift className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600 dark:text-red-400">
+              {promotion.amount}%
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <h3 className="text-sm font-medium">Đã sử dụng</h3>
+            <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {promotion.total_used} lượt
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <h3 className="text-sm font-medium">Giới hạn mỗi người</h3>
+            <Lock className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {promotion.per_user_limit === -1
+                ? "Vô hạn"
+                : `${promotion.per_user_limit} lần`}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Grid chính */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Thông tin khuyến mãi */}
-        <div className="col-span-2 rounded-lg border shadow transition-all border-themed/50 p-6 shadow p-6 space-y-2">
-          <h2 className="text-xl font-semibold mb-4">Thông tin mã khuyến mãi</h2>
-          <div className="grid sm:grid-cols-2 gap-y-3 text-sm">
-            <div><span className="font-medium text-sm-500">Mã khuyến mãi:</span> {creator.donate_code}</div>
-            <div><span className="font-medium text-sm-500">Trạng thái:</span> 
-              {promotion.status === 1 ? (
-                <span className="ml-1 px-2 py-0.5 rounded-full text-green-800 bg-green-100 text-xs font-medium">Hoạt động</span>
-              ) : (
-                <span className="ml-1 px-2 py-0.5 rounded-full text-red-800 bg-red-100 text-xs font-medium">Tạm tắt</span>
-              )}
-            </div>
-            <div><span className="font-medium text-sm-500">Thời gian bắt đầu:</span> {new Date(promotion.start_date).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-sm-500">Thời gian kết thúc:</span> {new Date(promotion.end_date).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-sm-500">Giới hạn tổng:</span> {promotion.usage_limit === -1 ? "Không giới hạn" : promotion.usage_limit}</div>
-            <div><span className="font-medium text-sm-500">Ngày tạo:</span> {new Date(promotion.created_at).toLocaleString("vi-VN")}</div>
-            <div><span className="font-medium text-sm-500">Ngày cập nhật:</span> {new Date(promotion.updated_at).toLocaleString("vi-VN")}</div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Thông tin chi tiết</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <InfoRow label="Mã khuyến mãi" value={creator.donate_code} />
+              <InfoRow label="Trạng thái">
+                <StatusBadge active={promotion.status === 1} />
+              </InfoRow>
+              <InfoRow
+                label="Bắt đầu"
+                value={new Date(promotion.start_date).toLocaleString("vi-VN")}
+              />
+              <InfoRow
+                label="Kết thúc"
+                value={new Date(promotion.end_date).toLocaleString("vi-VN")}
+              />
+              <InfoRow
+                label="Giới hạn tổng"
+                value={
+                  promotion.usage_limit === -1
+                    ? "Không giới hạn"
+                    : `${promotion.usage_limit} lượt`
+                }
+              />
+              <InfoRow
+                label="Ngày tạo"
+                value={new Date(promotion.created_at).toLocaleString("vi-VN")}
+              />
+            </dl>
+          </CardContent>
+        </Card>
 
-        {/* Người tạo */}
-        <div className="rounded-lg border shadow transition-all border-themed/50 shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Người tạo</h2>
-          <div className="flex items-center gap-3 mb-4">
-            <img
-              src={creator.avatar_url}
-              alt="avatar"
-              className="w-12 h-12 rounded-full object-cover"
-            />
-            <div>
-              <p className="text-sm font-medium">{creator.username}</p>
-              <p className="text-xs text-sm-500">ID: {creator.id}</p>
+        <Card>
+          <CardHeader>
+            <CardTitle>Người tạo</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <img
+                src={creator.avatar_url}
+                alt="avatar"
+                className="w-14 h-14 rounded-full object-cover border-2 border-slate-200 dark:border-slate-700"
+              />
+              <div>
+                <p className="font-semibold">{creator.username}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  ID: {creator.id}
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="text-sm space-y-1 text-xl-700">
-            <p>Email: {creator.email}</p>
-            <p>SĐT: {creator.phone || "Chưa có"}</p>
-            <p>Trạng thái: 
-              {creator.status === 1 ? (
-                <span className="ml-1 text-green-600 font-medium">Hoạt động</span>
-              ) : (
-                <span className="ml-1 text-red-600 font-medium">Ngưng</span>
-              )}
-            </p>
-          </div>
-        </div>
+            <dl className="space-y-2 text-sm">
+              <InfoRow label="Email" value={creator.email} />
+              <InfoRow label="SĐT" value={creator.phone || "Chưa có"} />
+            </dl>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Thông tin website */}
-      {web && (
-        <div className="rounded-lg border shadow transition-all border-themed/50 shadow p-6 mt-6">
-          <h2 className="text-xl font-semibold mb-4">Thông tin website</h2>
-          <div className="grid sm:grid-cols-2 gap-4 text-sm text-xl-700">
-            <div><span className="font-medium text-sm-500">Subdomain:</span> {web.subdomain}</div>
-            <div><span className="font-medium text-sm-500">API Key:</span> <span className="font-mono">{web.api_key.slice(0, 8)}...</span></div>
-            <div><span className="font-medium text-sm-500">Trạng thái:</span> 
-              {web.status === 1 ? (
-                <span className="ml-1 text-green-600 font-medium">Hoạt động</span>
-              ) : (
-                <span className="ml-1 text-red-600 font-medium">Tạm tắt</span>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

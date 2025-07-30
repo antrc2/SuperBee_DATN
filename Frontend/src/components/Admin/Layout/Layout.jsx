@@ -3,8 +3,7 @@
 import React, { useState } from "react";
 import Pagination from "../../Pagination/Pagination";
 import FilterModal from "./FilterModal";
-// Thay đổi: import icon từ lucide-react
-import { Plus, Filter, Search, ChevronLeft } from "lucide-react";
+import { Plus, Filter, Search, ChevronLeft, Sun, Moon } from "lucide-react";
 
 const Layout = ({
   title,
@@ -14,8 +13,8 @@ const Layout = ({
   showBrowse = false,
   onBack,
   onAdd,
-  onshow, // Giả sử bạn có hàm này để hiển thị sản phẩm
-  onApprove, // Giả sử bạn có hàm này để duyệt sản phẩm  
+  onshow,
+  onApprove,
   onLocalSearch,
   initialSearchTermLocal,
   paginationMeta,
@@ -27,123 +26,137 @@ const Layout = ({
   filterConfig,
   autoPostButtonLabel,
   showfilter = true,
-  showAuToPost= false, // Giả sử bạn có tùy chọn này
+  showAuToPost = false,
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col bg-xl-100">
-      <div className="section flex-grow flex flex-col">
-        <div className="section p-6 flex-grow flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              {showBackButton && (
-                <button
-                  onClick={onBack}
-                  className="flex items-center gap-2 px-4 py-2 bg-sm border border-xl-300 text-xl-700 rounded-md hover:bg-xl-50 transition-colors"
-                >
-                  {/* Thay đổi: Sử dụng icon <ChevronLeft /> */}
-                  <ChevronLeft size={18} />
-                  Quay lại
-                </button>
-              )}
-              <h2 className="text-2xl font-bold text-xl-800">{title}</h2>
+    <div className="flex flex-col flex-1 overflow-x-hidden bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+      <header className="bg-white dark:bg-gray-800 shadow-sm py-4 px-4 sm:px-6">
+        <div className="flex items-center justify-between gap-3">
+          <div className=" items-center gap-2">
+            {showBackButton && (
+              <button
+                onClick={onBack}
+                className="flex items-center justify-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium p-2 rounded-md transition-colors"
+              >
+                <ChevronLeft size={20} />
+                <span className="hidden sm:inline ml-1">Quay lại</span>
+              </button>
+            )}
+            <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
+                {title}
+              </h1>
+              <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Tạo và quản lý các mã giảm giá cho sản phẩm.
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                {/* Thay đổi: Sử dụng icon <Search /> */}
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Local Search */}
+            <div className="relative hidden md:block">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                 <Search
+                  className="text-gray-400 dark:text-gray-500"
                   size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-                />
-                <input
-                  type="text"
-                  placeholder="Tìm kiếm nhanh (FE)..."
-                  value={initialSearchTermLocal}
-                  onChange={(e) => onLocalSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 border border-themed/50 text-sm-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
                 />
               </div>
-              {showfilter && (
-
-              <div className="relative">
-                <button
-                  onClick={() => setIsFilterModalOpen(true)}
-                  className="relative flex items-center gap-2 px-4 py-2 bg-sm border border-xl-300 text-xl-700 rounded-md hover:bg-xl-50 transition-colors"
-                >
-                  {/* Thay đổi: Sử dụng icon <Filter /> */}
-                  <Filter size={16} />
-                  <span>Bộ lọc</span>
-                  {activeFilterCount > 0 && (
-                    <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-indigo-600 text-sm text-xs rounded-full">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-              </div>
-              )
-              }
-
-              {showAddButton && (
-              
-                <button
-                  onClick={onAdd}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {/* Thay đổi: Sử dụng icon <Plus /> */}
-                  <Plus size={18} />
-                  Thêm mới
-                </button>
-
-               
-              )}
-              {showAuToPost && (
-              
-                <button
-                  onClick={onshow}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {/* Thay đổi: Sử dụng icon <Plus /> */}
-                  <Plus size={18} />
-                  {autoPostButtonLabel || "Bật tự động đăng bài"}
-                </button>
-
-               
-              )}
-              {showBrowse && (
-                
-                
-                <button
-                  onClick={onApprove}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-whitey rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Duyệt SP
-                </button>
-             
-              )}
+              <input
+                type="text"
+                placeholder="Tìm kiếm..."
+                value={initialSearchTermLocal}
+                onChange={(e) => onLocalSearch(e.target.value)}
+                className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 p-2.5 transition"
+              />
             </div>
-          </div>
-          {isFilterModalOpen && (
-            <FilterModal
-              isOpen={isFilterModalOpen}
-              onClose={() => setIsFilterModalOpen(false)}
-              onApplyFilters={onApplyFilters}
-              onResetFilters={onResetFilters}
-              initialFilters={initialFilters}
-              filterConfig={filterConfig}
-            />
-          )}
-          <div className="flex-grow bg-sm p-6 rounded-lg shadow-sm">
-            {children}
-          </div>
 
-          {paginationMeta && paginationMeta.last_page > 1 && (
-            <div className="mt-6 flex justify-end">
+            {/* Filter Button */}
+            {showfilter && (
+              <button
+                onClick={() => setIsFilterModalOpen(true)}
+                className="relative flex items-center bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium py-2 px-3 rounded-md transition-colors"
+              >
+                <Filter size={18} />
+                <span className="hidden sm:inline ml-2">Bộ lọc</span>
+                {activeFilterCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Add Button */}
+            {showAddButton && (
+              <button
+                onClick={onAdd}
+                className="flex items-center bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-3 sm:px-4 rounded-md transition-colors"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline ml-2">Thêm mới</span>
+              </button>
+            )}
+
+            {showAuToPost && (
+              <button
+                onClick={onshow}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition duration-200 ease-in-out"
+              >
+                <Plus className="mr-2 inline-block" size={18} />
+                {autoPostButtonLabel || "Bật tự động đăng bài"}
+              </button>
+            )}
+
+            {showBrowse && (
+              <button
+                onClick={onApprove}
+                className="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-md transition duration-200 ease-in-out"
+              >
+                Duyệt SP
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Search bar for mobile */}
+        <div className="relative mt-4 md:hidden">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="text-gray-400" size={18} />
+          </div>
+          <input
+            type="text"
+            placeholder="Tìm kiếm..."
+            value={initialSearchTermLocal}
+            onChange={(e) => onLocalSearch(e.target.value)}
+            className="bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-10 p-2.5 transition"
+          />
+        </div>
+      </header>
+
+      <main className="flex-1 p-4 sm:p-6 overflow-y-auto">
+        {isFilterModalOpen && (
+          <FilterModal
+            isOpen={isFilterModalOpen}
+            onClose={() => setIsFilterModalOpen(false)}
+            onApplyFilters={onApplyFilters}
+            onResetFilters={onResetFilters}
+            initialFilters={initialFilters}
+            filterConfig={filterConfig}
+          />
+        )}
+        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+          <div className="p-4 sm:p-6">{children}</div>
+        </div>
+        {paginationMeta && paginationMeta.last_page > 1 && (
+          <div className="mt-4 bg-white dark:bg-gray-800 shadow-md rounded-lg overflow-hidden">
+            <div className="py-3 px-4 sm:px-6">
               <Pagination meta={paginationMeta} onPageChange={onPageChange} />
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };

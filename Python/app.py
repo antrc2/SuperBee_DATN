@@ -1,22 +1,31 @@
-from fastapi import FastAPI, UploadFile, File, Form, Request
 from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
+# from typing import List
 import uvicorn
-from threading import Thread
-from controller.S3Controller import S3Controller
-from cronjob import queue_money, event
-from controller.TransactionController import Transaction
-from controller.AssistantController import chat
+# from threading import Thread
+from Controller.S3Controller import S3Controller
+# from io import BytesIO
+# from cronjob import queue_money, event
+# from controller.ChatAssistance import router as chat_router
+# from Controller.TransactionController import Transaction
+# from Controller.AssistantController import chat
 import os
+import requests
+import json
+from Controller.NewsAgentController import generate_and_post_article
 
 from dotenv import load_dotenv
+from Controller.NewsAgentController import get_random_topic_from_api
 load_dotenv()
 
 username = os.getenv("MBBANK_USERNAME")
 password = os.getenv("MBBANK_PASSWORD")
+categories_list_api_url = os.getenv("BACKEND_CATEGORIES_LIST_API_URL")
+# print(username)
+# print(password)
 app = FastAPI()
-s3_client = S3Controller()
+# s3_client = S3Controller()
 
 
 
@@ -30,67 +39,68 @@ app.add_middleware(
 )
 
 
-@app.post("/assistant/chat")
-async def doibuonjqk(request: Request):
-    data = await request.json()
-    return StreamingResponse(
-        chat(data['messages']),
-        media_type="text/event-stream",
-        headers={
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive',
-                'Access-Control-Allow-Origin': '*',
-                'X-Accel-Buffering': 'no'
-            }
-    )
+# @app.post("/assistant/chat")
+# async def doibuonjqk(request: Request):
+#     data = await request.json()
+#     return StreamingResponse(
+#         chat(data['messages']),
+#         media_type="text/event-stream",
+#         headers={
+#                 'Cache-Control': 'no-cache',
+#                 'Connection': 'keep-alive',
+#                 'Access-Control-Allow-Origin': '*',
+#                 'X-Accel-Buffering': 'no'
+#             }
+#     )
 
 
 
-@app.get('/transaction/bank_list')
-async def getBankList():
-    transaction = Transaction(username=username,password=password)
-    return {
-        "status": True,
-        "message": "Lấy danh sách ngân hàng thành công",
-        "data": transaction.getListBank()
-    }
+
+# @app.get('/transaction/bank_list')
+# async def getBankList():
+#     transaction = Transaction(username=username,password=password)
+#     return {
+#         "status": True,
+#         "message": "Lấy danh sách ngân hàng thành công",
+#         "data": transaction.getListBank()
+#     }
 
 
-@app.get('/transaction/bulk_payment')
-async def get_bulk_payment():
-    transaction = Transaction(username=username,password=password)
-    bulks = transaction.getBulkPaymentStatus()
-    return {
-        "status": True,
-        'message': "Lấy danh sách chuyển tiền theo lô thành công",
-        'data': bulks
-    }
+# @app.get('/transaction/bulk_payment')
+# async def get_bulk_payment():
+#     transaction = Transaction(username=username,password=password)
+#     bulks = transaction.getBulkPaymentStatus()
+#     return {
+#         "status": True,
+#         'message': "Lấy danh sách chuyển tiền theo lô thành công",
+#         'data': bulks
+#     }
 
-@app.get('/transaction/bulk_payment_detail/{id}')
-async def get_bulk_payment_detail(id: str):
-    transaction = Transaction(username=username,password=password)
-    bulk_detail = transaction.getBulkPaymentDetail(id) 
-    return {
-        'status': True,
-        'message': "Xem chi tiết chuyển tiền theo lô thành công",
-        "data": bulk_detail
-    }
+# @app.get('/transaction/bulk_payment_detail/{id}')
+# async def get_bulk_payment_detail(id: str):
+#     transaction = Transaction(username=username,password=password)
+#     bulk_detail = transaction.getBulkPaymentDetail(id) 
+#     return {
+#         'status': True,
+#         'message': "Xem chi tiết chuyển tiền theo lô thành công",
+#         "data": bulk_detail
+#     }
 
 
-@app.post("/upload_file")
-async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
-    object_name = f"uploads/{folder}/"
+# @app.post("/upload_file")
+# async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
+#     object_name = f"uploads/{folder}/"
 
-    # # Đọc nội dung file vào bộ nhớ
-    # file_content = BytesIO(await file.read())
+#     # # Đọc nội dung file vào bộ nhớ
+#     # file_content = BytesIO(await file.read())
 
-    response = await s3_client.add(file,object_name,thread)
+#     response = await s3_client.add(file,object_name,thread)
 
-    return response 
+#     return response 
 
-@app.post("/upload_files")
-async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
-    object_name = f"uploads/{folder}/"
+# @app.post("/upload_files")
+# async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
+#     object_name = f"uploads/{folder}/"
     # print(files)
     # for file in files:
     #     print(f"Name: {file.filename}, Type: {file.content_type}")
@@ -107,34 +117,47 @@ async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), t
     #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
-    response = await s3_client.uploads(files,object_name,thread)
-    return response
+    # response = await s3_client.uploads(files,object_name,thread)
+    # return response
     # return "Xong"
 
 
-@app.post("/delete_file")
-async def delete(request: Request):
-    data = await request.json()
+# @app.post("/delete_file")
+# async def delete(request: Request):
+#     data = await request.json()
 
-    s3_client.delete(data['path'])
+#     s3_client.delete(data['path'])
 
-    return {"status": True}
+#     return {"status": True}
 
-@app.post("/delete_files")
-async def deletes(request: Request):
-    data = await request.json()
-    # print(data)
-    s3_client.deletes(data['paths'])
-    return {'status': True}
+# @app.post("/delete_files")
+# async def deletes(request: Request):
+#     data = await request.json()
+#     # print(data)
+#     s3_client.deletes(data['paths'])
+#     return {'status': True}
 
-@app.on_event("startup")
-def start_background_thread():
-    Thread(target=queue_money, args=(), daemon=True).start()
+# @app.on_event("startup")
+# def start_background_thread():
+#     Thread(target=queue_money, args=(), daemon=True).start()
 
-@app.on_event("shutdown")
-def stop_background_thread():
-    print("Shutting down, stopping background thread...")
-    event.set()
+# @app.on_event("shutdown")
+# def stop_background_thread():
+#     print("Shutting down, stopping background thread...")
+#     event.set()
 
+
+@app.post("/agent/create-post", tags=["News Agent"])
+def create_facebook_post(background_tasks: BackgroundTasks):
+    background_tasks.add_task(generate_and_post_article)
+    
+    return {
+        "status": True,
+        "message": "Đã nhận yêu cầu. Agent đang bắt đầu quá trình tạo và đăng bài trong nền."
+    }
+
+# --- Chạy server ---
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=5000)    
+
+

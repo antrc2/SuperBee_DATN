@@ -10,3 +10,11 @@ PyJWT
 Pillow
 mbbank-lib
 playwright
+fastapi
+uvicorn[standard]
+python-dotenv
+requests
+beautifulsoup4
+googlesearch-python
+google-generativeai
+facebook-sdk

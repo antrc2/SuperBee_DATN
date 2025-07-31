@@ -6,12 +6,14 @@ from dotenv import load_dotenv
 from datetime import datetime
 import asyncio
 from playwright.async_api import async_playwright
-import copy
 from threading import Thread
+import copy
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 chat_model = os.getenv("CHAT_MODEL")
 python_url = os.getenv("PYTHON_URL")
+# frontend_url = os.getenv("FRONTEND_URL",'')
+backend_api = os.getenv("BACKEND_API",'http://localhost/api')
 client = OpenAI(
 
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -24,10 +26,10 @@ def now():
     return now
 
 def search_product_detail_by_sku(id):
-    response = requests.get(f"http://localhost:8000/api/assistant/products/{id}").text
+    response = requests.get(f"{backend_api}/assistant/products/{id}").text
     return response
 def get_list_product_by_category(id):
-    response = requests.get(f"http://localhost:8000/api/assistant/categories/{id}").text
+    response = requests.get(f"{backend_api}/assistant/categories/{id}").text
     return response
 def sitemap_crawl(url):
     response = requests.get(url).text
@@ -310,9 +312,48 @@ def execute_agent(agent_name,messages):
 #     return tools
 
 def chat(messages):
-    categories = requests.get("http://localhost:8000/api/assistant/categories").text
-    products = requests.get("http://localhost:8000/api/assistant/products").text
-    post_sitemaps = requests.get("http://localhost:8000/api/tin-tuc.xml").text
+    results = {}
+
+    def fetch_categories():
+        results['categories'] = requests.get(
+            '{backend_api}/assistant/categories'
+        ).text
+
+    def fetch_products():
+        results['products'] = requests.get(
+            '{backend_api}/assistant/products'
+        ).text
+
+    def fetch_sitemaps():
+        results['post_sitemaps'] = requests.get(
+            '{backend_api}/tin-tuc.xml'
+        ).text
+    def get_sitemap():
+        results['sitemap'] = requests.get(
+            '{backend_api}/sitemap.xml'
+        ).text
+
+    # Tạo các Thread
+    threads = [
+        Thread(target=fetch_categories),
+        Thread(target=fetch_products),
+        Thread(target=fetch_sitemaps),
+        Thread(target=get_sitemap),
+    ]
+
+    # Bắt đầu tất cả
+    for t in threads:
+        t.start()
+
+    # Chờ đến khi tất cả hoàn thành
+    for t in threads:
+        t.join()
+
+    # Lúc này results đã có
+    categories    = results['categories']
+    products      = results['products']
+    post_sitemaps = results['post_sitemaps']
+    sitemap       = results['sitemap']
     system_content = {
             "role": "system",
             "content": f"""Bạn tên là 13Bee. Trong đó, số '13' là con số tâm linh của FPT, 'Bee' là linh vật của trường Cao đẳng FPT Polytechnic. Bạn là một nhân viên tư vấn và bán hàng của Website bán tài khoản game SuperBee.
@@ -323,6 +364,8 @@ def chat(messages):
             {products}
             Dưới đây là danh sách tin tức của trang web:
             {post_sitemaps}
+            Dưới đây là sitemap của cả trang web:
+            {sitemap}
             Đưa ra link và ảnh ở dạng markdown cho tôi
             """
         }
@@ -330,7 +373,7 @@ def chat(messages):
     messages = [system_content] + messages
 
     prepare_end = False
-    type_ = ['category','product','news']
+    router = ['category','product','news','other']
     tool_choice = 'required'
     user_content = copy.deepcopy(messages)
     while True:
@@ -345,7 +388,7 @@ def chat(messages):
                         "properties": {
                             "router": {
                                 "type": "string",
-                                "enum": type_,
+                                "enum": router,
                                 "description": "Phân loại câu hỏi theo danh mục"
                             },
                             "content": {
@@ -384,10 +427,9 @@ def chat(messages):
                     tool_call = False
                     generated_text += delta.content
                     messages[-1]['content'] = generated_text
-                    yield {
-                        "id": chunk.id,
+                    yield json.dumps({
                         "messages": messages
-                    }
+                    })
                     print(f"Final Message: {messages}")
                     # print(delta.content, end="", flush=True)
                     # print(f"generated_text: {generated_text}")
@@ -405,10 +447,9 @@ def chat(messages):
                                 }
                             }]
                         })
-                        yield {
-                            "id": chunk.id,
+                        yield json.dumps({
                             "messages": messages
-                        }
+                        })
                         print(f"ID Chat: {chunk.id}")
                         # print(f"Message: {messages}")
                         print(f"\n[TOOL CALL]: {tool_call.function.name} - {tool_call.function.arguments}")
@@ -424,10 +465,9 @@ def chat(messages):
                             "content": result
 
                         })
-                        yield {
-                            "id": chunk.id,
+                        yield json.dumps({
                             "messages": messages
-                        }
+                        })
                     messages.append(
                         {
                             "role": "assistant",

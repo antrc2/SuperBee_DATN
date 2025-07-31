@@ -16,7 +16,7 @@ class AdminDonatePromotionController extends Controller
     {
         DonatePromotion::where('end_date', '<', now())
             ->where('status', 1)
-            ->update(['status' => 0]);
+            ->update(['status' => 2]);
     }
     public function index(Request $request)
     {

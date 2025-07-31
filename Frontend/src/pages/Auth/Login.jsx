@@ -33,8 +33,7 @@ export default function LoginForm() {
     }
 
     const script = document.createElement("script");
-    script.src =
-      "https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback";
+    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&rnd=${Date.now()}`;
     script.async = true;
     script.defer = true;
     document.body.appendChild(script);
@@ -75,18 +74,26 @@ export default function LoginForm() {
   }, [captchaReady, captchaRefreshKey]);
 
 
+  // const resetCaptcha = () => {
+  //   if (window.turnstile && turnstileWidgetId.current) {
+  //     window.turnstile.reset(turnstileWidgetId.current);
+  //   }
+  //   setCaptchaToken("");
+  //   setCaptchaRefreshKey(prev => prev + 1);
+  // };
   const resetCaptcha = () => {
-    if (window.turnstile && turnstileWidgetId.current) {
-      window.turnstile.reset(turnstileWidgetId.current);
+    if (window.turnstile && turnstileWidgetId.current !== null) {
+      window.turnstile.remove(turnstileWidgetId.current);
+      turnstileWidgetId.current = null;
     }
     setCaptchaToken("");
-    setCaptchaRefreshKey(prev => prev + 1);
+    setCaptchaRefreshKey((prev) => prev + 1);
   };
-
   if (user) return <Navigate to="/" replace />;
 
   const onSubmit = async (data) => {
     clearErrors();
+    resetCaptcha(); 
     if (!captchaToken) {
       setError("captcha", {
         type: "manual",
@@ -102,8 +109,6 @@ export default function LoginForm() {
     });
 
     resetCaptcha();
-
-    console.log("[Login response] Result:", result);
 
     if (!result.success) {
       // Xử lý lỗi validation từ backend
@@ -255,7 +260,7 @@ export default function LoginForm() {
                 <button
                   type="submit"
                   className="font-heading flex items-center justify-center w-full px-4 py-3 text-sm font-bold rounded-lg transition-all text-accent-contrast bg-gradient-button hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading || !captchaToken}
+                  disabled={loading || (captchaReady && !captchaToken)}
                 >
                   {loading ? "Đang đăng nhập..." : "Đăng Nhập"}
                 </button>

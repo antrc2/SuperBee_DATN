@@ -4,10 +4,12 @@ namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
 use App\Models\Wallet;
+use App\Models\WalletTransaction;
 use App\Models\Withdraw;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class UserWithdrawController extends Controller
@@ -15,14 +17,13 @@ class UserWithdrawController extends Controller
     public function balance(Request $request)
     {
         try {
-            $wallet = Wallet::where("user_id", $request->user_id)->get();
-            return response()->json(
-                [
-                    "status" => True,
-                    "message" => "Lấy số dư thành công",
-                    "data" => $wallet->balance
-                ]
-            );
+            $balance = Wallet::where("user_id", $request->user_id)->value('balance');
+
+            return response()->json([
+                "status" => true,
+                "message" => "Lấy số dư thành công",
+                "data" => $balance
+            ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
@@ -60,7 +61,7 @@ class UserWithdrawController extends Controller
             // $responses = json_encode($responses);
             // var_dump($responses);
             $allowedBanks = [];
-            foreach($responses['data'] as $response){
+            foreach ($responses['data'] as $response) {
                 $allowedBanks[] = $response['name'];
             }
             return $allowedBanks;
@@ -115,21 +116,22 @@ class UserWithdrawController extends Controller
         //     'Quân đội (MB)'
         // ];
     }
-    public function allowBanks(){
+    public function allowBanks()
+    {
         try {
             $allowedBanks = $this->getAllowedBanks();
             return response()->json([
-                "status"=>True,
-                "message"=>"Lấy danh sách ngân hàng thành công",
-                "data"=>$allowedBanks
+                "status" => True,
+                "message" => "Lấy danh sách ngân hàng thành công",
+                "data" => $allowedBanks
             ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
-                "status"=>False,
-                'message'=>"Đã xảy ra lỗi",
-                "data"=>[]
-            ],500);
+                "status" => False,
+                'message' => "Đã xảy ra lỗi",
+                "data" => []
+            ], 500);
         }
     }
 
@@ -201,55 +203,51 @@ class UserWithdrawController extends Controller
 
     public function update(Request $request, $id)
     {
+        // Giữ nguyên phần validate, nhưng bỏ 'user_id' vì sẽ lấy từ user đã xác thực
         $allowedBanks = $this->getAllowedBanks();
-
-        $request->validate([
-            'user_id' => 'required|exists:withdraws,user_id',
-            'amount' => 'nullable|numeric|min:10000',
-            'bank_account_number' => 'nullable|string|max:50',
+        $validator = Validator::make($request->all(), [
+            'bank_account_number' => 'required|string|max:50',
             'bank_name' => [
-                'nullable',
+                'required',
                 'string',
                 'max:100',
                 function ($attribute, $value, $fail) use ($allowedBanks) {
                     if ($value && !in_array($value, $allowedBanks)) {
-                        $fail("Trường {$attribute} không hợp lệ. Vui lòng chọn từ danh sách ngân hàng được phép.");
+                        $fail("Ngân hàng không hợp lệ.");
                     }
                 }
             ],
-            'account_holder_name' => 'nullable|string|max:255',
+            'account_holder_name' => 'required|string|max:255',
             'note' => 'nullable|string|max:500',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Dữ liệu không hợp lệ.',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         try {
+            // Tìm yêu cầu rút tiền của user đã đăng nhập
             $withdraw = Withdraw::where('id', $id)
-                ->where('user_id', $request->user_id)
-                ->where('status', 0)
+                ->where('user_id', $request->user()->id) // Lấy user ID từ request đã xác thực
+                ->where('status', 0) // Chỉ cho phép sửa yêu cầu đang chờ
                 ->first();
 
             if (!$withdraw) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Không thể cập nhật. Yêu cầu không tồn tại hoặc đã được xử lý.',
-                ], 400);
+                ], 404);
             }
 
-            if ($request->has('amount')) {
-                $withdraw->amount = $request->amount;
-            }
-            if ($request->has('bank_account_number')) {
-                $withdraw->bank_account_number = $request->bank_account_number;
-            }
-            if ($request->has('bank_name')) {
-                $withdraw->bank_name = $request->bank_name;
-            }
-            if ($request->has('account_holder_name')) {
-                $withdraw->account_holder_name = $request->account_holder_name;
-            }
-            if ($request->has('note')) {
-                $withdraw->note = $request->note;
-            }
+            // Lấy tất cả dữ liệu đã được validate (sẽ không chứa 'amount')
+            $validatedData = $validator->validated();
 
+            // Cập nhật các trường được phép
+            $withdraw->fill($validatedData);
             $withdraw->save();
 
             return response()->json([
@@ -258,9 +256,11 @@ class UserWithdrawController extends Controller
                 'data' => $withdraw
             ]);
         } catch (\Throwable $th) {
+            // Ghi lại lỗi để debug
+            // Log::error('Lỗi cập nhật rút tiền: ' . $th->getMessage());
             return response()->json([
                 'status' => false,
-                'message' => 'Lỗi khi cập nhật yêu cầu rút tiền.',
+                'message' => 'Lỗi máy chủ khi cập nhật yêu cầu rút tiền.',
             ], 500);
         }
     }

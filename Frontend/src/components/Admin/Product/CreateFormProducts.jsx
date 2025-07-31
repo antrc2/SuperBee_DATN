@@ -89,7 +89,7 @@ export default function CreateFormProducts({
         category_id: initialData.category_id || "",
         import_price: initialData.import_price || "",
         username: initialData.credentials?.[0]?.username || "",
-        password: "",
+        password: initialData.credentials?.[0]?.username,
         description: initialData.description || "",
         attributes:
           initialData.game_attributes?.map((attr) => ({
@@ -315,7 +315,7 @@ export default function CreateFormProducts({
             />
           </FormField>
           <FormField
-            label={`Mật khẩu ${isEditing ? "(Bỏ trống nếu không đổi)" : ""}`}
+            label={`Mật khẩu `}
             htmlFor="password"
             error={formErrors.password}
           >

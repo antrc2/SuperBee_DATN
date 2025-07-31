@@ -139,6 +139,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // Ai đánh giá
             $table->unsignedBigInteger('web_id'); // Đánh giá web nào
             $table->integer('star'); // Số sao (1-5), không null
+            $table->text('comment')->nullable(); // Đổi tên ở đây
             $table->timestamps();
         });
 

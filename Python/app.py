@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, File, Form, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
@@ -9,7 +9,9 @@ from cronjob import queue_money, event
 from controller.TransactionController import Transaction
 from controller.AssistantController import chat
 import os
+from Controller.NewsAgent import generate_and_post_article
 
+ 
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -135,6 +137,17 @@ def start_background_thread():
 def stop_background_thread():
     print("Shutting down, stopping background thread...")
     event.set()
+
+@app.post("/agent/create-post", tags=["News Agent"])
+def create_facebook_post(background_tasks: BackgroundTasks):
+    background_tasks.add_task(generate_and_post_article)
+    
+    return {
+        "status": True,
+        "message": "Đã nhận yêu cầu. Agent đang bắt đầu quá trình tạo và đăng bài trong nền."
+    }
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

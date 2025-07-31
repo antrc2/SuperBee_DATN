@@ -27,6 +27,7 @@ use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Partner\PartnerOrderController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
@@ -39,6 +40,8 @@ use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
 use App\Http\Controllers\User\UserPostController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserWithdrawController;
+use App\Http\Controllers\User\UserReviewController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -47,7 +50,8 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+// Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
@@ -66,6 +70,12 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml',[SitemapController::class,'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
     // xác minh tài khoản
@@ -169,23 +179,35 @@ Route::middleware('auth')->group(function () {
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
 
-//         Route::prefix('user/withdraws')->group(function () {
-//             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
-//             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
-//             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
-//             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
+        //         Route::prefix('user/withdraws')->group(function () {
+        //             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
+        //             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
+        //             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
+        //             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
 
         Route::prefix('/withdraws')->group(function () {
             Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
             Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
             Route::get('/', [UserWithdrawController::class, 'index'])->name('user.withdraws.history');
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
-            Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
-            Route::put("/{id}",[UserWithdrawController::class,'update']);
-            Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);
-
+            Route::delete("/{id}", [UserWithdrawController::class, 'cancel']);
+            Route::put("/{id}", [UserWithdrawController::class, 'update']);
+            Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
         });
  Route::post('/disputes', [DisputeController::class, 'store']);
+
+        Route::prefix('/reviews')->group(function () {
+            Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
+            Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
+            Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
+            Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
+            Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
+        });
+
+
+
+
+
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });
@@ -287,6 +309,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::get('/', [AdminPostController::class, 'index'])->middleware('permission:posts.view');
         Route::get('/{id}', [AdminPostController::class, 'show'])->middleware('permission:posts.view');
         Route::post('/', [AdminPostController::class, 'store'])->middleware('permission:posts.create');
+        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
         Route::post('/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
         Route::delete('/{id}', [AdminPostController::class, 'destroy'])->middleware('permission:posts.delete');
         // publish/unpublish là hành động sửa bài viết
@@ -294,7 +317,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish'])->middleware('permission:posts.edit');
 
         // Các route tiện ích yêu cầu quyền tạo hoặc sửa
-        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
+
         Route::get('/load-images', [AdminPostController::class, 'loadImages'])->middleware('permission:posts.create|posts.edit');
         Route::post('/delete-image', [AdminPostController::class, 'deleteImage'])->middleware('permission:posts.create|posts.edit');
     });
@@ -345,9 +368,9 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
 
-    Route::prefix("/withdraws")->group(function(){
-        Route::get('/',[AdminWithdrawController::class,'index']);
-        Route::post("/export",[AdminWithdrawController::class,'export']);
+    Route::prefix("/withdraws")->group(function () {
+        Route::get('/', [AdminWithdrawController::class, 'index']);
+        Route::post("/export", [AdminWithdrawController::class, 'export']);
     });
     Route::prefix("/disputes")->group(function(){
         Route::get('/',[DisputeController::class,'index']);  
@@ -374,15 +397,15 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
     });
 });
 
-Route::prefix('/assistant')->group(function(){
-     Route::prefix("/categories")->group(function () {
+Route::prefix('/assistant')->group(function () {
+    Route::prefix("/categories")->group(function () {
         Route::get("/", [AssistantCategoryController::class, 'index']);
-
+        Route::get("/category_name", [AssistantCategoryController::class, 'get_category_name']);
         Route::get("/{id}", [AssistantCategoryController::class, 'show']);
     });
-    Route::prefix('/products')->group(function(){
-        Route::get("/",[AssistantProductController::class,'index']);
-        Route::get("/{sku}",[AssistantProductController::class,'show']);
+    Route::prefix('/products')->group(function () {
+        Route::get("/", [AssistantProductController::class, 'index']);
+        Route::get("/{sku}", [AssistantProductController::class, 'show']);
     });
 });
 

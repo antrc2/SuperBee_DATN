@@ -28,11 +28,12 @@ class AssistantProductController extends Controller
     public function show(Request $request,$sku){
         try {
             $product = Product::where("sku",$sku)->with(['category','gameAttributes','images'])->get();
+            $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>True,
                 'message'=>"Lấy chi tiết sản phẩm theo sku {$sku} thành công",
                 'data'=>$product,
-                'link'=>"http://localhost:5173/acc/{$sku}"
+                'link'=>"{$frontend_link}/acc/{$sku}"
             ]);
         } catch (\Throwable $th) {
             //throw $th;

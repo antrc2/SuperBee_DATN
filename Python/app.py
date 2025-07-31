@@ -1,24 +1,22 @@
 from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
-from io import BytesIO
 from threading import Thread
-# from controller import S3Controller
+from controller.S3Controller import S3Controller
 from cronjob import queue_money, event
-# from controller.ChatAssistance import router as chat_router
 from controller.TransactionController import Transaction
 from controller.AssistantController import chat
 import os
+
 from dotenv import load_dotenv
 load_dotenv()
 
 username = os.getenv("MBBANK_USERNAME")
 password = os.getenv("MBBANK_PASSWORD")
-# print(username)
-# print(password)
 app = FastAPI()
-# s3_client = S3Controller()
+s3_client = S3Controller()
 
 
 
@@ -31,13 +29,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/assistant/chat")
 async def doibuonjqk(request: Request):
     data = await request.json()
-    return chat(data['messages'])
+    return StreamingResponse(
+        chat(data['messages']),
+        media_type="text/event-stream",
+        headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'X-Accel-Buffering': 'no'
+            }
+    )
 
 
-# app.include_router(chat_router, prefix="/chat", tags=["Chat"])
 
 @app.get('/transaction/bank_list')
 async def getBankList():

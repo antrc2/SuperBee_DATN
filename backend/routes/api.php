@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\DisputeController;
 use App\Http\Controllers\Partner\PartnerProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -184,7 +185,7 @@ Route::middleware('auth')->group(function () {
             Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);
 
         });
-
+ Route::post('/disputes', [DisputeController::class, 'store']);
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });
@@ -347,6 +348,11 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     Route::prefix("/withdraws")->group(function(){
         Route::get('/',[AdminWithdrawController::class,'index']);
         Route::post("/export",[AdminWithdrawController::class,'export']);
+    });
+    Route::prefix("/disputes")->group(function(){
+        Route::get('/',[DisputeController::class,'index']);  
+        Route::get('/{id}', [DisputeController::class, 'show']);
+        Route::put('/{id}',[DisputeController::class,'update']);
     });
 });
 

@@ -118,6 +118,12 @@ const navItems = [
       { name: "Permissions", path: "/admin/authorization/permissions" },
     ],
   },
+  {
+    icon: <Newspaper />,
+    name: "Disputes",
+    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
+    path: "/admin/disputes",
+  },
 ];
 
 const AppSidebar = () => {

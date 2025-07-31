@@ -1,3 +1,6 @@
+// Gợi ý đường dẫn: src/app/(client)/user/orders/page.jsx (hoặc tương tự)
+// File: HistoryOrder.jsx
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -9,10 +12,221 @@ import {
   ChevronUp,
   AlertCircle,
   Loader,
+  HelpCircle,
+  Clock,
+  Upload,
+  Paperclip,
+  Loader2,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
-import api from "../../../utils/http";
+import api from "../../../utils/http"; // Đảm bảo đường dẫn này đúng
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
+import LoadingCon from "../../../components/Loading/LoadingCon";
 
-// --- TIỆN ÍCH ---
+// =====================================================================
+// COMPONENT CHO MODAL KHIẾU NẠI (DisputeModal)
+// Bạn nên tách component này ra một file riêng, ví dụ: src/components/Client/DisputeModal.jsx
+// =====================================================================
+const DISPUTE_TYPES = {
+  incorrect_login: "Sai thông tin đăng nhập",
+  account_banned: "Tài khoản bị khóa/hạn chế",
+  wrong_description: "Sản phẩm không đúng mô tả",
+  account_retrieved: "Tài khoản bị chủ cũ lấy lại",
+  other: "Lý do khác",
+};
+
+const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
+  const [disputeType, setDisputeType] = useState("incorrect_login");
+  const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState([]);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  if (!item) return null;
+
+  const handleFileChange = (e) => {
+    if (e.target.files.length > 3) {
+      setError("Chỉ được tải lên tối đa 3 ảnh.");
+      return;
+    }
+    const selectedFiles = Array.from(e.target.files);
+    setAttachments(selectedFiles);
+    setError(null);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!description.trim()) {
+      setError("Vui lòng mô tả chi tiết sự cố.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+
+    const formData = new FormData();
+    formData.append("order_item_id", item.id);
+    formData.append("dispute_type", disputeType);
+    formData.append("description", description);
+    attachments.forEach((file) => {
+      formData.append("attachments[]", file);
+    });
+
+    try {
+      await api.post("/disputes", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      onDisputeSuccess();
+    } catch (err) {
+      const errorMsg =
+        err.response?.data?.message ||
+        "Đã có lỗi xảy ra khi gửi khiếu nại. Vui lòng thử lại.";
+      setError(errorMsg);
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/80 z-[60] flex justify-center items-center p-4 backdrop-blur-sm">
+      <div className="bg-dropdown border border-themed rounded-2xl shadow-2xl w-full max-w-lg max-h-[95vh] flex flex-col">
+        <div className="flex justify-between items-center p-5 border-b border-themed">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-red-500/10 rounded-lg">
+              <AlertCircle className="h-6 w-6 text-red-500" />
+            </div>
+            <div>
+              <h3 className="font-heading text-xl font-bold text-primary">
+                Báo cáo sự cố
+              </h3>
+              <p className="text-secondary text-sm">
+                Sản phẩm: {item.product?.sku || item.product_id}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-full text-secondary hover:text-primary hover:bg-accent/10 transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 overflow-y-auto flex-1 space-y-6"
+        >
+          <div>
+            <label className="block text-sm font-semibold text-secondary mb-2">
+              Loại sự cố
+            </label>
+            <select
+              value={disputeType}
+              onChange={(e) => setDisputeType(e.target.value)}
+              className="w-full rounded-lg px-3 py-2 bg-input text-input border-themed border-hover"
+            >
+              {Object.entries(DISPUTE_TYPES).map(([key, value]) => (
+                <option key={key} value={key}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-secondary mb-2">
+              Mô tả chi tiết
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full rounded-lg px-3 py-2 bg-input text-input border-themed border-hover min-h-[120px]"
+              placeholder="Vui lòng mô tả rõ ràng vấn đề bạn gặp phải với tài khoản..."
+              required
+            ></textarea>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-secondary mb-2">
+              Ảnh bằng chứng (Tối đa 3 ảnh)
+            </label>
+            <div className="mt-2 flex justify-center rounded-lg border border-dashed border-themed px-6 py-10 bg-input">
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-secondary/50" />
+                <div className="mt-4 flex text-sm leading-6 text-secondary">
+                  <label
+                    htmlFor="file-upload"
+                    className="relative cursor-pointer rounded-md font-semibold text-accent focus-within:outline-none hover:text-accent/80"
+                  >
+                    <span>Tải tệp lên</span>
+                    <input
+                      id="file-upload"
+                      name="attachments"
+                      type="file"
+                      className="sr-only"
+                      multiple
+                      accept="image/png, image/jpeg, image/jpg"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                  <p className="pl-1">hoặc kéo và thả</p>
+                </div>
+                <p className="text-xs leading-5 text-secondary/70">
+                  PNG, JPG, JPEG tối đa 2MB mỗi tệp
+                </p>
+              </div>
+            </div>
+            {attachments.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h4 className="text-sm font-medium text-primary">
+                  Tệp đã chọn:
+                </h4>
+                <ul className="space-y-1">
+                  {attachments.map((file, index) => (
+                    <li
+                      key={index}
+                      className="flex items-center text-sm text-secondary gap-2"
+                    >
+                      {" "}
+                      <Paperclip className="h-4 w-4" /> {file.name}{" "}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+          {error && <div className="alert alert-danger">{error}</div>}
+        </form>
+
+        <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0 flex justify-end gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="action-button action-button-secondary !w-auto"
+            disabled={loading}
+          >
+            Hủy
+          </button>
+          <button
+            type="submit"
+            onClick={handleSubmit}
+            className="action-button action-button-primary !w-auto bg-gradient-danger hover:brightness-110"
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              "Gửi Khiếu nại"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================================================
+// TIỆN ÍCH
+// =====================================================================
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
   const date = new Date(dateString);
@@ -30,8 +244,10 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-// --- COMPONENT CON: MODAL CHI TIẾT ĐƠN HÀNG ---
-const OrderDetailModal = ({ order, onClose }) => {
+// =====================================================================
+// COMPONENT CON: MODAL CHI TIẾT ĐƠN HÀNG
+// =====================================================================
+const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
   if (!order) return null;
 
   const [expandedItems, setExpandedItems] = useState({});
@@ -43,6 +259,45 @@ const OrderDetailModal = ({ order, onClose }) => {
     }));
   };
 
+  const renderDisputeStatus = (dispute) => {
+    const statusMap = {
+      0: {
+        text: "Chờ xử lý",
+        icon: <Clock className="h-4 w-4" />,
+        className: "text-yellow-500 bg-yellow-500/10",
+      },
+      1: {
+        text: "Đang xử lý",
+        icon: <Loader2 className="h-4 w-4 animate-spin" />,
+        className: "text-blue-500 bg-blue-500/10",
+      },
+      2: {
+        text: "Đã giải quyết",
+        icon: <CheckCircle className="h-4 w-4" />,
+        className: "text-green-500 bg-green-500/10",
+      },
+      3: {
+        text: "Đã từ chối",
+        icon: <XCircle className="h-4 w-4" />,
+        className: "text-red-500 bg-red-500/10",
+      },
+    };
+    const current = statusMap[dispute.status] || {
+      text: "Không rõ",
+      icon: <HelpCircle className="h-4 w-4" />,
+      className: "bg-gray-500/20 text-gray-400",
+    };
+
+    return (
+      <span
+        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-full ${current.className}`}
+      >
+        {current.icon}
+        {current.text}
+      </span>
+    );
+  };
+
   const subtotal = order.items.reduce(
     (sum, item) => sum + Number.parseFloat(item.unit_price),
     0
@@ -51,7 +306,6 @@ const OrderDetailModal = ({ order, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/70 z-50 flex justify-center items-center p-4 backdrop-blur-sm">
       <div className="bg-dropdown border border-themed rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        {/* Header */}
         <div className="flex justify-between items-center p-5 border-b border-themed flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-accent/10 rounded-lg">
@@ -74,7 +328,6 @@ const OrderDetailModal = ({ order, onClose }) => {
           </button>
         </div>
 
-        {/* Body */}
         <div className="p-6 overflow-y-auto flex-1 space-y-6">
           <div>
             <h4 className="font-heading text-lg font-bold text-primary mb-4">
@@ -86,7 +339,7 @@ const OrderDetailModal = ({ order, onClose }) => {
                   key={item.id}
                   className="p-4 bg-background/50 rounded-lg border border-themed"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-start md:items-center gap-4 flex-col md:flex-row">
                     <img
                       src={
                         item.product?.images[0]?.image_url || "/placeholder.svg"
@@ -102,17 +355,30 @@ const OrderDetailModal = ({ order, onClose }) => {
                         {formatCurrency(item.unit_price)}
                       </p>
                     </div>
-                    <button
-                      onClick={() => toggleDetails(item.id)}
-                      className="action-button action-button-secondary !w-auto !py-2 !px-3 !text-sm"
-                    >
-                      {expandedItems[item.id] ? "Ẩn" : "Xem"}
-                      {expandedItems[item.id] ? (
-                        <ChevronUp className="h-4 w-4 ml-1" />
+                    <div className="flex flex-row md:flex-col items-start md:items-end gap-2 mt-2 md:mt-0">
+                      <button
+                        onClick={() => toggleDetails(item.id)}
+                        className="action-button action-button-secondary !w-auto !py-2 !px-3 !text-sm"
+                      >
+                        {expandedItems[item.id] ? "Ẩn" : "Xem"}
+                        {expandedItems[item.id] ? (
+                          <ChevronUp className="h-4 w-4 ml-1" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 ml-1" />
+                        )}
+                      </button>
+                      {item.dispute ? (
+                        renderDisputeStatus(item.dispute)
                       ) : (
-                        <ChevronDown className="h-4 w-4 ml-1" />
+                        <button
+                          onClick={() => onStartDispute(item)}
+                          className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors"
+                        >
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          Báo cáo sự cố
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
 
                   {expandedItems[item.id] && (
@@ -158,7 +424,6 @@ const OrderDetailModal = ({ order, onClose }) => {
               ))}
             </div>
           </div>
-
           <div className="border-t border-themed pt-6">
             <h4 className="font-heading text-lg font-bold text-primary mb-4">
               Tổng kết
@@ -183,8 +448,6 @@ const OrderDetailModal = ({ order, onClose }) => {
             </div>
           </div>
         </div>
-
-        {/* Footer */}
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0">
           <button
             onClick={onClose}
@@ -198,7 +461,9 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// --- COMPONENT CHÍNH: LỊCH SỬ ĐƠN HÀNG ---
+// =====================================================================
+// COMPONENT CHÍNH: LỊCH SỬ ĐƠN HÀNG
+// =====================================================================
 export default function HistoryOrder() {
   const [allOrders, setAllOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
@@ -211,26 +476,28 @@ export default function HistoryOrder() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [disputingItem, setDisputingItem] = useState(null);
+
+  const fetchAllOrders = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.get("/orders");
+      const sortedData = response.data.data.sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      setAllOrders(sortedData);
+      setFilteredOrders(sortedData);
+    } catch (err) {
+      setError("Không thể tải lịch sử đơn hàng. Vui lòng thử lại sau.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchOrders = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const response = await api.get("/user/order");
-        const sortedData = response.data.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        setAllOrders(sortedData);
-        setFilteredOrders(sortedData);
-      } catch (err) {
-        setError("Không thể tải lịch sử đơn hàng. Vui lòng thử lại sau.");
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrders();
+    fetchAllOrders();
   }, []);
 
   useEffect(() => {
@@ -262,23 +529,26 @@ export default function HistoryOrder() {
       setSelectedOrder(response.data.data);
     } catch (error) {
       console.error("Failed to fetch order details", error);
+      setError("Không thể tải chi tiết đơn hàng.");
     }
+  };
+
+  const handleDisputeSuccess = async () => {
+    // Đóng modal khiếu nại
+    setDisputingItem(null);
+    // Tải lại dữ liệu cho modal chi tiết đơn hàng để cập nhật trạng thái
+    if (selectedOrder) {
+      await handleViewDetails(selectedOrder);
+    }
+    // Tải lại toàn bộ danh sách đơn hàng để đồng bộ
+    await fetchAllOrders();
   };
 
   const renderStatus = (status) => {
     const statusMap = {
-      1: {
-        text: "Hoàn thành",
-        className: "bg-status-success-bg text-status-success-text",
-      },
-      0: {
-        text: "Đang xử lý",
-        className: "bg-status-processing-bg text-status-processing-text",
-      },
-      2: {
-        text: "Đã hủy",
-        className: "bg-status-cancelled-bg text-status-cancelled-text",
-      },
+      1: { text: "Hoàn thành", className: "bg-green-500/10 text-green-500" },
+      0: { text: "Đang xử lý", className: "bg-blue-500/10 text-blue-500" },
+      2: { text: "Đã hủy", className: "bg-red-500/10 text-red-500" },
     };
     const currentStatus = statusMap[status] || {
       text: "Không xác định",
@@ -295,14 +565,8 @@ export default function HistoryOrder() {
 
   const renderContent = () => {
     if (loading) {
-      return (
-        <div className="flex flex-col items-center justify-center text-center p-10">
-          <Loader className="w-12 h-12 animate-spin text-accent mb-4" />
-          <p className="text-secondary">Đang tải dữ liệu...</p>
-        </div>
-      );
+      return <LoadingCon />;
     }
-
     if (error) {
       return (
         <div className="alert alert-danger">
@@ -311,7 +575,6 @@ export default function HistoryOrder() {
         </div>
       );
     }
-
     if (filteredOrders.length === 0) {
       return (
         <div className="text-center p-10 bg-background rounded-lg border border-themed">
@@ -320,7 +583,6 @@ export default function HistoryOrder() {
         </div>
       );
     }
-
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredOrders.map((order) => (
@@ -362,7 +624,6 @@ export default function HistoryOrder() {
 
   return (
     <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg space-y-6">
-      {/* Header */}
       <div>
         <h1 className="font-heading text-2xl md:text-3xl font-bold text-primary">
           Lịch sử Đơn hàng
@@ -371,8 +632,6 @@ export default function HistoryOrder() {
           Theo dõi và quản lý tất cả các đơn hàng đã mua của bạn.
         </p>
       </div>
-
-      {/* Filters */}
       <div className="bg-background p-4 rounded-xl border border-themed">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
@@ -431,13 +690,22 @@ export default function HistoryOrder() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="min-h-[20rem]">{renderContent()}</div>
 
       {selectedOrder && (
         <OrderDetailModal
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
+          onStartDispute={(item) => setDisputingItem(item)}
+        />
+      )}
+
+      {disputingItem && (
+        <DisputeModal
+          item={disputingItem}
+          order={selectedOrder}
+          onClose={() => setDisputingItem(null)}
+          onDisputeSuccess={handleDisputeSuccess}
         />
       )}
     </section>

@@ -54,7 +54,6 @@ const TrangDanhSachAccGameBrowse = () => {
       const { data, ...meta } = response.data.data;
       setProducts(data);
       setPaginationMeta(meta);
-      pop("lấy dữ liệu thành công", "s");
     } catch (error) {
       pop("lấy dữ liệu thất bại", "e");
       console.error("Lỗi khi tải dữ liệu:", error);
@@ -116,7 +115,6 @@ const TrangDanhSachAccGameBrowse = () => {
   // const handleApprove = () => navigate("/admin/products/browse");
   const handleAction = async (actionType, id, confirmMessage) => {
     const ok = await conFim(confirmMessage);
-    console.log("🚀 ~ handleAction ~ ok:", ok);
     if (ok) {
       try {
         const url = `/admin/products/${id}/${actionType}`;

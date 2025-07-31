@@ -24,10 +24,13 @@ class SitemapController extends Controller
 		<loc>{$frontend}/tin-tuc.xml</loc>
 	</sitemap>
 	<sitemap>
-		<loc>{$frontend}/home.xml</loc>
+		<loc>{$frontend}/trang-khac.xml</loc>
 	</sitemap>
     <sitemap>
 		<loc>{$frontend}/san-pham.xml</loc>
+	</sitemap>
+        <sitemap>
+		<loc>{$frontend}/danh-muc.xml</loc>
 	</sitemap>
 </sitemapindex>";
 
@@ -60,7 +63,7 @@ class SitemapController extends Controller
                 $xml .= "  <url>\n";
                 $xml .= "    <loc>{$link}</loc>\n";
                 $xml .= "    <lastmod>{$lastmod}</lastmod>\n";
-                
+
                 if ($img) {
                     $xml .= "    <image:image>\n";
                     $xml .= "      <image:loc>{$img}</image:loc>\n";
@@ -143,7 +146,7 @@ class SitemapController extends Controller
             return response('Server Error', 500);
         }
     }
-    
+
     public function post()
     {
         try {
@@ -249,5 +252,32 @@ class SitemapController extends Controller
             return response('Server Error', 500);
         }
     }
-    public function home() {}
+    public function home()
+    {
+        $frontend_url = env("FRONTEND_URL");
+        $xml =  "<?xml version='1.0' encoding='UTF-8'?>
+<urlset xmlns='http://www.sitemaps.org/schemas/sitemap/0.9'>
+  <url>
+    <loc>{$frontend_url}/auth/login</loc>
+    <lastmod>2025-07-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>{$frontend_url}/auth/register</loc>
+    <lastmod>2025-07-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+    <url>
+    <loc>{$frontend_url}/forgot-password</loc>
+    <lastmod>2025-07-31</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
+";
+        return response($xml, 200)
+            ->header('Content-Type', 'application/xml; charset=UTF-8');
+    }
 }

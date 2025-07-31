@@ -50,10 +50,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 // Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
-Route::get("/sitemap.xml",[SitemapController::class,'index']);
-Route::get("/tin-tuc.xml",[SitemapController::class,'post']);
-Route::get('/danh-muc.xml',[SitemapController::class,'category']);
-Route::get("/san-pham.xml",[SitemapController::class,'product']);
 
 
 // Xác thực trang web
@@ -73,6 +69,12 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml',[SitemapController::class,'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
     // xác minh tài khoản
@@ -177,10 +179,10 @@ Route::middleware('auth')->group(function () {
         });
 
         //         Route::prefix('user/withdraws')->group(function () {
-//             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
-//             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
-//             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
-//             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
+        //             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
+        //             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
+        //             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
+        //             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
 
         Route::prefix('/withdraws')->group(function () {
             Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
@@ -190,7 +192,6 @@ Route::middleware('auth')->group(function () {
             Route::delete("/{id}", [UserWithdrawController::class, 'cancel']);
             Route::put("/{id}", [UserWithdrawController::class, 'update']);
             Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
-
         });
         Route::prefix('/reviews')->group(function () {
             Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
@@ -198,9 +199,8 @@ Route::middleware('auth')->group(function () {
             Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
             Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
             Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
-
         });
-        
+
 
 
 
@@ -313,7 +313,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish'])->middleware('permission:posts.edit');
 
         // Các route tiện ích yêu cầu quyền tạo hoặc sửa
-        
+
         Route::get('/load-images', [AdminPostController::class, 'loadImages'])->middleware('permission:posts.create|posts.edit');
         Route::post('/delete-image', [AdminPostController::class, 'deleteImage'])->middleware('permission:posts.create|posts.edit');
     });
@@ -391,7 +391,7 @@ Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function (
 Route::prefix('/assistant')->group(function () {
     Route::prefix("/categories")->group(function () {
         Route::get("/", [AssistantCategoryController::class, 'index']);
-        Route::get("/category_name",[AssistantCategoryController::class,'get_category_name']);
+        Route::get("/category_name", [AssistantCategoryController::class, 'get_category_name']);
         Route::get("/{id}", [AssistantCategoryController::class, 'show']);
     });
     Route::prefix('/products')->group(function () {

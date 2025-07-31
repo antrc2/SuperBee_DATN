@@ -305,6 +305,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::get('/', [AdminPostController::class, 'index'])->middleware('permission:posts.view');
         Route::get('/{id}', [AdminPostController::class, 'show'])->middleware('permission:posts.view');
         Route::post('/', [AdminPostController::class, 'store'])->middleware('permission:posts.create');
+        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
         Route::post('/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
         Route::delete('/{id}', [AdminPostController::class, 'destroy'])->middleware('permission:posts.delete');
         // publish/unpublish là hành động sửa bài viết
@@ -312,7 +313,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish'])->middleware('permission:posts.edit');
 
         // Các route tiện ích yêu cầu quyền tạo hoặc sửa
-        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
+        
         Route::get('/load-images', [AdminPostController::class, 'loadImages'])->middleware('permission:posts.create|posts.edit');
         Route::post('/delete-image', [AdminPostController::class, 'deleteImage'])->middleware('permission:posts.create|posts.edit');
     });

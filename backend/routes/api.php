@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\DisputeController;
 use App\Http\Controllers\Partner\PartnerProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -193,6 +194,8 @@ Route::middleware('auth')->group(function () {
             Route::put("/{id}", [UserWithdrawController::class, 'update']);
             Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
         });
+ Route::post('/disputes', [DisputeController::class, 'store']);
+
         Route::prefix('/reviews')->group(function () {
             Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
             Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
@@ -200,6 +203,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
             Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
         });
+
 
 
 
@@ -367,6 +371,11 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     Route::prefix("/withdraws")->group(function () {
         Route::get('/', [AdminWithdrawController::class, 'index']);
         Route::post("/export", [AdminWithdrawController::class, 'export']);
+    });
+    Route::prefix("/disputes")->group(function(){
+        Route::get('/',[DisputeController::class,'index']);  
+        Route::get('/{id}', [DisputeController::class, 'show']);
+        Route::put('/{id}',[DisputeController::class,'update']);
     });
 });
 

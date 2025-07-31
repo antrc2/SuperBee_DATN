@@ -1,9 +1,9 @@
 // @pages/Admin/Products/EditProducts.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; // Điều chỉnh đường dẫn
-import { LoaderCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";
 import { useNotification } from "../../../contexts/NotificationContext";
 
@@ -72,7 +72,8 @@ export default function EditProducts() {
       }
     } catch (err) {
       console.error(err);
-      const errorMessage = err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
+      const errorMessage =
+        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
       setError(errorMessage);
       pop(errorMessage, "e");
     } finally {
@@ -90,7 +91,7 @@ export default function EditProducts() {
 
   return (
     <div>
-      {/* <div className="flex items-center h-14">
+      <div className="flex items-center h-14">
         <div className="flex items-center  ">
           <Link
             to="/admin/products"
@@ -100,11 +101,10 @@ export default function EditProducts() {
             Quay lại danh sách
           </Link>
         </div>
-        <h2 className="text-2xl font-semibold mb-4 ml-4 mt-3 text-gray-700">
+        {/* <h2 className="text-2xl font-semibold mb-4 ml-4 mt-3 text-gray-700">
           Thêm sản phẩm mới
-        </h2>
-        
-      </div> */}
+        </h2> */}
+      </div>
       <h2 className="text-2xl font-semibold mb-4 text-xl-700">
         Chỉnh sửa sản phẩm: #{product?.sku}
       </h2>

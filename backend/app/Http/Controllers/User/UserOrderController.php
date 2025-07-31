@@ -50,7 +50,7 @@ class UserOrderController extends Controller
     {
         try {
             $user_id = $request->user_id;
-            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images'])->where('user_id', $user_id)->where('id', $id)->first();
+            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images','items.dispute'])->where('user_id', $user_id)->where('id', $id)->first();
             return response()->json([
                 "status" => True,
                 "message" => "Lấy đơn hàng thành công",
@@ -61,7 +61,8 @@ class UserOrderController extends Controller
             return response()->json([
                 "status" => False,
                 "message" => "Đã xảy ra lỗi",
-                "data" => []
+                "data" => [],
+                'e'=>$th->getMessage()
             ], 500);
         }
     }

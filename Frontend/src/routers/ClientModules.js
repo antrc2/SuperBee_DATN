@@ -1,4 +1,5 @@
 import React from "react";
+import WithdrawPage from "../pages/Clients/Profile/WithdrawPage";
 
 // Thay đổi các import trực tiếp thành React.lazy
 const Home = React.lazy(() => import("@pages/Clients/Home/Home"));
@@ -199,6 +200,11 @@ export const profileModule = [
   {
     path: "/info/affiliate-history",
     view: AffiliateHistory,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/withdraw",
+    view: WithdrawPage,
     requiresAuth: true,
   },
 ];

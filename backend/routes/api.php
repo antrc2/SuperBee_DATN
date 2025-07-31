@@ -71,7 +71,7 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
     Route::get("/sitemap.xml", [SitemapController::class, 'index']);
-    Route::get('/trang-khac.xml',[SitemapController::class,'home']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
     Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
     Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
     Route::get("/san-pham.xml", [SitemapController::class, 'product']);
@@ -186,7 +186,7 @@ Route::middleware('auth')->group(function () {
         //             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
 
         Route::prefix('/withdraws')->group(function () {
-            Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
+            Route::get('/balance', [UserWithdrawController::class, 'balance'])->name('user.withdraws.balance');
             Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
             Route::get('/', [UserWithdrawController::class, 'index'])->name('user.withdraws.history');
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
@@ -194,7 +194,7 @@ Route::middleware('auth')->group(function () {
             Route::put("/{id}", [UserWithdrawController::class, 'update']);
             Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
         });
- Route::post('/disputes', [DisputeController::class, 'store']);
+
 
         Route::prefix('/reviews')->group(function () {
             Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
@@ -207,7 +207,7 @@ Route::middleware('auth')->group(function () {
 
 
 
-
+        Route::post('/disputes', [DisputeController::class, 'store']);
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });
@@ -372,10 +372,10 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::get('/', [AdminWithdrawController::class, 'index']);
         Route::post("/export", [AdminWithdrawController::class, 'export']);
     });
-    Route::prefix("/disputes")->group(function(){
-        Route::get('/',[DisputeController::class,'index']);  
+    Route::prefix("/disputes")->group(function () {
+        Route::get('/', [DisputeController::class, 'index']);
         Route::get('/{id}', [DisputeController::class, 'show']);
-        Route::put('/{id}',[DisputeController::class,'update']);
+        Route::put('/{id}', [DisputeController::class, 'update']);
     });
 });
 

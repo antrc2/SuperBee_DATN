@@ -12,7 +12,8 @@ import {
   Unlock,
   Pencil,
 } from "lucide-react";
-
+import { useAuth } from "@contexts/AuthContext.jsx";
+import { useNavigate } from "react-router-dom";
 // Helper components for better structure
 const RoleBadge = ({ roleName }) => {
   const roleStyles = {
@@ -60,14 +61,14 @@ const AccountListPage = () => {
   const [meta, setMeta] = useState(null);
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({ role_id: "", status: "" });
   const [sort, setSort] = useState({ by: "created_at", direction: "desc" });
-
+  const { user } = useAuth();
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
-  const { pop } = useNotification();
+  const { pop, conFim } = useNotification();
 
   const fetchAccounts = useCallback(async () => {
     setLoading(true);
@@ -112,13 +113,37 @@ const AccountListPage = () => {
   }, [debouncedSearchTerm, filters]);
 
   const handleToggleStatus = async (id, status) => {
+    const check = id == user?.id;
+    if (check) {
+      pop("Bạn không thể khóa tài khoản của mình", "e");
+      return;
+    }
+
     try {
       if (status === 1) {
-        await api.delete(`/admin/accounts/${id}`);
-        pop("Khóa tài khoản thành công", "s");
+        const check2 = await conFim("Ban có muốn khóa tài khoản này lại");
+        if (!check2) return;
+        setLoading(true);
+        const res = await api.delete(`/admin/accounts/${id}`);
+        setLoading(false);
+        if (res.data.status) {
+          pop("Khóa tài khoản thành công", "s");
+        } else {
+          pop("Khóa tài khoản không thành công", "e");
+          return;
+        }
       } else {
-        await api.patch(`/admin/accounts/${id}`);
-        pop("Khôi phục tài khoản thành công", "s");
+        const check2 = await conFim("Ban có muốn khôi phục tài khoản này lại");
+        if (!check2) return;
+        setLoading(true);
+        const res = await api.patch(`/admin/accounts/${id}`);
+        setLoading(false);
+        if (res.data.status) {
+          pop("Khôi phục tài khoản thành công", "s");
+        } else {
+          pop("Khôi phục tài khoản không thành công", "e");
+          return;
+        }
       }
       setAccounts((prev) =>
         prev.map((acc) =>
@@ -129,6 +154,9 @@ const AccountListPage = () => {
       pop("Thao tác thất bại", "e");
       console.error(err);
     }
+  };
+  const handleEdit = (id) => {
+    return navigate(`/admin/users/${id}`);
   };
   const handleFilterChange = (e) => {
     setFilters((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -273,10 +301,10 @@ const AccountListPage = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
-                      {/* Add a tooltip library for better UX */}
                       <button
                         title="Chỉnh sửa"
                         className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
+                        onClick={() => handleEdit(acc.id)}
                       >
                         <Pencil size={16} />
                       </button>

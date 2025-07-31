@@ -14,11 +14,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class AdminDiscountCodeController extends Controller
 {
     // GET /discount_codes
-  public function index(Request $request)
+    public function index(Request $request)
     {
         try {
             // Validate request parameters
@@ -47,7 +48,7 @@ class AdminDiscountCodeController extends Controller
             $sortBy = $request->input('sort_by', 'created_at');
             $sortDirection = $request->input('sort_direction', 'desc');
             $query->orderBy($sortBy, $sortDirection);
-            
+
             // Paginate the results
             $promotions = $query->paginate(15)->withQueryString();
 
@@ -56,7 +57,6 @@ class AdminDiscountCodeController extends Controller
                 'status' => true,
                 'data' => $promotions,
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching promotions: ' . $e->getMessage());
             return response()->json([
@@ -188,9 +188,9 @@ class AdminDiscountCodeController extends Controller
             $code = Promotion::create($validated);
             DB::commit();
             if ($request->target_user_id == -1) {
-                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
             } else {
-                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}",null,$request->user_id);
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->user_id);
             }
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
@@ -225,6 +225,19 @@ class AdminDiscountCodeController extends Controller
                     'message' => 'Không tìm thấy mã giảm giá',
                     'status' => false
                 ], 404);
+            }
+            if (Carbon::parse($code->end_date)->isPast()) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã hết hạn và không thể chỉnh sửa.',
+                    'status' => false
+                ], 400); // 400 Bad Request
+            }
+            $luotsudung = $code->total_used;
+            if ($luotsudung > 0) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã được sử dụng ',
+                    'status' => false
+                ], 400);
             }
 
             $rules = [
@@ -295,7 +308,7 @@ class AdminDiscountCodeController extends Controller
 
             $validated = $validator->validated();
 
-            $validated['user_id'] = $request->per_user_limit;
+            $validated['user_id'] = $request->target_user_id;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
 

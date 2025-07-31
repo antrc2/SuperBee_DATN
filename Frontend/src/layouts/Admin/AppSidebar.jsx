@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-
 import {
   LayoutGrid,
   Users,
@@ -15,23 +14,24 @@ import {
   Folders,
   CircleDollarSign,
 } from "lucide-react";
-import Logo from "@assets/icons/logo.png";
+
+import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
 import { useSidebar } from "@contexts/SidebarContext";
 import { useRoles } from "../../utils/role";
 
+// Mảng cấu hình các mục menu, giữ nguyên từ file gốc
 const navItems = [
   {
     icon: <LayoutGrid />,
     name: "Dashboard",
     subItems: [{ name: "Ecommerce", path: "/admin" }],
-    // BỔ SUNG & SỬA ĐỔI: Thêm vai trò kiểm duyệt
     view: [
       "admin",
       "admin-super",
       "reseller",
       "ke_toan",
-      "nv_marketing", // Sửa lại từ 'marketing'
-      "nv_ho_tro", // Sửa lại từ 'ho_tro'
+      "nv_marketing",
+      "nv_ho_tro",
       "nv_kiem_duyet",
       "partner",
     ],
@@ -40,28 +40,24 @@ const navItems = [
     icon: <Users />,
     name: "Users",
     path: "/admin/users",
-    // BỔ SUNG & SỬA ĐỔI: Thêm vai trò kiểm duyệt
     view: ["admin", "admin-super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
   },
   {
     icon: <TicketPercent />,
     name: "Discount Code",
     path: "/admin/discountcode",
-    // Sửa lại cho nhất quán
     view: ["admin", "admin-super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <TicketPercent />,
     name: "Donate Promotion",
     path: "/admin/donatePromotions",
-    // Sửa lại cho nhất quán
     view: ["admin", "admin-super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <LayoutList />,
     name: "Categories",
     path: "/admin/categories",
-    // BỔ SUNG & SỬA ĐỔI: Thêm vai trò kiểm duyệt
     view: ["admin", "admin-super", "reseller", "nv_kiem_duyet"],
   },
   {
@@ -74,7 +70,6 @@ const navItems = [
     icon: <Package />,
     name: "PendingProduct",
     path: "/admin/pendingProducts",
-    // BỔ SUNG & SỬA ĐỔI: Đây là trang chính của nhân viên kiểm duyệt
     view: ["admin", "admin-super", "nv_kiem_duyet"],
   },
   {
@@ -131,18 +126,13 @@ const AppSidebar = () => {
   const roles = useRoles();
 
   const [openSubmenu, setOpenSubmenu] = useState(null);
-  // State mới để quản lý trạng thái "active"
   const [activeMenuInfo, setActiveMenuInfo] = useState({
     parent: null,
     self: null,
   });
-
   const [subMenuHeight, setSubMenuHeight] = useState({});
   const subMenuRefs = useRef({});
 
-  // ##########################################################################
-  // ## SỬA LẠI: Logic tìm menu active và menu cần mở mặc định khi URL thay đổi ##
-  // ##########################################################################
   useEffect(() => {
     let bestMatch = { path: "", parent: null, self: null };
 
@@ -150,7 +140,6 @@ const AppSidebar = () => {
       (navItem) => !navItem.view || navItem.view.some((role) => roles[role])
     );
 
-    // Duyệt qua tất cả các item để tìm item khớp nhất (dài nhất) với URL
     for (const navItem of visibleItems) {
       if (navItem.subItems) {
         for (const subItem of navItem.subItems) {
@@ -176,7 +165,6 @@ const AppSidebar = () => {
       }
     }
 
-    // Set trạng thái active và trạng thái mở dựa trên kết quả tìm được
     setActiveMenuInfo({ parent: bestMatch.parent, self: bestMatch.self });
     setOpenSubmenu(bestMatch.parent);
   }, [location.pathname, roles]);
@@ -190,7 +178,6 @@ const AppSidebar = () => {
     }
   }, [openSubmenu]);
 
-  // Handler này giờ chỉ quản lý việc mở/đóng menu
   const handleSubmenuToggle = (itemName) => {
     setOpenSubmenu((prevOpenSubmenu) =>
       prevOpenSubmenu === itemName ? null : itemName
@@ -327,27 +314,15 @@ const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`pt-2 pb-4 flex ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-center"
+        className={`pt-3 pb-3 flex ${
+          !isExpanded && !isHovered ? "lg:opacity-0" : "justify-center"
         }`}
       >
-        <Link to="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <img
-              className="dark:hidden max-w-44 object-fit-contain"
-              src={Logo}
-              alt="Logo"
-            />
-          ) : (
-            <img
-              src="/images/logo/logo-icon.svg"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
-          )}
-        </Link>
+        <div className="hidden lg:block">
+          <SuperBeeLogo className="w-8 h-8   " />
+        </div>
       </div>
+
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">

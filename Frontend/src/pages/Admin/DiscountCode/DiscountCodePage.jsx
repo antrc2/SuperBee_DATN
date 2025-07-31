@@ -14,6 +14,7 @@ import {
   Pencil,
   Undo2,
   ChevronsRight,
+  Eye,
 } from "lucide-react";
 
 // Helper để định dạng ngày
@@ -99,7 +100,7 @@ const DiscountCodePage = () => {
   }, [debouncedSearchTerm, filters]);
 
   const handleDelete = async (id) => {
-    const ok = conFim("Bạn có chắc chắn muốn xoá mã giảm giá này không?");
+    const ok = await conFim("Bạn có chắc chắn muốn tắt mã giảm giá này không?");
     if (ok) {
       try {
         const res = await api.delete(`/admin/discountcode/${id}`);
@@ -110,27 +111,29 @@ const DiscountCodePage = () => {
               item.id === id ? { ...item, ...res.data.data } : item
             )
           );
-          pop("Xóa thành công", "s");
-        } else {
-          // Xoá cứng: loại bỏ khỏi danh sách
-          setPromotions((prev) => prev.filter((item) => item.id !== id));
-          pop("Xóa thành công", "s");
+          pop("Tắt thành công", "s");
         }
       } catch (err) {
-        pop("Xoá thất bại!", "e");
+        pop("Tắt thất bại!", "e");
       }
     }
   };
   const handleUpdate = async (id) => {
     try {
-      const res = await api.patch(`/admin/discountcode/${id}`);
-      setDiscountCodes((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, ...res.data.data } : item
-        )
+      const ok = await conFim(
+        "Bạn có chắc chắn muốn Bật mã giảm giá này không?"
       );
+      if (ok) {
+        const res = await api.patch(`/admin/discountcode/${id}`);
+        setPromotions((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, ...res.data.data } : item
+          )
+        );
+        pop("Khôi phục thành công!", "s");
+      }
     } catch (err) {
-      alert("Khôi phục thất bại!");
+      pop("Khôi phục thất bại!", "e");
     }
   };
 
@@ -271,13 +274,17 @@ const DiscountCodePage = () => {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
-                      <Link
-                        to={`/admin/promotions/${promo.id}/edit`}
-                        title="Chỉnh sửa"
-                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
-                      >
-                        <Pencil size={16} />
-                      </Link>
+                      {promo.total_used > 0 ? (
+                        <span className="p-4"></span>
+                      ) : (
+                        <Link
+                          to={`/admin/discountcode/${promo.id}/edit`}
+                          title="Chỉnh sửa"
+                          className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </Link>
+                      )}
                       {promo.status === 1 ? (
                         <button
                           title="Vô hiệu hóa"
@@ -295,6 +302,13 @@ const DiscountCodePage = () => {
                           <Undo2 size={16} />
                         </button>
                       )}
+                      <Link
+                        to={`/admin/discountcode/${promo.id}`}
+                        title="Chỉnh sửa"
+                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
+                      >
+                        <Eye size={16} />
+                      </Link>
                     </div>
                   </td>
                 </tr>

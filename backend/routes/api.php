@@ -203,11 +203,21 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
             Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
         });
+        Route::prefix('/disputes')->group(function () {
+            Route::post('/', [DisputeController::class, 'store']);
+
+            // Route để lấy danh sách tất cả khiếu nại của người dùng
+            Route::get('/', [UserProfileController::class, 'getDisputes']);
+
+            // Route để lấy chi tiết một khiếu nại cụ thể (dựa vào ID)
+            Route::get('/{id}', [UserProfileController::class, 'getDisputeDetails']);
+        });
 
 
 
 
-        Route::post('/disputes', [DisputeController::class, 'store']);
+
+
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });

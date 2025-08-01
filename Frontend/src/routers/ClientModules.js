@@ -1,5 +1,6 @@
 import React from "react";
 import WithdrawPage from "../pages/Clients/Profile/WithdrawPage";
+import DisputeHistoryPage from "../pages/Clients/Profile/DisputeHistory";
 
 // Thay đổi các import trực tiếp thành React.lazy
 const Home = React.lazy(() => import("@pages/Clients/Home/Home"));
@@ -205,6 +206,11 @@ export const profileModule = [
   {
     path: "/info/withdraw",
     view: WithdrawPage,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/disputes",
+    view: DisputeHistoryPage,
     requiresAuth: true,
   },
 ];

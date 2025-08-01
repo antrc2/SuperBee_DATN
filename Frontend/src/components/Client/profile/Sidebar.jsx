@@ -95,6 +95,10 @@ export default function Sidebar() {
               <Package className="h-5 w-5" />
               <span>Lịch sử đơn hàng</span>
             </NavLink>
+            <NavLink to="/info/disputes" className={navLinkClass}>
+              <Package className="h-5 w-5" />
+              <span>Lịch sử khiếu lại</span>
+            </NavLink>
           </div>
         </div>
       </nav>

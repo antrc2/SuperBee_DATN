@@ -525,7 +525,7 @@ class AuthController extends Controller
             ]);
 
             // Cloudflare Turnstile CAPTCHA validation
-            $turnstileSecret = env('TURNSTILE_SECRET_KEY');
+            $turnstileSecret = config('services.turnstile.secret');
             $turnstileResponse = $request->input('cf-turnstile-response');
             $remoteIp = $request->ip();
 

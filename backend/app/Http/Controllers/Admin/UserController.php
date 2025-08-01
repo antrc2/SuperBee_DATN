@@ -1,0 +1,267 @@
+<?php
+
+namespace App\Http\Controllers\Admin;
+
+use App\Events\SystemNotification;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
+use Exception;
+use Illuminate\Support\Facades\Log;
+
+use Illuminate\Support\Facades\Validator;
+class UserController extends Controller
+{
+    //
+    public function index(Request $request)
+    {
+        try {
+            // Validate request parameters for sorting
+            $request->validate([
+                'sort_by' => 'sometimes|in:username,email,balance,created_at',
+                'sort_direction' => 'sometimes|in:asc,desc',
+                'status' => 'sometimes|in:0,1,2',
+                'role_id' => 'sometimes|integer|exists:roles,id',
+                'page' => 'sometimes|integer|min:1',
+            ]);
+
+            // Start building the query
+            $query = User::query();
+
+            // Eager load relationships
+            $query->with(['roles', 'wallet']);
+
+            // Handle combined search for username and email
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+                $q->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('username', 'like', $searchTerm)
+                        ->orWhere('email', 'like', $searchTerm);
+                });
+            });
+
+            // Handle status filtering
+            $query->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+            // Handle role filtering
+            $query->when($request->filled('role_id'), function ($q) use ($request) {
+                $q->whereHas('roles', function ($subQuery) use ($request) {
+                    $subQuery->where('id', $request->role_id);
+                });
+            });
+
+            // Handle sorting
+            if ($request->filled('sort_by')) {
+                $direction = $request->input('sort_direction', 'asc');
+
+                if ($request->sort_by === 'balance') {
+                    // Join with wallets table to sort by balance
+                    $query->leftJoin('wallets', 'users.id', '=', 'wallets.user_id')
+                        ->orderBy('wallets.balance', $direction)
+                        ->select('users.*'); // Avoid ambiguity
+                } else {
+                    $query->orderBy($request->sort_by, $direction);
+                }
+            } else {
+                // Default sort
+                $query->latest(); // Sort by created_at desc
+            }
+
+            // Paginate the results
+            $users = $query->paginate(15)->withQueryString();
+
+            // Get all roles for the filter dropdown
+            $roles = Role::all(['id', 'name', 'description']);
+
+            return response()->json([
+                'message' => 'Lấy danh sách tài khoản thành công',
+                'status' => true,
+                'data' => [
+                    'users' => $users,
+                    'roles' => $roles,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching accounts: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Đã có lỗi xảy ra ở phía máy chủ.',
+                'status' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function show($id)
+    {
+        try {
+            $user = User::with([
+                "wallet.transactions", // Lấy ví và tất cả giao dịch của ví
+                // "wallet.transactions.rechargeCard", // Chi tiết nạp thẻ (nếu là giao dịch loại recharge_card)
+                // "wallet.transactions.rechargeBank",  // Chi tiết nạp bank (nếu là giao dịch loại recharge_bank)
+                // "wallet.transactions.withdraw",    // Chi tiết rút tiền (nếu là giao dịch loại withdraw)
+                "wallet.transactions.order",         // Chi tiết đơn hàng (nếu là giao dịch loại purchase)
+                "orders.items",          // Lấy các đơn hàng và chi tiết từng sản phẩm trong đơn hàng
+                "rechargeCards", // Lịch sử nạp thẻ và khuyến mãi áp dụng
+                "rechargeBanks", // Lịch sử nạp bank và khuyến mãi áp dụng
+                "withdraw",           // Lịch sử rút tiền
+                "roles",                 // Vai trò của người dùng (từ Spatie/Permission)
+                "web",                   // Website mà user thuộc về
+                "referredUsers", // Các user mà user này đã giới thiệu (nếu cần xem ai)
+            ])->find($id);
+            $role = Role::where('name', '!=', 'admin')->get();
+            if (!$user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy tài khoản người dùng.'
+                ], 404); // Trả về 404 nếu không tìm thấy
+            }
+
+            // Có thể thêm logic xử lý dữ liệu trước khi gửi về FE tại đây
+            // Ví dụ: tính toán tổng tiền đã nạp/rút
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy dữ liệu tài khoản người dùng thành công.',
+                'data' => [
+                    'user' => $user->toArray(), // Chuyển đổi Eloquent Collection/Model sang array
+                    'role' => $role
+                ]
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Đã xảy ra lỗi khi lấy dữ liệu tài khoản.',
+            ], 500); // Trả về 500 cho lỗi server
+        }
+    }
+    public function destroy(Request $request, $id)
+    {
+        try {
+            $query = User::find($id);
+            if (!$query) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy tài khoản'
+                ]);
+            }
+
+            if ($request->user_id == $id) {
+                return response()->json([
+                    "status" => False,
+                    "message" => "Bạn không thể tự khóa tài khoản của mình"
+                ], 422);
+            }
+
+            $query->status = 2;
+            $query->save();
+            event(new SystemNotification(
+                "EMAIL_BAN_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
+            // event(new SystemNotification())
+            return response()->json([
+                'status' => true,
+                'message' => 'Khóa tài khoản thành công',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra khi xóa tài khoản',
+            ], 500);
+        }
+    }
+    public function restore(string $id)
+    {
+        try {
+            $query = User::find($id);
+            if (!$query) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy tài khoản'
+                ]);
+            }
+
+            $query->status = 1;
+            $query->save();
+            event(new SystemNotification(
+                "EMAIL_RESTORE_ACCOUNT",
+                [
+                    "email" => $query->email,
+                    "username" => $query->username,
+                    // "amount"=>9000
+                ]
+            ));
+            return response()->json([
+                'status' => true,
+                'message' => 'Khôi phục tài khoản thành công',
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Có lỗi xảy ra khi khôi phục tài khoản',
+            ], 500);
+        }
+    }
+    public function updateRoles(Request $request, $id)
+    {
+        try {
+            // Bước 1: Validate đầu vào một cách chặt chẽ hơn
+            $validator = Validator::make($request->all(), [
+                // 'roles' phải tồn tại và là một mảng. Mảng có thể rỗng (để xóa hết quyền).
+                'roles' => 'present|array', 
+                // Kiểm tra mỗi phần tử trong mảng 'roles' phải là chuỗi và tồn tại trong bảng 'roles'
+                'roles.*' => 'string|exists:roles,name', 
+                'user_id' => 'required|integer|exists:users,id',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Dữ liệu không hợp lệ.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $rolesToSync = $request->input('roles', []);
+
+            // Bước 2: Lấy thông tin các đối tượng
+            $targetUser = User::find($id);
+            if (!$targetUser) {
+                return response()->json(['status' => false, 'message' => 'Không tìm thấy tài khoản người dùng.'], 404);
+            }
+
+            $actingUser = User::find($request->user_id);
+            // Giả sử chỉ user có quyền 'roles.edit' mới được thực hiện
+            if (!$actingUser || !$actingUser->can('roles.edit')) {
+                return response()->json(['status' => false, 'message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
+            }
+
+            // Bước 3: Áp dụng các quy tắc nghiệp vụ quan trọng
+            // QUAN TRỌNG: Không cho phép sửa quyền của admin/admin-super khác
+            if ($targetUser->hasRole(['admin', 'admin-super'])) {
+                return response()->json(['status' => false, 'message' => 'Không thể chỉnh sửa quyền của Quản trị viên cấp cao.'], 403);
+            }
+            
+            // QUAN TRỌNG: Ngăn chặn việc gán quyền admin/admin-super qua API để bảo vệ hệ thống
+            if (in_array('admin', $rolesToSync) || in_array('admin-super', $rolesToSync)) {
+                 return response()->json(['status' => false, 'message' => 'Không thể gán quyền Quản trị viên qua giao diện này.'], 403);
+            }
+
+            // Bước 4: Đồng bộ hóa quyền
+            $targetUser->syncRoles($rolesToSync);
+
+            return response()->json(['status' => true, 'message' => 'Cập nhật quyền thành công.'], 200);
+
+        } catch (\Exception $e) {
+            // Ghi lại lỗi để debug
+            Log::error('Lỗi khi cập nhật quyền cho user ID ' . $id . ': ' . $e->getMessage());
+            return response()->json(['status' => false, 'message' => 'Đã có lỗi máy chủ xảy ra.'], 500);
+        }
+    }
+}

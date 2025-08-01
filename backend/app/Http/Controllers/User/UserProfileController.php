@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateHistory;
+use App\Models\Dispute;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -304,5 +305,82 @@ class UserProfileController extends Controller
             'message' => 'Get affiliate history successfully.',
             'data' => $histories
         ], 200);
+    }
+
+
+    public function getDisputes(Request $request)
+    {
+        try {
+            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
+            }
+
+            $disputes = Dispute::where('user_id', $user->id)
+                ->with(['orderItem:id,order_id,product_id', 'orderItem.product:id,sku', 'orderItem.order:id,order_code'])
+                ->select('id', 'order_item_id', 'dispute_type', 'description', 'status', 'created_at')
+                ->orderBy('created_at', 'desc')
+                ->get();
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy danh sách khiếu nại thành công.',
+                'data' => $disputes
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Có lỗi xảy ra khi lấy danh sách khiếu nại.',
+                'error' => $e->getMessage(),
+                'errorCode' => 'FETCH_DISPUTES_FAILED'
+            ], 500);
+        }
+    }
+
+    /**
+     * Lấy chi tiết một khiếu nại, bao gồm cả phản hồi từ Admin.
+     *
+     * @param Request $request
+     * @param int $id ID của dispute
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getDisputeDetails(Request $request, $id)
+    {
+        try {
+            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
+            }
+
+            // Lấy dispute với các thông tin liên quan cần thiết
+            $dispute = Dispute::with([
+                'orderItem:id,product_id',
+                'orderItem.product:id,sku'
+            ])->find($id);
+
+            // Kiểm tra khiếu nại có tồn tại và thuộc về user này không
+            if (!$dispute || $dispute->user_id !== $user->id) {
+                return response()->json([
+                    'message' => 'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.',
+                    'errorCode' => 'DISPUTE_NOT_FOUND_OR_FORBIDDEN'
+                ], 404);
+            }
+            
+          
+
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy chi tiết khiếu nại thành công.',
+                'data' => $dispute // Trả về toàn bộ object dispute, đã bao gồm cả 'resolution'
+            ], 200);
+
+        } catch (Exception $e) {
+            return response()->json([
+                'message' => 'Có lỗi xảy ra khi lấy chi tiết khiếu nại.',
+                'error' => $e->getMessage(),
+                'errorCode' => 'FETCH_DISPUTE_DETAIL_FAILED'
+            ], 500);
+        }
     }
 }

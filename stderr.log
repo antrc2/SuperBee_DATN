@@ -1,0 +1,108 @@
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0
+/usr/local/lsws/fcgi-bin/lsnode.js:48
+    var app = require(startupFile);
+              ^
+
+Error [ERR_REQUIRE_ESM]: require() of ES Module /home/mptvweo/node/server.js from /usr/local/lsws/fcgi-bin/lsnode.js not supported.
+Instead change the require of server.js in /usr/local/lsws/fcgi-bin/lsnode.js to a dynamic import() which is available in all CommonJS modules.
+    at startApplication (/usr/local/lsws/fcgi-bin/lsnode.js:48:15)
+    at Object.<anonymous> (/usr/local/lsws/fcgi-bin/lsnode.js:16:1) {
+  code: 'ERR_REQUIRE_ESM'
+}
+
+Node.js v20.17.0

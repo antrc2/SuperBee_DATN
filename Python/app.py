@@ -9,7 +9,7 @@ from cronjob import queue_money, event
 from controller.TransactionController import Transaction
 from controller.AssistantController import chat
 import os
-from Controller.NewsAgent import generate_and_post_article
+from controller.NewsAgent import generate_and_post_article
 
  
 from dotenv import load_dotenv

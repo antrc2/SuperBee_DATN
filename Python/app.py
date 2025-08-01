@@ -18,7 +18,7 @@ load_dotenv()
 username = os.getenv("MBBANK_USERNAME")
 password = os.getenv("MBBANK_PASSWORD")
 app = FastAPI()
-s3_client = S3Controller()
+# s3_client = S3Controller()
 
 
 

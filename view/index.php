@@ -18,8 +18,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= $title ?></title>
   <meta name="description" content="<?= $description ?>">
-    <script type="module" crossorigin src="/assets/index-CqC_z3Eu.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DQNaZ1Z9.css">
+<script type="module" crossorigin src="/assets/index-OefKdV4-.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CSXLybTD.css">
+  
 </head>
 
 <body>

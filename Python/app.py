@@ -9,7 +9,7 @@ from cronjob import queue_money, event
 from controller.TransactionController import Transaction
 from controller.AssistantController import chat
 import os
-from controller.NewsAgent import generate_and_post_article
+# from controller.NewsAgent import generate_and_post_article
 
  
 from dotenv import load_dotenv
@@ -138,14 +138,14 @@ def stop_background_thread():
     print("Shutting down, stopping background thread...")
     event.set()
 
-@app.post("/agent/create-post", tags=["News Agent"])
-def create_facebook_post(background_tasks: BackgroundTasks):
-    background_tasks.add_task(generate_and_post_article)
+# @app.post("/agent/create-post", tags=["News Agent"])
+# def create_facebook_post(background_tasks: BackgroundTasks):
+#     background_tasks.add_task(generate_and_post_article)
     
-    return {
-        "status": True,
-        "message": "Đã nhận yêu cầu. Agent đang bắt đầu quá trình tạo và đăng bài trong nền."
-    }
+#     return {
+#         "status": True,
+#         "message": "Đã nhận yêu cầu. Agent đang bắt đầu quá trình tạo và đăng bài trong nền."
+#     }
 
 
 

@@ -10,9 +10,12 @@ import { useAuth } from "@contexts/AuthContext"; // Import hook chính
  */
 const ProtectedRoute = ({ children, allowedRoles, requiredPermission }) => {
   // Lấy thông tin xác thực từ context
-  const { isLoggedIn, roles, permissions } = useAuth();
-  console.log("🚀 ~ ProtectedRoute ~ isAuthenticated:", isLoggedIn);
+  const { isLoggedIn, roles, permissions, authInitialized } = useAuth();
+
   const location = useLocation();
+  if (!authInitialized) {
+    return <div>Bạn là ai????...</div>;
+  }
 
   // 1. Kiểm tra đã đăng nhập chưa?
   if (!isLoggedIn) {

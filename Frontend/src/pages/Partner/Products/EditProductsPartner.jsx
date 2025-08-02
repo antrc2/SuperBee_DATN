@@ -72,7 +72,8 @@ export default function EditProductsPartner() {
       navigate("/partner/products");
     } catch (err) {
       console.error(err);
-      const errorMessage = err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
+      const errorMessage =
+        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
       setError(errorMessage);
       pop(errorMessage, "e");
     } finally {
@@ -89,19 +90,32 @@ export default function EditProductsPartner() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-8">
+    <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
       <div className="flex items-center gap-4 mb-6">
         <button
           type="button"
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white px-3 py-2 rounded-lg transition border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            strokeWidth={1.5}
+            stroke="currentColor"
+            className="w-5 h-5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15.75 19.5L8.25 12l7.5-7.5"
+            />
           </svg>
           <span className="font-medium">Quay lại</span>
         </button>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-2">Chỉnh sửa sản phẩm: #{product?.sku}</h2>
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 ml-2">
+          Chỉnh sửa sản phẩm: #{product?.sku}
+        </h2>
       </div>
       {error && (
         <div className="rounded-lg p-3 mb-4 border bg-red-50 dark:bg-red-900 text-red-700 dark:text-red-300 border-red-200 dark:border-red-700">

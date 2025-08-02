@@ -30,7 +30,7 @@ const LayoutContent = () => {
           `}
         >
           <AppHeader />
-          <div className="p-4 mx-auto max-w-7xl md:p-6 lg:p-8">
+          <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
             <Outlet />
           </div>
         </main>

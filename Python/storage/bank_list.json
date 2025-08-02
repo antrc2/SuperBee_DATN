@@ -1,194 +1,509 @@
 {
     "banks": [
         {
-            "id": "25080121452933198",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC AN",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "WDUNYKA46QGZX420",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": null,
-                    "ft": "FT25213236070063",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25213250887710",
-                    "totalAmount": "20000.000000"
-                },
-                {
-                    "detailDestNumber": "0108205",
-                    "detailDestName": "NGUYEN NGOC ANH",
-                    "detailBenBankCd": "963369",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "WD1T8OYT8VK8WYNO",
-                    "status": "DONE",
-                    "errorCode": "BP02",
-                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "ft": null,
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": null,
-                    "totalAmount": null
-                },
-                {
-                    "detailDestNumber": "0108205",
-                    "detailDestName": "NGUYEN NGOC AN",
-                    "detailBenBankCd": "963369",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "WD2F221KIC86U5ED",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": null,
-                    "ft": "FT25213557815693",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25213250887710",
-                    "totalAmount": "20000.000000"
-                }
-            ]
+            "id": "MB",
+            "name": "Qu\u00e2n \u0111\u1ed9i (MB)",
+            "code": "MB"
         },
         {
-            "id": "25072820222009330",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC AN",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "DOIBUONJQK1",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": null,
-                    "ft": "FT25209776305395",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25209559303942",
-                    "totalAmount": "10000.000000"
-                }
-            ]
+            "id": "VIETINBANK",
+            "name": "C\u00f4ng Th\u01b0\u01a1ng Vi\u1ec7t Nam (VIETINBANK)",
+            "code": "VIETINBANK"
         },
         {
-            "id": "25072820180943727",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC AN",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "DOIBUONJQK1",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": null,
-                    "ft": "FT25209130142242",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25209852874450",
-                    "totalAmount": "10000.000000"
-                }
-            ]
+            "id": "VCB",
+            "name": "Ngo\u1ea1i th\u01b0\u01a1ng Vi\u1ec7t Nam (VCB)",
+            "code": "VCB"
         },
         {
-            "id": "25072810284151936",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "FYGJNKML",
-                    "status": "DONE",
-                    "errorCode": "BP02",
-                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "ft": null,
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": null,
-                    "totalAmount": null
-                },
-                {
-                    "detailDestNumber": "0965932120",
-                    "detailDestName": "TRAN VAN HAI",
-                    "detailBenBankCd": "970422",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "Anh An dep trai",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": "HACH TOAN THANH CONG",
-                    "ft": "FT25209474784010",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25209337878430",
-                    "totalAmount": "10000"
-                }
-            ]
+            "id": "VBA",
+            "name": "N\u00f4ng nghi\u1ec7p v\u00e0 Ph\u00e1t tri\u1ec3n n\u00f4ng th\u00f4n (VBA)",
+            "code": "VBA"
         },
         {
-            "id": "25072810243301639",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "FYGJNKML",
-                    "status": "DONE",
-                    "errorCode": "BP02",
-                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
-                    "ft": null,
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": null,
-                    "totalAmount": null
-                }
-            ]
+            "id": "BIDV",
+            "name": "\u0110\u1ea7u t\u01b0 v\u00e0 ph\u00e1t tri\u1ec3n (BIDV)",
+            "code": "BIDV"
         },
         {
-            "id": "25072810151649821",
-            "detail": [
-                {
-                    "detailDestNumber": "0838411897",
-                    "detailDestName": "NGUYEN NGOC AN",
-                    "detailBenBankCd": "970407",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "FYGJNKML",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": null,
-                    "ft": "FT25209224601826",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25209715920097",
-                    "totalAmount": "10000.000000"
-                },
-                {
-                    "detailDestNumber": "0965932120",
-                    "detailDestName": "TRAN VAN HAI",
-                    "detailBenBankCd": "970422",
-                    "detailAmount": "10000",
-                    "detailChargeAmount": "0",
-                    "detailDescription": "FGYHJKL",
-                    "status": "DONE",
-                    "errorCode": "00",
-                    "errorMessage": null,
-                    "errorDetail": "HACH TOAN THANH CONG",
-                    "ft": "FT25209967007494",
-                    "refundTransactionFT": null,
-                    "totalTransactionFT": "FT25209683420482",
-                    "totalAmount": "10000"
-                }
-            ]
+            "id": "TCB",
+            "name": "K\u1ef9 Th\u01b0\u01a1ng (TCB)",
+            "code": "TCB"
+        },
+        {
+            "id": "VIB",
+            "name": "Qu\u1ed1c t\u1ebf (VIB)",
+            "code": "VIB"
+        },
+        {
+            "id": "LPB",
+            "name": "Ng\u00e2n h\u00e0ng Th\u01b0\u01a1ng m\u1ea1i C\u1ed5 ph\u1ea7n L\u1ed9c Ph\u00e1t Vi\u1ec7t Nam",
+            "code": "LPB"
+        },
+        {
+            "id": "TIMO",
+            "name": "BVBank Timo \u2013 Ng\u00e2n h\u00e0ng s\u1ed1 Timo",
+            "code": "TIMO"
+        },
+        {
+            "id": "VIETTELM",
+            "name": "Viettel Money",
+            "code": "VIETTELM"
+        },
+        {
+            "id": "VNPTM",
+            "name": "VNPT Money",
+            "code": "VNPTM"
+        },
+        {
+            "id": "TPB",
+            "name": "Ti\u00ean Phong (TPB)",
+            "code": "TPB"
+        },
+        {
+            "id": "UBANKVPB",
+            "name": "Vi\u1ec7t Nam Th\u1ecbnh V\u01b0\u1ee3ng UBANK(VPB)",
+            "code": "UBANKVPB"
+        },
+        {
+            "id": "CAKEVPB",
+            "name": "Vi\u1ec7t Nam Th\u1ecbnh V\u01b0\u1ee3ng CAKE BANK(VPB)",
+            "code": "CAKEVPB"
+        },
+        {
+            "id": "LIOBANK",
+            "name": "Ngan hang so Liobank by OCB",
+            "code": "LIOBANK"
+        },
+        {
+            "id": "SVFC",
+            "name": "Cong ty Tai chinh TNHH MTV Shinhan Viet Nam (SVFC)",
+            "code": "SVFC"
+        },
+        {
+            "id": "Vikki by HDBank",
+            "name": "Vikki by HDBank",
+            "code": "Vikki by HDBank"
+        },
+        {
+            "id": "EIB",
+            "name": "Xu\u1ea5t nh\u1eadp kh\u1ea9u (EIB)",
+            "code": "EIB"
+        },
+        {
+            "id": "MSB",
+            "name": "H\u00e0ng h\u1ea3i (MSB)",
+            "code": "MSB"
+        },
+        {
+            "id": "MAFC",
+            "name": "Cong ty Tai chinh TNHH MTV Mirae Asset",
+            "code": "MAFC"
+        },
+        {
+            "id": "VietQR_NAPAS",
+            "name": "CTCP TT QUOC GIA VIET NAM NAPAS",
+            "code": "VietQR_NAPAS"
+        },
+        {
+            "id": "VPB",
+            "name": "Vi\u1ec7t Nam Th\u1ecbnh V\u01b0\u1ee3ng (VPB)",
+            "code": "VPB"
+        },
+        {
+            "id": "SHB",
+            "name": "S\u00e0i G\u00f2n H\u00e0 N\u1ed9i (SHB)",
+            "code": "SHB"
+        },
+        {
+            "id": "PVC",
+            "name": "\u0110\u1ea1i ch\u00fang Vi\u1ec7t Nam (PVC)",
+            "code": "PVC"
+        },
+        {
+            "id": "VAB",
+            "name": "Vi\u1ec7t \u00c1 (VAB)",
+            "code": "VAB"
+        },
+        {
+            "id": "MBV",
+            "name": "Ng\u00e2n h\u00e0ng TNHH MTV Vi\u1ec7t Nam Hi\u1ec7n \u0110\u1ea1i (MBV)",
+            "code": "MBV"
+        },
+        {
+            "id": "STB",
+            "name": "Sacombank (STB)",
+            "code": "STB"
+        },
+        {
+            "id": "VID",
+            "name": "Li\u00ean doanh VID Public Bank (VID)",
+            "code": "VID"
+        },
+        {
+            "id": "PGB",
+            "name": "Ng\u00e2n h\u00e0ng TMCP Th\u1ecbnh v\u01b0\u1ee3ng v\u00e0 Ph\u00e1t tri\u1ec3n (PGBank)",
+            "code": "PGB"
+        },
+        {
+            "id": "SGB",
+            "name": "S\u00e0i G\u00f2n C\u00f4ng th\u01b0\u01a1ng (SGB)",
+            "code": "SGB"
+        },
+        {
+            "id": "PVcomBank Pay",
+            "name": "PVcomBank Pay",
+            "code": "PVcomBank Pay"
+        },
+        {
+            "id": "UMEE",
+            "name": "Ki\u00ean Long UMEE (KLB)",
+            "code": "UMEE"
+        },
+        {
+            "id": "ABBANK",
+            "name": "An B\u00ecnh (ABBANK)",
+            "code": "ABBANK"
+        },
+        {
+            "id": "HDB",
+            "name": "Ph\u00e1t tri\u1ec3n nh\u00e0 TP HCM (HDB)",
+            "code": "HDB"
+        },
+        {
+            "id": "BVB",
+            "name": "B\u1ea3o Vi\u1ec7t (BVB)",
+            "code": "BVB"
+        },
+        {
+            "id": "NCB",
+            "name": "Qu\u1ed1c D\u00e2n (NCB)",
+            "code": "NCB"
+        },
+        {
+            "id": "OCB",
+            "name": "Ph\u01b0\u01a1ng \u0110\u00f4ng (OCB)",
+            "code": "OCB"
+        },
+        {
+            "id": "SEAB",
+            "name": "\u0110\u00f4ng Nam \u00c1 (SEAB)",
+            "code": "SEAB"
+        },
+        {
+            "id": "SCB",
+            "name": "S\u00e0i G\u00f2n (SCB)",
+            "code": "SCB"
+        },
+        {
+            "id": "NAMABANK",
+            "name": "Nam \u00c1 (NAMABANK)",
+            "code": "NAMABANK"
+        },
+        {
+            "id": "VDB",
+            "name": "Ph\u00e1t tri\u1ec3n Vi\u1ec7t Nam (VDB)",
+            "code": "VDB"
+        },
+        {
+            "id": "CSXH",
+            "name": "Ch\u00ednh s\u00e1ch X\u00e3 h\u1ed9i (CSXH)",
+            "code": "CSXH"
+        },
+        {
+            "id": "ACB",
+            "name": "\u00c1 Ch\u00e2u (ACB)",
+            "code": "ACB"
+        },
+        {
+            "id": "KLB",
+            "name": "Ki\u00ean Long (KLB)",
+            "code": "KLB"
+        },
+        {
+            "id": "VCCB",
+            "name": "BVBank \u2013 Ng\u00e2n h\u00e0ng TMCP B\u1ea3n Vi\u1ec7t",
+            "code": "VCCB"
+        },
+        {
+            "id": "VIETBANK",
+            "name": "Vi\u1ec7t Nam Th\u01b0\u01a1ng t\u00edn (VIETBANK)",
+            "code": "VIETBANK"
+        },
+        {
+            "id": "NASB",
+            "name": "B\u1eafc \u00c1 (NASB)",
+            "code": "NASB"
+        },
+        {
+            "id": "DAB",
+            "name": "TNHH MTV s\u1ed1 Vikki",
+            "code": "DAB"
+        },
+        {
+            "id": "GPB",
+            "name": "D\u1ea7u kh\u00ed to\u00e0n c\u1ea7u (GPB)",
+            "code": "GPB"
+        },
+        {
+            "id": "HLB",
+            "name": "TNHH MTV Hong Leong VN (HLB)",
+            "code": "HLB"
+        },
+        {
+            "id": "SHBVN",
+            "name": "MTV Shinhan Vi\u1ec7t Nam (SHBVN)",
+            "code": "SHBVN"
+        },
+        {
+            "id": "KEB HANA HN",
+            "name": "NH KEB HANA CN HA NOI",
+            "code": "KEB HANA HN"
+        },
+        {
+            "id": "ANZ",
+            "name": "TNHH MTV ANZ Vi\u1ec7t Nam (ANZ)",
+            "code": "ANZ"
+        },
+        {
+            "id": "BANGKOK",
+            "name": "Bangkok \u0110\u1ea1i ch\u00fang TNHH (BANGKOK)",
+            "code": "BANGKOK"
+        },
+        {
+            "id": "CHINA",
+            "name": "Trung Qu\u1ed1c (CHINA)",
+            "code": "CHINA"
+        },
+        {
+            "id": "BNP PARIBAS",
+            "name": "BNP PARIBAS HN Ngan hang BNP Paribas CN HN",
+            "code": "BNP PARIBAS"
+        },
+        {
+            "id": "CCB",
+            "name": "X\u00e2y d\u1ef1ng Trung Qu\u1ed1c (CCB)",
+            "code": "CCB"
+        },
+        {
+            "id": "CHINATRUST",
+            "name": "TNHH CTBC (CHINATRUST)",
+            "code": "CHINATRUST"
+        },
+        {
+            "id": "CIMB",
+            "name": "TNHH MTV CIMB Vi\u1ec7t Nam (CIMB)",
+            "code": "CIMB"
+        },
+        {
+            "id": "CITIBANK",
+            "name": "Citibank Vi\u1ec7t Nam (CITIBANK)",
+            "code": "CITIBANK"
+        },
+        {
+            "id": "DBS",
+            "name": "DBS BANK (DBS)",
+            "code": "DBS"
+        },
+        {
+            "id": "DEUTSCHE",
+            "name": "DEUTSCHE BANK AG (DEUTSCHE)",
+            "code": "DEUTSCHE"
+        },
+        {
+            "id": "KEB HANA HCM",
+            "name": "NH KEB HANA CN TP HCM",
+            "code": "KEB HANA HCM"
+        },
+        {
+            "id": "HSBC",
+            "name": "TNHH MTV HSBC Vi\u1ec7t Nam (HSBC)",
+            "code": "HSBC"
+        },
+        {
+            "id": "IBK HCM",
+            "name": "INDUSTRIAL BANK OF KOREA CN HCM (IBK HCM)",
+            "code": "IBK HCM"
+        },
+        {
+            "id": "KOOKMIN CN HCM",
+            "name": "NH KOOKMIN CN HCM",
+            "code": "KOOKMIN CN HCM"
+        },
+        {
+            "id": "MAYBANK",
+            "name": "May Bank (MAYBANK)",
+            "code": "MAYBANK"
+        },
+        {
+            "id": "MEGA",
+            "name": "MEGA ICBC (MEGA)",
+            "code": "MEGA"
+        },
+        {
+            "id": "SHANGHAI",
+            "name": "The Shanghai Commercial & Savings (SHANGHAI)",
+            "code": "SHANGHAI"
+        },
+        {
+            "id": "CHINESE",
+            "name": "OVERSEA - CHINESE BANKING CORP (CHINESE)",
+            "code": "CHINESE"
+        },
+        {
+            "id": "SMBC",
+            "name": "SUMITOMO MITSUI BANKING CORPORATION (SMBC)",
+            "code": "SMBC"
+        },
+        {
+            "id": "TAIPEI",
+            "name": "Taipei Fubon (TAIPEI)",
+            "code": "TAIPEI"
+        },
+        {
+            "id": "CBB",
+            "name": "TNHH MTV Ngo\u1ea1i th\u01b0\u01a1ng C\u00f4ng ngh\u1ec7 s\u1ed1 (VCBNeo)",
+            "code": "CBB"
+        },
+        {
+            "id": "Woori",
+            "name": "Woori Vi\u1ec7t Nam (Woori)",
+            "code": "Woori"
+        },
+        {
+            "id": "IVB",
+            "name": "Indovina (IVB)",
+            "code": "IVB"
+        },
+        {
+            "id": "CITIBANKHCM",
+            "name": "Citibank TP.H\u1ed3 Ch\u00ed Minh (CITIBANK)",
+            "code": "CITIBANKHCM"
+        },
+        {
+            "id": "MIZUHOHCM",
+            "name": "MIZUHO BANK TP HO CHI MINH (MIZUHO)",
+            "code": "MIZUHOHCM"
+        },
+        {
+            "id": "AGRICULTURALCHINA",
+            "name": "NH AGRICULTURAL BANK OF CHINA LTD HN",
+            "code": "AGRICULTURALCHINA"
+        },
+        {
+            "id": "KASIKORNBANK CNHCM",
+            "name": "NH DAICHUNG TNHH KASIKORNBANK CNHCM",
+            "code": "KASIKORNBANK CNHCM"
+        },
+        {
+            "id": "COMERCIAL HCM",
+            "name": "FIRST COMMERCIAL BANK CN TP HCM",
+            "code": "COMERCIAL HCM"
+        },
+        {
+            "id": "TokyoMitsubishiHCM",
+            "name": "NH MUFG BANK LTD CN TP HCM",
+            "code": "TokyoMitsubishiHCM"
+        },
+        {
+            "id": "BNP PARIBAS HCM",
+            "name": "BNP PARIBAS HCM Ngan hang BNP Paribas CN HCM",
+            "code": "BNP PARIBAS HCM"
+        },
+        {
+            "id": "CUBHCM",
+            "name": "CUBHCM Ngan hang Cathay United Bank CN HCM",
+            "code": "CUBHCM"
+        },
+        {
+            "id": "COMMUNICATION",
+            "name": "BANK OF COMMUNICATIONS (COMMUNICATION)",
+            "code": "COMMUNICATION"
+        },
+        {
+            "id": "CCF",
+            "name": "Ng\u00e2n h\u00e0ng H\u1ee3p t\u00e1c x\u00e3 Vi\u1ec7t Nam (Co-opbank)",
+            "code": "CCF"
+        },
+        {
+            "id": "COMMONWEALTH",
+            "name": "COMMONWEALTH BANK (COMMONWEALTH)",
+            "code": "COMMONWEALTH"
+        },
+        {
+            "id": "COMERCIAL HN",
+            "name": "FIRST COMMERCIAL BANK CN HA NOI",
+            "code": "COMERCIAL HN"
+        },
+        {
+            "id": "HUA NAN",
+            "name": "HUA NAN COMMERCIAL BANK (HUA NAN)",
+            "code": "HUA NAN"
+        },
+        {
+            "id": "MCB",
+            "name": "JPMORGAN CHASE (MCB)",
+            "code": "MCB"
+        },
+        {
+            "id": "MALAYAN",
+            "name": "Malayan Banking Berhad (MALAYAN)",
+            "code": "MALAYAN"
+        },
+        {
+            "id": "NATIXIS",
+            "name": "BPCE IOM (NATIXIS)",
+            "code": "NATIXIS"
+        },
+        {
+            "id": "SinoPac",
+            "name": "SinoPac (FAR EAST NATIONAL BANK) (SinoPac)",
+            "code": "SinoPac"
+        },
+        {
+            "id": "TokyoMitsubishi",
+            "name": "NH MUFG BANK LTD CN HA NOI",
+            "code": "TokyoMitsubishi"
+        },
+        {
+            "id": "KOOKMIN CN HN",
+            "name": "NH KOOKMIN CN HA NOI",
+            "code": "KOOKMIN CN HN"
+        },
+        {
+            "id": "UOB",
+            "name": "United Overseas Bank Vi\u1ec7t Nam (UOB)",
+            "code": "UOB"
+        },
+        {
+            "id": "VRB",
+            "name": "Li\u00ean Doanh Vi\u1ec7t Nga (VRB)",
+            "code": "VRB"
+        },
+        {
+            "id": "BIDC",
+            "name": "DT-PT CAMPUCHIA (BIDC)",
+            "code": "BIDC"
+        },
+        {
+            "id": "ICBC",
+            "name": "C\u00f4ng th\u01b0\u01a1ng Trung Qu\u1ed1c (ICBC)",
+            "code": "ICBC"
+        },
+        {
+            "id": "MIZUHOHN",
+            "name": "MIZUHO BANK HA NOI (MIZUHO)",
+            "code": "MIZUHOHN"
+        },
+        {
+            "id": "STANDARDCHARTERED",
+            "name": "STANDARD CHARTERED (STANDARDCHARTERED)",
+            "code": "STANDARDCHARTERED"
+        },
+        {
+            "id": "IBK HN",
+            "name": "INDUSTRIAL BANK OF KOREA CN HA NOI (IBK HN)",
+            "code": "IBK HN"
         }
     ]
 }

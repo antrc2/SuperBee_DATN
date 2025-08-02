@@ -27,8 +27,8 @@ class Transaction(MBBank):
         response = self._req("https://online.mbbank.com.vn/api/retail-web-bulkpaymentms/getBulkPaymentDetail",json=data)
         # print(response)
         return response['bulkPaymentDataDetail']
-def getListBank(self):
-    with open("../storage/bank_list.json",'r',encoding='utf-8') as f:
+def getListBank():
+    with open("storage/bank_list.json",'r',encoding='utf-8') as f:
         bank_list = json.load(f)
     return bank_list['banks']
     # def getListBank(self):

@@ -26,7 +26,8 @@ def withdraw():
                         'code': bank['bankCode']
                     }
                 )
-            
+            with open("storage/bank_list.json","w",encoding='utf-8') as f:
+                json.dump({"banks": output}, f,indent=4)
 
             bulk_payments = []
             ids = []
@@ -42,8 +43,7 @@ def withdraw():
                         "detail": bulk_detail
                     }
                 )
-            with open("storage/bank_list.json","w",encoding='utf-8') as f:
-                json.dump({"banks": bulk_payments}, f,indent=4)
+            
 
             with open("storage/data.json", "w",encoding='utf-8') as json_file:
                 json.dump(bulk_payments, json_file,indent=4)

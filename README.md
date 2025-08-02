@@ -6,6 +6,7 @@ redis-server --port 1234 --unixsocket /home/mptvweo/.application/redis.sock --un
 5. **21:00:00 01/08/2025**
 * Quản lí mã giảm giá
     * 1. Thiếu validate khi thêm % giảm giá (nhập quá 100% thì vẫn được ở BE). Bên FE không được sử dụng min= và max= hoặc required để validate
+    * 2. Khi thêm số lần có thể sử dụng, thì chỉ có -1, hoặc số dương, nhưng lúc test, thì nhập - 52 vào thì nó vẫn nhận, mặc dù sau đó không dùng được
 * Quản lí khuyến mãi nạp thẻ
     * 1. Thiếu message khi khôi phục khuyến mãi đã hết hạn, không có message trả về
 * Quản lí sản phẩm của admin:

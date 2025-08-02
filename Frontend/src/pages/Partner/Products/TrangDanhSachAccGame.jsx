@@ -53,7 +53,6 @@ const TrangDanhSachAccGamePartner = () => {
       const { data, ...meta } = response.data.data;
       setProducts(data);
       setPaginationMeta(meta);
-      pop("lấy dữ liệu thành công", "s");
     } catch (error) {
       pop("lấy dữ liệu thất bại", "e");
       console.error("Lỗi khi tải dữ liệu:", error);
@@ -130,7 +129,11 @@ const TrangDanhSachAccGamePartner = () => {
 
   return (
     <Layout
-      title={<span className="text-2xl font-bold text-gray-900 dark:text-gray-100">Danh sách tài khoản game</span>}
+      title={
+        <span className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          Danh sách tài khoản game
+        </span>
+      }
       className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 mt-8 max-w-6xl mx-auto"
       showBackButton={false}
       showBrowse={false}

@@ -28,10 +28,10 @@ class AdminBannerController extends Controller
 
             // Lọc theo khoảng ngày tạo
             $query->when($request->filled('start_date'), function ($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->start_date);
+                $q->whereDate('updated_at', '>=', $request->start_date);
             });
             $query->when($request->filled('end_date'), function ($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->end_date);
+                $q->whereDate('updated_at', '<=', $request->end_date);
             });
 
             // Sắp xếp và phân trang

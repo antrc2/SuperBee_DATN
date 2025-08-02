@@ -9,6 +9,7 @@ redis-server --port 1234 --unixsocket /home/mptvweo/.application/redis.sock --un
     * 2. Khi thêm số lần có thể sử dụng, thì chỉ có -1, hoặc số dương, nhưng lúc test, thì nhập - 52 vào thì nó vẫn nhận, mặc dù sau đó không dùng được
 * Quản lí khuyến mãi nạp thẻ
     * 1. Thiếu message khi khôi phục khuyến mãi đã hết hạn, không có message trả về
+    * 2. Khi đã xóa, nhưng lại không thấy bên FE gọi API lại để lấy danh sách lại
 * Quản lí sản phẩm của admin:
     * 1. Khi không sửa giá sale, thì nó đưa về null, mặc dù có sửa giá sale
 * Rút tiền tự động

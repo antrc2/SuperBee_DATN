@@ -101,7 +101,7 @@ class AdminDiscountCodeController extends Controller
             $rules = [
                 'code'                  => 'required|string|unique:promotions,code',
                 'description'           => 'nullable|string|max:255',
-                'discount_value'        => 'required|integer|min:0',
+                'discount_value'        => 'required|integer|min:0|max:99',
                 'min_discount_amount'   => 'nullable|integer|min:0',
                 'max_discount_amount'   => 'nullable|integer|min:0',
                 'start_date'            => 'required|date',
@@ -123,6 +123,7 @@ class AdminDiscountCodeController extends Controller
                 'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
                 'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
                 'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 99%.",
 
                 'min_discount_amount.integer'   => 'Số tiền giảm giá tối thiểu phải là số nguyên.',
                 'min_discount_amount.min'       => 'Số tiền giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
@@ -185,6 +186,7 @@ class AdminDiscountCodeController extends Controller
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
             $validated['status'] = $request->status;
+            $validated['code'] = strtoupper($request->code);
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();

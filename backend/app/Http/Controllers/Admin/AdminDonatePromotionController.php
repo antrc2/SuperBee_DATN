@@ -106,7 +106,7 @@ class AdminDonatePromotionController extends Controller
                 'usage_limit'      => 'nullable|integer',
                 'per_user_limit'   => 'nullable|integer',
            
-                'status'           => 'nullable|string',
+                'status'           => 'nullable',
             ];
 
             $messages = [
@@ -127,7 +127,6 @@ class AdminDonatePromotionController extends Controller
                 'per_user_limit.integer'  => 'Giới hạn mỗi người dùng phải là số nguyên.',
                 'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
 
-                'status.string'           => 'Trạng thái phải là chuỗi ký tự.',
             ];
 
 
@@ -212,26 +211,31 @@ class AdminDonatePromotionController extends Controller
                     'status' => False,
                     'message' => "Không tìm thấy khuyến mãi"
                 ], 404);
-            } // } else {
-            // 
-            // }
+            } 
+
+            if (DonatePromotion::where('id',$id)->first()->end_date < now()){
+                return response()->json([
+                    "status"=>False,
+                    'message'=>"Khuyến mãi dã hết hạn"
+                ],400);
+            }
+
             if (DonatePromotion::where('web_id', $request->web_id)->where("status", 1)->first() != NULL) { // Có tìm thấy
                 return response()->json([
                     "status" => False,
                     "message" => "Không thể khôi phục, vì đã có khuyến mãi khác đang hoạt động"
                 ], 400);
             }
-        $a=    DonatePromotion::where("id", $id)->update(['status' => 1]);
+            DonatePromotion::where("id", $id)->update(['status' => 1]);
             return response()->json([
                 'status' => True,
                 'message' => "Khôi phục thành công",
-                "đf"=>$a
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => False,
                 'message' => "Khôi phục thất bại"
-            ]);
+            ],500);
         }
     }
 }

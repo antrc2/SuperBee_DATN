@@ -204,6 +204,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
         });
         Route::prefix('/disputes')->group(function () {
+            // Từ chối rồi nhưng lại thành công
             Route::post('/', [DisputeController::class, 'store']);
 
             // Route để lấy danh sách tất cả khiếu nại của người dùng
@@ -419,5 +420,5 @@ Route::prefix('/assistant')->group(function () {
     });
 });
 
-// Route::post("/export",[AdminWithdrawController::class,'export']);
+Route::post("/export",[AdminWithdrawController::class,'export']);
 // Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

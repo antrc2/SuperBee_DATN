@@ -1,4 +1,21 @@
+# Deploy:
+```bash
+redis-server --port 1234 --unixsocket /home/mptvweo/.application/redis.sock --unixsocketperm 777
+```
 # Ghi chú nội dung cuộc họp
+5. **21:00:00 01/08/2025**
+* Quản lí mã giảm giá
+    * 1. Thiếu validate khi thêm % giảm giá (nhập quá 100% thì vẫn được ở BE). Bên FE không được sử dụng min= và max= hoặc required để validate
+* Quản lí khuyến mãi nạp thẻ
+    * 1. Thiếu message khi khôi phục khuyến mãi đã hết hạn, không có message trả về
+* Quản lí sản phẩm của admin:
+    * 1. Khi không sửa giá sale, thì nó đưa về null, mặc dù có sửa giá sale
+* Rút tiền tự động
+    * 1. Khi rút tiền theo lô, thì nó trừ tiền ở 1 requests, chứ không phải ở số lần giao dịch
+* Nạp thẻ:
+    * 1. Thêm phần lịch sử rút tiền
+    * 2. Thêm phần khuyến mãi nạp thẻ nếu có
+
 4. **21:00:00 26/05/2025**
 * API quản lí sản phẩm
     * 1. Khi User chưa đăng nhập, và khi admin muốn xem danh sách sản phẩm của web đó, thì Endpoint là `GET /products/`

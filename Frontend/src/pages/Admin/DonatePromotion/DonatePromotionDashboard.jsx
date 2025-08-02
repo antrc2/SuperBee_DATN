@@ -142,6 +142,7 @@ const DonatePromotionDashboard = () => {
             <option value="">Tất cả trạng thái</option>
             <option value="1">Hoạt động</option>
             <option value="0">Ngưng</option>
+            <option value="2">Hết hạn</option>
           </select>
           <select
             onChange={(e) => {

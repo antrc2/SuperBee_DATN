@@ -94,6 +94,7 @@ class AdminDiscountCodeController extends Controller
         }
     }
     public function store(Request $request)
+// Thiếu validate discount amount
     {
         try {
             // 1. Validate input
@@ -108,6 +109,7 @@ class AdminDiscountCodeController extends Controller
                 'usage_limit'           => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'        => 'nullable|integer|min:-1|not_in:0',
                 'target_user_id'        => 'required|integer',
+                'status'=>'nullable|integer'
             ];
 
             $messages = [
@@ -182,6 +184,7 @@ class AdminDiscountCodeController extends Controller
             $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
+            $validated['status'] = $request->status;
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();

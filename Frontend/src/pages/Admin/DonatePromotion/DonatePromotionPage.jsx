@@ -20,15 +20,15 @@ const StatusBadge = ({ status, endDate }) => {
   let colorClasses =
     "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
 
-  if (status == 1 && !isExpired) {
+  if (status == 1) {
     text = "Hoạt động";
     colorClasses =
       "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
-  } else if (status == 1 && isExpired) {
-    text = "Hết hạn";
-    colorClasses =
-      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";
-  } else if (status == 2 && isExpired) {
+  // } else if (status == 1 && isExpired) {
+  //   text = "Hết hạn";
+  //   colorClasses =
+  //     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";
+  } else if (status == 2) {
     text = "Hết hạn";
     colorClasses =
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";

@@ -7,7 +7,7 @@ load_dotenv()
 backend_url = os.getenv("BACKEND_URL")
 api_key = os.getenv("BACKEND_API_KEY")
 event = Event()
-sleep = 3
+sleep = 5
 def queue_money():
     while not  event.is_set():
         try:

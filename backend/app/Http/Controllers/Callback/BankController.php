@@ -102,41 +102,78 @@ class BankController extends Controller
                     'message'=>"Fail to callback"
                 ],403);
             };
-            $python_url = env("PYTHON_API");
-            $bulks = Http::get("{$python_url}/transaction/bulk_payment")->json();
-            Log::info(['bulks'=>$bulks['data']]);
-            foreach ($bulks['data'] as $bulk){
-                // Log::info(['bulk_details'=>$bulk]);
-                $bulk_details = Http::get("{$python_url}/transaction/bulk_payment_detail/{$bulk['bulkId']}")->json();
-                
-                foreach ($bulk_details['data'] as $bulk_detail){
-                    $detailDescription = $bulk_detail['detailDescription'];
-                    $withdraw = Withdraw::where("withdraw_code",$detailDescription)->first();
-                    if ($withdraw != NULL) { // Tìm thấy
-                        DB::beginTransaction();
+            // return response()->json([
+            //     "hehe"=>$request->withdraw_code
+            // ]);
+            DB::beginTransaction();
+            $withdraw = Withdraw::where("withdraw_code",$request->withdraw_code)->with("user")->first();
+            if ($withdraw == null) {
 
-                        $withdraw->status = 1;
-                        // $withdraw->save();
-                        $wallet = Wallet::where('user_id',$withdraw->user_id)->first();
-                        $wallet_transaction = WalletTransaction::create([
-                            'wallet_id'=>$wallet->id,
-                            "type"=>"withdraw",
-                            "amount"=>$withdraw->amount,
-                            "related_id"=>$withdraw->id,
-                            "related_type"=>"App\Models\Withdraw",
-                            'status'=>1
-                        ]);
-
-                        $withdraw->wallet_transaction_id = $wallet_transaction->id;
-                        $withdraw->save();
-                        DB::commit();
-                        return response()->json([
-                            'success'=>True,
-                        ]);
-                        
-                    }
-                }    
+                // return "{'hehe'=>'không tìm thấy withdrawcode tương ứng'}";
+                return response()->json([
+                    "hehe"=>"Không tìm thấy withdraw_code {$request->withdraw_code} tương ứng"
+                ]);
             }
+            // $wallet = Wallet::where("user_id",$withdraw->user_id)->first();
+            if ($request->status){
+                $withdraw->status = 1;
+                // $withdraw->note = $request->message;
+                WalletTransaction::create([
+                    "wallet_id"=>$withdraw->user->id,
+                    "type"=>'withdraw',
+                    'related_id'=>$withdraw->id,
+                    "related_type"=>"App\Models\Withdraw",
+                    "amount"=>$withdraw->amount,
+                    'status'=>1
+                ]);
+            } else {
+                $withdraw->status = 3;
+                $withdraw->note = $request->message;
+            }
+            $withdraw->save();
+            DB::commit();
+            return response()->json([
+                "status"=>True,
+                'message'=>$request->message
+            ]);
+
+
+            // $withdraw = Withdraw::where('withdraw_code',$request->withdraw)
+            // $python_url = env("PYTHON_API");
+            // $bulks = Http::get("{$python_url}/transaction/bulk_payment")->json();
+            // Log::info(['bulks'=>$bulks['data']]);
+            // foreach ($bulks['data'] as $bulk){
+            //     // Log::info(['bulk_details'=>$bulk]);
+            //     $bulk_details = Http::get("{$python_url}/transaction/bulk_payment_detail/{$bulk['bulkId']}")->json();
+                
+            //     foreach ($bulk_details['data'] as $bulk_detail){
+            //         $detailDescription = $bulk_detail['detailDescription'];
+            //         $withdraw = Withdraw::where("withdraw_code",$detailDescription)->first();
+            //         if ($withdraw != NULL) { // Tìm thấy
+            //             DB::beginTransaction();
+
+            //             $withdraw->status = 1;
+            //             // $withdraw->save();
+            //             $wallet = Wallet::where('user_id',$withdraw->user_id)->first();
+            //             $wallet_transaction = WalletTransaction::create([
+            //                 'wallet_id'=>$wallet->id,
+            //                 "type"=>"withdraw",
+            //                 "amount"=>$withdraw->amount,
+            //                 "related_id"=>$withdraw->id,
+            //                 "related_type"=>"App\Models\Withdraw",
+            //                 'status'=>1
+            //             ]);
+
+            //             $withdraw->wallet_transaction_id = $wallet_transaction->id;
+            //             $withdraw->save();
+            //             DB::commit();
+            //             return response()->json([
+            //                 'success'=>True,
+            //             ]);
+                        
+            //         }
+            //     }    
+            // }
             // Ghi dữ liệu từ request vào file log
             // Log::info('Withdraw request data:', [
             //     'request' => $request->all(),
@@ -206,9 +243,9 @@ class BankController extends Controller
             return response()->json([
                 'success'=>False,
                 "message"=>"Đã có lỗi xảy ra",
-                // 'hehe'=>$th->getMessage(),
-                // 'line'=>$th->getLine()
-            ], 200);
+                'hehe'=>$th->getMessage(),
+                'line'=>$th->getLine()
+            ], 500);
         }
     }
 

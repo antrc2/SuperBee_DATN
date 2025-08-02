@@ -1,0 +1,194 @@
+{
+    "banks": [
+        {
+            "id": "25080121452933198",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC AN",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "WDUNYKA46QGZX420",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": null,
+                    "ft": "FT25213236070063",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25213250887710",
+                    "totalAmount": "20000.000000"
+                },
+                {
+                    "detailDestNumber": "0108205",
+                    "detailDestName": "NGUYEN NGOC ANH",
+                    "detailBenBankCd": "963369",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "WD1T8OYT8VK8WYNO",
+                    "status": "DONE",
+                    "errorCode": "BP02",
+                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "ft": null,
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": null,
+                    "totalAmount": null
+                },
+                {
+                    "detailDestNumber": "0108205",
+                    "detailDestName": "NGUYEN NGOC AN",
+                    "detailBenBankCd": "963369",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "WD2F221KIC86U5ED",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": null,
+                    "ft": "FT25213557815693",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25213250887710",
+                    "totalAmount": "20000.000000"
+                }
+            ]
+        },
+        {
+            "id": "25072820222009330",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC AN",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "DOIBUONJQK1",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": null,
+                    "ft": "FT25209776305395",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25209559303942",
+                    "totalAmount": "10000.000000"
+                }
+            ]
+        },
+        {
+            "id": "25072820180943727",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC AN",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "DOIBUONJQK1",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": null,
+                    "ft": "FT25209130142242",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25209852874450",
+                    "totalAmount": "10000.000000"
+                }
+            ]
+        },
+        {
+            "id": "25072810284151936",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "FYGJNKML",
+                    "status": "DONE",
+                    "errorCode": "BP02",
+                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "ft": null,
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": null,
+                    "totalAmount": null
+                },
+                {
+                    "detailDestNumber": "0965932120",
+                    "detailDestName": "TRAN VAN HAI",
+                    "detailBenBankCd": "970422",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "Anh An dep trai",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": "HACH TOAN THANH CONG",
+                    "ft": "FT25209474784010",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25209337878430",
+                    "totalAmount": "10000"
+                }
+            ]
+        },
+        {
+            "id": "25072810243301639",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "FYGJNKML",
+                    "status": "DONE",
+                    "errorCode": "BP02",
+                    "errorMessage": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "errorDetail": "LOI TRUY VAN TEN: SAI TEN NGUOI THU HUONG, TEN DUNG:NGUYEN NGOC AN",
+                    "ft": null,
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": null,
+                    "totalAmount": null
+                }
+            ]
+        },
+        {
+            "id": "25072810151649821",
+            "detail": [
+                {
+                    "detailDestNumber": "0838411897",
+                    "detailDestName": "NGUYEN NGOC AN",
+                    "detailBenBankCd": "970407",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "FYGJNKML",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": null,
+                    "ft": "FT25209224601826",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25209715920097",
+                    "totalAmount": "10000.000000"
+                },
+                {
+                    "detailDestNumber": "0965932120",
+                    "detailDestName": "TRAN VAN HAI",
+                    "detailBenBankCd": "970422",
+                    "detailAmount": "10000",
+                    "detailChargeAmount": "0",
+                    "detailDescription": "FGYHJKL",
+                    "status": "DONE",
+                    "errorCode": "00",
+                    "errorMessage": null,
+                    "errorDetail": "HACH TOAN THANH CONG",
+                    "ft": "FT25209967007494",
+                    "refundTransactionFT": null,
+                    "totalTransactionFT": "FT25209683420482",
+                    "totalAmount": "10000"
+                }
+            ]
+        }
+    ]
+}

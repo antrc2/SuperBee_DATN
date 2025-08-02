@@ -6,8 +6,9 @@ import uvicorn
 from threading import Thread
 from controller.S3Controller import S3Controller
 from cronjob import queue_money, event
-from controller.TransactionController import Transaction
+from controller.TransactionController import getListBank
 from controller.AssistantController import chat
+from cronjob.withdraw import withdraw
 import os
 # from controller.NewsAgent import generate_and_post_article
 
@@ -50,33 +51,32 @@ async def doibuonjqk(request: Request):
 
 @app.get('/transaction/bank_list')
 async def getBankList():
-    transaction = Transaction(username=username,password=password)
     return {
         "status": True,
         "message": "Lấy danh sách ngân hàng thành công",
-        "data": transaction.getListBank()
+        "data": getListBank()
     }
 
 
-@app.get('/transaction/bulk_payment')
-async def get_bulk_payment():
-    transaction = Transaction(username=username,password=password)
-    bulks = transaction.getBulkPaymentStatus()
-    return {
-        "status": True,
-        'message': "Lấy danh sách chuyển tiền theo lô thành công",
-        'data': bulks
-    }
+# @app.get('/transaction/bulk_payment')
+# async def get_bulk_payment():
+#     transaction = Transaction(username=username,password=password)
+#     bulks = transaction.getBulkPaymentStatus()
+#     return {
+#         "status": True,
+#         'message': "Lấy danh sách chuyển tiền theo lô thành công",
+#         'data': bulks
+#     }
 
-@app.get('/transaction/bulk_payment_detail/{id}')
-async def get_bulk_payment_detail(id: str):
-    transaction = Transaction(username=username,password=password)
-    bulk_detail = transaction.getBulkPaymentDetail(id) 
-    return {
-        'status': True,
-        'message': "Xem chi tiết chuyển tiền theo lô thành công",
-        "data": bulk_detail
-    }
+# @app.get('/transaction/bulk_payment_detail/{id}')
+# async def get_bulk_payment_detail(id: str):
+#     transaction = Transaction(username=username,password=password)
+#     bulk_detail = transaction.getBulkPaymentDetail(id) 
+#     return {
+#         'status': True,
+#         'message': "Xem chi tiết chuyển tiền theo lô thành công",
+#         "data": bulk_detail
+#     }
 
 
 @app.post("/upload_file")
@@ -131,7 +131,9 @@ async def deletes(request: Request):
 
 @app.on_event("startup")
 def start_background_thread():
+    Thread(target=withdraw,args=(),daemon=True).start()
     Thread(target=queue_money, args=(), daemon=True).start()
+    
 
 @app.on_event("shutdown")
 def stop_background_thread():

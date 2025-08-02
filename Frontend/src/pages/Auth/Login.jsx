@@ -93,7 +93,7 @@ export default function LoginForm() {
 
   const onSubmit = async (data) => {
     clearErrors();
-    resetCaptcha(); 
+    // resetCaptcha(); 
     if (!captchaToken) {
       setError("captcha", {
         type: "manual",

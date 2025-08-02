@@ -5,6 +5,7 @@ import WithdrawForm from "../../../components/Client/withdraw/WithdrawForm";
 import CancelWithdrawModal from "../../../components/Client/withdraw/CancelWithdrawModal";
 import LoadingCon from "@components/Loading/LoadingCon";
 import { useNotification } from "../../../contexts/NotificationContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const WithdrawPage = () => {
   const [view, setView] = useState("history"); // 'history' hoặc 'form'
@@ -14,7 +15,7 @@ const WithdrawPage = () => {
   const { pop } = useNotification();
   const [cancelTargetId, setCancelTargetId] = useState(null);
   const isCancelModalOpen = !!cancelTargetId;
-
+  const { isLoggedIn, fetchUserMoney } = useAuth();
   const fetchWithdrawals = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -48,6 +49,7 @@ const WithdrawPage = () => {
     if (!cancelTargetId) return;
     try {
       await api.delete(`/withdraws/${cancelTargetId}`); // DELETE /withdraws/{id}
+      await fetchUserMoney();
       pop("Yêu cầu đã được hủy thành công.", "s");
       setCancelTargetId(null);
       fetchWithdrawals(); // Tải lại danh sách

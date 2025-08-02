@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../../../utils/http";
 import LoadingCon from "@components/Loading/LoadingCon";
 import { useNotification } from "../../../contexts/NotificationContext";
+import { useAuth } from "../../../contexts/AuthContext";
 
 const removeAccents = (str) =>
   str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -21,7 +22,7 @@ const WithdrawForm = ({ initialData, onSuccess }) => {
     account_holder_name: "",
     note: "",
   });
-
+  const { isLoggedIn, fetchUserMoney } = useAuth();
   useEffect(() => {
     const fetchFormData = async () => {
       setIsLoading(true);
@@ -86,9 +87,11 @@ const WithdrawForm = ({ initialData, onSuccess }) => {
     try {
       if (isEditMode) {
         await api.put(`/withdraws/${initialData.id}`, formData);
+        // fetchUserMoney()
         pop("Cập nhật yêu cầu thành công!", "s");
       } else {
         await api.post("/withdraws", formData);
+        await fetchUserMoney()
         pop("Tạo yêu cầu rút tiền thành công!", "s");
       }
       onSuccess();

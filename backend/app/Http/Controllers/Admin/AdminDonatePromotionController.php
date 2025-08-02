@@ -204,6 +204,7 @@ class AdminDonatePromotionController extends Controller
         }
     }
     public function undo(Request $request, String $id)
+    // Thêm tí message khi hết hạn
     {
         try {
             if (DonatePromotion::where('id', $id)->first() == NULL) {

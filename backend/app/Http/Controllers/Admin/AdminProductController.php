@@ -150,6 +150,7 @@ class AdminProductController extends Controller
         }
     }
     public function update(Request $request, $id)
+    // Giá sale đang null ,mặc dù có sửa
     {
         try {
             // Lấy product kèm quan hệ

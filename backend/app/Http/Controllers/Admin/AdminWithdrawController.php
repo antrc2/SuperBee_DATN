@@ -113,7 +113,10 @@ class AdminWithdrawController extends Controller
                         'message' => "Yêu cầu {$withdraw->withdraw_code} đã thất bại: {$withdraw->note}",
                     ], 400);
                 }
-                $data[] = [$index, $withdraw->bank_account_number, $withdraw->account_holder_name, $withdraw->bank_name, $withdraw->withdraw_code];
+                // return response()->json([
+                //     "hehe"=>$withdraw
+                // ]);
+                $data[] = [$index, $withdraw->bank_account_number, $withdraw->account_holder_name, $withdraw->bank_name,$withdraw->amount, $withdraw->withdraw_code];
                 $index++;
             }
             // Đường dẫn file mẫu

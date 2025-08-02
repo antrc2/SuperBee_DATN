@@ -9,11 +9,13 @@ import time
 sleep = 1
 backend_url = os.getenv("BACKEND_URL")
 backend_api_key = os.getenv("BACKEND_API_KEY")
+username = os.getenv('MBBANK_USERNAME')
+password=os.getenv("MBBANK_PASSWORD")
 event = Event()
 def withdraw():
     while not event.is_set():
         try:
-            mb = Transaction(username="0838411897", password="Sqrtfl0@t011")
+            mb = Transaction(username=username, password=password)
             response = mb.getBankList()
             # print(response)
             output = []

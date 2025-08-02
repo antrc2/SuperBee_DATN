@@ -248,15 +248,15 @@ class AdminProductController extends Controller
                     'message' => 'Giá sale phải nhỏ hơn giá gốc',
                 ], 400);
             }
-
             DB::beginTransaction();
 
             // Cập nhật fields cơ bản
+            
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'description' => $validated['description'] ?? $product->description,
                 'price'       => $validated['price'] ?? $product->price,
-                'sale' => (isset($validatedData['sale']) && $validatedData['sale'] != 0) ? $validatedData['sale'] : null,
+                'sale' => (isset($validated['sale']) && $validated['sale'] != 0) ? $validated['sale'] : null,
                 'updated_by'  => $request->user_id,
             ]);
 

@@ -381,6 +381,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
 
     Route::prefix("/withdraws")->group(function () {
         Route::get('/', [AdminWithdrawController::class, 'index']);
+        Route::put('/{id}', [AdminWithdrawController::class, 'update']);
         Route::post("/export", [AdminWithdrawController::class, 'export']);
     });
     Route::prefix("/disputes")->group(function () {

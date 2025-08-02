@@ -119,6 +119,7 @@ const PermissionsPage = React.lazy(() =>
 import { UserListPage } from "../pages/Admin/Authorization/UserRolesPage";
 import DisputesPage from "../pages/Admin/DisputesPage/DisputesPage";
 import DisputeDetailPage from "../pages/Admin/DisputesPage/DisputeDetailPage";
+import WithdrawalsPage from "../pages/Admin/Withdrawals/WithdrawalsPage";
 
 // ================== MODULES DEFINITION ==================
 export const adminModules = [
@@ -316,6 +317,18 @@ export const adminModules = [
     permissions: {
       view: "product_reports.view",
       edit: "product_reports.edit",
+    },
+  },
+  {
+    name: "withdrawals",
+    list: WithdrawalsPage,
+    show: NotFound,
+    create: NotFound,
+    edit: NotFound,
+    allowedRoles: ["admin", "admin-super", "reseller"],
+    permissions: {
+      view: "withdrawals.view",
+      edit: "withdrawals.edit",
     },
   },
   // Module Agent

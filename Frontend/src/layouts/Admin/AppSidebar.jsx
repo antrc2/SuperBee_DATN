@@ -120,6 +120,12 @@ const navItems = [
   },
   {
     icon: <Newspaper />,
+    name: "Withdrawals",
+    view: ["admin", "admin-super", "reseller"],
+    path: "/admin/withdrawals",
+  },
+  {
+    icon: <Newspaper />,
     name: "Disputes",
     view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
     path: "/admin/disputes",

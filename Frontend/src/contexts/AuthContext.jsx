@@ -7,7 +7,6 @@ import { useNotification } from "@contexts/NotificationContext";
 import { useContext } from "react";
 import { checkLocation } from "../utils/hook";
 
-// AuthContext sẽ chỉ quản lý thông tin xác thực người dùng (login, register, logout, user data)
 const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
@@ -16,7 +15,7 @@ export function AuthProvider({ children }) {
     const decoded = getDecodedToken();
     return decoded
       ? {
-          id: decoded.user_id, // Thêm dòng này
+          id: decoded.user_id,
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
@@ -32,7 +31,7 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(sessionStorage.getItem("access_token"));
   const [error, setError] = useState(null); // Trạng thái lỗi riêng cho các thao tác auth
   const navigate = useNavigate();
-
+  const [authInitialized, setAuthInitialized] = useState(false); // <--- THÊM STATE MỚI
   // useEffect để đồng bộ user và token khi access_token thay đổi (vd: đăng nhập thành công)
   // và để xử lý trường hợp token bị xóa hoặc không hợp lệ sau khi load
   useEffect(() => {
@@ -42,7 +41,7 @@ export function AuthProvider({ children }) {
       const decoded = getDecodedToken();
       if (decoded) {
         setUser({
-          id: decoded.user_id, // Thêm dòng này
+          id: decoded.user_id,
           name: decoded.name,
           money: decoded.money,
           avatar: decoded?.avatar,
@@ -209,8 +208,11 @@ export function AuthProvider({ children }) {
 
   const isLoggedIn = !!user;
   const fetchUserMoney = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
+    if (!token) {
+      setAuthInitialized(true); // Nếu không có token, coi như đã khởi tạo xong
+      return;
+    }
+    // setLoading(true); // Không cần set loading chung ở đây nữa
     try {
       const res = await api.get("/user/money");
       if (res.data && res.data.status) {
@@ -223,14 +225,18 @@ export function AuthProvider({ children }) {
           permissions: res.data.data.permissions || [],
         });
       } else {
-        console.error("Failed to fetch user money:", res.data.message);
+        // Nếu fetch thất bại (ví dụ token hết hạn), đăng xuất người dùng
+        console.error("Failed to fetch user data:", res.data.message);
+        logout(); // Cân nhắc tự động logout
       }
     } catch (err) {
-      console.error("Error fetching user money:", err);
+      console.error("Error fetching user data:", err);
+      logout(); // Tự động logout khi có lỗi API
     } finally {
-      setLoading(false);
+      // setLoading(false);
+      setAuthInitialized(true); // <--- ĐÁNH DẤU LÀ ĐÃ KHỞI TẠO XONG
     }
-  }, [token]);
+  }, [token, logout]);
   return (
     <AuthContext.Provider
       value={{
@@ -244,6 +250,7 @@ export function AuthProvider({ children }) {
         logout,
         setUser,
         fetchUserMoney,
+        authInitialized,
         ...auth,
       }}
     >

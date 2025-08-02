@@ -9,8 +9,6 @@ import time
 sleep = 1
 backend_url = os.getenv("BACKEND_URL")
 backend_api_key = os.getenv("BACKEND_API_KEY")
-# MBBANK_USERNAME="0838411897"
-# MBBANK_PASSWORD=Sqrtfl0@t011
 username = os.getenv('MBBANK_USERNAME')
 password=os.getenv("MBBANK_PASSWORD")
 event = Event()

@@ -271,15 +271,15 @@ class RolesAndPermissionsSeeder extends Seeder
         $this->command->info('Bắt đầu tạo dữ liệu mẫu...');
 
         $mainWeb = Web::create(['subdomain' => 'main-site', 'api_key' => 'D9BD170B6093FF737C754C8A5070FC97', 'status' => 1]);
-        $resellerWeb = Web::create(['subdomain' => 'reseller-site', 'api_key' => 'RESELLER-API-KEY-HERE', 'status' => 1]);
+        // $resellerWeb = Web::create(['subdomain' => 'reseller-site', 'api_key' => 'RESELLER-API-KEY-HERE', 'status' => 1]);
         $this->command->info('Đã tạo web mẫu.');
 
         $userList = [
             ['username' => 'admin', 'role' => 'admin', 'web_id' => $mainWeb->id],
             ['username' => 'adminsuper', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
-            ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $resellerWeb->id],
-            ['username' => 'partner', 'role' => 'partner', 'web_id' => $resellerWeb->id],
-            ['username' => 'user', 'role' => 'user', 'web_id' => $resellerWeb->id],
+            ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $mainWeb->id],
+            ['username' => 'partner', 'role' => 'partner', 'web_id' => $mainWeb->id],
+            ['username' => 'user', 'role' => 'user', 'web_id' => $mainWeb->id],
             ['username' => 'ketoan', 'role' => 'ke-toan', 'web_id' => $mainWeb->id],
             ['username' => 'hotro', 'role' => 'nv-ho-tro', 'web_id' => $mainWeb->id],
             ['username' => 'marketing', 'role' => 'nv-marketing', 'web_id' => $mainWeb->id],
@@ -319,8 +319,8 @@ class RolesAndPermissionsSeeder extends Seeder
         }
         $resellerUser = User::where('username', 'reseller')->first();
         if ($resellerUser) {
-            $resellerWeb->user_id = $resellerUser->id;
-            $resellerWeb->save();
+            $mainWeb->user_id = $resellerUser->id;
+            $mainWeb->save();
         }
         $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
 

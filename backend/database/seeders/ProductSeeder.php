@@ -23,10 +23,21 @@ class ProductSeeder extends Seeder
         return $code;
     }
     public function run(): void
-    {
+    {   $parent_categories = [];
+        $parent_categories[] = DB::table('categories')->insertGetId([
+                'parent_id' => null,
+                'name' => 'Khác',
+                'slug' => 'khac',
+                'image_url' => 'https://picsum.photos/400/300?random='  . 12,
+                'status' => 1,
+                'created_by' => 1,
+                'updated_by' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         // Tạo danh mục cha và con
-        $parent_categories = [];
-        for ($i = 1; $i <= 7; $i++) {
+        
+        for ($i = 2; $i <= 7; $i++) {
             $parent_categories[] = DB::table('categories')->insertGetId([
                 'parent_id' => null,
                 'name' => 'Danh mục cha ' . $i,
@@ -40,7 +51,7 @@ class ProductSeeder extends Seeder
             ]);
         }
 
-        for ($i = 1; $i <= 10; $i++) {
+        for ($i = 2; $i <= 10; $i++) {
             DB::table('categories')->insert([
                 'parent_id' => $parent_categories[array_rand($parent_categories)],
                 'name' => 'Danh mục con ' . $i,

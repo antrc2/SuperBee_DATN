@@ -118,6 +118,7 @@ class BankController extends Controller
             if ($request->status){
                 $withdraw->status = 1;
                 // $withdraw->note = $request->message;
+                $this->sendNotification(1,"Rút {$withdraw->amount} thành công",null,$withdraw->user->id);
                 WalletTransaction::create([
                     "wallet_id"=>$withdraw->user->id,
                     "type"=>'withdraw',

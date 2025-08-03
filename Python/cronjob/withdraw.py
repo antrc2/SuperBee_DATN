@@ -6,7 +6,7 @@ import json
 from threading import Event
 from controller.TransactionController import Transaction
 import time
-sleep = 1
+sleep = 3
 backend_url = os.getenv("BACKEND_URL")
 backend_api_key = os.getenv("BACKEND_API_KEY")
 username = os.getenv('MBBANK_USERNAME')
@@ -105,4 +105,4 @@ def withdraw():
         except Exception as e:
             print(f"Lỗi: {e}")
             pass
-        time.sleep(sleep)
+        time.sleep(300)

@@ -1,51 +1,36 @@
+// src/components/common/Breadcrumbs.jsx
+
+import React from "react";
 import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 
-export default function Breadcrumbs({ category }) {
+export default function Breadcrumbs({ items }) {
+  if (!items || items.length === 0) return null;
+
   return (
-    <div className="mb-6 ml-7">
-      <nav
-        aria-label="breadcrumb"
-        className="flex items-center flex-wrap text-sm text-gray-400"
-      >
-        {/* Trang chủ */}
-        <Link
-          to="/"
-          className="hover:text-purple-400 transition-colors duration-200"
-        >
-          Trang chủ
-        </Link>
+    <nav
+      aria-label="Breadcrumb"
+      className="max-w-screen-xl mx-auto px-4 sm:px-6 lg:px-8 mb-4"
+    >
+      <div className="breadcrumbs-container">
+        {items.map((item, index) => (
+          <React.Fragment key={index}>
+            {/* Nếu là phần tử cuối cùng, chỉ hiển thị text, không có link */}
+            {index === items.length - 1 ? (
+              <span className="font-semibold text-primary">{item.label}</span>
+            ) : (
+              <Link to={item.href} className="breadcrumb-link">
+                {item.label}
+              </Link>
+            )}
 
-        <ChevronRight className="w-4 h-4 mx-1" />
-
-        {/* Mua ACC */}
-        <Link
-          to="/mua-acc"
-          className="hover:text-purple-400 transition-colors duration-200"
-        >
-          Mua ACC
-        </Link>
-
-        {category && (
-          <>
-            <ChevronRight className="w-4 h-4 mx-1" />
-
-            <Link
-              to={`/mua-acc/${category.slug}`}
-              className="hover:text-purple-400 transition-colors duration-200 font-medium text-gray-200"
-            >
-              {category.name}
-            </Link>
-          </>
-        )}
-      </nav>
-
-      {/* Tiêu đề danh mục */}
-      {category && (
-        <h1 className="text-2xl md:text-3xl font-semibold text-white pt-6">
-          {category.name}
-        </h1>
-      )}
-    </div>
+            {/* Hiển thị dấu phân cách nếu không phải là phần tử cuối */}
+            {index < items.length - 1 && (
+              <ChevronRight size={16} className="breadcrumb-separator" />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </nav>
   );
 }

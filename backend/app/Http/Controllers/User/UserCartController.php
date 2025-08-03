@@ -167,7 +167,8 @@ class UserCartController extends Controller
 
             // Thêm sản phẩm vào giỏ
             $cartItem = $cart->items()->create([
-                'product_id' => $product->id
+                'product_id' => $product->id,
+                'status'=>1
             ]);
 
             $cart = Cart::with([

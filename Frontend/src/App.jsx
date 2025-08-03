@@ -1,67 +1,75 @@
 // src/App.jsx
-import React, { useEffect } from "react";
+
+// Các Context Providers sẽ được render có điều kiện
+import { CartProvider } from "./contexts/CartContext.jsx";
+import { HomeProvider } from "./contexts/HomeContext.jsx";
+import { ChatProvider } from "./contexts/ChatContext.jsx";
 import { useRoutes } from "react-router-dom";
 import adminRoutes from "@routers/Admin";
 import { clientRoutes, profileRoutes } from "@routers/Client";
 import authRoutes from "@routers/Auth";
+import partnerRoutes from "./routers/Partner.jsx";
 
 import { ScrollToTop } from "@components/Admin/common/ScrollToTop";
-import { useAuth } from "./contexts/AuthContext";
+import { useAppStatus } from "@contexts/AppStatusContext";
 import LoadingDomain from "./components/Loading/LoadingDomain";
-import ActivateNotice from "./components/Loading/ActivateNotice";
 import ErrorPage from "./pages/Error/ErrorPage";
 import ActiveDomain from "./pages/Clients/ActiveDomain/ActiveDomain";
 
 function AppRoutes() {
-  const { authStatus, combinedError, enterKey, retryDomain } = useAuth();
+  // Lấy trạng thái khởi tạo ứng dụng và các hàm liên quan từ AppStatusContext
+  const { appInitStatus, combinedError, enterKey, retryDomain, isLoading } =
+    useAppStatus();
+
+  // Định nghĩa các routes của ứng dụng
   const appRoutes = useRoutes([
     ...authRoutes,
     ...clientRoutes,
     ...adminRoutes,
+    ...partnerRoutes,
     ...profileRoutes,
   ]);
 
-  switch (authStatus) {
-    case "loading_key":
-      return <LoadingDomain message="Đang kiểm tra API key..." />;
+  if (isLoading) {
+    return <LoadingDomain message="Đang khởi động ứng dụng..." />;
+  }
 
+  switch (appInitStatus) {
     case "needs_key":
-      // Chưa có key → chuyển sang form nhập thủ công
       return <ActiveDomain />;
 
-    case "ready_check_domain":
-      return <LoadingDomain message="Đang kiểm tra trạng thái kích hoạt…" />;
-
-    // chưa kích hoạt
     case "needs_activation":
       return (
         <ActiveDomain onRetry={retryDomain} errorMessage={combinedError} />
       );
 
     case "invalid_key":
-      // Key sai → xuất ErrorPage, nút retry quay về nhập lại key
+      // API key không hợp lệ
       return (
         <ErrorPage
           message={`API Key không hợp lệ.\n${combinedError}`}
-          onRetry={() => enterKey("")} // reset key, dẫn đến needs_key
+          onRetry={() => enterKey("")}
         />
       );
 
     case "error":
-      // Lỗi chung (404 /domain, network, v.v.)
       return <ErrorPage message={`Lỗi hệ thống:\n${combinedError}`} />;
 
     case "app_ready":
-      // Domain active, API key ok → render phần chính của app (Route)
       return (
-        <div>
-          <ScrollToTop />
-          {appRoutes}
-        </div>
+        <HomeProvider>
+          <ChatProvider>
+            <CartProvider>
+              <div>
+                <ScrollToTop />
+                {appRoutes}
+              </div>
+            </CartProvider>
+          </ChatProvider>
+        </HomeProvider>
       );
-
     default:
-      return <LoadingDomain message="Đang khởi tạo..." />;
+      return <LoadingDomain message="Đang khởi tạo ứng dụng..." />;
   }
 }
 

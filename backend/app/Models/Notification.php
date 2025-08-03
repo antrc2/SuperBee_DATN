@@ -11,10 +11,12 @@ class Notification extends Model
 
     protected $fillable = [
         'user_id',
-        'title',
+        'type',
         'content',
         'link',
+        "published_at",
         'is_read', // Often updated separately, not on creation
+        "expires_at"
     ];
 
     protected $casts = [

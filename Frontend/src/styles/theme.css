@@ -1,136 +1,649 @@
-/* Import color variables */
+/* =====================================================================
+  GOOGLE FONTS & TAILWIND
+===================================================================== */
+/* --- THAY ĐỔI 1: Cập nhật link import để lấy cả 2 font --- */
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&family=Outfit:wght@500;700;900&display=swap");
+
+@import "tailwindcss";
+
+/* =====================================================================
+  THEME DEFINITIONS (COLOR VARIABLES)
+===================================================================== */
 :root {
-  /* Primary Colors */
-  --color-primary-50: #f0f9ff;
-  --color-primary-100: #e0f2fe;
-  --color-primary-200: #bae6fd;
-  --color-primary-300: #7dd3fc;
-  --color-primary-400: #38bdf8;
-  --color-primary-500: #0ea5e9;
-  --color-primary-600: #0284c7;
-  --color-primary-700: #0369a1;
-  --color-primary-800: #075985;
-  --color-primary-900: #0c4a6e;
+  /* --- THAY ĐỔI 2: Thêm biến cho font chữ --- */
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
 
-  /* Secondary Colors */
-  --color-secondary-50: #fdf4ff;
-  --color-secondary-100: #fae8ff;
-  --color-secondary-200: #f5d0fe;
-  --color-secondary-300: #f0abfc;
-  --color-secondary-400: #e879f9;
-  --color-secondary-500: #d946ef;
-  --color-secondary-600: #c026d3;
-  --color-secondary-700: #a21caf;
-  --color-secondary-800: #86198f;
-  --color-secondary-900: #701a75;
-
-  /* Accent Colors */
-  --color-accent-orange: #f97316;
-  --color-accent-yellow: #eab308;
-  --color-accent-green: #22c55e;
-  --color-accent-red: #ef4444;
-  --color-accent-pink: #ec4899;
-
-  /* Neon Colors */
-  --color-neon-blue: #00f5ff;
-  --color-neon-purple: #bf00ff;
-  --color-neon-pink: #ff1493;
-  --color-neon-green: #00ff41;
-  --color-neon-yellow: #ffff00;
-  --color-neon-cyan: #00ffff;
-
-  /* Dark Theme */
-  --color-dark-bg: #0a0a0f;
-  --color-dark-surface: #1a1a2e;
-  --color-dark-card: #16213e;
-  --color-dark-border: #2d3748;
-  --color-dark-text: #e2e8f0;
-
-  /* Gradients */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --gradient-secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --gradient-neon: linear-gradient(135deg, #00f5ff 0%, #bf00ff 100%);
-  --gradient-gaming: linear-gradient(
-    135deg,
-    #ff1493 0%,
-    #00f5ff 50%,
-    #bf00ff 100%
-  );
-  --gradient-dark: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-  --gradient-header: linear-gradient(
-    135deg,
-    #1e293b 0%,
-    #2a3345 50%,
-    #1e293b 100%
-  );
-  --gradient-button: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-
-  /* Fonts */
-  --font-primary: "Inter", "Noto Sans", sans-serif;
-  --font-heading: "Poppins", "Inter", sans-serif;
-  --font-gaming: "Orbitron", "Roboto Mono", monospace;
-  --font-japanese: "Noto Sans JP", sans-serif;
+  /* ... (giữ nguyên tất cả các biến màu của bạn) ... */
+  --color-background: #fffffe;
+  --color-text-primary: #272343;
+  --color-text-secondary: #2d334a;
+  --color-text-placeholder: #2d334a;
+  --color-accent: #ffd803;
+  --color-accent-text: #272343;
+  --color-highlight: #ffd803;
+  --color-secondary: #e3f6f5;
+  --color-tertiary: #bae8e8;
+  --color-stroke: #272343;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #e3f6f5, #fffffe);
+  --gradient-button: linear-gradient(to right, #ffd803, #ffc300);
+  --gradient-logo: linear-gradient(to right, #ffd803, #272343);
+  --gradient-danger: linear-gradient(to right, #f85032, #e73827);
+  --gradient-success: linear-gradient(to right, #56ab2f, #a8e063);
+  --gradient-warning: linear-gradient(to right, #ffd803, #ffc300);
+  --gradient-info: linear-gradient(to right, #2193b0, #6dd5ed);
+  --color-input-bg: #fdfdfd;
+  --color-input-text: #272343;
+  --color-border: #e3f6f5;
+  --color-border-hover: #ffd803;
+  --color-dropdown-bg: rgba(255, 255, 254, 0.9);
+  --color-notification-unread-bg: #e3f6f5;
+  --color-scrollbar-thumb: #bae8e8;
+  --color-scrollbar-thumb-hover: #ffd803;
 }
 
-/* Utility classes using CSS variables */
-.bg-gradient-header {
-  background: var(--gradient-header);
+/* ... (giữ nguyên các theme .dark và .theme-pink) ... */
+.dark {
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #16161a;
+  --color-text-primary: #fffffe;
+  --color-text-secondary: #94a1b2;
+  --color-text-placeholder: #94a1b2;
+  --color-accent: #7f5af0;
+  --color-accent-text: #fffffe;
+  --color-highlight: #7f5af0;
+  --color-secondary: #72757e;
+  --color-tertiary: #2cb67d;
+  --color-stroke: #010101;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #1a1a1f, #101014);
+  --gradient-button: linear-gradient(to right, #7f5af0, #9d7bf5);
+  --gradient-logo: linear-gradient(to right, #7f5af0, #2cb67d, #fffffe);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #2cb67d, #34d399);
+  --gradient-warning: linear-gradient(to right, #f59e0b, #fbbf24);
+  --gradient-info: linear-gradient(to right, #38bdf8, #7dd3fc);
+  --color-input-bg: #1f1f24;
+  --color-input-text: #fffffe;
+  --color-border: #2a2a30;
+  --color-border-hover: #7f5af0;
+  --color-dropdown-bg: rgba(22, 22, 26, 0.85);
+  --color-notification-unread-bg: rgba(127, 90, 240, 0.2);
+  --color-scrollbar-thumb: #2a2a30;
+  --color-scrollbar-thumb-hover: #7f5af0;
+}
+.theme-pink {
+  --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #faeee7;
+  --color-text-primary: #33272a;
+  --color-text-secondary: #594a4e;
+  --color-text-placeholder: #594a4e;
+  --color-accent: #ff8ba7;
+  --color-accent-text: #33272a;
+  --color-highlight: #ff8ba7;
+  --color-secondary: #ffc6c7;
+  --color-tertiary: #c3f0ca;
+  --color-stroke: #33272a;
+  --color-main-white: #fffffe;
+  --gradient-header: linear-gradient(135deg, #ffc6c7, #faeee7);
+  --gradient-button: linear-gradient(to right, #ff8ba7, #ffc6c7);
+  --gradient-logo: linear-gradient(to right, #ff8ba7, #33272a);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #c3f0ca, #a1e2a6);
+  --gradient-warning: linear-gradient(to right, #ffb199, #fa9a85);
+  --gradient-info: linear-gradient(to right, #a2d2ff, #bde0fe);
+  --color-input-bg: #fefbf9;
+  --color-input-text: #33272a;
+  --color-border: #ffc6c7;
+  --color-border-hover: #ff8ba7;
+  --color-dropdown-bg: rgba(250, 238, 231, 0.9);
+  --color-notification-unread-bg: #ffc6c7;
+  --color-scrollbar-thumb: #ffc6c7;
+  --color-scrollbar-thumb-hover: #ff8ba7;
+}
+.theme-blue{
+    --font-heading: "Outfit", sans-serif;
+  --font-body: "Nunito", sans-serif;
+  --color-background: #e7faf5;
+  --color-text-primary: #33272a;
+  --color-text-secondary: #594a4e;
+  --color-text-placeholder: #594a4e;
+  --color-accent: #09adff;
+  --color-accent-text: #33272a;
+  --color-highlight: #09b1ff;
+  --color-secondary: #c6feff;
+  --color-tertiary: #c3f0ca;
+  --color-stroke: #33272a;
+  --color-main-white: #feffff;
+  --gradient-header: linear-gradient(135deg, #afdffb, #e7faf7);
+  --gradient-button: linear-gradient(to right, #58ddee, #c6f8ff);
+  --gradient-logo: linear-gradient(to right, #3b8dc8, #33272a);
+  --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+  --gradient-success: linear-gradient(to right, #c3f0ca, #a1e2a6);
+  --gradient-warning: linear-gradient(to right, #99f6ff, #85d9fa);
+  --gradient-info: linear-gradient(to right, #a2d2ff, #bde0fe);
+  --color-input-bg: #fefbf9;
+  --color-input-text: #33272a;
+  --color-border: #c6f8ff;
+  --color-border-hover: #8bcbff;
+  --color-dropdown-bg: rgba(231, 244, 250, 0.9);
+  --color-notification-unread-bg: #c6f7ff;
+  --color-scrollbar-thumb: #c6f3ff;
+  --color-scrollbar-thumb-hover: #8beaff;
 }
 
-.bg-gradient-button {
-  background: var(--gradient-button);
+.theme-green {
+    --font-heading: "Outfit", sans-serif;
+    --font-body: "Nunito", sans-serif;
+    --color-background: #e8f9e7;
+    --color-text-primary: #2a3d2f;
+    --color-text-secondary: #4a5c4e;
+    --color-text-placeholder: #4a5c4e;
+    --color-accent: #34c759;
+    --color-accent-text: #2a3d2f;
+    --color-highlight: #34c759;
+    --color-secondary: #c8ffd7;
+    --color-tertiary: #b3e8c0;
+    --color-stroke: #2a3d2f;
+    --color-main-white: #fffffe;
+    --gradient-header: linear-gradient(135deg, #c8ffd7, #e8f9e7);
+    --gradient-button: linear-gradient(to right, #34c759, #c8ffd7);
+    --gradient-logo: linear-gradient(to right, #34c759, #2a3d2f);
+    --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+    --gradient-success: linear-gradient(to right, #b3e8c0, #8cd698);
+    --gradient-warning: linear-gradient(to right, #a3e635, #bef264);
+    --gradient-info: linear-gradient(to right, #86efac, #a7f3d0);
+    --color-input-bg: #f8fff7;
+    --color-input-text: #2a3d2f;
+    --color-border: #c8ffd7;
+    --color-border-hover: #34c759;
+    --color-dropdown-bg: rgba(232, 249, 231, 0.9);
+    --color-notification-unread-bg: #c8ffd7;
+    --color-scrollbar-thumb: #c8ffd7;
+    --color-scrollbar-thumb-hover: #34c759;
 }
 
-.bg-gradient-neon {
-  background: var(--gradient-neon);
+.theme-purple {
+    --font-heading: "Outfit", sans-serif;
+    --font-body: "Nunito", sans-serif;
+    --color-background: #f3e8ff;
+    --color-text-primary: #3c2f4b;
+    --color-text-secondary: #5c4a6b;
+    --color-text-placeholder: #5c4a6b;
+    --color-accent: #9e35ff;
+    --color-accent-text: #3c2f4b;
+    --color-highlight: #a855f7;
+    --color-secondary: #e9d5ff;
+    --color-tertiary: #d8b4fe;
+    --color-stroke: #3c2f4b;
+    --color-main-white: #fffffe;
+    --gradient-header: linear-gradient(135deg, #e9d5ff, #f3e8ff);
+    --gradient-button: linear-gradient(to right, #a855f7, #e9d5ff);
+    --gradient-logo: linear-gradient(to right, #a855f7, #3c2f4b);
+    --gradient-danger: linear-gradient(to right, #ef4444, #f87171);
+    --gradient-success: linear-gradient(to right, #b4fecb, #beffb6);
+    --gradient-warning: linear-gradient(to right, #d4b2ff, #e9d5ff);
+    --gradient-info: linear-gradient(to right, #c4b5fd, #ddd6fe);
+    --color-input-bg: #faf8ff;
+    --color-input-text: #3c2f4b;
+    --color-border: #e9d5ff;
+    --color-border-hover: #a855f7;
+    --color-dropdown-bg: rgba(243, 232, 255, 0.9);
+    --color-notification-unread-bg: #e9d5ff;
+    --color-scrollbar-thumb: #e9d5ff;
+    --color-scrollbar-thumb-hover: #a855f7;
 }
-
-.text-neon-blue {
-  color: var(--color-neon-blue);
-}
-
-.text-neon-purple {
-  color: var(--color-neon-purple);
-}
-
-.border-neon-blue {
-  border-color: var(--color-neon-blue);
-}
-
-.glow-neon-blue {
-  box-shadow: 0 0 20px var(--color-neon-blue);
-}
-
-.glow-neon-purple {
-  box-shadow: 0 0 20px var(--color-neon-purple);
-}
-
-.font-gaming {
-  font-family: var(--font-gaming);
-}
-
-.font-heading {
-  font-family: var(--font-heading);
-}
-
-.font-primary {
-  font-family: var(--font-primary);
-}
-
-/* Custom animations */
-@keyframes glow {
-  0%,
-  100% {
-    box-shadow: 0 0 5px var(--color-neon-blue);
+/* =====================================================================
+  GLOBAL STYLES & UTILITY CLASSES
+===================================================================== */
+@layer base {
+  body {
+    /* --- THAY ĐỔI 3: Đặt font mặc định là font nội dung --- */
+    font-family: var(--font-body);
+    background-color: var(--color-background);
+    color: var(--color-text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
-  50% {
-    box-shadow: 0 0 20px var(--color-neon-blue), 0 0 30px var(--color-neon-blue);
-  }
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+@layer utilities {
+  .font-heading {
+    font-family: var(--font-heading);
+  }
+  /* Text Colors */
+  .text-primary {
+    color: var(--color-text-primary);
+  }
+  .text-secondary {
+    color: var(--color-text-secondary);
+  }
+  .text-accent {
+    color: var(--color-accent);
+  }
+  .text-accent-contrast {
+    color: var(--color-accent-text);
+  }
+  .text-highlight {
+    color: var(--color-highlight);
+  }
+  .text-tertiary {
+    color: var(--color-tertiary);
+  }
+  .text-info {
+    color: var(--color-info, #38bdf8);
+  }
+  .placeholder-theme::placeholder {
+    color: var(--color-text-placeholder);
+    opacity: 0.7;
+  }
+
+  /* Background Colors & Gradients */
+  .bg-gradient-header {
+    background: var(--gradient-header);
+  }
+  .bg-gradient-button {
+    background: var(--gradient-button);
+  }
+  .bg-gradient-logo {
+    background: var(--gradient-logo);
+  }
+  .bg-gradient-danger {
+    background: var(--gradient-danger);
+  }
+  .bg-gradient-success {
+    background: var(--gradient-success);
+  }
+  .bg-gradient-warning {
+    background: var(--gradient-warning);
+  }
+  .bg-gradient-info {
+    background: var(--gradient-info);
+  }
+
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .bg-tertiary {
+    background-color: var(--color-tertiary);
+  }
+  .bg-dropdown {
+    background-color: var(--color-dropdown-bg);
+  }
+  .bg-notification-unread {
+    background-color: var(--color-notification-unread-bg);
+  }
+
+  /* Border Colors */
+  .border-themed {
+    border-color: var(--color-border);
+  }
+  .border-hover {
+    border: 1px solid var(--color-border);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .border-hover:hover {
+    border-color: var(--color-border-hover);
+  }
+
+  .border-hover:focus {
+    outline: none;
+    border-color: var(--color-border-hover);
+    box-shadow: 0 0 0 1px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  /* Scrollbar */
+  .custom-scrollbar-notification::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-thumb {
+    background-color: var(--color-scrollbar-thumb);
+    border-radius: 10px;
+  }
+  .custom-scrollbar-notification::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-scrollbar-thumb-hover);
+  }
+  .bg-input {
+    background-color: var(--color-input-bg);
+  }
+  .text-input {
+    color: var(--color-input-text);
+  }
+  /*  */
+  /* Dành cho khu vực section lớn */
+  .section-bg {
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 95%,
+      var(--color-text-primary) 5%
+    );
+    border-radius: 1rem;
+    padding: 1rem;
+  }
+
+  /* Dành cho các nút Tab (Nạp tiền, Top nạp) */
+  .tab-button {
+    padding: 0.625rem 1rem; /* Tương đương px-4 py-2.5 */
+    font-size: 0.875rem; /* Tương đương text-sm */
+    line-height: 1.25rem;
+    font-weight: 700; /* Tương đương font-bold */
+    border-radius: 0.5rem; /* Tương đương rounded-lg */
+    transition: all 300ms ease;
+    flex: 1;
+    text-align: center;
+    color: var(--color-text-secondary);
+    background-color: transparent;
+  }
+
+  .tab-button-active {
+    color: var(--color-accent-text);
+    background: var(--gradient-button);
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  /* Dành cho các lựa chọn thẻ cào, mệnh giá */
+  .selection-grid-item {
+    padding: 0.5rem; /* Tương đương p-2 */
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem; /* Tương đương rounded-lg */
+    cursor: pointer;
+    transition: all 200ms ease;
+    text-align: center;
+    background-color: var(--color-input-bg);
+  }
+
+  .selection-grid-item:hover {
+    border-color: var(--color-border-hover);
+    transform: translateY(-2px);
+  }
+
+  .selection-grid-item-selected {
+    border-color: var(--color-accent);
+    background-color: color-mix(
+      in srgb,
+      var(--color-accent) 15%,
+      var(--color-input-bg)
+    );
+    box-shadow: 0 0 0 2px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+  /*  */
+  .tab-button-slanted {
+    position: relative;
+    padding: 0.625rem 1.5rem; /* Tăng padding ngang một chút */
+    font-size: 0.875rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    transition: all 300ms ease;
+    flex: 1;
+    text-align: center;
+    color: var(--color-text-secondary);
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 80%,
+      var(--color-text-primary) 10%
+    );
+    transform: skewX(-20deg); /* Hiệu ứng nghiêng */
+    border: 1px solid var(--color-border);
+  }
+
+  .tab-button-slanted-active {
+    color: var(--color-accent-text);
+    background: var(--gradient-button);
+    border-color: transparent;
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+
+  /* Phần nội dung bên trong tab để làm thẳng chữ lại */
+  .tab-button-slanted .content {
+    display: flex;
+    transform: skewX(20deg); /* Hiệu ứng ngược lại để chữ thẳng */
+    transition: transform 300ms ease;
+  }
+
+  .tab-button-slanted:hover .content {
+    transform: skewX(20deg) scale(1.05); /* Phóng to nhẹ khi hover */
+  }
+  /*  */
+  /* --- Dành cho các hộp thông báo --- */
+  .alert {
+    padding: 1rem; /* p-4 */
+    border-radius: 0.5rem; /* rounded-lg */
+    border-left-width: 4px; /* border-l-4 */
+    font-size: 0.875rem; /* text-sm */
+    line-height: 1.25rem;
+  }
+  .alert-warning {
+    background-color: color-mix(
+      in srgb,
+      var(--color-highlight) 10%,
+      var(--color-background)
+    );
+    border-color: var(--color-highlight);
+    color: color-mix(
+      in srgb,
+      var(--color-text-primary) 80%,
+      var(--color-highlight)
+    );
+  }
+  .alert-success {
+    background-color: color-mix(
+      in srgb,
+      var(--color-tertiary) 15%,
+      var(--color-background)
+    );
+    border-color: var(--color-tertiary);
+    color: color-mix(
+      in srgb,
+      var(--color-text-primary) 80%,
+      var(--color-tertiary)
+    );
+  }
+  .alert-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+  .alert-info {
+    background-color: color-mix(
+      in srgb,
+      var(--color-info) 15%,
+      var(--color-background)
+    );
+    border-color: var(--color-info);
+    color: var(--color-info);
+  }
+  /*  */
+  .category-card-glow {
+    /* Thêm box-shadow vào transition để hiệu ứng mượt mà */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  .category-card-glow:hover {
+    /* Hiệu ứng nâng card lên một chút */
+    transform: translateY(-8px);
+    /* Hiệu ứng tỏa sáng với màu nhấn của chủ đề */
+    box-shadow: 0 15px 30px -5px color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+  /*  */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Dành cho Chrome, Safari, và Opera */
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* Dành cho IE và Edge */
+    scrollbar-width: none; /* Dành cho Firefox */
+  }
+  /*  */
+
+  /* --- Breadcrumbs --- */
+  .breadcrumbs-container {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem; /* 8px */
+    font-size: 0.875rem; /* 14px */
+    color: var(--color-text-secondary);
+  }
+  .breadcrumb-link {
+    transition: color 0.2s ease;
+  }
+  .breadcrumb-link:hover {
+    color: var(--color-text-primary);
+  }
+  .breadcrumb-separator {
+    color: var(--color-text-secondary);
+    opacity: 0.5;
+  }
+
+  /* --- Image Gallery --- */
+  .thumbnail-button {
+    border: 2px solid transparent;
+    border-radius: 0.75rem; /* rounded-xl */
+    overflow: hidden;
+    transition: all 0.3s ease;
+    opacity: 0.7;
+  }
+  .thumbnail-button:hover {
+    border-color: var(--color-border-hover);
+    opacity: 1;
+  }
+  .thumbnail-button-active {
+    border-color: var(--color-accent);
+    opacity: 1;
+    box-shadow: 0 0 15px
+      color-mix(in srgb, var(--color-accent) 20%, transparent);
+  }
+
+  /* --- Feature Box --- */
+  .feature-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1rem;
+    border-radius: 0.75rem;
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+  }
+
+  /* --- Action Buttons --- */
+  .action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600; /* semibold */
+    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem; /* py-3 px-6 */
+    width: 100%;
+  }
+  .action-button-primary {
+    background: var(--gradient-button);
+    color: var(--color-accent-text);
+  }
+  .action-button-primary:hover {
+    filter: brightness(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px
+      color-mix(in srgb, var(--color-accent) 25%, transparent);
+  }
+  .action-button-secondary {
+    background-color: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .action-button-secondary:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
+  @keyframes slideInFromRight {
+    from {
+      transform: translateX(110%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutToRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(110%);
+      opacity: 0;
+    }
+  }
+
+  @keyframes progressBarShrink {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
+
+  /* --- Animation Classes --- */
+  .toast-enter {
+    animation: slideInFromRight 0.5s ease-out forwards;
+  }
+
+  .toast-exit {
+    animation: slideOutToRight 0.5s ease-in forwards;
+  }
+
+  .progress-bar-animate {
+    animation: progressBarShrink linear forwards;
+  }
+
+  /* --- Themed Shadow for Modals/Popups --- */
+  .shadow-themed {
+    box-shadow: 0 10px 25px -5px color-mix(in srgb, var(--color-text-primary)
+            20%, transparent),
+      0 8px 10px -6px color-mix(in srgb, var(--color-text-primary) 15%, transparent);
+  }
+
+  /* --- Modal Button --- */
+  .modal-button {
+    padding: 0.5rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .modal-button-confirm {
+    background: var(--gradient-button);
+    color: var(--color-accent-text);
+  }
+  .modal-button-confirm:hover {
+    filter: brightness(1.1);
+  }
+
+  .modal-button-cancel {
+    background-color: var(--color-input-bg);
+    border-color: var(--color-border);
+    color: var(--color-text-secondary);
+  }
+  .modal-button-cancel:hover {
+    border-color: var(--color-border-hover);
+    color: var(--color-text-primary);
+  }
 }

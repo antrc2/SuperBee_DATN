@@ -1,24 +1,29 @@
-import React from "react";
-import GridShape from "@components/Admin/common/GridShape";
-import { Link, Outlet } from "react-router";
-import ThemeTogglerTwo from "@components/Admin/common/ThemeTogglerTwo";
-import BgLogin from "@assets/tn/bg-l.jpeg";
+// src/layouts/AuthLayout.jsx
+
+import { Outlet } from "react-router-dom";
+import chi from "@assets/tn/chitos.gif"; // Điều chỉnh đường dẫn nếu cần
+import { useClientTheme } from "../../contexts/ClientThemeContext";
+
 export default function AuthLayout() {
+  const { theme, setTheme } = useClientTheme();
   return (
-    <div
-      className="relative p-6 bg-white z-1 dark:bg-gray-900 sm:p-0 object-fit-contain "
-      style={{
-        backgroundImage: `url(${BgLogin})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="relative flex flex-col justify-center w-full h-screen lg:flex-row dark:bg-gray-900 sm:p-0">
-        <Outlet />
-        <div className={`items-center hidden w-full h-full lg:w-1/2  lg:grid`}>
-          <div className="relative flex items-center justify-center z-1"></div>
+    <div className="serene-dawn">
+      <div className="relative flex min-h-screen w-full flex-col justify-center lg:flex-row">
+        {/* Phần bên trái chứa Form, chiếm 1/2 màn hình trên desktop */}
+        <div className="relative flex w-full items-center justify-center p-8 lg:w-1/2">
+          {/* Outlet sẽ render component con, ví dụ như LoginForm */}
+          <Outlet />
         </div>
+
+        {/* Phần bên phải chứa ảnh, chỉ hiển thị trên desktop
+        <div className="relative hidden items-center justify-center lg:flex lg:w-1/2">
+          <img
+            src={chi}
+            alt="Chitoge Kirisaki"
+            className="h-full max-h-screen w-full object-contain"
+            loading="eager"
+          />
+        </div> */}
       </div>
     </div>
   );

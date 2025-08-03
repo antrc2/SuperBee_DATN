@@ -9,24 +9,25 @@ import {
   CreditCard,
   HelpCircle,
 } from "lucide-react";
+
 export default function Footer() {
   return (
-    <footer className="bg-gradient-header text-white py-12 px-6">
-      <div className="max-w-7xl mx-auto">
+    <footer className="bg-gradient-header text-secondary py-12 ">
+      <div className="max-w-screen-xl mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="bg-yellow-400 p-2 rounded-lg">
-                <Zap className="h-6 w-6 text-slate-900" />
+              <div className="bg-accent p-2 rounded-lg">
+                <Zap className="h-6 w-6 text-accent-contrast" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">SuperBee</h3>
-                <p className="text-gray-400 text-sm">Gaming Store Premium</p>
+                <h3 className="text-xl font-bold text-primary">SuperBee</h3>
+                <p className="text-secondary text-sm">Gaming Store Premium</p>
               </div>
             </div>
 
-            <p className="text-gray-300 text-sm leading-relaxed">
+            <p className="text-secondary text-sm leading-relaxed">
               Bán nick Liên quân, Free fire, Roblox với chất lượng cao và giá cả
               hợp lý nhất thị trường.
             </p>
@@ -34,15 +35,15 @@ export default function Footer() {
 
           {/* Thông tin chung */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
-              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+            <h4 className="text-lg font-semibold text-highlight flex items-center">
+              <div className="w-1 h-6 bg-highlight mr-3"></div>
               THÔNG TIN CHUNG
             </h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
                 >
                   <Users className="h-4 w-4 mr-2" />
                   Về chúng tôi
@@ -51,7 +52,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
                 >
                   <Shield className="h-4 w-4 mr-2" />
                   Chính sách bảo mật và đổi trả
@@ -60,7 +61,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
                 >
                   <HelpCircle className="h-4 w-4 mr-2" />
                   Điều khoản sử dụng
@@ -69,7 +70,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
                 >
                   <CreditCard className="h-4 w-4 mr-2" />
                   Hướng dẫn nạp tiền thẻ cào
@@ -80,18 +81,18 @@ export default function Footer() {
 
           {/* Sản phẩm */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
-              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+            <h4 className="text-lg font-semibold text-highlight flex items-center">
+              <div className="w-1 h-6 bg-highlight mr-3"></div>
               SẢN PHẨM
             </h4>
             <ul className="space-y-3">
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
                 >
                   Nick Liên Quân Giá Rẻ
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
                     HOT
                   </span>
                 </a>
@@ -99,7 +100,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm"
+                  className="text-secondary hover:text-highlight transition-colors text-sm"
                 >
                   Nick Random Freefire 2k
                 </a>
@@ -107,7 +108,7 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors text-sm"
+                  className="text-secondary hover:text-highlight transition-colors text-sm"
                 >
                   Nick Random Liên quân 2k
                 </a>
@@ -115,10 +116,10 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
                 >
                   Nick Random Blox Fruit 20k
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
                     HOT
                   </span>
                 </a>
@@ -126,10 +127,10 @@ export default function Footer() {
               <li>
                 <a
                   href="#"
-                  className="text-gray-300 hover:text-yellow-400 transition-colors flex items-center justify-between text-sm"
+                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
                 >
                   Tặng 100 acc liên quân miễn phí
-                  <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
                     HOT
                   </span>
                 </a>
@@ -139,31 +140,31 @@ export default function Footer() {
 
           {/* Hỗ trợ */}
           <div className="space-y-4">
-            <h4 className="text-lg font-semibold text-yellow-400 flex items-center">
-              <div className="w-1 h-6 bg-yellow-400 mr-3"></div>
+            <h4 className="text-lg font-semibold text-highlight flex items-center">
+              <div className="w-1 h-6 bg-highlight mr-3"></div>
               HỖ TRỢ
             </h4>
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="bg-green-500 p-2 rounded-lg">
+                <div className="bg-gradient-success p-2 rounded-lg">
                   <MessageCircle className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">Zalo Support</p>
-                  <p className="text-green-400 font-bold text-lg">0987654321</p>
-                  <p className="text-gray-400 text-xs">Bấm vào đây để chat</p>
+                  <p className="text-primary font-medium">Zalo Support</p>
+                  <p className="font-bold text-lg text-tertiary">0987654321</p>
+                  <p className="text-secondary text-xs">Bấm vào đây để chat</p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-3">
-                <div className="bg-blue-600 p-2 rounded-lg">
+                <div className="p-2 rounded-lg bg-gradient-info">
                   <Facebook className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">Facebook Admin</p>
+                  <p className="text-primary font-medium">Facebook Admin</p>
                   <a
                     href="#"
-                    className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                    className="text-info hover:brightness-110 transition-all text-sm"
                   >
                     SuperBee
                   </a>
@@ -171,17 +172,17 @@ export default function Footer() {
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="bg-red-500 p-2 rounded-lg mt-1">
+                <div className="p-2 rounded-lg mt-1 bg-gradient-danger">
                   <MapPin className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <p className="text-white font-medium">Địa chỉ</p>
-                  <p className="text-gray-300 text-sm leading-relaxed">
+                  <p className="text-primary font-medium">Địa chỉ</p>
+                  <p className="text-secondary text-sm leading-relaxed">
                     Số 1, Trịnh Văn Bô, Nam Từ Liêm, Hà Nội
                   </p>
                   <a
                     href="#"
-                    className="text-blue-400 hover:text-blue-300 transition-colors text-sm"
+                    className="text-info hover:brightness-110 transition-all text-sm"
                   >
                     facebook.com/superbee
                   </a>
@@ -192,30 +193,32 @@ export default function Footer() {
         </div>
 
         {/* Bottom section */}
-        <div className="border-t border-gray-700 mt-12 pt-8">
+        <div className="border-t border-themed mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-gray-400 text-sm">
+            <p className="text-secondary text-sm">
               © {new Date().getFullYear()} SuperBee Gaming Store. Tất cả quyền
               được bảo lưu.
             </p>
             <div className="flex items-center space-x-4">
-              <span className="text-gray-400 text-sm">Theo dõi chúng tôi:</span>
+              <span className="text-secondary text-sm">
+                Theo dõi chúng tôi:
+              </span>
               <div className="flex space-x-2">
                 <a
                   href="#"
-                  className="bg-blue-600 p-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="p-2 rounded-lg bg-gradient-info hover:brightness-110 transition-colors"
                 >
                   <Facebook className="h-4 w-4 text-white" />
                 </a>
                 <a
                   href="#"
-                  className="bg-green-500 p-2 rounded-lg hover:bg-green-600 transition-colors"
+                  className="p-2 rounded-lg bg-gradient-success hover:brightness-110 transition-colors"
                 >
                   <MessageCircle className="h-4 w-4 text-white" />
                 </a>
                 <a
                   href="#"
-                  className="bg-red-500 p-2 rounded-lg hover:bg-red-600 transition-colors"
+                  className="p-2 rounded-lg bg-gradient-danger hover:brightness-110 transition-colors"
                 >
                   <Phone className="h-4 w-4 text-white" />
                 </a>

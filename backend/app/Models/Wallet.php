@@ -13,6 +13,7 @@ class Wallet extends Model
         'user_id',
         'balance', // Typically updated via transactions, not direct fill
         'currency',
+        'promotion_balance'
     ];
 
     public function user()

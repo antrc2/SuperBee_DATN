@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+boto3
+python-multipart
+python-dotenv
+requests
+tf-nightly
+openai
+PyJWT
+Pillow
+mbbank-lib
+playwright
+beautifulsoup4
+googlesearch-python
+google-generativeai
+facebook-sdk

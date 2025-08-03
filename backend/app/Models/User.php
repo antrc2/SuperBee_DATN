@@ -145,15 +145,49 @@ class User extends Authenticatable
     {
         return $this->hasMany(Notification::class);
     }
+  
+    /**
+     * Get the global notifications read by the user.
+     */
+    public function globalNotificationsReadStatus()
+    {
+        return $this->hasMany(UserGlobalNotificationStatus::class);
+    }
+    public function agent()
+    {
+        return $this->hasOne(Agent::class, 'user_id');
+    }
 
+    /**
+     * Lấy tất cả các phòng chat mà người dùng này đã tạo.
+     *
+     *
+     */
     public function createdChatRooms()
     {
         return $this->hasMany(ChatRoom::class, 'created_by');
     }
 
-    public function sentMessages()
+    /**
+     * Lấy tất cả tin nhắn đã gửi bởi người dùng này.
+     *
+     * 
+     */
+    public function messages()
     {
         return $this->hasMany(Message::class, 'sender_id');
+    }
+
+    /**
+     * Lấy tất cả các phòng chat mà người dùng này tham gia (với bất kỳ vai trò nào).
+     *
+     * 
+     */
+    public function chatRooms()
+    {
+        return $this->belongsToMany(ChatRoom::class, 'chat_room_participants', 'user_id', 'chat_room_id')
+                    ->withPivot('role', 'joined_at', 'left_at')
+                    ->withTimestamps();
     }
 
     public function createdBanners()

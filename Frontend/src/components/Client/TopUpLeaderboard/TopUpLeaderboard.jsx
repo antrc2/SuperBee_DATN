@@ -1,86 +1,155 @@
-import { Crown, Trophy, Medal, Zap } from "lucide-react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Trophy, Zap, Landmark, CreditCard } from "lucide-react";
+import { formatCurrencyVND } from "../../../config/recharge";
 
-export default function TopUpLeaderboard({ top }) {
-  const getRankIcon = (index) => {
-    switch (index) {
-      case 0:
-        return <Crown className="h-4 w-4 text-yellow-500" />;
-      case 1:
-        return <Trophy className="h-4 w-4 text-slate-400" />;
-      case 2:
-        return <Medal className="h-4 w-4 text-amber-600" />;
-      default:
-        return (
-          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-slate-600 text-xs font-medium text-white">
-            {index + 1}
-          </div>
-        );
-    }
-  };
+import { useAuth } from "../../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import {
+  CardRechargeForm,
+  BankRechargeTab,
+} from "../Recharge/CardRechargeForm";
 
+const LeaderboardList = ({ top }) => {
   const getRankBg = (index) => {
     switch (index) {
       case 0:
-        return "bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/20";
+        return "bg-yellow-400/10 border-yellow-400/30";
       case 1:
-        return "bg-gradient-to-r from-slate-500/10 to-slate-400/10 border-slate-400/20";
+        return "bg-gray-400/10 border-gray-400/30";
       case 2:
-        return "bg-gradient-to-r from-amber-600/10 to-orange-500/10 border-amber-600/20";
+        return "bg-orange-400/10 border-orange-400/30";
       default:
-        return "bg-slate-800/50 border-slate-700";
+        return "border-themed/50";
+    }
+  };
+  const getBadgeText = (index) =>
+    ({
+      0: "👑 Vua Nạp Thẻ",
+      1: "🏆 Cao Thủ",
+      2: "🥉 Chuyên Gia",
+      3: "⭐ Tài Năng",
+      4: "🌟 Tân Binh",
+    }[index]);
+
+  return (
+    <div className="p-3 space-y-2 animate-fade-in">
+      {top.map((entry, index) => (
+        <div
+          key={index}
+          className={`flex items-center justify-between p-3 rounded-lg border transition-all ${getRankBg(
+            index
+          )}`}
+        >
+          <div className="flex items-center gap-3">
+            <span
+              className={`font-bold text-lg w-5 text-center ${
+                index < 3 ? "text-highlight" : "text-secondary"
+              }`}
+            >
+              {index + 1}
+            </span>
+            <div>
+              <span className="text-sm text-primary font-medium">
+                {entry.user?.username}
+              </span>
+              <div className="text-xs text-secondary">
+                {getBadgeText(index)}
+              </div>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="flex items-center gap-1">
+              <Zap className="h-3 w-3 text-highlight" />
+              <span className="text-sm font-medium text-primary">
+                {formatCurrencyVND(entry.balance)}
+              </span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+import { useNotification } from "@contexts/NotificationContext";
+export default function TopUpLeaderboard({ top }) {
+  const [activeTab, setActiveTab] = useState("leaderboard"); // Mặc định là tab Top Nạp
+  const [rechargeMethod, setRechargeMethod] = useState("card");
+  const { pop } = useNotification();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const handleRechargeClick = () => {
+    if (user) {
+      // Nếu đã đăng nhập, chuyển sang tab nạp tiền
+      setRechargeMethod("bank");
+    } else {
+      pop("Vui lòng đăng nhập để nạp tiền", "i");
+      localStorage.setItem("location", "/recharge-atm");
+      navigate("/auth/login");
     }
   };
 
   return (
-    <div className="w-full max-w-sm rounded-lg bg-slate-800 border border-slate-700 shadow-lg ">
-      {/* Leaderboard */}
-      <div className="p-3 space-y-2 flex-1 overflow-y-auto">
-        {top.map((entry, index) => (
-          <div
-            key={index}
-            className={`flex items-center justify-between p-3 rounded-lg border transition-colors hover:bg-slate-700/50 ${getRankBg(
-              index
-            )}`}
+    <div className="w-full bg-content rounded-2xl overflow-hidden h-full flex flex-col">
+      {/* Header với các Tab Chéo */}
+      <div className="p-2 border-b border-themed">
+        <div className="flex items-center justify-center gap-1">
+          <button
+            onClick={() => setActiveTab("recharge")}
+            className={`tab-button-slanted ${
+              activeTab === "recharge" ? "tab-button-slanted-active" : ""
+            }`}
           >
-            <div className="flex items-center gap-3">
-              {getRankIcon(index)}
-              <div>
-                <span className="text-sm text-white font-medium">
-                  {entry.user?.username}
-                </span>
-                {index < 3 && (
-                  <div className="text-xs text-slate-400 mt-0.5">
-                    {index === 0
-                      ? "Vua nạp thẻ"
-                      : index === 1
-                      ? "Cao thủ"
-                      : "Chuyên gia"}
-                  </div>
-                )}
-              </div>
+            <div className="content flex items-center justify-center gap-1">
+              <span>
+                <Zap size={14} />
+              </span>{" "}
+              <span>Nạp Tiền</span>
             </div>
-            <div className="text-right">
-              <div className="flex items-center gap-1">
-                <Zap className="h-3 w-3 text-yellow-500" />
-                <span className="text-sm font-semibold text-white">
-                  {entry.balance}
-                  <sup className="text-xs text-slate-400">đ</sup>
-                </span>
-              </div>
-            </div>
-          </div>
-        ))}
+          </button>
+          <button
+            onClick={() => setActiveTab("leaderboard")}
+            className={`tab-button-slanted ${
+              activeTab === "leaderboard" ? "tab-button-slanted-active" : ""
+            }`}
+          >
+            <span className="content flex items-center justify-center gap-1">
+              <Trophy size={14} /> Top Nạp
+            </span>
+          </button>
+        </div>
       </div>
 
-      {/* CTA Button */}
-      <div className="p-4 border-t border-slate-700">
-        <Link to={"/recharge-atm"}>
-          <button className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200 flex items-center justify-center gap-2">
-            <Zap className="h-4 w-4" />
-            Nạp thẻ ngay
-          </button>
-        </Link>
+      {/* Vùng nội dung động */}
+      <div className="flex-grow overflow-y-auto custom-scrollbar-notification p-4 h-[400px]">
+        {activeTab === "recharge" ? (
+          <div>
+            <div className="flex items-center justify-center gap-2 mb-4 bg-primary/5 p-1 rounded-lg">
+              <button
+                onClick={() => setRechargeMethod("card")}
+                className={`tab-button text-xs ${
+                  rechargeMethod === "card" ? "tab-button-active" : ""
+                }`}
+              >
+                <CreditCard size={14} className="inline-block mr-1" /> Thẻ Cào
+              </button>
+              <button
+                onClick={handleRechargeClick}
+                className={`tab-button text-xs ${
+                  rechargeMethod === "bank" ? "tab-button-active" : ""
+                }`}
+              >
+                <Landmark size={14} className="inline-block mr-1" /> Ngân Hàng
+              </button>
+            </div>
+            {rechargeMethod === "card" ? (
+              <CardRechargeForm />
+            ) : (
+              <BankRechargeTab user={user} />
+            )}
+          </div>
+        ) : (
+          <LeaderboardList top={top} />
+        )}
       </div>
     </div>
   );

@@ -3,6 +3,8 @@
 import { X, ShoppingBag } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import Image from "../Image/Image";
+import { formatCurrencyVND } from "../../../utils/hook";
 
 export default function CartDropdown({
   cartItems,
@@ -35,100 +37,100 @@ export default function CartDropdown({
       ref={dropdownRef}
       className={`${
         isMobile
-          ? "h-full flex flex-col bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl"
-          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl bg-gradient-to-b from-slate-900 via-purple-900/95 to-slate-900 backdrop-blur-xl shadow-2xl border border-purple-500/20"
+          ? "h-full flex flex-col custom-scrollbar-notification bg-gradient-header"
+          : "absolute right-0 top-full z-20 mt-3 w-80 sm:w-96 rounded-2xl bg-dropdown custom-scrollbar-notification backdrop-blur-xl shadow-2xl border-themed"
       }`}
     >
-      {/* Header */}
-      <div className="flex justify-between items-center p-4 border-b border-purple-500/20">
+      <div className="flex justify-between items-center p-4 border-b border-themed">
         <div className="flex items-center gap-2">
-          <ShoppingBag className="w-5 h-5 text-cyan-400" />
-          <h3 className="text-lg font-bold text-white">🛒 Giỏ hàng</h3>
+          <ShoppingBag className="w-5 h-5 text-info" />
+          <h3 className="text-lg font-bold text-primary"> Giỏ hàng</h3>
           {cartItems.length > 0 && (
-            <span className="px-2 py-0.5 bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs font-bold rounded-full">
+            <span className="px-2 py-0.5 bg-gradient-success text-white text-xs font-bold rounded-full">
               {cartItems.length}
             </span>
           )}
         </div>
         <button
           onClick={onClose}
-          className="text-white/60 hover:text-white hover:bg-white/10 rounded-lg p-1.5 transition-all duration-300"
+          className="text-secondary/60 hover:text-primary rounded-lg p-1.5 transition-colors"
           aria-label="Close cart"
         >
           <X size={18} />
         </button>
       </div>
 
-      {/* Cart Items */}
-      <div className={`overflow-y-auto ${isMobile ? "flex-grow" : "max-h-80"}`}>
+      <div
+        className={`overflow-y-auto ${
+          isMobile ? "flex-grow" : "max-h-80"
+        } custom-scrollbar-notification`}
+      >
         {cartItems.length > 0 ? (
           cartItems.map((item, index) => (
             <Link
               to={`/acc/${item?.product?.sku}`}
               key={index}
-              className="flex gap-4 p-4 border-b border-purple-500/10 hover:bg-gradient-to-r hover:from-blue-600/10 hover:to-cyan-600/10 transition-all duration-300 group"
+              className="flex gap-4 p-4 border-b border-themed/50 hover:bg-primary/5 transition-colors group"
               onClick={onClose}
             >
-              {/* Product Image */}
               <div className="relative flex-shrink-0">
-                <img
-                  src={`${import.meta.env.VITE_BACKEND_IMG}${
-                    item?.product?.images[0]?.image_url
-                  }`}
+                <Image
+                  url={`${item?.product?.images[0]?.image_url}`}
                   alt={item?.name}
-                  className="h-16 w-16 rounded-xl object-cover border-2 border-purple-400/30 group-hover:border-cyan-400/60 transition-colors duration-300"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src =
-                      "https://placehold.co/64x64/667eea/ffffff?text=🎮";
-                  }}
+                  className="h-16 w-16 rounded-xl object-cover border-2 border-themed group-hover:border-highlight transition-colors"
                 />
-                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-success rounded-full flex items-center justify-center">
                   <span className="text-xs text-white font-bold">✓</span>
                 </div>
               </div>
 
-              {/* Product Info */}
               <div className="flex-grow min-w-0">
-                <p className="text-sm font-semibold text-white/90 group-hover:text-white transition-colors duration-300 truncate">
-                  🎮 {item?.product?.category?.name}
+                <p className="text-sm font-semibold text-secondary group-hover:text-primary truncate">
+                  {item?.product?.category?.name}
                 </p>
                 <div className="flex items-center gap-2 mt-1">
-                  <p className="text-lg font-bold text-transparent bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text">
-                    {item?.product?.price}đ
-                  </p>
-                  <span className="px-2 py-0.5 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-400 text-xs font-semibold rounded-full border border-red-500/30">
-                    HOT
-                  </span>
+                  {item?.product?.sale ? (
+                    <>
+                      <p className="text-lg font-bold text-highlight ">
+                        {formatCurrencyVND(item?.product?.sale)} VND
+                      </p>
+                      <p className="text-sm font-bold text-secondary/50 line-through">
+                        {formatCurrencyVND(item?.product?.price)} VND
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-lg font-bold text-highlight ">
+                      {formatCurrencyVND(item?.product?.price)} VND
+                    </p>
+                  )}
                 </div>
               </div>
             </Link>
           ))
         ) : (
           <div className="p-8 text-center">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-600/20 to-cyan-600/20 flex items-center justify-center">
-              <ShoppingBag className="w-8 h-8 text-white/40" />
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/5 flex items-center justify-center">
+              <ShoppingBag className="w-8 h-8 text-secondary/40" />
             </div>
-            <p className="text-sm text-white/60 mb-2">
+            <p className="text-sm text-secondary">
               Giỏ hàng của bạn đang trống
             </p>
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-secondary/60">
               Hãy thêm acc game yêu thích vào giỏ hàng!
             </p>
           </div>
         )}
       </div>
 
-      {/* Footer */}
       {cartItems.length > 0 && (
-        <div className="p-4 border-t border-purple-500/20">
-          <a
-            href="/cart"
-            className="block w-full text-center rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 px-4 py-3 text-sm font-bold text-white shadow-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105"
+        <div className="p-4 border-t border-themed">
+          <Link
+            to={`/cart`}
+            className="block w-full text-center rounded-xl bg-gradient-info px-4 py-3 text-sm font-bold text-white shadow-lg hover:brightness-110 transition-all transform hover:scale-105"
             onClick={onClose}
           >
             🛒 Xem giỏ hàng ({cartItems.length})
-          </a>
+          </Link>
         </div>
       )}
     </div>

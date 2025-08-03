@@ -9,7 +9,9 @@ import DiscountCodePage from "./Admin/DiscountCode/DiscountCodePage";
 import ShowDiscountCodePage from "./Admin/DiscountCode/ShowDiscountCodePage";
 import EditDiscountCodePage from "./Admin/DiscountCode/EditDiscountCodePage";
 import CreateDonatePromotionPage from "./Admin/DonatePromotion/CreateDonatePromotionPage";
+import DonatePromotionDashboard from "./Admin/DonatePromotion/DonatePromotionDashboard";
 import DonatePromotionPage from "./Admin/DonatePromotion/DonatePromotionPage";
+import DonatePromotionDetail from "./Admin/DonatePromotion/DonatePromotionDetail";
 import EditDonatePromotionPage from "./Admin/DonatePromotion/EditDonatePromotionPage";
 import BannersListPage from "../pages/Admin/Banners/BannersListPage";
 import BannerDetailPage from "../pages/Admin/Banners/BannerDetailPage";
@@ -23,6 +25,17 @@ import CreateProducts from "./Admin/Products/CreateProducts";
 import HistoryOrder from "./Clients/Profile/HistoryOrder";
 import ShowOrderPage from "./Admin/Orders/ShowOrderPage";
 import ProductDetailPage from "./Admin/Products/ProductDetailPage";
+import ProductsBrowse from "./Admin/Products/ProductsBrowse";
+import TrangDanhSachPost from "./Admin/Post/TrangDanhSachPost";
+import ShowPostPage from "./Admin/Post/ShowPostPage";
+import CreatePostPage from "./Admin/Post/CreatePostPage";
+import EditPostPage from "./Admin/Post/EditPostPage";
+import TrangDanhSachCategoryPost from "./Admin/CategoryPost/TrangDanhSachCategoryPost";
+
+import TrangDanhSachAccGamePartner from "./Partner/Products/TrangDanhSachAccGame";
+import ProductDetailPagePartner from "./Partner/Products/ProductDetailPagePartner";
+import EditProductsPartner from "./Partner/Products/EditProductsPartner";
+import CreateProductsPartner from "./Partner/Products/CreateProductsPartner";
 
 // AUTH
 import Login from "./Auth/Login";
@@ -48,7 +61,18 @@ import ResetPassword from "./Clients/ResetPassword/ResetPassword";
 import ForgotPassword from "./Clients/ForgotPassword/ForgotPassword";
 import ActiveAcc from "./Clients/ResetPassword/ActiveAcc";
 import ActivateWebPage from "./Clients/ActiveDomain/ActivateWebPage";
+import ChatComponent from "./Chat/Chat";
+import SearchPage from "./Clients/SearchPage/SearchPage ";
+import RolesPage from "./Admin/Authorization/RolesPage";
+import PermissionsPage from "./Admin/Authorization/PermissionsPage";
+import UserAssignRolesPage from "./Admin/Authorization/UserRolesPage";
+
 export {
+  RolesPage,
+  PermissionsPage,
+  UserAssignRolesPage,
+  SearchPage,
+  ChatComponent,
   ActivateWebPage,
   ActiveAcc,
   ProductDetailPage,
@@ -69,7 +93,9 @@ export {
   EditDiscountCodePage,
   CreateDonatePromotionPage,
   DonatePromotionPage,
+  DonatePromotionDashboard,
   EditDonatePromotionPage,
+  DonatePromotionDetail,
   Login,
   ActiveDomain,
   Home,
@@ -93,4 +119,14 @@ export {
   EditBanner,
   BannersPageLayout,
   TrangDanhSachAccGame,
+  TrangDanhSachAccGamePartner,
+  ProductDetailPagePartner,
+  EditProductsPartner,
+  CreateProductsPartner,
+  ProductsBrowse,
+  TrangDanhSachPost,
+  ShowPostPage,
+  CreatePostPage,
+  EditPostPage,
+  TrangDanhSachCategoryPost,
 };

@@ -1,144 +1,165 @@
+import { Eye, Lock, Key, Calendar, ChevronsRight, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import Highlighter from "react-highlight-words"; // Thư viện để làm nổi bật chữ
 
-const DonatePromotionPage = () => {
-  const [promotions, setPromotions] = useState([
-    {
-      id: 1,
-      web_id: 1,
-      amount: 20,
-      start_date: "2024-05-01",
-      end_date: "2024-12-31",
-      created_at: "2024-04-30",
-      updated_at: "2024-05-01",
-    },
-    {
-      id: 2,
-      web_id: 2,
-      amount: 15,
-      start_date: "2024-06-01",
-      end_date: "2024-09-30",
-      created_at: "2024-05-15",
-      updated_at: "2024-05-16",
-    },
-  ]);
+// Helper để định dạng ngày tháng
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
 
-  const [selectedIds, setSelectedIds] = useState([]);
+// Component Badge cho Trạng thái, thông minh hơn
+const StatusBadge = ({ status, endDate }) => {
+  const isExpired = new Date(endDate) < new Date();
+  let text = "Ngưng";
+  let colorClasses =
+    "bg-slate-100 text-slate-800 dark:bg-slate-700 dark:text-slate-300";
 
-  const handleSelect = (id) => {
-    setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(promotions.map((p) => p.id));
-    } else {
-      setSelectedIds([]);
-    }
-  };
-
-  const handleDelete = (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xoá khuyến mãi này không?")) {
-      setPromotions((prev) => prev.filter((p) => p.id !== id));
-      setSelectedIds((prev) => prev.filter((i) => i !== id));
-    }
-  };
-
-  const handleDeleteSelected = () => {
-    if (
-      selectedIds.length > 0 &&
-      window.confirm("Bạn có chắc chắn muốn xoá các khuyến mãi đã chọn?")
-    ) {
-      setPromotions((prev) => prev.filter((p) => !selectedIds.includes(p.id)));
-      setSelectedIds([]);
-    }
-  };
+  if (status == 1) {
+    text = "Hoạt động";
+    colorClasses =
+      "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
+  // } else if (status == 1 && isExpired) {
+  //   text = "Hết hạn";
+  //   colorClasses =
+  //     "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";
+  } else if (status == 2) {
+    text = "Hết hạn";
+    colorClasses =
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300";
+  }
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Quản lý khuyến mãi nạp thẻ</h1>
-        <div className="flex gap-2">
-          {selectedIds.length > 0 && (
-            <button
-              onClick={handleDeleteSelected}
-              className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-            >
-              Xoá đã chọn ({selectedIds.length})
-            </button>
-          )}
-          <Link to="/admin/donate-promotions/new">
-            <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-              + Thêm khuyến mãi
-            </button>
-          </Link>
-        </div>
-      </div>
+    <span
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorClasses}`}
+    >
+      {text}
+    </span>
+  );
+};
 
-      <table className="min-w-full bg-white shadow rounded text-sm">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            <th className="px-3 py-2">
-              <input
-                type="checkbox"
-                onChange={handleSelectAll}
-                checked={
-                  selectedIds.length === promotions.length &&
-                  promotions.length > 0
-                }
-              />
+export default function DonatePromotionPage({
+  loading,
+  data,
+  handleLock,
+  handleUndo,
+  searchTerm,
+}) {
+  return (
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm overflow-x-auto">
+      <table className="w-full text-sm text-left text-slate-500 dark:text-slate-400">
+        <thead className="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-700/50">
+          <tr>
+            <th scope="col" className="px-6 py-3">
+              ID
             </th>
-            <th className="px-3 py-2">ID</th>
-            <th className="px-3 py-2">Web ID</th>
-            <th className="px-3 py-2">Phần trăm KM</th>
-            <th className="px-3 py-2">Bắt đầu</th>
-            <th className="px-3 py-2">Kết thúc</th>
-            <th className="px-3 py-2 text-center">Hành động</th>
+            <th scope="col" className="px-6 py-3">
+              Khuyến mãi (%)
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Thời gian hiệu lực
+            </th>
+            <th scope="col" className="px-6 py-3">
+              Trạng thái
+            </th>
+            <th scope="col" className="px-6 py-3 text-center">
+              Hành động
+            </th>
           </tr>
         </thead>
-        <tbody>
-          {promotions.map((p) => (
-            <tr key={p.id} className="border-b">
-              <td className="px-3 py-2">
-                <input
-                  type="checkbox"
-                  checked={selectedIds.includes(p.id)}
-                  onChange={() => handleSelect(p.id)}
-                />
-              </td>
-              <td className="px-3 py-2">{p.id}</td>
-              <td className="px-3 py-2">{p.web_id}</td>
-              <td className="px-3 py-2">{p.amount}%</td>
-              <td className="px-3 py-2">{p.start_date}</td>
-              <td className="px-3 py-2">{p.end_date}</td>
-              <td className="px-3 py-2 text-center space-x-2">
-                <Link to={`/admin/donate-promotions/${p.id}/edit`}>
-                  <button className="bg-yellow-400 px-3 py-1 rounded hover:bg-yellow-500 text-white">
-                    Sửa
-                  </button>
-                </Link>
-                <button
-                  onClick={() => handleDelete(p.id)}
-                  className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 text-white"
-                >
-                  Xoá
-                </button>
-              </td>
-            </tr>
-          ))}
-          {promotions.length === 0 && (
+        <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+          {loading ? (
+            Array.from({ length: 5 }).map((_, i) => (
+              <tr key={i} className="animate-pulse">
+                <td className="px-6 py-4" colSpan="6">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-full"></div>
+                </td>
+              </tr>
+            ))
+          ) : data.length === 0 ? (
             <tr>
-              <td colSpan="7" className="px-3 py-4 text-center text-gray-500">
-                Không có khuyến mãi nào.
+              <td colSpan="6" className="text-center py-16 text-slate-500">
+                <Tag size={48} className="mx-auto mb-2" />
+                Không tìm thấy mã giảm giá nào.
               </td>
             </tr>
+          ) : (
+            data.map((item) => (
+              <tr
+                key={item.id}
+                className="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+              >
+                <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200">
+                  <Highlighter
+                    highlightClassName="bg-yellow-200 dark:bg-yellow-700 rounded-sm"
+                    searchWords={[searchTerm]}
+                    autoEscape={true}
+                    textToHighlight={item.id.toString()}
+                  />
+                </td>
+                <td className="px-6 py-4 font-semibold text-indigo-600 dark:text-indigo-400">
+                  <Highlighter
+                    highlightClassName="bg-yellow-200 dark:bg-yellow-700 rounded-sm"
+                    searchWords={[searchTerm]}
+                    autoEscape={true}
+                    textToHighlight={`${item.amount}%`}
+                  />
+                </td>
+                {/* <td className="px-6 py-4 font-medium text-slate-900 dark:text-slate-200">
+                  {item.id}
+                </td>
+                <td className="px-6 py-4 font-semibold text-indigo-600 dark:text-indigo-400">
+                  {item.amount}%
+                </td> */}
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+                    <Calendar size={14} />
+                    <span>{formatDate(item.start_date)}</span>
+                    <ChevronsRight size={14} />
+                    <span>{formatDate(item.end_date)}</span>
+                  </div>
+                </td>
+                <td className="px-6 py-4">
+                  <StatusBadge status={item.status} endDate={item.end_date} />
+                </td>
+                <td className="px-6 py-4">
+                  <div className="flex justify-center items-center gap-4">
+                    <Link
+                      to={`/admin/donatePromotions/${item.id}`}
+                      title="Xem chi tiết"
+                      className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-blue-600 transition-colors"
+                    >
+                      <Eye size={18} />
+                    </Link>
+                    {item.status === 1 ? (
+                      <button
+                        onClick={() => handleLock(item.id)}
+                        title="Tắt khuyến mãi"
+                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-red-600 transition-colors"
+                      >
+                        <Lock size={18} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleUndo(item.id)}
+                        title="Kích hoạt lại"
+                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-green-600 transition-colors"
+                      >
+                        <Key size={18} />
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))
           )}
         </tbody>
       </table>
     </div>
   );
-};
-
-export default DonatePromotionPage;
+}

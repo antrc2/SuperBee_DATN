@@ -4,9 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; // Điều chỉnh đường dẫn
 import api from "@utils/http";
 import { ArrowLeft } from "lucide-react";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function CreateProducts() {
   const navigate = useNavigate();
+  const { pop } = useNotification();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,15 +22,15 @@ export default function CreateProducts() {
         },
       });
       if (response.status === 201 || response.status === 200) {
+        pop("Tạo sản phẩm thành công!", "s");
         navigate("/admin/products");
       }
       return response.data;
     } catch (err) {
       console.error(err);
-      // setError(
-      //   err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại."
-      // );
-      // toast.error(err.response?.data?.message || "Có lỗi xảy ra!");
+      const errorMessage = err.response?.data?.message || "Có lỗi xảy ra, vui lòng thử lại.";
+      setError(errorMessage);
+      pop(errorMessage, "e");
     } finally {
       setIsLoading(false);
     }
@@ -46,7 +48,7 @@ export default function CreateProducts() {
             Quay lại danh sách
           </Link>
         </div>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+        <h2 className="text-2xl font-semibold mb-4 ml-4 mt-3 text-gray-700">
           Thêm sản phẩm mới
         </h2>
       </div>

@@ -135,6 +135,17 @@ const decodeData = (token) => {
   const decoded = jwtDecode(token);
   return decoded;
 };
+const checkLocation = () => {
+  const savedLocation = localStorage.getItem("location");
+  if (savedLocation) {
+    return savedLocation;
+  } else {
+    return null;
+  }
+};
+const formatCurrencyVND = (amount) => {
+  return new Intl.NumberFormat("vi-VN").format(amount);
+};
 
 // export default MyComponent;
 export {
@@ -149,4 +160,6 @@ export {
   setSessionValue,
   useSessionStorage,
   decodeData,
+  checkLocation,
+  formatCurrencyVND,
 };

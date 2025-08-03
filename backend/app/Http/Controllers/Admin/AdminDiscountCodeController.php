@@ -10,10 +10,11 @@ use App\Models\Promotion;
 use App\Models\User;
 use App\Models\Web;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class AdminDiscountCodeController extends Controller
 {
@@ -21,25 +22,47 @@ class AdminDiscountCodeController extends Controller
     public function index(Request $request)
     {
         try {
-            // $query = DiscountCode::orderBy('created_at', 'desc');
-            $codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
-            if ($codes->count() == 0) {
-                return response()->json([
-                    'message' => 'Không có mã giảm giá nào',
-                    'status' => true,
-                    'data' => []
-                ]);
-            }
+            // Validate request parameters
+            $request->validate([
+                'sort_by' => 'sometimes|in:code,discount_value,end_date,created_at',
+                'sort_direction' => 'sometimes|in:asc,desc',
+                'status' => 'sometimes|in:0,1',
+                'search' => 'sometimes|string|max:50',
+                'page' => 'sometimes|integer|min:1',
+            ]);
+
+            // Start building the query from Promotion model
+            $query = Promotion::query();
+
+            // Handle search by promotion code
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%');
+            });
+
+            // Handle status filtering
+            $query->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+            // Handle sorting
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortDirection = $request->input('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+
+            // Paginate the results
+            $promotions = $query->paginate(15)->withQueryString();
+
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
                 'status' => true,
-                'data' => $codes
+                'data' => $promotions,
             ]);
         } catch (\Exception $e) {
+            Log::error('Error fetching promotions: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Đã có lỗi xảy ra',
+                'message' => 'Đã có lỗi xảy ra ở phía máy chủ.',
                 'status' => false,
-                'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
+                'error' => 'Could not fetch promotions.',
             ], 500);
         }
     }
@@ -65,34 +88,79 @@ class AdminDiscountCodeController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi khi lấy chi tiết mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
     }
     public function store(Request $request)
+// Thiếu validate discount amount
     {
         try {
             // 1. Validate input
-            $validator = Validator::make($request->all(), [
-                'code' => 'required|string|unique:promotions,code',
-                'description' => 'nullable|string|max:255',
-                'discount_value' => 'required|integer|min:0',
-                'min_discount_amount' => 'nullable|integer|min:0',
-                'max_discount_amount' => 'nullable|integer|min:0',
-                'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
-                'usage_limit' => 'nullable|integer|min:-1|not_in:0',
-                'per_user_limit' => 'nullable|integer|min:-1|not_in:0',
-            ]);
+            $rules = [
+                'code'                  => 'required|string|unique:promotions,code',
+                'description'           => 'nullable|string|max:255',
+                'discount_value'        => 'required|integer|min:0|max:99',
+                'min_discount_amount'   => 'nullable|integer|min:0',
+                'max_discount_amount'   => 'nullable|integer|min:0',
+                'start_date'            => 'required|date',
+                'end_date'              => 'required|date|after_or_equal:start_date',
+                'usage_limit'           => 'nullable|integer|min:-1|not_in:0',
+                'per_user_limit'        => 'nullable|integer|min:-1|not_in:0',
+                'target_user_id'        => 'required|integer',
+                'status'=>'nullable|integer'
+            ];
 
+            $messages = [
+                'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
+                'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
+                'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
+
+                'description.string'            => 'Mô tả phải là chuỗi ký tự.',
+                'description.max'               => 'Mô tả không được vượt quá 255 ký tự.',
+
+                'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
+                'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
+                'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 99%.",
+
+                'min_discount_amount.integer'   => 'Số tiền giảm giá tối thiểu phải là số nguyên.',
+                'min_discount_amount.min'       => 'Số tiền giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
+
+                'max_discount_amount.integer'   => 'Số tiền giảm giá tối đa phải là số nguyên.',
+                'max_discount_amount.min'       => 'Số tiền giảm giá tối đa phải lớn hơn hoặc bằng 0.',
+
+                'start_date.required'           => 'Vui lòng chọn ngày bắt đầu.',
+                'start_date.date'               => 'Ngày bắt đầu không đúng định dạng.',
+
+                'end_date.required'             => 'Vui lòng chọn ngày kết thúc.',
+                'end_date.date'                 => 'Ngày kết thúc không đúng định dạng.',
+                'end_date.after_or_equal'       => 'Ngày kết thúc phải cùng hoặc sau ngày bắt đầu.',
+
+                'usage_limit.integer'           => 'Giới hạn sử dụng phải là số nguyên.',
+                'usage_limit.min'               => 'Giới hạn sử dụng phải lớn hơn hoặc bằng -1.',
+                'usage_limit.not_in'            => 'Giới hạn sử dụng không được là 0.',
+
+                'per_user_limit.integer'        => 'Giới hạn mỗi người dùng phải là số nguyên.',
+                'per_user_limit.min'            => 'Giới hạn mỗi người dùng phải lớn hơn hoặc bằng -1.',
+                'per_user_limit.not_in'         => 'Giới hạn mỗi người dùng không được là 0.',
+
+                'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
+                'target_user_id.integer'        => 'ID người dùng mục tiêu phải là số nguyên.',
+            ];
+
+
+            $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
+                // Trả về JSON (API)
                 return response()->json([
-                    'message' => 'Dữ liệu không hợp lệ',
-                    'status' => false,
-                    'errors' => $validator->errors()
+                    'status'  => false,
+                    'message' => $validator->errors()->first(), // message đầu tiên
+                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
                 ], 422);
             }
+            // $validatedData = $validator->validated();
 
             // 2. Lấy dữ liệu đã validate
             $validated = $validator->validated();
@@ -114,14 +182,21 @@ class AdminDiscountCodeController extends Controller
             $validated['usage_limit'] = $validated['usage_limit'] ?? -1;
             $validated['per_user_limit'] = $validated['per_user_limit'] ?? -1;
             $validated['total_used'] = 0;
+            $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
+            $validated['status'] = $request->status;
+            $validated['code'] = strtoupper($request->code);
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();
             $code = Promotion::create($validated);
             DB::commit();
-
+            if ($request->target_user_id == -1) {
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
+            } else {
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->user_id);
+            }
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
                 'status' => true,
@@ -131,12 +206,12 @@ class AdminDiscountCodeController extends Controller
             return response()->json([
                 'message' => 'Dữ liệu không hợp lệ',
                 'status' => false,
-                'errors' => $e->errors()
+                // 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi tạo mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -156,32 +231,89 @@ class AdminDiscountCodeController extends Controller
                     'status' => false
                 ], 404);
             }
+            if (Carbon::parse($code->end_date)->isPast()) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã hết hạn và không thể chỉnh sửa.',
+                    'status' => false
+                ], 400); // 400 Bad Request
+            }
+            $luotsudung = $code->total_used;
+            if ($luotsudung > 0) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã được sử dụng ',
+                    'status' => false
+                ], 400);
+            }
 
-            $validator = Validator::make($request->all(), [
-                'code' => 'required|string|unique:promotions,code,' . $id,
-                'description' => 'nullable|string|max:255',
-                'usage_limit' => 'nullable|integer|min:-1', // Cho phép -1 (không giới hạn) hoặc >=1
-                'per_user_limit' => 'nullable|integer|min:-1', // Cho phép -1 (không giới hạn) hoặc >=1
-                'discount_value' => 'required|integer|min:0',
-                'min_discount_amount' => 'nullable|integer|min:0',
-                'max_discount_amount' => 'nullable|integer|min:0|gt:min_discount_amount',
-                'start_date' => 'required|date',
-                "status" => 'required|in:0,1', // Thêm kiểm tra trạng thái
-                'end_date' => 'required|date|after_or_equal:start_date',
-            ], [
-                'max_discount_amount.gt' => 'Giá trị tối đa phải lớn hơn giá trị tối thiểu',
-                'usage_limit' => 'nullable|integer|min:-1|not_in:0',
-                'per_user_limit' => 'nullable|integer|min:-1|not_in:0',
-            ]);
+            $rules = [
+                'code'                 => 'required|string|unique:promotions,code,' . $id,
+                'description'          => 'nullable|string|max:255',
+                'usage_limit'          => 'nullable|integer|min:-1|not_in:0',
+                'per_user_limit'       => 'nullable|integer|min:-1|not_in:0',
+                'discount_value'       => 'required|integer|min:0',
+                'min_discount_amount'  => 'nullable|integer|min:0',
+                'max_discount_amount'  => 'nullable|integer|min:0|gt:min_discount_amount',
+                'start_date'           => 'required|date',
+                'end_date'             => 'required|date|after_or_equal:start_date',
+                'status'               => 'required|in:0,1',
+                'target_user_id'       => 'required|integer',
+            ];
+
+            $messages = [
+                'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
+                'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
+                'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
+
+                'description.string'            => 'Mô tả phải là chuỗi ký tự.',
+                'description.max'               => 'Mô tả không được vượt quá 255 ký tự.',
+
+                'usage_limit.integer'           => 'Giới hạn sử dụng phải là số nguyên.',
+                'usage_limit.min'               => 'Giới hạn sử dụng phải lớn hơn hoặc bằng -1.',
+                'usage_limit.not_in'            => 'Giới hạn sử dụng không được là 0.',
+
+                'per_user_limit.integer'        => 'Giới hạn mỗi người dùng phải là số nguyên.',
+                'per_user_limit.min'            => 'Giới hạn mỗi người dùng phải lớn hơn hoặc bằng -1.',
+                'per_user_limit.not_in'         => 'Giới hạn mỗi người dùng không được là 0.',
+
+                'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
+                'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
+                'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+
+                'min_discount_amount.integer'   => 'Giá trị giảm giá tối thiểu phải là số nguyên.',
+                'min_discount_amount.min'       => 'Giá trị giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
+
+                'max_discount_amount.integer'   => 'Giá trị giảm giá tối đa phải là số nguyên.',
+                'max_discount_amount.min'       => 'Giá trị giảm giá tối đa phải lớn hơn hoặc bằng 0.',
+                'max_discount_amount.gt'        => 'Giá trị tối đa phải lớn hơn giá trị tối thiểu.',
+
+                'start_date.required'           => 'Vui lòng chọn ngày bắt đầu.',
+                'start_date.date'               => 'Ngày bắt đầu không đúng định dạng.',
+
+                'end_date.required'             => 'Vui lòng chọn ngày kết thúc.',
+                'end_date.date'                 => 'Ngày kết thúc không đúng định dạng.',
+                'end_date.after_or_equal'       => 'Ngày kết thúc phải cùng hoặc sau ngày bắt đầu.',
+
+                'status.required'               => 'Vui lòng chọn trạng thái.',
+                'status.in'                     => 'Trạng thái không hợp lệ (phải là 0 hoặc 1).',
+
+                'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
+                'target_user_id.integer'        => 'ID người dùng mục tiêu phải là số nguyên.',
+            ];
+
+            // Áp dụng validator
+            $validator = Validator::make($request->all(), $rules, $messages);
+
             if ($validator->fails()) {
                 return response()->json([
                     'message' => 'Dữ liệu không hợp lệ',
-                    'status' => false,
-                    'errors' => $validator->errors()
+                    'status'  => false,
+                    'errors'  => $validator->errors()
                 ], 422);
             }
 
             $validated = $validator->validated();
+
+            $validated['user_id'] = $request->target_user_id;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
 
@@ -204,7 +336,7 @@ class AdminDiscountCodeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi cập nhật mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -234,7 +366,7 @@ class AdminDiscountCodeController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json([
-                'message' => 'Lỗi hệ thống: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
                 'status' => false
             ], 500);
         }
@@ -282,7 +414,30 @@ class AdminDiscountCodeController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
-                'message' => 'Lỗi khi xóa mã giảm giá: ' . $e->getMessage(),
+                'message' => 'Đã có lỗi xảy ra.',
+                'status' => false
+            ], 500);
+        }
+    }
+    public function getUserByWebId(Request $request)
+    {
+        try {
+            $user = User::where('web_id', $request->web_id)->get();
+
+            if (!$user) {
+                return response()->json([
+                    'message' => 'Lấy danh sách user không thành công.',
+                    'status' => false
+                ], 400);
+            }
+            return response()->json([
+                'message' => 'Lấy danh sách user thành công.',
+                'status' => true,
+                'data' => $user
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Đã có lỗi xảy ra. ',
                 'status' => false
             ], 500);
         }

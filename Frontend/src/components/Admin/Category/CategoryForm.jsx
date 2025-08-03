@@ -1,232 +1,274 @@
-// @components/Admin/Product/CreateFormProducts.jsx
 import React, { useState, useEffect } from "react";
 import api from "../../../utils/http";
 
-// Component này nhận vào:
-// - initialData: Dữ liệu ban đầu để điền form (dùng cho chức năng Edit)
-// - onSubmit: Hàm sẽ được gọi khi form được gửi đi
-// - isEditing: Cờ boolean để biết đây là form sửa hay tạo mới
-// - isLoading: Cờ boolean để vô hiệu hóa nút submit khi đang xử lý
-export default function CreateFormProducts({
+// Danh sách các định dạng ảnh được phép
+const ALLOWED_IMAGE_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+];
+const ALLOWED_IMAGE_EXTENSIONS = "image/png, image/jpeg, image/webp, image/gif";
+
+export default function CategoryForm({
   initialData,
   onSubmit,
   isEditing = false,
   isLoading = false,
 }) {
   const [formData, setFormData] = useState({
-    category_id: "",
-    sku: "",
-    price: 0,
-    sale: 0,
-    status: 1,
-    username: "", // from product_credentials
-    password: "", // from product_credentials
-    // Thêm các trường khác ở đây nếu cần
-    // Ví dụ: attributes, images
+    name: "",
+    parent_id: "",
+    status: "1",
   });
-  const [categories, setCategories] = useState([]);
+  const [imageFile, setImageFile] = useState(null);
+  const [rootCategories, setRootCategories] = useState([]);
+  const [errors, setErrors] = useState({});
 
-  const getCategories = async () => {
-    try {
-      const res = await api.get("/admin/categories");
-      setCategories(res?.data?.data);
-    } catch (error) {
-      console.log(error);
-    }
-  };
   useEffect(() => {
-    getCategories();
+    const fetchCategories = async () => {
+      try {
+        const res = await api.get("/categories");
+        let cats = res.data?.data;
+        if (
+          cats &&
+          !Array.isArray(cats) &&
+          Array.isArray(cats.treeCategories)
+        ) {
+          cats = cats.treeCategories;
+        }
+        setRootCategories(Array.isArray(cats) ? cats : []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setRootCategories([]);
+      }
+    };
+    fetchCategories();
   }, []);
+
   useEffect(() => {
-    // Nếu có initialData (chế độ edit), điền dữ liệu vào form
     if (initialData) {
       setFormData({
-        category_id: initialData.category_id || "",
-        sku: initialData.sku || "",
-        price: initialData.price || 0,
-        sale: initialData.sale || 0,
-        status: initialData.status !== undefined ? initialData.status : 1,
-        username: initialData.credentials?.username || "",
-        password: "", // Không bao giờ điền mật khẩu cũ vào form
+        name: initialData.name || "",
+        parent_id: initialData.parent_id?.toString() || "",
+        status: initialData.status?.toString() || "1",
       });
+      setImageFile(null);
+      setErrors({});
     }
   }, [initialData]);
 
+  const validate = () => {
+    const newErrors = { ...errors }; // Giữ lại các lỗi type checking
+
+    // Rule 1: Tên danh mục không được trống
+    if (!formData.name || !formData.name.trim()) {
+      newErrors.name = "Tên danh mục không được để trống.";
+    }
+
+    // Rule 2: Phải chọn ảnh khi tạo mới
+    if (!isEditing && !imageFile) {
+      newErrors.image_url = "Vui lòng chọn hình ảnh cho danh mục.";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? (checked ? 1 : 0) : value,
-    }));
+    const { name, value, files } = e.target;
+
+    // Xóa lỗi của trường đang được sửa
+    const newErrors = { ...errors };
+    if (newErrors[name]) {
+      delete newErrors[name];
+      setErrors(newErrors);
+    }
+
+    if (name === "image_url" && files && files[0]) {
+      const file = files[0];
+      // Rule 3: Kiểm tra định dạng file ngay khi chọn
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        setErrors((prev) => ({
+          ...prev,
+          [name]:
+            "Định dạng không hợp lệ. Chỉ chấp nhận .png, .jpg, .webp, .gif",
+        }));
+        setImageFile(null);
+        e.target.value = ""; // Xóa file đã chọn khỏi input
+        return;
+      }
+      setImageFile(file);
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+    if (!validate()) {
+      return;
+    }
+    const data = new FormData();
+    data.append("name", formData.name);
+    data.append("parent_id", formData.parent_id);
+    data.append("status", formData.status);
+    if (imageFile) {
+      data.append("image_url", imageFile);
+    }
+    onSubmit(data);
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Cột trái */}
-        <div className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+      {/* Basic Info Section */}
+      <div className="p-6 border bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+        <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+          Thông tin cơ bản
+        </h3>
+        <div className="grid md:grid-cols-2 gap-6">
           <div>
             <label
-              htmlFor="sku"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="name"
+              className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              SKU
+              Tên danh mục
             </label>
             <input
-              type="text"
-              name="sku"
-              id="sku"
-              value={formData.sku}
+              name="name"
+              id="name"
+              value={formData.name}
               onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className={`w-full p-2.5 rounded-md border bg-gray-50 text-gray-900 focus:ring-2 focus:ring-opacity-50 dark:bg-gray-700 dark:placeholder-gray-400 dark:text-white ${
+                errors.name
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500"
+                  : "border-gray-300 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:focus:border-blue-500"
+              }`}
+              placeholder="Nhập tên danh mục"
             />
+            {errors.name && (
+              <p className="mt-2 text-sm text-red-600 dark:text-red-500">
+                {errors.name}
+              </p>
+            )}
           </div>
+          {/* ... other fields */}
           <div>
             <label
-              htmlFor="category_id"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="parent_id"
+              className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Danh mục
+              Danh mục cha
             </label>
             <select
-              name="category_id"
-              id="category_id"
-              value={formData.category_id}
+              name="parent_id"
+              id="parent_id"
+              value={formData.parent_id}
               onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="w-full p-2.5 rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
             >
-              <option value="">-- Chọn danh mục --</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
+              <option value="">-- Không có --</option>
+              {rootCategories
+                .filter(
+                  (cat) =>
+                    !(isEditing && initialData && cat.id === initialData.id)
+                )
+                .map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
             </select>
           </div>
           <div>
             <label
-              htmlFor="price"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              htmlFor="status"
+              className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
             >
-              Giá gốc
-            </label>
-            <input
-              type="number"
-              name="price"
-              id="price"
-              value={formData.price}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="sale"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Giá khuyến mãi (nếu có)
-            </label>
-            <input
-              type="number"
-              name="sale"
-              id="sale"
-              value={formData.sale}
-              onChange={handleChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Cột phải */}
-        <div className="space-y-6">
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Tài khoản đăng nhập
-            </label>
-            <input
-              type="text"
-              name="username"
-              id="username"
-              value={formData.username}
-              onChange={handleChange}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Mật khẩu {isEditing && "(Bỏ trống nếu không muốn thay đổi)"}
-            </label>
-            <input
-              type="password"
-              name="password"
-              id="password"
-              value={formData.password}
-              onChange={handleChange}
-              required={!isEditing}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Trạng thái
             </label>
-            <div className="flex items-center gap-4">
-              <label>
-                <input
-                  type="radio"
-                  name="status"
-                  value="1"
-                  checked={formData.status == 1}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Hoạt động
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="status"
-                  value="0"
-                  checked={formData.status == 0}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                Ẩn
-              </label>
-            </div>
+            <select
+              name="status"
+              id="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full p-2.5 rounded-md border border-gray-300 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            >
+              <option value="1">Hoạt động</option>
+              <option value="0">Không hoạt động</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {/* Phần thuộc tính và hình ảnh sẽ phức tạp hơn, có thể làm component riêng */}
-      {/* ... */}
+      {/* Image Upload Section */}
+      <div className="p-6 border bg-white rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+        <h3 className="mb-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+          Hình ảnh danh mục
+        </h3>
+        <div>
+          <label
+            htmlFor="image_url"
+            className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
+            Chọn hoặc kéo thả ảnh
+          </label>
+          <input
+            type="file"
+            name="image_url"
+            id="image_url"
+            onChange={handleChange}
+            accept={ALLOWED_IMAGE_EXTENSIONS}
+            className={`block w-full text-sm text-gray-900 border rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none file:mr-4 file:py-2 file:px-4 file:rounded-l-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 dark:file:bg-blue-900 dark:file:text-blue-300 dark:hover:file:bg-blue-800 ${
+              errors.image_url
+                ? "border-red-500 dark:border-red-500"
+                : "border-gray-300 dark:border-gray-600"
+            }`}
+          />
+          {/* Hiển thị lỗi validation cho hình ảnh */}
+          {errors.image_url && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-500">
+              {errors.image_url}
+            </p>
+          )}
+        </div>
+        <div className="mt-4">
+          {initialData && initialData.image_url && !imageFile && (
+            <div>
+              <p className="text-sm text-gray-600 mb-2 dark:text-gray-400">
+                Ảnh hiện tại:
+              </p>
+              <img
+                src={initialData.image_url}
+                loading="lazy"
+                alt="Current category"
+                className="max-w-[200px] h-auto rounded-lg shadow-md border dark:border-gray-600"
+              />
+            </div>
+          )}
+          {imageFile && (
+            <div>
+              <p className="text-sm text-gray-600 mb-2 dark:text-gray-400">
+                Ảnh xem trước:
+              </p>
+              <img
+                src={URL.createObjectURL(imageFile)}
+                alt="New category preview"
+                className="max-w-[200px] h-auto rounded-lg shadow-md border dark:border-gray-600"
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
-      <div className="pt-6 border-t border-gray-200 flex justify-end">
+      {/* Submit Button */}
+      <div className="pt-4 flex justify-end">
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-blue-600 text-white py-2 px-6 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+          className="px-6 py-2.5 text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm disabled:bg-gray-400 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 dark:disabled:bg-gray-600"
         >
-          {isLoading
-            ? "Đang lưu..."
-            : isEditing
-            ? "Cập Nhật Sản Phẩm"
-            : "Tạo Sản Phẩm"}
+          {isLoading ? "Đang xử lý..." : isEditing ? "Cập nhật" : "Tạo mới"}
         </button>
       </div>
     </form>

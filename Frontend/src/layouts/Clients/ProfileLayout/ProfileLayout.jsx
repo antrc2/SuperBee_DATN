@@ -2,19 +2,25 @@ import React from "react";
 import Header from "../../../components/Client/layout/Header";
 import Sidebar from "../../../components/Client/profile/Sidebar";
 import { Outlet } from "react-router-dom";
+import { ClientThemeProvider } from "../../../contexts/ClientThemeContext";
 
 export default function ProfileLayout() {
   return (
-    <div className="bg-gradient-header0">
-      <Header />
-      <div className="min-h-screen flex max-w-7xl mx-auto mt-5 gap-5">
-        <Sidebar />
-        <main className="flex-1 overflow-auto ">
-          <div>
+    <ClientThemeProvider>
+      {/* Sử dụng class `bg-background` từ theme để đảm bảo toàn bộ trang có màu nền đúng */}
+      <div className="bg-background min-h-screen ">
+        <Header />
+        <div className="flex flex-col md:flex-row max-w-screen-xl mx-auto py-6 px-4 gap-6">
+          <Sidebar />
+          {/* Main content area */}
+          <main className="flex-1">
+            {/* - Bỏ thẻ div thừa bên trong. Outlet sẽ render trực tiếp nội dung các trang con.
+              - Các trang con sẽ tự có thẻ <section> riêng để đồng nhất.
+            */}
             <Outlet />
-          </div>
-        </main>
+          </main>
+        </div>
       </div>
-    </div>
+    </ClientThemeProvider>
   );
 }

@@ -13,7 +13,9 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            AccountCTV::class
+            RolesAndPermissionsSeeder::class,
+            ProductSeeder::class,
+            PostSeeder::class,
         ]);
     }
 }

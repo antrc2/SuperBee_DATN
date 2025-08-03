@@ -7,7 +7,7 @@ const defaultConfig = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
-  timeout: 10_000,
+  timeout: 30_000,
 };
 
 const api = axios.create(defaultConfig);
@@ -17,13 +17,7 @@ api.interceptors.request.use((config) => {
   if (!token) {
     const apiKey = getApiKey();
     if (!apiKey) {
-      // Ném lỗi sẽ được catch ở tầng gọi API
-      // const reload = () => {
-      //   window.location.reload();
-      // };
-      // runAfter3Seconds(reload, 100);
       return Promise.reject(new axios.Cancel("NO_API_KEY_AVAILABLE"));
-      // throw new axios.Cancel("NO_API_KEY");
     }
     config.headers["X-API-KEY"] = apiKey;
     return config;
@@ -45,7 +39,6 @@ api.interceptors.response.use(
       if (!originalReq._retry) {
         originalReq._retry = true;
         if (!isRefreshing) {
-          // localStorage.removeItem("")
           sessionStorage.removeItem("access_token");
           isRefreshing = true;
           return refreshToken()
@@ -58,9 +51,9 @@ api.interceptors.response.use(
               return api(originalReq);
             })
             .catch((err) => {
-              console.log("🚀 ~ err:", err);
               queue = [];
-              window.location.href = "/login";
+              alert("hết phiên vui lòng đăng nhập lại");
+              window.location.href = "/auth/login";
               return Promise.reject(err);
             });
         }

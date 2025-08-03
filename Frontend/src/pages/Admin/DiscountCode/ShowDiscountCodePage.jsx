@@ -1,305 +1,376 @@
-"use client"
+import { useEffect, useState } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import api from "@utils/http"; // Giả định đường dẫn đúng
+import { useNotification } from "../../../contexts/NotificationContext"; // Giả định đường dẫn đúng
+import LoadingDomain from "@components/Loading/LoadingDomain";
+// --- Icons ---
+const BackIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-5 h-5 mr-2"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15.75 19.5L8.25 12l7.5-7.5"
+    />
+  </svg>
+);
+const EditIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-5 h-5 mr-2"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
+    />
+  </svg>
+);
+const UserCircleIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+  </svg>
+);
+const UsersIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.962c.51.054.994.093 1.485.127a18.154 18.154 0 010 2.863m-7.5 0a9.094 9.094 0 013.741-.479 3 3 0 014.682-2.72M13.5 5.25h3V7.5h-3V5.25zm-8.25 5.25h3V13.5h-3V10.5z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+    />
+  </svg>
+);
+const AdminPanelSettingsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-6 h-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z"
+    />
+  </svg>
+);
 
-import { useState, useEffect } from "react"
-import { useParams } from "react-router-dom"
-// Temporarily comment out unresolved imports; replace with correct paths
-// import { Badge } from "@/components/ui/badge"
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-// import { Separator } from "@/components/ui/separator"
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  Tag,
-  User,
-  Globe,
-  Calendar,
-  DollarSign,
-  Users,
-  Shield,
-  Key,
-  Mail,
-  Hash,
-  TrendingUp,
-  Gift,
-  Phone, // Added Phone icon
-} from "lucide-react"
-import api from "@utils/http"
+// --- Helper Components ---
+const DetailItem = ({ label, value, children, className = "" }) => {
+  if (value === null || (value === undefined && !children)) return null;
+  return (
+    <div
+      className={`px-4 py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 ${className}`}
+    >
+      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm text-gray-900 dark:text-white sm:col-span-2 sm:mt-0">
+        {children || value}
+      </dd>
+    </div>
+  );
+};
 
-// Placeholder components if imports fail
-const Badge = ({ children, className, variant = "default" }) => (
-  <span className={`inline-flex items-center px-2 py-1 rounded-full text-sm font-medium ${className} ${variant === "secondary" ? "bg-gray-200 text-gray-800" : "bg-green-100 text-green-800"}`}>
-    {children}
-  </span>
-)
-const Card = ({ children }) => <div className="bg-white rounded-lg shadow">{children}</div>
-const CardHeader = ({ children }) => <div className="p-4 border-b">{children}</div>
-const CardTitle = ({ children }) => <h3 className="text-lg font-bold">{children}</h3>
-const CardContent = ({ children }) => <div className="p-4">{children}</div>
-const Separator = () => <hr className="my-4 border-gray-200" />
-const Avatar = ({ children }) => <div className="relative">{children}</div>
-const AvatarImage = ({ src, alt }) => <img src={src} alt={alt} className="w-12 h-12 rounded-full" />
-const AvatarFallback = ({ children }) => <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">{children}</div>
+const StatusBadge = ({ status }) => {
+  const isActived = status === 1;
+  const badgeClasses = isActived
+    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+    : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+  return (
+    <span
+      className={`px-3 py-1 text-xs font-medium rounded-full ${badgeClasses}`}
+    >
+      {isActived ? "Kích hoạt" : "Ẩn"}
+    </span>
+  );
+};
 
-export default function ShowDiscountCodePage() {
-  const { id } = useParams()
-  const [discountCode, setDiscountCode] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+const ShowDiscountCodePage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { pop } = useNotification();
+  const [promotion, setPromotion] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch discount code data
   useEffect(() => {
-    const fetchDiscountCode = async () => {
+    const fetchPromotion = async () => {
       try {
-        const response = await api.get(`/admin/discountcode/${id}`)
-        setDiscountCode(response.data.data)
-      } catch (err) {
-        setError(err.response?.data?.message || "Không thể tải chi tiết mã giảm giá!")
+        const response = await api.get(`/admin/discountcode/${id}`);
+        setPromotion(response.data.data);
+      } catch (error) {
+        pop("Không thể tải thông tin khuyến mãi.", "e");
+        navigate("/admin/discountcode");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    fetchDiscountCode()
-  }, [id])
+    };
+    fetchPromotion();
+  }, [id, navigate, pop]);
 
-  // Format currency
-  const formatCurrency = (amount) => {
+  const formatCurrency = (value) => {
+    if (value === null || value === undefined) return "N/A";
     return new Intl.NumberFormat("vi-VN", {
       style: "currency",
       currency: "VND",
-    }).format(amount)
-  }
+    }).format(value);
+  };
 
-  // Format date
   const formatDate = (dateString) => {
-    if (!dateString) return "Không giới hạn"
-    return new Date(dateString).toLocaleDateString("vi-VN")
-  }
-
-  // Get status badge
-  const getStatusBadge = (status) => {
-    return status === 1 ? (
-      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-        <Shield className="w-3 h-3 mr-1" />
-        Hoạt động
-      </Badge>
-    ) : (
-      <Badge variant="secondary">
-        <Shield className="w-3 h-3 mr-1" />
-        Không hoạt động
-      </Badge>
-    )
-  }
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString("vi-VN", {
+      dateStyle: "long",
+      timeStyle: "short",
+    });
+  };
 
   if (loading) {
-    return (
-      <div className="p-6 flex justify-center items-center min-h-screen">
-        <div className="flex items-center">
-          <svg className="animate-spin h-8 w-8 text-blue-600 mr-2" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z" />
-          </svg>
-          <span>Đang tải...</span>
-        </div>
-      </div>
-    )
+    return <LoadingDomain />;
   }
 
-  if (error) {
+  if (!promotion) {
     return (
-      <div className="p-6">
-        <div className="text-red-500 text-center">{error}</div>
+      <div className="flex justify-center items-center h-screen bg-slate-50 dark:bg-gray-900 text-red-500">
+        Không có dữ liệu để hiển thị.
       </div>
-    )
+    );
   }
 
-  if (!discountCode) {
-    return (
-      <div className="p-6">
-        <div className="text-gray-500 text-center">Không tìm thấy mã giảm giá!</div>
-      </div>
-    )
-  }
+  const isForAllUsers = promotion.user_id === -1;
+  const creatorUser = promotion.user; // User who created the promotion
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Chi tiết mã giảm giá</h1>
-          <p className="text-gray-600 mt-1">Thông tin chi tiết về mã giảm giá: <strong>{discountCode.code}</strong> </p>
+    <div className="font-sans bg-slate-50 dark:bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-8">
+          <div>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex items-center text-sm font-medium text-gray-600 hover:text-sky-600 dark:text-gray-400 dark:hover:text-sky-400 mb-2"
+            >
+              <BackIcon />
+              Quay lại danh sách
+            </button>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              Chi tiết Khuyến Mãi
+            </h1>
+          </div>
+          <div className="flex-shrink-0">
+            <Link
+              to={`/admin/discountcode/${id}/edit`}
+              className="w-full sm:w-auto inline-flex justify-center items-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-sky-600 hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 dark:focus:ring-offset-gray-900"
+            >
+              <EditIcon />
+              Chỉnh sửa
+            </Link>
+          </div>
         </div>
-        {getStatusBadge(discountCode.status)}
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Discount Info */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Discount Code Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Tag className="w-5 h-5 text-blue-600" />
-                Thông tin mã giảm giá
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">Mã giảm giá</label>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-lg px-3 py-1 font-mono">
-                      {discountCode.code}
-                    </Badge>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">ID</label>
-                  <div className="flex items-center gap-2">
-                    <Hash className="w-4 h-4 text-gray-400" />
-                    <span className="font-mono">{discountCode.id}</span>
-                  </div>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Promotion Details */}
+          <div className="lg:col-span-2">
+            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+              <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-xl leading-6 font-bold text-gray-900 dark:text-white">
+                  Mã:{" "}
+                  <span className="font-mono text-sky-600 dark:text-sky-400">
+                    {promotion.code}
+                  </span>
+                </h3>
+                <p className="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                  {promotion.description || "Không có mô tả."}
+                </p>
               </div>
+              <dl>
+                <DetailItem
+                  label="Trạng thái"
+                  className="bg-gray-50 dark:bg-gray-800/50"
+                >
+                  <StatusBadge status={promotion.status} />
+                </DetailItem>
+                <DetailItem
+                  label="Phần trăm giảm"
+                  value={`${promotion.discount_value}%`}
+                />
+                <DetailItem
+                  label="Ngày bắt đầu"
+                  value={formatDate(promotion.start_date)}
+                  className="bg-gray-50 dark:bg-gray-800/50"
+                />
+                <DetailItem
+                  label="Ngày kết thúc"
+                  value={formatDate(promotion.end_date)}
+                />
+                <DetailItem
+                  label="Tổng lượt đã dùng"
+                  value={promotion.total_used}
+                  className="bg-gray-50 dark:bg-gray-800/50"
+                />
+                <DetailItem
+                  label="Tổng lượt sử dụng"
+                  value={
+                    promotion.usage_limit === -1
+                      ? "Không giới hạn"
+                      : promotion.usage_limit
+                  }
+                />
+                <DetailItem
+                  label="Lượt dùng/Người"
+                  value={
+                    promotion.per_user_limit === -1
+                      ? "Không giới hạn"
+                      : promotion.per_user_limit
+                  }
+                  className="bg-gray-50 dark:bg-gray-800/50"
+                />
+                <DetailItem
+                  label="Giảm tối thiểu"
+                  value={formatCurrency(promotion.min_discount_amount)}
+                />
+                <DetailItem
+                  label="Giảm tối đa"
+                  value={formatCurrency(promotion.max_discount_amount)}
+                  className="bg-gray-50 dark:bg-gray-800/50"
+                />
+              </dl>
+            </div>
+          </div>
 
-              <Separator />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">Giới hạn sử dụng</label>
-                  <div className="flex items-center gap-2">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <span>{discountCode.usage_limit === -1 ? "Không giới hạn" : discountCode.usage_limit}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">Đã sử dụng</label>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-gray-400" />
-                    <span>{discountCode.total_used} lần</span>
-                  </div>
-                </div>
+          {/* Side Column */}
+          <div className="lg:col-span-1 space-y-8">
+            {/* Target Audience Card */}
+            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+              <div className="p-5 border-b border-gray-200 dark:border-gray-700">
+                <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 flex items-center">
+                  Đối tượng áp dụng
+                </h3>
               </div>
+              {isForAllUsers ? (
+                <div className="p-6 flex flex-col items-center justify-center text-center">
+                  <div className="p-3 bg-sky-100 dark:bg-sky-900/50 rounded-full">
+                    <UsersIcon className="w-8 h-8 text-sky-600 dark:text-sky-400" />
+                  </div>
+                  <p className="mt-4 font-semibold text-gray-800 dark:text-gray-200">
+                    Tất cả người dùng
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Mã khuyến mãi này áp dụng cho mọi khách hàng.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-6 flex flex-col items-center justify-center text-center">
+                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full">
+                    <UserCircleIcon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <p className="mt-4 font-semibold text-gray-800 dark:text-gray-200">
+                    Người dùng cá nhân
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    ID: {promotion.user_id}
+                  </p>
+                  <Link
+                    to={`/admin/users/${promotion.user_id}`}
+                    className="mt-2 text-sky-600 dark:text-sky-400 hover:underline text-sm font-medium"
+                  >
+                    Xem chi tiết người dùng &rarr;
+                  </Link>
+                </div>
+              )}
+            </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">Ngày bắt đầu</label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>{formatDate(discountCode.start_date)}</span>
-                  </div>
+            {/* Creator Info Card */}
+            {creatorUser && (
+              <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
+                <div className="p-5 border-b border-gray-200 dark:border-gray-700">
+                  <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 flex items-center">
+                    Người tạo
+                  </h3>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-500">Ngày kết thúc</label>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <span>{formatDate(discountCode.end_date)}</span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-500">Mô tả</label>
-                    <div className="text-gray-700">
-                        {discountCode.description || <em className="text-gray-400">Không có mô tả</em>}
+                <div className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      className="h-16 w-16 rounded-full object-cover"
+                      src={creatorUser.avatar_url}
+                      alt={`Avatar of ${creatorUser.username}`}
+                      onError={(e) => {
+                        e.target.onerror = null;
+                        e.target.src =
+                          "https://placehold.co/64x64/e2e8f0/64748b?text=User";
+                      }}
+                    />
+                    <div>
+                      <h4 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {creatorUser.username}
+                      </h4>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {creatorUser.email}
+                      </p>
                     </div>
-                </div>
-
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Discount Amount Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-green-600" />
-                Thông tin giảm giá
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <Gift className="w-8 h-8 text-green-600 mx-auto mb-2" />
-                  <div className="text-sm text-gray-500">Mức giảm</div>
-                  <div className="text-xl font-bold text-green-600">{discountCode.discount_value}%</div>
-                </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <TrendingUp className="w-8 h-8 text-blue-600 mx-auto mb-2" />
-                  <div className="text-sm text-gray-500">Đơn hàng tối thiểu</div>
-                  <div className="text-xl font-bold text-blue-600">{formatCurrency(discountCode.min_discount_amount)}</div>
-                </div>
-                <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <Shield className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <div className="text-sm text-gray-500">Giảm tối đa</div>
-                  <div className="text-xl font-bold text-purple-600">{formatCurrency(discountCode.max_discount_amount)}</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* User Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="w-5 h-5 text-blue-600" />
-                Người tạo
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={discountCode.user?.avatar_url || "/placeholder.svg"} alt={discountCode.user?.username} />
-                  {/* <AvatarFallback>{discountCode.user?.username.charAt(0).toUpperCase()}</AvatarFallback> */}
-                </Avatar>
-                <div>
-                  <div className="font-semibold">{discountCode.user?.username || "Không xác định"}</div>
-                  <div className="text-sm text-gray-500">ID: {discountCode.user?.id || "N/A"}</div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span>{discountCode.user?.email || "Không có"}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4 text-gray-400" /> {/* Now defined */}
-                  <span>{discountCode.user?.phone || "Không có"}</span>
-                </div>
-                <div className="flex items-center gap-2">{getStatusBadge(discountCode.user?.status || 0)}</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Web Info Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-green-600" />
-                Thông tin website
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-gray-500">Subdomain</label>
-                  <div className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">{discountCode.user?.web?.subdomain || "N/A"}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">API Key</label>
-                  <div className="flex items-center gap-2">
-                    <Key className="w-4 h-4 text-gray-400" />
-                    <span className="font-mono text-sm">{discountCode.user?.web?.api_key.substring(0, 8) || "N/A"}...</span>
+                  </div>
+                  <div className="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <dl className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <dt className="text-gray-500 dark:text-gray-400">
+                          Website
+                        </dt>
+                        <dd className="text-gray-700 dark:text-gray-300 font-mono">
+                          {creatorUser.web?.subdomain || "N/A"}
+                        </dd>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <dt className="text-gray-500 dark:text-gray-400">
+                          Ngày tạo
+                        </dt>
+                        <dd className="text-gray-700 dark:text-gray-300">
+                          {formatDate(promotion.created_at)}
+                        </dd>
+                      </div>
+                    </dl>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">{getStatusBadge(discountCode.user?.web?.status || 0)}</div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
+
+export default ShowDiscountCodePage;

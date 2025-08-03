@@ -1,20 +1,23 @@
-// components/Pagination.jsx
 import React from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+} from "lucide-react";
 
 const Pagination = ({ meta, onPageChange }) => {
-  // Ensure meta and its properties exist before accessing them
-  const currentPage = meta?.current_page || 1;
-  const lastPage = meta?.last_page || 1;
-  const totalItems = meta?.total || 0;
+  if (!meta || meta.last_page <= 1) {
+    return null; // Don't render if there's only one page or no data
+  }
+
+  const { current_page, last_page, from, to, total } = meta;
 
   const pageNumbers = [];
-  // Display a maximum number of pages to avoid being too long
-  // Example: display 2 pages before, current page, 2 pages after
   const maxPagesToShow = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
-  let endPage = Math.min(lastPage, startPage + maxPagesToShow - 1);
+  let startPage = Math.max(1, current_page - Math.floor(maxPagesToShow / 2));
+  let endPage = Math.min(last_page, startPage + maxPagesToShow - 1);
 
-  // Adjust startPage if endPage is limited by lastPage
   if (endPage - startPage + 1 < maxPagesToShow) {
     startPage = Math.max(1, endPage - maxPagesToShow + 1);
   }
@@ -23,100 +26,103 @@ const Pagination = ({ meta, onPageChange }) => {
     pageNumbers.push(i);
   }
 
-  // Base button styles for reusability
-  const baseButtonClasses =
-    "px-4 py-2 mx-1 rounded-md transition-colors duration-200";
-  const enabledButtonClasses =
-    "bg-blue-500 text-white hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50";
-  const disabledButtonClasses = "bg-gray-300 text-gray-600 cursor-not-allowed";
-  const pageButtonClasses =
-    "bg-gray-200 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50";
-  const currentPageButtonClasses = "bg-blue-600 text-white font-bold";
+  const buttonClasses =
+    "flex items-center justify-center h-9 w-9 rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50";
+  const enabledClasses =
+    "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700";
+  const disabledClasses =
+    "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed";
+  const currentClasses =
+    "bg-indigo-600 text-white font-bold pointer-events-none";
 
   return (
-    <nav className="flex justify-center items-center py-4">
-      <ul className="flex items-center space-x-1">
-        <li>
-          <button
-            onClick={() => onPageChange(1)}
-            disabled={currentPage === 1}
-            className={`${baseButtonClasses} ${
-              currentPage === 1 ? disabledButtonClasses : enabledButtonClasses
-            }`}
-          >
-            First
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`${baseButtonClasses} ${
-              currentPage === 1 ? disabledButtonClasses : enabledButtonClasses
-            }`}
-          >
-            Prev
-          </button>
-        </li>
-        {startPage > 1 && (
+    <div className="flex flex-col sm:flex-row justify-between items-center py-4 px-2">
+      <div className="text-sm text-slate-600 dark:text-slate-400 mb-2 sm:mb-0">
+        Hiển thị từ **{from}** đến **{to}** trong tổng số **{total}** mục
+      </div>
+      <nav>
+        <ul className="flex items-center space-x-1.5">
           <li>
-            <span className="px-4 py-2 mx-1 text-gray-700">...</span>
-          </li>
-        )}{" "}
-        {/* Ellipsis if pages are hidden before */}
-        {pageNumbers.map((number) => (
-          <li key={number}>
             <button
-              onClick={() => onPageChange(number)}
-              className={`${baseButtonClasses} ${
-                currentPage === number
-                  ? currentPageButtonClasses
-                  : pageButtonClasses
+              onClick={() => onPageChange(1)}
+              disabled={current_page === 1}
+              className={`${buttonClasses} ${
+                current_page === 1 ? disabledClasses : enabledClasses
               }`}
+              aria-label="First Page"
             >
-              {number}
+              <ChevronsLeft size={18} />
             </button>
           </li>
-        ))}
-        {endPage < lastPage && (
           <li>
-            <span className="px-4 py-2 mx-1 text-gray-700">...</span>
+            <button
+              onClick={() => onPageChange(current_page - 1)}
+              disabled={current_page === 1}
+              className={`${buttonClasses} ${
+                current_page === 1 ? disabledClasses : enabledClasses
+              }`}
+              aria-label="Previous Page"
+            >
+              <ChevronLeft size={20} />
+            </button>
           </li>
-        )}{" "}
-        {/* Ellipsis if pages are hidden after */}
-        <li>
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === lastPage}
-            className={`${baseButtonClasses} ${
-              currentPage === lastPage
-                ? disabledButtonClasses
-                : enabledButtonClasses
-            }`}
-          >
-            Next
-          </button>
-        </li>
-        <li>
-          <button
-            onClick={() => onPageChange(lastPage)}
-            disabled={currentPage === lastPage}
-            className={`${baseButtonClasses} ${
-              currentPage === lastPage
-                ? disabledButtonClasses
-                : enabledButtonClasses
-            }`}
-          >
-            Last
-          </button>
-        </li>
-        {totalItems !== undefined && (
-          <li className="ml-4">
-            <span className="text-gray-700 text-sm">Total: {totalItems}</span>
+
+          {startPage > 1 && (
+            <li>
+              <span className="flex items-center justify-center h-9 w-9 text-slate-500">
+                ...
+              </span>
+            </li>
+          )}
+
+          {pageNumbers.map((number) => (
+            <li key={number}>
+              <button
+                onClick={() => onPageChange(number)}
+                className={`${buttonClasses} ${
+                  current_page === number ? currentClasses : enabledClasses
+                }`}
+              >
+                {number}
+              </button>
+            </li>
+          ))}
+
+          {endPage < last_page && (
+            <li>
+              <span className="flex items-center justify-center h-9 w-9 text-slate-500">
+                ...
+              </span>
+            </li>
+          )}
+
+          <li>
+            <button
+              onClick={() => onPageChange(current_page + 1)}
+              disabled={current_page === last_page}
+              className={`${buttonClasses} ${
+                current_page === last_page ? disabledClasses : enabledClasses
+              }`}
+              aria-label="Next Page"
+            >
+              <ChevronRight size={20} />
+            </button>
           </li>
-        )}
-      </ul>
-    </nav>
+          <li>
+            <button
+              onClick={() => onPageChange(last_page)}
+              disabled={current_page === last_page}
+              className={`${buttonClasses} ${
+                current_page === last_page ? disabledClasses : enabledClasses
+              }`}
+              aria-label="Last Page"
+            >
+              <ChevronsRight size={18} />
+            </button>
+          </li>
+        </ul>
+      </nav>
+    </div>
   );
 };
 

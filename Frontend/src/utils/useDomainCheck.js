@@ -37,12 +37,28 @@ export function useDomainCheck(apiKey) {
         throw new Error("Endpoint /domain không tồn tại (404).");
       }
       const code = response.data?.code;
-      // console.log("🚀 ~ checkDomain ~ code:", code);
+      const style = response.data?.style;
 
       if (code === "ACTIVE") {
         setDomainStatus("active");
         sessionStorage.setItem("code", "active");
+
         setErrorMessage(null);
+        if (style !== "NOACTIVE" && style != null) {
+          const { template_name, favicon_url, logo_url, shop_name, slogan } =
+            style;
+          const settingToStore = {
+            template_name,
+            favicon_url,
+            logo_url,
+            shop_name,
+            slogan,
+          };
+          sessionStorage.setItem("setting", JSON.stringify(settingToStore));
+        } else {
+          const def = "def";
+          sessionStorage.setItem("setting", JSON.stringify(def));
+        }
       } else if (code === "NO_ACTIVE") {
         setDomainStatus("inactive");
         setErrorMessage("Domain chưa được kích hoạt.");
@@ -80,6 +96,6 @@ export function useDomainCheck(apiKey) {
   return {
     domainStatus,
     errorMessage,
-    retryCheck: checkDomain
+    retryCheck: checkDomain,
   };
 }

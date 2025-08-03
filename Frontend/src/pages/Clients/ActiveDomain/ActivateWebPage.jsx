@@ -1,26 +1,51 @@
-// src/pages/ActivateWebPage.js
-
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Dùng để điều hướng
-
-// Import các icon cần dùng từ lucide-react
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Store,
   Tag,
-  Image,
-  Link,
+  Image as ImageIcon,
+  Link as LinkIcon,
   Phone,
   Mail,
   Home,
-  MessageCircle,
+  MessageSquare,
   Facebook,
   Sparkles,
   Loader2,
   CheckCircle,
   XCircle,
+  Settings,
+  Code,
 } from "lucide-react";
+import api from "../../../utils/http";
 
-function ActivateWebPage() {
+// Component con cho Input để tái sử dụng, giúp code gọn gàng hơn
+const InputField = ({ icon, label, name, error, required, ...props }) => {
+  const Icon = icon;
+  return (
+    <div>
+      <label
+        htmlFor={name}
+        className=" text-sm font-semibold text-secondary mb-2 flex items-center gap-2"
+      >
+        <Icon className="w-4 h-4 text-accent" />
+        <span>{label}</span>
+        {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        id={name}
+        name={name}
+        className={`w-full rounded-lg px-4 py-3 bg-input text-input border-themed border-hover placeholder-theme ${
+          error ? "border-red-500" : ""
+        }`}
+        {...props}
+      />
+      {error && <p className="text-red-500 text-xs mt-1.5">{error}</p>}
+    </div>
+  );
+};
+
+export default function ActivateWebPage() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -33,9 +58,9 @@ function ActivateWebPage() {
     address: "",
     zalo_link: "",
     facebook_link: "",
-    template_name: "default", // Mặc định là 'default'
-    header_settings: null, // Sẽ là object/null
-    footer_settings: null, // Sẽ là object/null
+    template_name: "default",
+    header_settings: null,
+    footer_settings: null,
   });
 
   const [errors, setErrors] = useState({});
@@ -123,23 +148,17 @@ function ActivateWebPage() {
     }
     setLoading(true);
     try {
-      const response = await fetch("/api/activeWeb", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const response = await api.post("/activeWeb", formData);
 
-      const data = await response.json();
+      const data = response;
 
-      if (response.ok) {
+      if (response.status) {
         setSuccessMessage("Cập nhật web thành công! Đang chuyển hướng...");
         sessionStorage.setItem(
           "business_settings",
           JSON.stringify(data.business_settings)
         );
-        navigate("/dashboard"); // Or '/'
+        navigate("/dashboard");
       } else {
         setErrorMessage(data.message || "Có lỗi xảy ra khi Cập nhật web.");
         if (data.errors) {
@@ -155,290 +174,218 @@ function ActivateWebPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-lg shadow-xl max-w-4xl w-full border-2 border-pink-300 transform transition-transform duration-500 hover:scale-105">
-        {/* Header with Chibi/Wibu style */}
-        <h1 className="text-4xl font-bold text-center text-purple-600 mb-4 animate-bounce-slow">
-          <Sparkles className="inline-block mr-2 w-10 h-10 text-yellow-400" />
-          Chào mừng đến với Trang Cấu Hình Web!
-          <Sparkles className="inline-block ml-2 w-10 h-10 text-yellow-400" />
-        </h1>
-        <p className="text-center text-gray-700 text-lg mb-8 font-semibold italic">
-          Cùng tôi kiến tạo web game kawaii của riêng bạn!
-          <br />
-          Vui lòng điền thông tin để shop của bạn lung linh hơn nhé! ✨
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Success/Error Messages */}
-          {successMessage && (
-            <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative text-center flex items-center justify-center gap-2 animate-fade-in-down">
-              <CheckCircle className="w-5 h-5" />
-              {successMessage}
-            </div>
-          )}
-          {errorMessage && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative text-center flex items-center justify-center gap-2 animate-fade-in-down">
-              <XCircle className="w-5 h-5" />
-              {errorMessage}
-            </div>
-          )}
-
-          {/* --- Basic Shop Information --- */}
-          <h2 className="text-2xl font-bold text-blue-500 border-b-2 border-blue-200 pb-3 mb-5 flex items-center gap-2">
-            <Store className="inline-block w-6 h-6 text-blue-400" />
-            Thông Tin Cơ Bản Của Shop
-          </h2>
-
-          {/* Grid Container for Input Fields */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Input Field: Shop Name */}
-            <div>
-              <label
-                htmlFor="shop_name"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Tag className="w-4 h-4 text-pink-500" /> Tên Shop{" "}
-                <span className="text-red-500">*</span>:
-              </label>
-              <input
-                type="text"
-                id="shop_name"
-                name="shop_name"
-                value={formData.shop_name}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.shop_name ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Tên shop của bạn (ví dụ: Akihabara Gaming)"
-              />
-              {errors.shop_name && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.shop_name}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Slogan */}
-            <div>
-              <label
-                htmlFor="slogan"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <MessageCircle className="w-4 h-4 text-indigo-500" />
-                Slogan/Mô Tả Ngắn:
-              </label>
-              <input
-                type="text"
-                id="slogan"
-                name="slogan"
-                value={formData.slogan}
-                onChange={handleChange}
-                className="shadow appearance-none border border-purple-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50"
-                placeholder="Khẩu hiệu dễ thương (ví dụ: Nơi ước mơ gaming trở thành hiện thực!)"
-              />
-            </div>
-
-            {/* Input Field: Logo URL */}
-            <div>
-              <label
-                htmlFor="logo_url"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Image className="w-4 h-4 text-green-500" /> URL Logo:
-              </label>
-              <input
-                type="text"
-                id="logo_url"
-                name="logo_url"
-                value={formData.logo_url}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.logo_url ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Link hình ảnh logo (ví dụ: https://example.com/logo.png)"
-              />
-              {errors.logo_url && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.logo_url}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Favicon URL */}
-            <div>
-              <label
-                htmlFor="favicon_url"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Link className="w-4 h-4 text-yellow-500" /> URL Favicon:
-              </label>
-              <input
-                type="text"
-                id="favicon_url"
-                name="favicon_url"
-                value={formData.favicon_url}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.favicon_url ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Link favicon (ví dụ: https://example.com/favicon.ico)"
-              />
-              {errors.favicon_url && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.favicon_url}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Phone Number */}
-            <div>
-              <label
-                htmlFor="phone_number"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Phone className="w-4 h-4 text-orange-500" /> Số Điện Thoại Liên
-                Hệ:
-              </label>
-              <input
-                type="text"
-                id="phone_number"
-                name="phone_number"
-                value={formData.phone_number}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.phone_number ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Số điện thoại của shop"
-              />
-              {errors.phone_number && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.phone_number}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Email */}
-            <div>
-              <label
-                htmlFor="email"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Mail className="w-4 h-4 text-cyan-500" /> Email Liên Hệ{" "}
-                <span className="text-red-500">*</span>:
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.email ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Địa chỉ email liên hệ"
-              />
-              {errors.email && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Address */}
-            <div>
-              <label
-                htmlFor="address"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Home className="w-4 h-4 text-lime-500" /> Địa Chỉ Shop:
-              </label>
-              <input
-                type="text"
-                id="address"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                className="shadow appearance-none border border-purple-300 rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50"
-                placeholder="Địa chỉ shop của bạn"
-              />
-            </div>
-
-            {/* Input Field: Zalo Link */}
-            <div>
-              <label
-                htmlFor="zalo_link"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <MessageCircle className="w-4 h-4 text-blue-500" /> Link Zalo:
-              </label>
-              <input
-                type="text"
-                id="zalo_link"
-                name="zalo_link"
-                value={formData.zalo_link}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.zalo_link ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Link Zalo của shop"
-              />
-              {errors.zalo_link && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.zalo_link}
-                </p>
-              )}
-            </div>
-
-            {/* Input Field: Facebook Link */}
-            <div>
-              <label
-                htmlFor="facebook_link"
-                className="block text-gray-700 text-sm font-bold mb-2 flex items-center gap-1"
-              >
-                <Facebook className="w-4 h-4 text-blue-700" /> Link Facebook:
-              </label>
-              <input
-                type="text"
-                id="facebook_link"
-                name="facebook_link"
-                value={formData.facebook_link}
-                onChange={handleChange}
-                className={`shadow appearance-none border ${
-                  errors.facebook_link ? "border-red-500" : "border-purple-300"
-                } rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:ring-2 focus:ring-purple-400 bg-pink-50`}
-                placeholder="Link Facebook của shop"
-              />
-              {errors.facebook_link && (
-                <p className="text-red-500 text-xs italic mt-2">
-                  {errors.facebook_link}
-                </p>
-              )}
-            </div>
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+      <div className="max-w-6xl mx-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-content-bg border border-themed rounded-2xl shadow-xl overflow-hidden"
+        >
+          {/* Header */}
+          <div className="p-6 md:p-8 border-b border-themed bg-gradient-to-r from-background to-content-bg">
+            <h1 className="font-heading text-3xl md:text-4xl font-bold text-primary flex items-center gap-3">
+              <Sparkles className="w-8 h-8 text-accent" />
+              Cấu hình Shop của bạn
+            </h1>
+            <p className="text-secondary mt-2">
+              Hãy điền các thông tin dưới đây để shop của bạn trông thật lung
+              linh và chuyên nghiệp nhé!
+            </p>
           </div>
-          {/* End Grid Container */}
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-purple-400 to-pink-500 hover:from-purple-500 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transform transition-all duration-300 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed text-xl shadow-lg flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" /> Đang Cập nhật shop của
-                bạn...
-              </>
-            ) : (
-              <>
-                <Sparkles /> Cập nhật Web Kawaii Ngay! <Sparkles />
-              </>
+          <div className="p-6 md:p-8 space-y-8">
+            {/* Success/Error Messages */}
+            {successMessage && (
+              <div className="alert alert-success">
+                <CheckCircle className="w-5 h-5 mr-2" />
+                {successMessage}
+              </div>
             )}
-          </button>
+            {errorMessage && (
+              <div className="alert alert-danger">
+                <XCircle className="w-5 h-5 mr-2" />
+                {errorMessage}
+              </div>
+            )}
+
+            {/* Section: Basic Info */}
+            <section>
+              <h2 className="font-heading text-xl font-semibold text-primary flex items-center gap-3 border-b border-themed/50 pb-3 mb-6">
+                <Store /> Thông tin cơ bản
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <InputField
+                  icon={Tag}
+                  label="Tên Shop"
+                  name="shop_name"
+                  value={formData.shop_name}
+                  onChange={handleChange}
+                  error={errors.shop_name}
+                  required
+                  placeholder="Akihabara Gaming"
+                />
+                <InputField
+                  icon={ImageIcon}
+                  label="URL Logo"
+                  name="logo_url"
+                  value={formData.logo_url}
+                  onChange={handleChange}
+                  error={errors.logo_url}
+                  placeholder="https://example.com/logo.png"
+                />
+                <InputField
+                  icon={LinkIcon}
+                  label="URL Favicon"
+                  name="favicon_url"
+                  value={formData.favicon_url}
+                  onChange={handleChange}
+                  error={errors.favicon_url}
+                  placeholder="https://example.com/favicon.ico"
+                />
+                <InputField
+                  icon={MessageSquare}
+                  label="Slogan/Mô tả ngắn"
+                  name="slogan"
+                  value={formData.slogan}
+                  onChange={handleChange}
+                  placeholder="Nơi ước mơ gaming trở thành sự thật!"
+                />
+              </div>
+            </section>
+
+            {/* Section: Contact Info */}
+            <section>
+              <h2 className="font-heading text-xl font-semibold text-primary flex items-center gap-3 border-b border-themed/50 pb-3 mb-6">
+                <Phone /> Thông tin liên hệ
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <InputField
+                  icon={Mail}
+                  label="Email Liên Hệ"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={errors.email}
+                  required
+                  placeholder="contact@shop.com"
+                />
+                <InputField
+                  icon={Phone}
+                  label="Số Điện Thoại"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  error={errors.phone_number}
+                  placeholder="09xxxxxxxx"
+                />
+                <InputField
+                  icon={Home}
+                  label="Địa Chỉ Shop"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleChange}
+                  placeholder="123 Đường Anime, Quận Manga..."
+                />
+                <InputField
+                  icon={MessageSquare}
+                  label="Link Zalo"
+                  name="zalo_link"
+                  value={formData.zalo_link}
+                  onChange={handleChange}
+                  error={errors.zalo_link}
+                  placeholder="Link Zalo của shop"
+                />
+                <InputField
+                  icon={Facebook}
+                  label="Link Facebook"
+                  name="facebook_link"
+                  value={formData.facebook_link}
+                  onChange={handleChange}
+                  error={errors.facebook_link}
+                  placeholder="Link trang Facebook của shop"
+                />
+              </div>
+            </section>
+
+            {/* Section: Advanced Settings */}
+            <section>
+              <h2 className="font-heading text-xl font-semibold text-primary flex items-center gap-3 border-b border-themed/50 pb-3 mb-6">
+                <Settings /> Cấu hình nâng cao (JSON)
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    htmlFor="header_settings"
+                    className="block text-sm font-semibold text-secondary mb-2 flex items-center gap-2"
+                  >
+                    <Code /> Header Settings (JSON)
+                  </label>
+                  <textarea
+                    id="header_settings"
+                    rows="5"
+                    onChange={(e) =>
+                      handleJsonChange("header_settings", e.target.value)
+                    }
+                    className={`w-full font-mono text-sm rounded-lg p-3 bg-input text-input border-themed border-hover placeholder-theme ${
+                      errors.header_settings ? "border-red-500" : ""
+                    }`}
+                    placeholder='{ "key": "value" }'
+                  ></textarea>
+                  {errors.header_settings && (
+                    <p className="text-red-500 text-xs mt-1.5">
+                      {errors.header_settings}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label
+                    htmlFor="footer_settings"
+                    className="block text-sm font-semibold text-secondary mb-2 flex items-center gap-2"
+                  >
+                    <Code /> Footer Settings (JSON)
+                  </label>
+                  <textarea
+                    id="footer_settings"
+                    rows="5"
+                    onChange={(e) =>
+                      handleJsonChange("footer_settings", e.target.value)
+                    }
+                    className={`w-full font-mono text-sm rounded-lg p-3 bg-input text-input border-themed border-hover placeholder-theme ${
+                      errors.footer_settings ? "border-red-500" : ""
+                    }`}
+                    placeholder='{ "copyright": "Your Shop" }'
+                  ></textarea>
+                  {errors.footer_settings && (
+                    <p className="text-red-500 text-xs mt-1.5">
+                      {errors.footer_settings}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          {/* Footer with Submit Button */}
+          <div className="p-6 bg-background/50 border-t border-themed flex justify-end">
+            <button
+              type="submit"
+              disabled={loading}
+              className="action-button action-button-primary !w-auto"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin mr-2 h-5 w-5" /> Đang lưu cấu
+                  hình...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="mr-2 h-5 w-5" /> Lưu và Kích hoạt
+                </>
+              )}
+            </button>
+          </div>
         </form>
       </div>
     </div>
   );
 }
-
-export default ActivateWebPage;

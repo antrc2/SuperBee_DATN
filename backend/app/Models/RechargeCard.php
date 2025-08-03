@@ -25,6 +25,7 @@ class RechargeCard extends Model
         'message',
         'sign',
         'donate_promotion_id',
+        // "donate_amount"
     ];
     protected $hidden = [
         'sign',

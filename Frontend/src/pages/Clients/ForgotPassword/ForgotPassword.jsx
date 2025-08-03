@@ -1,69 +1,67 @@
-// src/pages/ForgotPassword.js
 import React, { useState } from "react";
 import api from "@utils/http";
+import AuthCardLayout from "@layouts/AuthCardLayout"; // Import layout mới
+import { Mail } from "lucide-react";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setMessage("");
     setError("");
 
     try {
       const response = await api.post("/forgot-password", { email });
       setMessage(response.data.message);
-      setEmail(""); // Clear the email field
+      setEmail("");
     } catch (err) {
-      if (err.response && err.response.data) {
-        setError(err.response.data.message || "Đã xảy ra lỗi khi gửi yêu cầu.");
-      } else {
-        setError("Không thể kết nối đến máy chủ.");
-      }
+      setError(err.response?.data?.message || "Đã có lỗi xảy ra.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div
-      style={{
-        maxWidth: "400px",
-        margin: "50px auto",
-        padding: "20px",
-        border: "1px solid #ccc",
-        borderRadius: "8px"
-      }}
-    >
-      <h2>Quên mật khẩu</h2>
-      {message && <p style={{ color: "green" }}>{message}</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "15px" }}>
-          <label>Email của bạn:</label>
+    <AuthCardLayout title="Quên mật khẩu" icon={Mail}>
+      <p className="text-secondary text-sm text-center mb-6 -mt-4">
+        Nhập email của bạn để nhận liên kết đặt lại mật khẩu.
+      </p>
+
+      {message && <div className="alert alert-success mb-4">{message}</div>}
+      {error && <div className="alert alert-danger mb-4">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold text-secondary mb-2"
+          >
+            Địa chỉ Email
+          </label>
           <input
+            id="email"
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: "100%", padding: "8px", boxSizing: "border-box" }}
+            className="w-full rounded-lg px-4 py-3 bg-input text-input border-themed border-hover placeholder-theme"
+            placeholder="example@email.com"
           />
         </div>
         <button
           type="submit"
-          style={{
-            padding: "10px 15px",
-            backgroundColor: "#007bff",
-            color: "white",
-            border: "none",
-            borderRadius: "5px",
-            cursor: "pointer"
-          }}
+          disabled={loading}
+          className="action-button action-button-primary"
         >
-          Gửi yêu cầu đặt lại mật khẩu
+          {loading ? "Đang gửi..." : "Gửi liên kết"}
         </button>
       </form>
-    </div>
+    </AuthCardLayout>
   );
 };
 

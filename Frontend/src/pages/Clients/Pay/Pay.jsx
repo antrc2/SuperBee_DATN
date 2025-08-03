@@ -5,86 +5,148 @@ import {
   X,
   CreditCard,
   ShieldCheck,
-  Gift
+  Gift,
+  TicketPercent,
+  ChevronRight,
+  ListOrdered,
+  FileText,
+  Wallet,
+  Landmark,
 } from "lucide-react";
-import { useCart } from "@contexts/CartContexts";
-import { useNotification } from "@contexts/NotificationProvider";
-import { Link } from "react-router-dom";
+import { useCart } from "@contexts/CartContext";
+import { useNotification } from "@contexts/NotificationContext";
+import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";
+import { useAuth } from "../../../contexts/AuthContext";
 
-// Hàm định dạng tiền tệ
+// Hàm định dạng tiền tệ không thay đổi
 const formatCurrency = (amount) => {
   const numberAmount = Number(amount);
   if (isNaN(numberAmount)) return "0 ₫";
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
-    currency: "VND"
+    currency: "VND",
   }).format(numberAmount);
 };
 
-// Component Modal hiển thị mã giảm giá
-const DiscountModal = ({ isOpen, onClose, discounts, onApplyDiscount }) => {
+// --- MODAL MÃ GIẢM GIÁ (Không thay đổi, đã được thiết kế lại ở lần trước) ---
+const DiscountModal = ({
+  isOpen,
+  onClose,
+  discounts,
+  onApplyDiscount,
+  appliedPromotionCode,
+}) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-40">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold text-gray-800">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="section-bg w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b border-themed">
+          <h3 className="text-xl font-bold font-heading text-primary flex items-center">
+            <Gift size={24} className="mr-2 text-accent" />
             Mã Giảm Giá Của Bạn
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            className="p-1 rounded-full text-secondary hover:text-primary hover:bg-white/10 transition-colors"
           >
             <X size={24} />
           </button>
         </div>
-        {discounts.length === 0 ? (
-          <p className="text-gray-600">Bạn không có mã giảm giá nào.</p>
-        ) : (
-          <ul className="space-y-3">
-            {discounts.map((discount) => (
-              <li
-                key={discount.id}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="font-bold text-blue-600 text-lg">{discount.code}</p>
-                    <p className="text-sm text-gray-700">
-                      {discount.description || `Giảm ${discount.value}`}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Hạn sử dụng: {discount.expiry}
-                      {discount.min_discount_amount > 0 &&
-                        ` | Đơn tối thiểu: ${formatCurrency(discount.min_discount_amount)}`}
-                    </p>
+        <div className="p-4 overflow-y-auto custom-scrollbar-notification">
+          {discounts.length === 0 ? (
+            <p className="text-secondary text-center py-8">
+              Bạn không có mã giảm giá nào.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {discounts.map((discount) => (
+                <li
+                  key={discount.id}
+                  className={`selection-grid-item text-left p-4 ${
+                    appliedPromotionCode === discount.code
+                      ? "selection-grid-item-selected"
+                      : ""
+                  }`}
+                >
+                  <div className="flex justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center mb-2">
+                        <TicketPercent size={20} className="mr-2 text-accent" />
+                        <span className="font-bold text-lg text-primary">
+                          {discount.code}
+                        </span>
+                        {appliedPromotionCode === discount.code && (
+                          <span className="ml-3 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-semibold">
+                            Đang áp dụng
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-secondary mb-2">
+                        {discount.description || `Giảm ${discount.value}%`}
+                      </p>
+                      <div className="text-xs text-secondary/80 space-y-1 border-t border-themed pt-2 mt-2">
+                        <p>
+                          HSD:{" "}
+                          <span className="font-medium">
+                            {discount.expiry === "N/A"
+                              ? "Vô thời hạn"
+                              : new Date(discount.expiry).toLocaleDateString(
+                                  "vi-VN"
+                                )}
+                          </span>
+                        </p>
+                        {discount.min_discount_amount > 0 && (
+                          <p>
+                            Đơn tối thiểu:{" "}
+                            <span className="font-medium">
+                              {formatCurrency(discount.min_discount_amount)}
+                            </span>
+                          </p>
+                        )}
+                        {discount.max_discount_amount > 0 && (
+                          <p>
+                            Giảm tối đa:{" "}
+                            <span className="font-medium">
+                              {formatCurrency(discount.max_discount_amount)}
+                            </span>
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => {
+                        onApplyDiscount(discount.code);
+                        onClose();
+                      }}
+                      disabled={appliedPromotionCode === discount.code}
+                      className="action-button action-button-primary text-sm !py-2 !px-4 self-center disabled:!bg-tertiary disabled:!text-primary/80 disabled:cursor-not-allowed disabled:filter-none disabled:transform-none"
+                    >
+                      {appliedPromotionCode === discount.code
+                        ? "Đã chọn"
+                        : "Dùng ngay"}
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      onApplyDiscount(discount.code);
-                      onClose();
-                    }}
-                    className="bg-blue-600 text-white px-3 py-1.5 rounded-md text-sm hover:bg-blue-700 transition-colors"
-                  >
-                    Dùng ngay
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-// Component chính của trang thanh toán
+// Component chính đã được thiết kế lại
 export default function Pay() {
+  // Toàn bộ logic (useState, useEffect, useMemo, handlers) được giữ nguyên
+  // ...
+  // Không cần thay đổi bất kỳ logic nào ở đây.
+  // Dán toàn bộ logic của bạn từ file Pay.jsx cũ vào đây.
   const { pop, conFim } = useNotification();
-  const { fetchCartItems, cartItems, loadingCart } = useCart();
+  const { fetchCartItems } = useCart();
   const [cartItemsPay, setCartItemsPay] = useState([]);
   const [userBalance, setUserBalance] = useState(0);
   const [promotionCodes, setPromotionCodes] = useState([]);
@@ -92,21 +154,30 @@ export default function Pay() {
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
-  const [cartError, setCartError] = useState(null);
+  const [loadingCheckout, setLoadingCheckout] = useState(true);
+  const [discountErrorMessage, setDiscountErrorMessage] = useState("");
 
-  // Lấy dữ liệu từ API /orders/checkout
+  const [backendRawTotalPrice, setBackendRawTotalPrice] = useState(0);
+  const [backendTotalPriceAfterDiscount, setBackendTotalPriceAfterDiscount] =
+    useState(0);
+  const [backendTaxAmount, setBackendTaxAmount] = useState(0);
+  const [backendTaxValue, setBackendTaxValue] = useState(0);
+  const [backendRoleDiscountAmount, setBackendRoleDiscountAmount] = useState(0);
+  const [backendRoleDiscountValue, setBackendRoleDiscountValue] = useState(0);
+
+  const navigate = useNavigate();
+  const { fetchUserMoney } = useAuth();
+
   useEffect(() => {
     const fetchCheckoutData = async () => {
-      setCartError(null);
+      setLoadingCheckout(true);
       try {
-        // Đồng bộ giỏ hàng từ context
-        await fetchCartItems();
         const response = await api.get("/orders/checkout");
         if (response.data?.status) {
           const items = response.data.carts
-            .filter((item) => item.status === 1) // Chỉ lấy sản phẩm có status = 1
+            .filter((item) => item.status === 1)
             .map((item) => ({
-              id: item.id, // cart_item_id
+              id: item.id,
               product_id: item.product_id,
               name: item.product?.sku || "Sản phẩm không tên",
               image:
@@ -114,339 +185,450 @@ export default function Pay() {
                 "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
               price: parseFloat(item.unit_price) || 0,
               old_price: parseFloat(item.product?.price) || 0,
-              quantity: 1 // Giả định số lượng
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
+
+          // Set all the detailed price states directly from backend response
+          setBackendRawTotalPrice(parseFloat(response.data.total_price) || 0);
+          setBackendTotalPriceAfterDiscount(
+            parseFloat(response.data.total_price_after_discount) || 0
+          );
+          setBackendTaxAmount(parseFloat(response.data.tax_amount) || 0);
+          setBackendTaxValue(parseFloat(response.data.tax_value) || 0);
+          setBackendRoleDiscountAmount(
+            parseFloat(response.data.discount_amount) || 0
+          );
+          setBackendRoleDiscountValue(
+            parseFloat(response.data.discount_value) || 0
+          );
+
           setPromotionCodes(
             response.data.promotion_codes.map((promo) => ({
               id: promo.id,
               code: promo.code,
-              description: promo.description || `Giảm ${promo.discount_value}`,
+              description: promo.description,
               type: "percentage",
               value: parseFloat(promo.discount_value) || 0,
               expiry: promo.end_date || "N/A",
-              min_discount_amount: promo.min_discount_amount || 0
+              min_discount_amount: parseFloat(promo.min_discount_amount) || 0,
+              max_discount_amount: parseFloat(promo.max_discount_amount) || 0,
+              per_user_limit: parseInt(promo.per_user_limit) || -1,
+              usage_limit: parseInt(promo.usage_limit) || -1,
             }))
           );
+
+          // Reset applied discount if cart items change or new data comes
+          setAppliedDiscount(null);
+          setDiscountCodeInput("");
+          setDiscountErrorMessage(""); // Clear discount error on successful fetch
+
           if (items.length === 0) {
-            pop("Giỏ hàng của bạn đang trống.", "i");
+            pop("Giỏ hàng của bạn đang trống.", "info");
+            navigate("/cart");
           }
         } else {
-          pop(response.data.message, "e");
-          setCartError({ message: response.data.message });
+          pop(response.data.message, "error");
+          navigate("/cart");
         }
       } catch (error) {
         console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
         const errorMessage =
           error.response?.data?.message || "Lỗi khi tải dữ liệu giỏ hàng.";
-        pop(errorMessage, "e");
-        setCartError({ message: errorMessage });
+        pop(errorMessage, "error");
+        navigate("/cart");
+      } finally {
+        setLoadingCheckout(false);
       }
     };
 
     fetchCheckoutData();
-  }, [fetchCartItems, pop]);
+  }, [fetchCartItems, pop, navigate]);
 
-  // Tính toán tổng tiền
-  const { subtotal, discountAmount, finalAmount } = useMemo(() => {
-    const subtotal = cartItemsPay.reduce(
-      (sum, item) => sum + item.price * item.quantity,
-      0
-    );
-    const discountAmount = appliedDiscount?.discount_amount || 0;
-    const finalAmount = Math.max(subtotal - discountAmount, 0);
-    return { subtotal, discountAmount, finalAmount };
-  }, [cartItemsPay, appliedDiscount]);
+  const { subtotalBeforeTax, finalAmount } = useMemo(() => {
+    const subtotalBeforeTaxAndRoleDiscount = backendRawTotalPrice;
 
-  // Kiểm tra và áp dụng mã giảm giá
+    let currentTotal = backendTotalPriceAfterDiscount;
+
+    if (appliedDiscount) {
+      currentTotal = appliedDiscount.total_price_after_discount;
+    }
+
+    return {
+      subtotalBeforeTax: subtotalBeforeTaxAndRoleDiscount,
+      finalAmount: currentTotal,
+    };
+  }, [backendRawTotalPrice, backendTotalPriceAfterDiscount, appliedDiscount]);
+
   const handleApplyDiscountCode = async (codeToApply = discountCodeInput) => {
     const code = codeToApply.trim().toUpperCase();
     if (!code) {
-      pop("Vui lòng nhập mã giảm giá.", "e");
+      setDiscountErrorMessage("Vui lòng nhập mã giảm giá.");
       return;
+    } else {
+      setDiscountErrorMessage("");
     }
 
     if (!(await conFim(`Bạn muốn áp dụng mã giảm giá "${code}"?`))) return;
 
     try {
-      const response = await api.post("/orders/check", { promotion_code: code });
+      const response = await api.post("/orders/check", {
+        promotion_code: code,
+      });
       if (response.data.status) {
         setAppliedDiscount({
           code: response.data.promotion_code,
           discount_amount: parseFloat(response.data.discount_amount) || 0,
           discount_value: parseFloat(response.data.discount_value) || 0,
-          total_price_after_discount: parseFloat(response.data.total_price_after_discount) || 0
+          total_price_after_discount:
+            parseFloat(response.data.total_price_after_discount) || 0,
         });
-        pop(response.data.message, "s");
+        setBackendTotalPriceAfterDiscount(
+          parseFloat(response.data.total_price_after_discount) || 0
+        );
+        pop(response.data.message, "success");
         setDiscountCodeInput("");
+        setDiscountErrorMessage("");
       } else {
         setAppliedDiscount(null);
-        pop(response.data.message, "e");
+        setDiscountErrorMessage(response.data.message);
+        const checkoutResponse = await api.get("/orders/checkout");
+        if (checkoutResponse.data?.status) {
+          setBackendTotalPriceAfterDiscount(
+            parseFloat(checkoutResponse.data.total_price_after_discount) || 0
+          );
+        }
       }
     } catch (error) {
       console.error("Lỗi khi kiểm tra mã giảm giá:", error);
       const errorMessage =
         error.response?.data?.message || "Lỗi khi kiểm tra mã giảm giá.";
-      pop(errorMessage, "e");
+      setDiscountErrorMessage(errorMessage);
       setAppliedDiscount(null);
+      try {
+        const checkoutResponse = await api.get("/orders/checkout");
+        if (checkoutResponse.data?.status) {
+          setBackendTotalPriceAfterDiscount(
+            parseFloat(checkoutResponse.data.total_price_after_discount) || 0
+          );
+        }
+      } catch (e) {
+        console.error("Error reverting total price:", e);
+      }
     }
   };
 
   const handleRemoveDiscount = async () => {
+    if (!appliedDiscount) return;
     if (!(await conFim("Bạn có chắc chắn muốn xóa mã giảm giá?"))) return;
     setAppliedDiscount(null);
-    pop("Đã xóa mã giảm giá.", "s");
+    setDiscountCodeInput("");
+    setDiscountErrorMessage("");
+
+    try {
+      const response = await api.get("/orders/checkout");
+      if (response.data.status) {
+        setBackendTotalPriceAfterDiscount(
+          parseFloat(response.data.total_price_after_discount) || 0
+        );
+        pop("Đã xóa mã giảm giá.", "success");
+      } else {
+        pop("Lỗi khi khôi phục giá gốc.", "error");
+      }
+    } catch (error) {
+      console.error("Lỗi khi xóa mã giảm giá:", error);
+      pop("Lỗi khi xóa mã giảm giá.", "error");
+    }
   };
 
-  // Xử lý thanh toán
   const handlePayment = async () => {
     if (!termsAccepted) {
-      pop("Bạn cần đồng ý với điều khoản và dịch vụ.", "e");
+      pop("Bạn cần đồng ý với điều khoản và dịch vụ.", "warning");
       return;
     }
 
     if (finalAmount > userBalance) {
-      pop("Số dư không đủ để thanh toán.", "e");
+      pop("Số dư không đủ. Vui lòng nạp thêm tiền.", "error");
       return;
     }
 
-    if (!(await conFim("Bạn có chắc chắn muốn thanh toán đơn hàng?"))) return;
+    // if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
 
     try {
       const response = await api.post("/orders/purchase", {
-        promotion_code: appliedDiscount?.code || null
+        promotion_code: appliedDiscount?.code || null,
       });
       if (response.data.status) {
         setUserBalance((prev) => prev - finalAmount);
         setCartItemsPay([]);
         setAppliedDiscount(null);
-        pop(response.data.message, "s");
-        // Đồng bộ lại giỏ hàng
+        pop(response.data.message, "success");
         await fetchCartItems();
+        await fetchUserMoney();
+        navigate("/info/orders");
       } else {
-        pop(response.data.message, "e");
+        pop(response.data.message, "error");
       }
     } catch (error) {
       console.error("Lỗi khi xử lý thanh toán:", error);
       const errorMessage =
         error.response?.data?.message || "Lỗi khi xử lý thanh toán.";
-      pop(errorMessage, "e");
+      pop(errorMessage, "error");
     }
   };
 
-  // Xử lý xóa sản phẩm
-  const handleRemoveItem = async (itemId, itemName) => {
-    if (!(await conFim(`Bạn có chắc chắn muốn xóa "${itemName}" khỏi giỏ hàng?`))) return;
-
-    try {
-      await api.delete(`/cart/${itemId}`);
-      setCartItemsPay((prevItems) => prevItems.filter((item) => item.id !== itemId));
-      await fetchCartItems(); // Đồng bộ giỏ hàng
-      pop("Đã xóa sản phẩm khỏi giỏ hàng.", "s");
-    } catch (error) {
-      console.error("Lỗi khi xóa sản phẩm:", error);
-      const errorMessage =
-        error.response?.data?.message || "Lỗi khi xóa sản phẩm.";
-      pop(errorMessage, "e");
-    }
-  };
-
-  const handleQuantityChange = (itemId, newQuantity) => {
-    if (newQuantity < 1) newQuantity = 1;
-    setCartItemsPay((prevItems) =>
-      prevItems.map((item) =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  // Hiển thị loading
-  if (loadingCart) return <LoadingDomain />;
-
-  // // Hiển thị giỏ hàng rỗng
-  // if (cartItemsPay.length === 0) {
-  //   return (
-  //     <div className="bg-gray-100 min-h-screen py-8 px-4">
-  //       <div className="max-w-4xl mx-auto text-center">
-  //         <ShoppingCart size={80} className="mx-auto text-gray-400 mb-6" />
-  //         <h1 className="text-3xl font-bold mb-4">Giỏ hàng của bạn đang trống</h1>
-  //         <p className="mb-8 text-gray-600">
-  //           Hãy khám phá thêm sản phẩm tuyệt vời của chúng tôi!
-  //         </p>
-  //         <Link
-  //           to="/"
-  //           className="px-6 py-3 bg-blue-600 text-white rounded-md font-medium inline-flex items-center"
-  //         >
-  //           <X size={20} className="mr-1" />
-  //           Quay lại mua sắm
-  //         </Link>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  if (loadingCheckout) return <LoadingDomain />;
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <div className="mb-6 flex justify-between items-center">
-        <h1 className="text-3xl font-bold">
-          Thanh Toán ({cartItemsPay.length} sản phẩm)
-        </h1>
-        <Link to="/cart" className="text-blue-600 font-medium flex items-center">
-          <X size={20} className="mr-1" />
-          Quay lại giỏ hàng
-        </Link>
-      </div>
-
-      <div className="lg:flex gap-8">
-        {/* Danh sách sản phẩm */}
-        <div className="lg:w-2/3 bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-xl font-semibold mb-4 border-b pb-4">
-            Sản phẩm trong đơn hàng
-          </h2>
-          {cartItemsPay.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-center justify-between border-b py-3"
-            >
-              <div className="flex items-center">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  className="w-20 h-20 object-cover rounded mr-4 border"
-                  onError={(e) => {
-                    e.target.src =
-                      "https://placehold.co/100x100/E2E8F0/4A5568?text=Lỗi";
-                  }}
-                />
-                <div>
-                  <h3 className="font-semibold">{item.name}</h3>
-                  <p className="text-sm text-gray-500">Mã sản phẩm: {item.name}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-4">
-                <span className="font-semibold text-red-600">
-                  {formatCurrency(item.price * item.quantity)}
-                </span>
-                <button
-                  onClick={() => handleRemoveItem(item.id, item.name)}
-                  className="text-gray-500 hover:text-red-600"
-                  aria-label={`Xóa ${item.name}`}
-                >
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
-          ))}
+    <div className="min-h-screen">
+      <div className="max-w-screen-xl mx-auto">
+        {/* Breadcrumbs */}
+        <div className="breadcrumbs-container p-4  ">
+          <Link to="/" className="breadcrumb-link">
+            Trang chủ
+          </Link>
+          <ChevronRight size={16} className="breadcrumb-separator" />
+          <Link to="/cart" className="breadcrumb-link">
+            Giỏ hàng
+          </Link>
+          <ChevronRight size={16} className="breadcrumb-separator" />
+          <span className="text-primary font-semibold">Thanh toán</span>
         </div>
 
-        {/* Tóm tắt đơn hàng và thanh toán */}
-        <div className="lg:w-1/3 bg-white rounded-lg shadow-md p-6 h-fit sticky top-24 mt-8 lg:mt-0">
-          <h2 className="text-xl font-semibold mb-4">Tóm tắt đơn hàng</h2>
-          <div className="space-y-3 mb-6">
-            <div className="flex justify-between">
-              <span>Sản phẩm:</span>
-              <span>{cartItemsPay.length}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Tạm tính:</span>
-              <span>{formatCurrency(subtotal)}</span>
-            </div>
-            {appliedDiscount && (
-              <div className="flex justify-between text-green-600">
-                <span>Giảm giá ({appliedDiscount.code}):</span>
-                <span>-{formatCurrency(discountAmount)}</span>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Cột chính (trái) */}
+          <div className="lg:col-span-3 space-y-8">
+            {/* Card: Xem lại đơn hàng */}
+            <div className="section-bg p-6">
+              <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
+                <ListOrdered size={24} className="mr-3 text-accent" />
+                Xem lại đơn hàng ({cartItemsPay.length})
+              </h2>
+              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-notification">
+                {cartItemsPay.map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 bg-input p-3 rounded-lg border border-themed"
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.name}
+                      className="w-16 h-16 object-cover rounded-md shadow-sm"
+                    />
+                    <div className="flex-grow">
+                      <h3 className="font-semibold text-primary">
+                        {item.name}
+                      </h3>
+                      <p className="text-sm text-secondary">
+                        Giá gốc: {formatCurrency(item.old_price)}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold text-primary">
+                        {formatCurrency(item.price)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            )}
-          </div>
-          <div className="border-t pt-4 mb-6">
-            <div className="flex justify-between items-center">
-              <span className="font-semibold text-lg">Tổng cộng:</span>
-              <span className="font-bold text-red-600 text-xl">
-                {formatCurrency(finalAmount)}
-              </span>
             </div>
           </div>
 
-          {/* Mã giảm giá */}
-          <div className="mb-6">
-            <label
-              htmlFor="discountCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Mã giảm giá
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                id="discountCode"
-                value={discountCodeInput}
-                onChange={(e) => setDiscountCodeInput(e.target.value)}
-                placeholder="Nhập mã của bạn"
-                className="flex-grow border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm p-2"
-              />
-              <button
-                onClick={() => handleApplyDiscountCode()}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 text-sm"
-              >
-                Áp dụng
-              </button>
+          {/* Cột phụ (phải) */}
+          <div className="lg:col-span-2">
+            <div className="sticky top-24 space-y-8">
+              {/* Card: Ví của bạn */}
+              <div className="section-bg p-6">
+                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
+                  <Wallet size={24} className="mr-3 text-accent" />
+                  Ví của bạn
+                </h2>
+                <div
+                  className={`p-4 rounded-lg flex items-center justify-between gap-5 ${
+                    userBalance >= finalAmount
+                      ? "bg-tertiary/20"
+                      : "bg-red-500/10"
+                  }`}
+                >
+                  <div>
+                    <p className="text-sm text-secondary">Số dư khả dụng</p>
+                    <p className="text-2xl font-bold text-primary">
+                      {formatCurrency(userBalance)}
+                    </p>
+                  </div>
+                  {userBalance < finalAmount && (
+                    <Link
+                      to="/recharge-atm"
+                      className="action-button action-button-primary !py-2 !px-4 text-sm"
+                    >
+                      <Landmark size={16} className="mr-2" />
+                      Nạp tiền
+                    </Link>
+                  )}
+                </div>
+                {userBalance < finalAmount && (
+                  <p className="text-red-500 text-sm mt-2 font-semibold">
+                    Số dư không đủ để thực hiện thanh toán.
+                  </p>
+                )}
+              </div>
+              {/* Card: Mã giảm giá */}
+              <div className="section-bg p-6">
+                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
+                  <TicketPercent size={24} className="mr-3 text-accent" />
+                  Mã giảm giá
+                </h2>
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <input
+                    type="text"
+                    value={discountCodeInput}
+                    onChange={(e) =>
+                      setDiscountCodeInput(e.target.value.toUpperCase())
+                    }
+                    placeholder="Nhập mã của bạn ở đây"
+                    className="flex-grow w-full bg-input text-input p-3 rounded-md border-hover placeholder-theme"
+                  />
+                  <button
+                    onClick={() => handleApplyDiscountCode()}
+                    className="action-button action-button-secondary !py-3 !px-6"
+                  >
+                    Áp dụng
+                  </button>
+                </div>
+                {discountErrorMessage && (
+                  <p className="text-red-500 text-sm mt-2">
+                    {discountErrorMessage}
+                  </p>
+                )}
+                <div className="mt-3 flex justify-between items-center">
+                  <button
+                    onClick={() => setShowDiscountModal(true)}
+                    className="text-sm text-accent hover:brightness-125 font-medium"
+                  >
+                    Xem danh sách mã giảm giá
+                  </button>
+                  {appliedDiscount && (
+                    <button
+                      onClick={handleRemoveDiscount}
+                      className="text-xs text-red-500 hover:underline flex items-center"
+                    >
+                      <X size={12} className="mr-1" /> Gỡ mã "
+                      {appliedDiscount.code}"
+                    </button>
+                  )}
+                </div>
+              </div>
+              {/* Card: Tổng kết thanh toán */}
+              <div className="section-bg p-6">
+                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
+                  <FileText size={24} className="mr-3 text-accent" />
+                  Tổng kết thanh toán
+                </h2>
+                <div className="space-y-3 text-sm">
+                  {/* Dotted line separator */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-secondary">Giá gốc sản phẩm</span>
+                    <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
+                    <span className="font-medium text-primary">
+                      {formatCurrency(subtotalBeforeTax)}
+                    </span>
+                  </div>
+                  {backendRoleDiscountValue > 0 && (
+                    <div className="flex items-center justify-between text-tertiary">
+                      <span className="font-semibold">
+                        Chiết khấu hạng ({backendRoleDiscountValue}%)
+                      </span>
+                      <div className="flex-grow border-b border-dashed border-tertiary/50 mx-2"></div>
+                      <span className="font-semibold">
+                        -{formatCurrency(backendRoleDiscountAmount)}
+                      </span>
+                    </div>
+                  )}
+                  {backendTaxAmount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-secondary">
+                        Thuế ({backendTaxValue}%)
+                      </span>
+                      <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
+                      <span className="font-medium text-primary">
+                        +{formatCurrency(backendTaxAmount)}
+                      </span>
+                    </div>
+                  )}
+                  {appliedDiscount && (
+                    <div className="flex items-center justify-between text-accent">
+                      <span className="font-semibold">
+                        Mã giảm giá "{appliedDiscount.code}"
+                      </span>
+                      <div className="flex-grow border-b border-dashed border-accent/50 mx-2"></div>
+                      <span className="font-semibold">
+                        -{formatCurrency(appliedDiscount.discount_amount)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="border-t border-themed mt-4 pt-4">
+                  <div className="flex justify-between items-baseline">
+                    <span className="text-lg font-semibold text-primary">
+                      Tổng thanh toán
+                    </span>
+                    <span className="font-bold text-red-500 text-3xl">
+                      {formatCurrency(finalAmount)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Card: Hành động cuối cùng */}
+              <div className="section-bg p-6">
+                <div className="mb-4">
+                  <label
+                    htmlFor="terms"
+                    className="flex items-start text-sm text-secondary cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="h-4 w-4 mr-3 mt-0.5 rounded"
+                    />
+                    <span>
+                      Tôi đã đọc và đồng ý với các{" "}
+                      <Link
+                        to="/terms"
+                        className="text-accent hover:underline font-medium"
+                      >
+                        điều khoản và dịch vụ
+                      </Link>{" "}
+                      của trang web.
+                    </span>
+                  </label>
+                </div>
+
+                <button
+                  onClick={handlePayment}
+                  disabled={
+                    loadingCheckout ||
+                    finalAmount > userBalance ||
+                    !termsAccepted ||
+                    cartItemsPay.length === 0
+                  }
+                  className="action-button action-button-primary w-full text-lg !py-4"
+                >
+                  <CreditCard className="inline-block mr-3" size={24} />
+                  Xác nhận & Thanh toán
+                </button>
+
+                <div className="mt-4 text-xs text-secondary text-center">
+                  <p className="flex items-center justify-center">
+                    <ShieldCheck size={14} className="mr-2 text-tertiary" />
+                    Tất cả giao dịch đều được mã hóa và bảo mật.
+                  </p>
+                </div>
+              </div>
             </div>
-            {appliedDiscount && (
-              <button
-                onClick={handleRemoveDiscount}
-                className="text-xs text-red-500 hover:text-red-700 mt-1 flex items-center"
-              >
-                <X size={12} className="mr-1" /> Xóa mã "{appliedDiscount.code}"
-              </button>
-            )}
-            <button
-              onClick={() => setShowDiscountModal(true)}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-800 flex items-center"
-            >
-              <Gift size={16} className="mr-1" /> Xem mã giảm giá của bạn
-            </button>
-          </div>
-
-          <div className="mb-6">
-            <p className="text-gray-700">Số dư tài khoản:</p>
-            <span className="text-blue-600 font-bold text-xl">{formatCurrency(userBalance)}</span>
-          </div>
-
-          <div className="mb-4">
-            <label
-              htmlFor="terms"
-              className="flex items-center text-sm text-gray-600"
-            >
-              <input
-                type="checkbox"
-                id="terms"
-                checked={termsAccepted}
-                onChange={(e) => setTermsAccepted(e.target.checked)}
-                className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-2"
-              />
-              Tôi đồng ý với{" "}
-              <a href="#" className="text-blue-600 hover:underline">
-                điều khoản và dịch vụ
-              </a>{" "}
-              của website.
-            </label>
-          </div>
-
-          <button
-            onClick={handlePayment}
-            disabled={loadingCart || finalAmount > userBalance || !termsAccepted}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            <CreditCard className="inline mr-2" />
-            Thanh toán ({formatCurrency(finalAmount)})
-          </button>
-
-          <div className="mt-6 text-xs text-gray-500 text-center">
-            <p className="flex items-center justify-center">
-              <ShieldCheck size={14} className="mr-1 text-green-500" />
-              Giao dịch an toàn.
-            </p>
           </div>
         </div>
       </div>
@@ -456,6 +638,7 @@ export default function Pay() {
         onClose={() => setShowDiscountModal(false)}
         discounts={promotionCodes}
         onApplyDiscount={handleApplyDiscountCode}
+        appliedPromotionCode={appliedDiscount?.code}
       />
     </div>
   );

@@ -1,14 +1,16 @@
 // @pages/Admin/Products/EditProducts.jsx
 import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
 import CreateFormProducts from "@components/Admin/Product/CreateFormProducts"; // Điều chỉnh đường dẫn
-import { LoaderCircle } from "lucide-react";
+import { ArrowLeft, LoaderCircle } from "lucide-react";
 import api from "../../../utils/http";
+import { useNotification } from "../../../contexts/NotificationContext";
 
 export default function EditProducts() {
   const { id } = useParams(); // Lấy id từ URL, ví dụ: /edit/123
   const navigate = useNavigate();
+  const { pop } = useNotification();
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -33,16 +35,19 @@ export default function EditProducts() {
         } else {
           setProduct(null);
           setError("Sản phẩm không tồn tại.");
+          pop("Sản phẩm không tồn tại.", "e");
         }
       } catch (err) {
         console.error(err);
-        setError("Không tìm thấy sản phẩm hoặc có lỗi xảy ra.");
+        const errorMessage = "Không tìm thấy sản phẩm hoặc có lỗi xảy ra.";
+        setError(errorMessage);
+        pop(errorMessage, "e");
       } finally {
         setIsFetching(false);
       }
     };
     fetchProduct();
-  }, [id]);
+  }, [id, pop]);
 
   const handleUpdateSubmit = async (formData) => {
     setIsLoading(true);
@@ -62,16 +67,15 @@ export default function EditProducts() {
         },
       });
       if (response.status === 201 || response.status === 200) {
-        navigate("/admin/categories");
+        pop("Cập nhật sản phẩm thành công!", "s");
+        navigate("/admin/products");
       }
-      // toast.success("Cập nhật sản phẩm thành công!");
-      navigate("/admin/products");
     } catch (err) {
       console.error(err);
-      setError(
-        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại."
-      );
-      // toast.error(err.response?.data?.message || "Cập nhật thất bại!");
+      const errorMessage =
+        err.response?.data?.message || "Cập nhật thất bại, vui lòng thử lại.";
+      setError(errorMessage);
+      pop(errorMessage, "e");
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +91,21 @@ export default function EditProducts() {
 
   return (
     <div>
-      <h2 className="text-2xl font-semibold mb-4 text-gray-700">
+      <div className="flex items-center h-14">
+        <div className="flex items-center  ">
+          <Link
+            to="/admin/products"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft size={20} />
+            Quay lại danh sách
+          </Link>
+        </div>
+        {/* <h2 className="text-2xl font-semibold mb-4 ml-4 mt-3 text-gray-700">
+          Thêm sản phẩm mới
+        </h2> */}
+      </div>
+      <h2 className="text-2xl font-semibold mb-4 text-xl-700">
         Chỉnh sửa sản phẩm: #{product?.sku}
       </h2>
       {error && (

@@ -58,10 +58,10 @@ return new class extends Migration
             $table->foreign('web_id')->references('id')->on('webs')->onDelete('cascade');
         });
 
-        Schema::table('product_reports', function (Blueprint $table) {
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
-        });
+        // Schema::table('product_reports', function (Blueprint $table) {
+        //     $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        //     $table->foreign('product_id')->references('id')->on('products')->onDelete('cascade');
+        // });
 
         // Schema::table('general_complaints', function (Blueprint $table) {
         // Table 'general_complaints' is not created in the provided schema migration's up() method.
@@ -86,7 +86,9 @@ return new class extends Migration
             $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
             $table->foreign('product_id')->references('id')->on('products')->onDelete('restrict');
         });
-
+        Schema::table("order_queues",function(Blueprint $table){
+            $table->foreign('order_id')->references('id')->on('orders')->onDelete('cascade');
+        });
         Schema::table('wallets', function (Blueprint $table) {
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
@@ -152,7 +154,7 @@ return new class extends Migration
 
         Schema::table('posts', function (Blueprint $table) {
             // category_id in posts IS nullable.
-            $table->foreign('category_id')->references('id')->on('categories')->onDelete('set null');
+            $table->foreign('category_id')->references('id')->on('categories_post')->onDelete('set null');
             $table->foreign('author_id')->references('id')->on('users')->onDelete('restrict');
         });
 
@@ -167,14 +169,14 @@ return new class extends Migration
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
         });
 
-        Schema::table('chat_rooms', function (Blueprint $table) {
-            // created_by in chat_rooms is not nullable.
-            $table->foreign('created_by')->references('id')->on('users')->onDelete('restrict');
-        });
+        // Schema::table('chat_rooms', function (Blueprint $table) {
+        //     // created_by in chat_rooms is not nullable.
+        //      $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
+        // });
 
         Schema::table('messages', function (Blueprint $table) {
             $table->foreign('chat_room_id')->references('id')->on('chat_rooms')->onDelete('cascade');
-            $table->foreign('sender_id')->references('id')->on('users')->onDelete('restrict');
+            $table->foreign('sender_id')->references('id')->on('users')->onDelete('cascade');
         });
 
         Schema::table('banners', function (Blueprint $table) {

@@ -1,14 +1,41 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { User, Mail, Phone, Camera, Edit3, Save, X } from "lucide-react";
+import { Camera, Edit3, Save, X, User, Mail, Phone } from "lucide-react";
 import api from "@utils/http";
 import { toast } from "react-toastify";
+
+// Component con cho các trường input để tránh lặp code
+const ProfileInput = ({ icon, label, isEditing, ...props }) => {
+  const Icon = icon;
+  return (
+    <div>
+      <label className="block text-sm font-semibold text-secondary mb-2">
+        {label}
+      </label>
+      <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary">
+          <Icon size={18} />
+        </span>
+        <input
+          readOnly={!isEditing}
+          className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
+                        ${
+                          isEditing
+                            ? "border-hover"
+                            : "bg-background cursor-not-allowed"
+                        }`}
+          {...props}
+        />
+      </div>
+    </div>
+  );
+};
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
-    username: "hikariuisu",
+    username: "...",
     email: "",
     phone: "",
     avatar: "",
@@ -16,7 +43,6 @@ export default function Profile() {
   const [editData, setEditData] = useState({});
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
-
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
@@ -85,184 +111,127 @@ export default function Profile() {
 
   const handleCancelClick = () => {
     setIsEditing(false);
-    setEditData({ ...userData });
-    setAvatarFile(null);
+    // Không cần reset data ở đây vì khi fetch lại đã có data mới
   };
 
-  const handleSaveClick = () => {
-    updateUserData();
+  const handleSaveClick = async () => {
+    await updateUserData();
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setEditData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
-  };
-
-  const handleAvatarFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setAvatarFile(file);
-      setEditData((prevData) => ({
-        ...prevData,
-        avatar: URL.createObjectURL(file),
-      }));
-    }
-  };
-
-  const triggerFileInput = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
+  const triggerFileInput = () => fileInputRef.current?.click();
 
   return (
-    <div className="max-w-2xl mx-auto ">
-      <div className="bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-slate-800 to-slate-700 p-6 border-b border-slate-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-700 rounded-lg">
-                <User className="h-6 w-6 text-blue-400" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-white">
-                  Thông tin tài khoản
-                </h1>
-                <p className="text-slate-400 text-sm">
-                  Quản lý thông tin cá nhân của bạn
-                </p>
-              </div>
-            </div>
-            {!isEditing && (
-              <button
-                onClick={handleEditClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                <Edit3 className="h-4 w-4" />
-                Chỉnh sửa
-              </button>
+    <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-themed">
+        <div>
+          <h1 className="font-heading text-2xl md:text-3xl font-bold text-primary">
+            Thông tin tài khoản
+          </h1>
+          <p className="text-secondary mt-1">
+            Quản lý và bảo mật thông tin cá nhân của bạn.
+          </p>
+        </div>
+        {!isEditing && (
+          <button
+            onClick={handleEditClick}
+            className="action-button action-button-primary mt-4 sm:mt-0 !w-auto"
+          >
+            <Edit3 className="h-4 w-4 mr-2" />
+            Chỉnh sửa
+          </button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pt-8">
+        {/* Avatar Section */}
+        <div className="lg:col-span-1 flex flex-col items-center text-center">
+          <div className="relative group w-40 h-40">
+            <img
+              src={
+                avatarFile
+                  ? URL.createObjectURL(avatarFile)
+                  : userData.avatar || "/default-avatar.png"
+              }
+              alt="Avatar"
+              className="w-full h-full object-cover rounded-full ring-4 ring-offset-4 ring-offset-content-bg ring-accent/70"
+            />
+            {isEditing && (
+              <>
+                <button
+                  onClick={triggerFileInput}
+                  className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                >
+                  <Camera size={24} />
+                </button>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files[0])}
+                />
+              </>
             )}
           </div>
+          <p className="text-secondary text-sm mt-4">Ảnh đại diện của bạn.</p>
         </div>
 
-        <div className="p-6">
-          {/* Avatar Section */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="relative group">
-              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-slate-600 shadow-lg">
-                <img
-                  src={avatarFile ? editData.avatar : userData.avatar}
-                  alt="Avatar"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              {isEditing && (
-                <>
-                  <div
-                    className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                    onClick={triggerFileInput}
-                  >
-                    <div className="text-center">
-                      <Camera className="h-6 w-6 text-white mx-auto mb-1" />
-                      <span className="text-white text-xs font-medium">
-                        Đổi ảnh
-                      </span>
-                    </div>
-                  </div>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleAvatarFileChange}
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Form Fields */}
-          <div className="space-y-6">
-            {/* Username - Read-only */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <User className="h-4 w-4" />
-                Username
-              </label>
-              <input
-                type="text"
-                value={userData.username}
-                readOnly
-                className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-300 cursor-not-allowed"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <Mail className="h-4 w-4" />
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={isEditing ? editData.email : userData.email}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border rounded-lg px-4 py-3 transition-colors ${
-                  isEditing
-                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    : "bg-slate-700/50 border-slate-600 text-slate-300 cursor-not-allowed"
-                }`}
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label className="flex items-center gap-2 text-sm font-medium text-slate-300 mb-2">
-                <Phone className="h-4 w-4" />
-                Số điện thoại
-              </label>
-              <input
-                type="tel"
-                name="phone"
-                value={isEditing ? editData.phone : userData.phone}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={`w-full border rounded-lg px-4 py-3 transition-colors ${
-                  isEditing
-                    ? "bg-slate-700 border-slate-600 text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    : "bg-slate-700/50 border-slate-600 text-slate-300 cursor-not-allowed"
-                }`}
-              />
-            </div>
-          </div>
+        {/* Form Fields Section */}
+        <div className="lg:col-span-2 space-y-6">
+          <ProfileInput
+            icon={User}
+            label="Tên đăng nhập"
+            isEditing={false}
+            value={userData.username}
+            placeholder="Tên đăng nhập"
+          />
+          <ProfileInput
+            icon={Mail}
+            label="Địa chỉ Email"
+            isEditing={isEditing}
+            name="email"
+            type="email"
+            value={isEditing ? editData.email : userData.email}
+            onChange={(e) =>
+              setEditData({ ...editData, email: e.target.value })
+            }
+            placeholder="example@email.com"
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Số điện thoại"
+            isEditing={isEditing}
+            name="phone"
+            type="tel"
+            value={isEditing ? editData.phone : userData.phone}
+            onChange={(e) =>
+              setEditData({ ...editData, phone: e.target.value })
+            }
+            placeholder="0123 456 789"
+          />
 
           {/* Action Buttons */}
           {isEditing && (
-            <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-slate-700">
+            <div className="flex justify-end gap-3 pt-4">
               <button
                 onClick={handleCancelClick}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg transition-colors"
+                className="action-button action-button-secondary !w-auto"
               >
-                <X className="h-4 w-4" />
+                <X className="h-4 w-4 mr-2" />
                 Hủy
               </button>
               <button
                 onClick={handleSaveClick}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="action-button action-button-primary !w-auto"
               >
-                <Save className="h-4 w-4" />
-                Lưu
+                <Save className="h-4 w-4 mr-2" />
+                Lưu thay đổi
               </button>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

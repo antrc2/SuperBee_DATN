@@ -267,20 +267,21 @@ export default function DisputeDetailPage() {
                 >
                   Cập nhật trạng thái
                 </label>
-                <select
-                  id="status"
-                  value={newStatus}
-                  onChange={(e) => setNewStatus(e.target.value)}
-                  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
-                >
-                  {Object.entries(DISPUTE_STATUS_OPTIONS).map(
-                    ([key, value]) => (
-                      <option key={key} value={key}>
-                        {value}
-                      </option>
-                    )
-                  )}
-                </select>
+              <select
+  id="status"
+  value={newStatus}
+  onChange={(e) => setNewStatus(e.target.value)}
+  className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
+>
+  {Object.entries(DISPUTE_STATUS_OPTIONS)
+    .filter(([key]) => Number(key) >= Number(dispute.status)) // Chỉ cho phép bằng hoặc lớn hơn
+    .map(([key, value]) => (
+      <option key={key} value={key}>
+        {value}
+      </option>
+    ))}
+</select>
+
               </div>
               <div>
                 <label

@@ -226,7 +226,7 @@ class PartnerProductController extends Controller
                 if ($request->import_price !== $product->import_price) {
                     return response()->json([
                         "status"=>False,
-                        "message"=>"Bạn không thể sửa giá nhập"
+                        "message"=>"Bạn không thể sửa giá bán"
                     ],422);
                 }
             } elseif ($product->status === 4) {

@@ -156,11 +156,18 @@ class AdminProductController extends Controller
             // Lấy product kèm quan hệ
             $product = Product::with(['category', 'images', 'gameAttributes', 'credentials'])
                 ->find($id);
+            
             if (!$product) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
+            }
+            if ($product->status == 4){
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Không thể sửa sản phẩm"
+                ],400);
             }
             $sku = $product->sku;
             // Nếu attributes là JSON string, decode nó

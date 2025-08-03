@@ -7,7 +7,7 @@ import FilterControls from "./FilterControls";
 import WithdrawalTable from "./WithdrawalTable";
 import EditWithdrawalModal from "./EditWithdrawalModal";
 import Pagination from "../../../components/Pagination/Pagination";
-
+import { useNotification } from "../../../contexts/NotificationContext";
 const WithdrawalsPage = () => {
   // State cho dữ liệu
   const [withdrawals, setWithdrawals] = useState([]);
@@ -28,6 +28,7 @@ const WithdrawalsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedWithdrawal, setSelectedWithdrawal] = useState(null);
 
+  const {pop} =useNotification()
   // Hàm gọi API chính, sử dụng useCallback để tối ưu
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -98,10 +99,11 @@ const WithdrawalsPage = () => {
       });
       const a = { withdraw_ids: ac };
       const response = await api.post("/admin/withdraws/export", a);
-      alert(`Export thành công! URL của bạn: ${response.data.url}`);
+      // alert(`Export thành công! URL của bạn: ${response.data.url}`);
       window.open(response.data.url, "_blank");
     } catch (err) {
-      alert(`Export thất bại: ${err.response?.data?.message || err.message}`);
+      // alert(`Export thất bại: ${err.response?.data?.message || err.message}`);
+      pop(`Export thất bại: ${err.response?.data?.message || err.message}`)
     }
   };
 

@@ -20,8 +20,10 @@ use App\Http\Controllers\Admin\AuthorizationDashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
+use App\Http\Controllers\Assistant\AssistantCartController;
 use App\Http\Controllers\Assistant\AssistantCategoryController;
 use App\Http\Controllers\Assistant\AssistantProductController;
+use App\Http\Controllers\Auto\AutoTransactionController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
@@ -43,6 +45,7 @@ use App\Http\Controllers\User\UserWithdrawController;
 use App\Http\Controllers\User\UserReviewController;
 
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 
 /*
 |--------------------------------------------------------------------------
@@ -389,6 +392,17 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::get('/{id}', [DisputeController::class, 'show']);
         Route::put('/{id}', [DisputeController::class, 'update']);
     });
+
+
+    Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
+    });
 });
 
 // =================== PARTNER ROUTES ===================
@@ -419,7 +433,20 @@ Route::prefix('/assistant')->group(function () {
         Route::get("/", [AssistantProductController::class, 'index']);
         Route::get("/{sku}", [AssistantProductController::class, 'show']);
     });
+    Route::prefix('/carts')->group(function(){
+        Route::post("/",[AssistantCartController::class,'store'])->middleware('jwt');
+    });
 });
 
-Route::post("/export",[AdminWithdrawController::class,'export']);
+
+Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            // Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
+    });
+// Route::post("/export",[AdminWithdrawController::class,'export']);
 // Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

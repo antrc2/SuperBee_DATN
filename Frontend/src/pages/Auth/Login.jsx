@@ -11,8 +11,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
   const [captchaReady, setCaptchaReady] = useState(false);
-  const captchaRef = useRef(null);
-  const sitekey = import.meta.env.VITE_SITE_KEY;
+  // const captchaRef = useRef(null);
+  // const sitekey = import.meta.env.VITE_SITE_KEY;
   const turnstileWidgetId = useRef(null);
   const { login, loading, user } = useAuth();
   // const navigate = useNavigate();
@@ -26,52 +26,52 @@ export default function LoginForm() {
   } = useForm();
 
   // Load turnstile script
-  useEffect(() => {
-    if (window.turnstile) {
-      setCaptchaReady(true);
-      return;
-    }
+  // useEffect(() => {
+  //   if (window.turnstile) {
+  //     setCaptchaReady(true);
+  //     return;
+  //   }
 
-    const script = document.createElement("script");
-    script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&rnd=${Date.now()}`;
-    script.async = true;
-    script.defer = true;
-    document.body.appendChild(script);
+    // const script = document.createElement("script");
+    // script.src = `https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback&rnd=${Date.now()}`;
+    // script.async = true;
+    // script.defer = true;
+    // document.body.appendChild(script);
 
-    window.onloadTurnstileCallback = () => {
-      setCaptchaReady(true);
-    };
+    // window.onloadTurnstileCallback = () => {
+    //   setCaptchaReady(true);
+    // };
 
-    return () => {
-      if (window.turnstile && turnstileWidgetId.current) {
-        window.turnstile.remove(turnstileWidgetId.current);
-      }
-      delete window.onloadTurnstileCallback;
-      document.body.removeChild(script);
-    };
-  }, []);
+  //   return () => {
+  //     if (window.turnstile && turnstileWidgetId.current) {
+  //       window.turnstile.remove(turnstileWidgetId.current);
+  //     }
+  //     delete window.onloadTurnstileCallback;
+  //     document.body.removeChild(script);
+  //   };
+  // }, []);
 
   // Render CAPTCHA widget
-  useEffect(() => {
-    if (captchaReady && window.turnstile && captchaRef.current) {
-      if (turnstileWidgetId.current) {
-        window.turnstile.remove(turnstileWidgetId.current);
-      }
+  // useEffect(() => {
+  //   if (captchaReady && window.turnstile && captchaRef.current) {
+  //     if (turnstileWidgetId.current) {
+  //       window.turnstile.remove(turnstileWidgetId.current);
+  //     }
 
-      turnstileWidgetId.current = window.turnstile.render(captchaRef.current, {
-        sitekey: sitekey,
-        callback: (token) => {
-          setCaptchaToken(token);
-        },
-        "expired-callback": () => {
-          setCaptchaToken("");
-        },
-        "error-callback": () => {
-          setCaptchaToken("");
-        },
-      });
-    }
-  }, [captchaReady, captchaRefreshKey]);
+  //     turnstileWidgetId.current = window.turnstile.render(captchaRef.current, {
+  //       sitekey: sitekey,
+  //       callback: (token) => {
+  //         setCaptchaToken(token);
+  //       },
+  //       "expired-callback": () => {
+  //         setCaptchaToken("");
+  //       },
+  //       "error-callback": () => {
+  //         setCaptchaToken("");
+  //       },
+  //     });
+  //   }
+  // }, [captchaReady, captchaRefreshKey]);
 
 
   // const resetCaptcha = () => {
@@ -81,34 +81,34 @@ export default function LoginForm() {
   //   setCaptchaToken("");
   //   setCaptchaRefreshKey(prev => prev + 1);
   // };
-  const resetCaptcha = () => {
-    if (window.turnstile && turnstileWidgetId.current !== null) {
-      window.turnstile.remove(turnstileWidgetId.current);
-      turnstileWidgetId.current = null;
-    }
-    setCaptchaToken("");
-    setCaptchaRefreshKey((prev) => prev + 1);
-  };
+  // const resetCaptcha = () => {
+  //   if (window.turnstile && turnstileWidgetId.current !== null) {
+  //     window.turnstile.remove(turnstileWidgetId.current);
+  //     turnstileWidgetId.current = null;
+  //   }
+  //   setCaptchaToken("");
+  //   setCaptchaRefreshKey((prev) => prev + 1);
+  // };
   if (user) return <Navigate to="/" replace />;
 
   const onSubmit = async (data) => {
     clearErrors();
     // resetCaptcha(); 
-    if (!captchaToken) {
-      setError("captcha", {
-        type: "manual",
-        message: "Vui lòng xác thực CAPTCHA",
-      });
-      return;
-    }
+    // if (!captchaToken) {
+    //   setError("captcha", {
+    //     type: "manual",
+    //     message: "Vui lòng xác thực CAPTCHA",
+    //   });
+    //   return;
+    // }
 
     const result = await login({
       ...data,
-      "cf-turnstile-response": captchaToken,
+      // "cf-turnstile-response": captchaToken,
       web_id: webId,
     });
 
-    resetCaptcha();
+    // resetCaptcha();
 
     if (!result.success) {
       // Xử lý lỗi validation từ backend
@@ -122,15 +122,15 @@ export default function LoginForm() {
       }
 
       // Xử lý lỗi CAPTCHA
-      if (result.code === 'CAPTCHA_FAILED' || result.code === 'CAPTCHA_ERROR') {
-        setError("captcha", {
-          type: "server",
-          message: result.message || "Xác thực CAPTCHA thất bại",
-        });
-      }
-      if (result.code === "VALIDATION_ERROR" && result.validationErrors?.["cf-turnstile-response"]) {
-        resetCaptcha();
-      }
+      // if (result.code === 'CAPTCHA_FAILED' || result.code === 'CAPTCHA_ERROR') {
+      //   setError("captcha", {
+      //     type: "server",
+      //     message: result.message || "Xác thực CAPTCHA thất bại",
+      //   });
+      // }
+      // if (result.code === "VALIDATION_ERROR" && result.validationErrors?.["cf-turnstile-response"]) {
+      //   resetCaptcha();
+      // }
 
       // Xử lý lỗi thông tin đăng nhập sai
       if (result.code === 'INVALID_CREDENTIALS') {
@@ -246,14 +246,14 @@ export default function LoginForm() {
               </div>
 
               {/* CAPTCHA */}
-              <div>
+              {/* <div>
                 <div ref={captchaRef} id="captcha" className="mb-2" />
                 {errors.captcha && (
                   <p className="mt-1 text-sm text-red-500">
                     {errors.captcha.message}
                   </p>
                 )}
-              </div>
+              </div> */}
 
               {/* Submit */}
               <div>

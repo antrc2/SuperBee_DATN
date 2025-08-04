@@ -13,6 +13,8 @@ import {
   Newspaper,
   Folders,
   CircleDollarSign,
+  HomeIcon,
+  Home,
 } from "lucide-react";
 
 import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
@@ -21,6 +23,11 @@ import { useRoles } from "../../utils/role";
 
 // Mảng cấu hình các mục menu, giữ nguyên từ file gốc
 const navItems = [
+    {
+    icon: <Home />,
+    name: "Trang chủ",
+    path: "/",
+  },
   {
     icon: <LayoutGrid />,
     name: "Dashboard",
@@ -36,39 +43,56 @@ const navItems = [
       "partner",
     ],
   },
+
+    {
+    icon: <Calendar />,
+    name: "Ảnh Banners",
+    path: "/admin/banners",
+    view: ["admin", "admin-super", "reseller", "nv_marketing"],
+  },
   {
     icon: <Users />,
-    name: "Users",
+    name: "Tài Khoản",
     path: "/admin/users",
     view: ["admin", "admin_super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
   },
+    {
+    icon: <Newspaper />,
+    name: "Phân quyền",
+    view: ["admin"],
+    subItems: [
+      { name: "Tổng Quan", path: "/admin/authorization" },
+      { name: "Vai Trò", path: "/admin/authorization/roles" },
+      { name: "Quyền Hệ Thống", path: "/admin/authorization/permissions" },
+    ],
+  },
   {
     icon: <TicketPercent />,
-    name: "Discount Code",
+    name: "Mã Giảm giá",
     path: "/admin/discountcode",
     view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <TicketPercent />,
-    name: "Donate Promotion",
+    name: "Khuyến Mãi Nạp Thẻ",
     path: "/admin/donatePromotions",
     view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <LayoutList />,
-    name: "Categories",
+    name: "Danh Mục Sản Phẩm",
     path: "/admin/categories",
     view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
   },
   {
     icon: <Package />,
-    name: "Products",
+    name: "Sản Phẩm",
     path: "/admin/products",
     view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
   },
   {
     icon: <Package />,
-    name: "PendingProduct",
+    name: "Duyệt Sản Phẩm",
     path: "/admin/pendingProducts",
     view: ["admin", "admin_super", "nv_kiem_duyet"],
   },
@@ -92,22 +116,23 @@ const navItems = [
   },
   {
     icon: <Calendar />,
-    name: "agent",
+    name: "Tin Nhắn",
     path: "/admin/agent",
     view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
   },
   {
     icon: <Folders />,
-    name: "CategoryPost",
+    name: "Danh Mục Tin Tức",
     path: "/admin/categoryPost",
     view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
   {
     icon: <Newspaper />,
-    name: "Post",
+    name: "Tin Tức",
     path: "/admin/post",
     view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
+
   {
     icon: <Newspaper />,
     name: "Authorization",
@@ -120,14 +145,20 @@ const navItems = [
   },
   {
     icon: <Newspaper />,
-    name: "Withdrawals",
-    view: ["admin", "admin_super", "reseller"],
+    name: "Rút tiền",
+    view: ["admin", "admin-super", "reseller"],
     path: "/admin/withdrawals",
+  },
+    {
+    icon: <ShoppingCart />,
+    name: "Đơn Hàng",
+    path: "/admin/orders",
+    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
   },
   {
     icon: <Newspaper />,
-    name: "Disputes",
-    view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
+    name: "Khiếu Nại",
+    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
     path: "/admin/disputes",
   },
 ];

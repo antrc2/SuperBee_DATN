@@ -246,7 +246,7 @@ class AdminDiscountCodeController extends Controller
             }
 
             $rules = [
-                'code'                 => 'required|string|unique:promotions,code,' . $id,
+                // 'code'                 => 'required|string|unique:promotions,code,' . $id,
                 'description'          => 'nullable|string|max:255',
                 'usage_limit'          => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'       => 'nullable|integer|min:-1|not_in:0',
@@ -260,9 +260,9 @@ class AdminDiscountCodeController extends Controller
             ];
 
             $messages = [
-                'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
-                'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
-                'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
+                // 'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
+                // 'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
+                // 'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
 
                 'description.string'            => 'Mô tả phải là chuỗi ký tự.',
                 'description.max'               => 'Mô tả không được vượt quá 255 ký tự.',

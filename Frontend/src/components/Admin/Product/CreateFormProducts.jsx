@@ -89,7 +89,7 @@ export default function CreateFormProducts({
         category_id: initialData.category_id || "",
         import_price: initialData.import_price || "",
         username: initialData.credentials?.[0]?.username || "",
-        password: initialData.credentials?.[0]?.username,
+        password: initialData.credentials?.[0]?.password,
         description: initialData.description || "",
         attributes:
           initialData.game_attributes?.map((attr) => ({

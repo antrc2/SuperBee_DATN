@@ -19,7 +19,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::with(['creator', 'updater'])->get();
+            $categories = Category::with(['creator', 'updater'])->where('id',"!=",1)->get();
 
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];

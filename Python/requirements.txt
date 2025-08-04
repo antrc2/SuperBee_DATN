@@ -10,7 +10,3 @@ PyJWT
 Pillow
 mbbank-lib
 playwright
-beautifulsoup4
-googlesearch-python
-google-generativeai
-facebook-sdk

@@ -17,8 +17,6 @@ backend_api = os.getenv("BACKEND_API",'http://localhost/api')
 client = OpenAI(
 
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-    # base_url="https://api.together.xyz/v1",
-    # base_url="https://openrouter.ai/api/v1",
     api_key=api_key
 )
 def now():
@@ -33,6 +31,9 @@ def get_list_product_by_category(id):
     return response
 def sitemap_crawl(url):
     response = requests.get(url).text
+    return response
+def add_product_to_cart(id,access_token):
+    response = requests.post(f"{backend_api}/assistant/carts/",json={"product_id": id},headers={"Authorization": f"Bearer {access_token}","Content-Type": "application/json"}).text
     return response
 async def fetch_body_html(url: str) -> str:
     print(f"Đang crawl {url}")
@@ -59,7 +60,7 @@ def url_crawl_sync(url: str) -> str:
     t.start()
     t.join()
     return result["body"]
-def execute_agent(agent_name,messages):
+def execute_agent(agent_name,messages,access_token):
     if (agent_name == 'product'):
         # print(f"Product message: {messages[1:]}")
 
@@ -80,6 +81,23 @@ def execute_agent(agent_name,messages):
                                 },
                             },
                             "required": ["sku"]
+                        }
+                    }
+                },
+                {
+                    "type": "function",
+                    'function': {
+                        'name': "add_product_to_cart",
+                        "description": "Thêm sản phẩm vào giỏ hàng",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer",
+                                    "description": "ID của sản phẩm"
+                                }
+                            },
+                            "required": ['id']
                         }
                     }
                 }
@@ -104,37 +122,10 @@ def execute_agent(agent_name,messages):
                 if (function_name == "search_product_detail_by_sku"):
                     result = search_product_detail_by_sku(argument['sku'])
                     response += result
+                if (function_name == "add_product_to_cart"):
+                    result = add_product_to_cart(argument['id'],access_token)
+                    response += result
             return response
-                # argument = response.choices[0].message.tool_calls[0].function.arguments
-                # data = json.loads(argument)
-                # print(f"Product data: {data}")
-                # result = search_product_detail_by_sku(data['sku'])
-                # print(f"Product result: {result}")
-                # return result
-            # messages.append({
-            #     "role": "assistant",
-            #     "tool_calls": [{
-            #         "id": response.choices[0].message.tool_calls[0].id,
-            #         "type": "function",
-            #         "function": {
-            #             "name": response.choices[0].message.tool_calls[0].function.name,
-            #             "arguments": response.choices[0].message.tool_calls[0].function.arguments
-            #         }
-            #     }]
-            # })
-            
-            # messages.append({
-            #     "role": "tool",
-            #     "tool_call_id": response.choices[0].message.tool_calls[0].id,
-            #     "content": result
-            # })
-            # response_ = client.chat.completions.create(
-            #     messages=messages,
-            #     model=chat_model
-                
-            # )
-            # return response_.choices[0].message
-
     elif (agent_name == 'category'):
         response = client.chat.completions.create(
             messages=messages,
@@ -249,69 +240,8 @@ def execute_agent(agent_name,messages):
                     result = url_crawl_sync(argument['url'])
                     response += result
             return response
-            # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
-            #     argument = response.choices[0].message.tool_calls[0].function.arguments
-            #     data = json.loads(argument)
-            #     print(f"Category data: {data}")
-            #     result = get_list_product_by_category(data['category_id'])
-            #     print(f"Category result: {result}")
-            #     return result
-            # messages.append({
-            #     "role": "assistant",
-            #     "tool_calls": [{
-            #         "id": response.choices[0].message.tool_calls[0].id,
-            #         "type": "function",
-            #         "function": {
-            #             "name": response.choices[0].message.tool_calls[0].function.name,
-            #             "arguments": response.choices[0].message.tool_calls[0].function.arguments
-            #         }
-            #     }]
-            # })
             
-            # messages.append({
-            #     "role": "tool",
-            #     "tool_call_id": response.choices[0].message.tool_calls[0].id,
-            #     "content": result
-            # })
-            # response_ = client.chat.completions.create(
-            #     messages=messages,
-            #     model=chat_model
-                
-            # )
-            # return response_.choices[0].message
-
-
-
-
-
-
-        # print(f"Agent name: {agent_name},Response: {response}")
-# def list_tools(router):
-#     if (router == "product"):
-#         tools = [
-#             {
-#                 "type": "function",
-#                 "function": {
-#                     "name": "search_product_detail_by_sku",
-#                     "description": "Tìm kiếm sản phẩm theo mã sku",
-#                     "parameters": {
-#                         "type": "object",
-#                         "properties": {
-#                             "sku": {
-#                                 "type": "string",
-#                                 "description": "Mã sku của sản phẩm"
-#                             },
-#                         },
-#                         "required": ["sku"]
-#                     }
-#                 }
-#             }
-#         ]
-#     else:
-#         tools = []
-#     return tools
-
-def chat(messages):
+def chat(messages,access_token):
     results = {}
 
     def fetch_categories():
@@ -458,7 +388,7 @@ def chat(messages):
                         messages_clone = copy.deepcopy(user_content)
                         messages_clone[-1]['content'] = data['content']
                         print(f"Message clone: {messages_clone}")
-                        result = execute_agent(agent_name=data['router'],messages=messages_clone)
+                        result = execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token)
                         messages.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
@@ -474,8 +404,7 @@ def chat(messages):
                             'content': generated_text
                         }
                     )
-                        # print(f"Message: {messages}")
-        # print(f"Message: {messages}")
+
         tool_choice = 'auto'
         # break
         if (tool_call):
@@ -485,191 +414,4 @@ def chat(messages):
             print("Không dùng tool call nữa")
             print(f"Generated_text: {generated_text}")
             break
-    # return {
-    #     "messages": messages[1:]
-    # }
-        # break
-        # for res in response:
-        #     response_clone.append(res)
-        #     if res.choices[0].delta.tool_calls is None:
-        #         if res.choices[0].delta.content is not None:
-        #             # if (prepare_end):
-        #             #     pass
-        #             # else:
-        #             #     messages.append(
-        #             #         {
-        #             #             "role": "assistant",
-        #             #             "content": generated_text
-        #             #         }
-        #             #     )
-        #             # messages[-1]['content'] = generated_text
-        #             # print(messages)
-        #             # return messages
-        #             print(f"Content: {res.choices[0].delta.content}\n")
-        #     else:
-        #         print(f"Tool calls: {res.choices[0].delta.tool_calls}")
-        #         tool_call = True
-        #         tools_call_stream.append(res.choices[0].delta.tool_calls)
-
-        # if not tool_call:
-        #     break
-
-        # print(f"Response: {response_clone}")
-        # break
-    #     # Bước 2: Gom và hợp nhất tool_calls theo index
-    #     tool_data = defaultdict(dict)
-    #     len_ = 0
-    #     for tool_part in tools_call_stream:
-
-    #         # function_name = tools_call_stream[len_].
-    #         print(f"Tool part: {tool_part}")
-    #         function_name = tool_part[0].function.name if tool_part and tool_part[0].function.name else ""
-    #         print(f"Function name: {function_name}")
-    #         for call in tool_part:
-    #             print(f"Call: {call}")
-
-
-
-    #             idx = call.index
-    #             if 'function' not in tool_data[idx]:
-    #                 tool_data[idx]['function'] = {}
-
-    #             # Gán function name chỉ khi chưa có
-    #             if 'name' not in tool_data[idx]['function'] or not tool_data[idx]['function']['name']:
-    #                 tool_data[idx]['function']['name'] = call.function.name or function_name  # fallback nếu bị None
-
-    #             if hasattr(call.function, 'arguments') and call.function.arguments is not None:
-    #                 tool_data[idx]['function'].setdefault('arguments', '')
-    #                 tool_data[idx]['function']['arguments'] += call.function.arguments
-
-    #             tool_data[idx]['id'] = call.id
-    #             tool_data[idx]['type'] = call.type
-        
-    #     print(f"Tool data: {tool_data.values()}")
-    #     for tool_ in tool_data.values():
-    #         print(f"Tool_: {tool_}")
-    #         print(type(tool_))
-    #         arguments = json.loads(tool_['function']['arguments'])
-    #         content = arguments['content']
-    #         agent_name = arguments['router']
-    #         messages_clone = [system_content] + [
-    #             {
-    #                 "role": "user",
-    #                 'content': content
-    #             }
-    #         ]
-    #         print(f"\nAgent name: {agent_name}, Response: {execute_agent(agent_name=agent_name,messages=messages_clone)}\n")
-    #         messages.append({
-    #             "role": "assistant",
-    #             "tool_calls": [{
-    #                 "id": tool_['id'],
-    #                 "type": "function",
-    #                 "function": {
-    #                     "name": tool_['function']['name'],
-    #                     "arguments": tool_['function']['arguments']
-    #                 }
-    #             }]
-    #         })
-    #         messages.append({
-    #             "role": "tool",
-    #             "tool_call_id": tool_['id'],
-    #             "content": execute_agent(agent_name=agent_name,messages=messages_clone)
-    #         })
-
-    #         print(messages)
-
-    #     break
-
-    # response_ = client.chat.completions.create(
-    #     messages=messages,
-    #     model=chat_model,
-    #     temperature=0.2,
-    #     max_tokens=2048,
-    #     stream=True
-    # )
-    # for res in response_:
-    #     print(res)
-
-
-        # break
-            # messages.append(
-            #     {
-            #         "role": "assistant",
-            #         "tool_calls": [{
-            #             "id": tool_['id'],
-            #             "type": "function",
-            #             "function": {
-            #                 "name": tool_['function']['name'],
-            #                 "arguments": tool_['function']['arguments']
-            #             }
-            #         }]
-            #     }
-            # )
-
-
-
-        # print(f"Tool data: {tool_data}")
-        # break
-        
-
-                # args += res.choices[0].delta.tool_calls[0].function.arguments
-        # print(f"Response Clone: {response_clone}")
-        # if (response_clone[0].choices[0].delta.tool_calls == None):
-        #     print("Không dùng tool")
-        #     # break
-        # else:
-        #     function_name = res.choices[0].delta.tool_calls[0].function.name
-        #     print(f"Function name: {function_name}")
-            # print(f"Arguments: {args}")
-        
-        
-        # print(response)
-        # break
-
-
-    # print(messages)
-    # router_output = json.loads(router(messages,['category_product','product','news','other']))
-    # router_ , content= router_output['router'], router_output['content']
-    
-
-    # print(router_output)
-    # list_tools = query_router(router=router_,content=content)
-    # print(list_tools)
-
-    
-
-    # response = client.chat.completions.create(
-    #     messages=messages,
-    #     tools=list_tools,
-    #     model=chat_model,
-    #     tool_choice='auto',
-    #     max_tokens=1024,
-    #     temperature=0.2,
-    #     stream=True
-    # )
-
-    # args = ""
-    # function_name = ""
-    # response_clone = []
-    # for res in response:
-    #     response_clone.append(res)
-    #     if (res.choices[0].delta.tool_calls == None):
-    #         # Không dùng tools
-    #         # pass
-    #         print(res.choices[0].delta.content)
-    #     else:
-    #         args += res.choices[0].delta.tool_calls[0].function.arguments
-
-    # # print(response_clone)
-    # if (response_clone[0].choices[0].delta.tool_calls == None):
-    #     print("Không dùng tool")
-    # else:
-    #     function_name = res.choices[0].delta.tool_calls[0].function.name
-    #     print(f"Function name: {function_name}")
-    #     print(f"Arguments: {args}")
-        
-
-    # print(response_clone)
-
-
     

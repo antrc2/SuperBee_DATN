@@ -23,8 +23,8 @@ class ProductSeeder extends Seeder
         return $code;
     }
     public function run(): void
-    {   $parent_categories = [];
-        $parent_categories[] = DB::table('categories')->insertGetId([
+    {   
+        DB::table('categories')->insertGetId([
                 'parent_id' => null,
                 'name' => 'Khác',
                 'slug' => 'khac',
@@ -35,9 +35,11 @@ class ProductSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
+        $parent_categories = [];
+        // $parent_categories[] = 
         // Tạo danh mục cha và con
         
-        for ($i = 2; $i <= 7; $i++) {
+        for ($i = 1; $i <= 7; $i++) {
             $parent_categories[] = DB::table('categories')->insertGetId([
                 'parent_id' => null,
                 'name' => 'Danh mục cha ' . $i,
@@ -51,7 +53,7 @@ class ProductSeeder extends Seeder
             ]);
         }
 
-        for ($i = 2; $i <= 10; $i++) {
+        for ($i = 1; $i <= 10; $i++) {
             DB::table('categories')->insert([
                 'parent_id' => $parent_categories[array_rand($parent_categories)],
                 'name' => 'Danh mục con ' . $i,
@@ -66,7 +68,7 @@ class ProductSeeder extends Seeder
         }
 
         // Tạo sản phẩm
-        $category_ids = DB::table('categories')->pluck('id')->toArray();
+        $category_ids = DB::table('categories')->where('id','!=',1)->pluck('id')->toArray();
         for ($i = 1; $i <= 30; $i++) {
             $product_id = DB::table('products')->insertGetId([
                 'category_id' => $category_ids[array_rand($category_ids)],

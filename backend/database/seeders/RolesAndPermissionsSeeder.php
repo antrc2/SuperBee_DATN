@@ -263,7 +263,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'chat.view', // Có thể xem chat để hỗ trợ
             'wallet.view'
         ]);
-
+$roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nhân viên cơ bản với quyền tùy chỉnh.', 'guard_name' => 'api']);
 
         $this->command->info('Đã tạo và gán quyền cho tất cả các Roles.');
 

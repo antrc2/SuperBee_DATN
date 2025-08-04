@@ -11,10 +11,36 @@ import {
   Lock,
   Unlock,
   Pencil,
+  Eye,
 } from "lucide-react";
 import { useAuth } from "@contexts/AuthContext.jsx";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { usePermissions } from "../../../utils/usePermissions";
 // Helper components for better structure
+const getRoleDisplayName = (roleName) => {
+  switch (roleName) {
+    case "admin":
+      return "Quản trị viên cấp cao";
+    case "user":
+      return "Người dùng";
+    case "partner":
+      return "Đối tác";
+    case "reseller":
+      return "Đại lý";
+    case "nv-ho-tro":
+      return "Nhân viên hỗ trợ";
+    case "nv-kiem-duyet":
+      return "Nhân viên kiểm duyệt";
+    case "admin-super":
+      return "Quản trị viên";
+    case "nv-marketing":
+      return "Nhân viên marketing";
+    case "ke-toan":
+      return "Nhân viên Kế toán";
+    default:
+      return roleName || "Không rõ";
+  }
+};
 const RoleBadge = ({ roleName }) => {
   const roleStyles = {
     admin: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
@@ -39,7 +65,7 @@ const RoleBadge = ({ roleName }) => {
         roleStyles[roleName] || roleStyles["user"]
       }`}
     >
-      {roleName?.replace(/-/g, " ") || "Không rõ"}
+      {getRoleDisplayName(roleName)}
     </span>
   );
 };
@@ -57,6 +83,15 @@ const StatusBadge = ({ status }) => (
 );
 
 const AccountListPage = () => {
+  const { can } = usePermissions();
+  const isView = can("users.view");
+  console.log("🚀 ~ AccountListPage ~ isView:", isView);
+  const isCreate = can("users.create");
+  console.log("🚀 ~ AccountListPage ~ isCreate:", isCreate);
+  const isEdit = can("users.edit");
+  console.log("🚀 ~ AccountListPage ~ isEdit:", isEdit);
+  const isDelete = can("users.delete");
+  console.log("🚀 ~ AccountListPage ~ isDelete:", isDelete);
   const [accounts, setAccounts] = useState([]);
   const [meta, setMeta] = useState(null);
   const [roles, setRoles] = useState([]);
@@ -151,7 +186,8 @@ const AccountListPage = () => {
         )
       );
     } catch (err) {
-      pop("Thao tác thất bại", "e");
+      setLoading(false);
+      pop(`${err?.response?.data?.message ?? "Thao tác thất bại"}`, "e");
       console.error(err);
     }
   };
@@ -167,13 +203,18 @@ const AccountListPage = () => {
   };
   return (
     <div className="p-4 sm:p-6 bg-slate-50 dark:bg-slate-900 min-h-screen font-sans">
-      <header className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
-          Quản lý tài khoản
-        </h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Tìm kiếm, lọc và quản lý tất cả người dùng trong hệ thống.
-        </p>
+      <header className="mb-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">
+            Quản lý tài khoản
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Tìm kiếm, lọc và quản lý tất cả người dùng trong hệ thống.
+          </p>
+        </div>
+        <div>
+          <Link to={"/admin/users/new"}>Thêm tài khoản nhân viên</Link>
+        </div>
       </header>
 
       {/* Filter and Action Bar */}
@@ -302,25 +343,42 @@ const AccountListPage = () => {
                   <td className="px-6 py-4 text-center">
                     <div className="flex items-center justify-center space-x-2">
                       <button
-                        title="Chỉnh sửa"
-                        className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-indigo-600 transition-colors"
+                        title={isView ? "Xem Chi tiết" : "Không có quyền"}
+                        className={` p-2 rounded-full transition-colors ${
+                          isView
+                            ? "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-indigo-600"
+                            : "text-slate-400 opacity-50 cursor-not-allowed"
+                        }`}
                         onClick={() => handleEdit(acc.id)}
+                        disabled={!isView} // Vô hiệu hóa button khi isView là false
                       >
-                        <Pencil size={16} />
+                        <Eye size={16} />
                       </button>
                       {acc.status === 1 ? (
                         <button
-                          title="Khóa"
+                          title={isEdit ? "Khóa tài khoản" : "Không có quyền"}
                           onClick={() => handleToggleStatus(acc.id, acc.status)}
-                          className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-red-600 transition-colors"
+                          className={` p-2 rounded-full transition-colors ${
+                            isEdit
+                              ? "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-indigo-600"
+                              : "text-slate-400 opacity-50 cursor-not-allowed"
+                          }`}
+                          disabled={!isEdit}
                         >
                           <Lock size={16} />
                         </button>
                       ) : (
                         <button
-                          title="Mở khóa"
+                          title={
+                            isEdit ? " Mở Khóa tài khoản" : "Không có quyền"
+                          }
                           onClick={() => handleToggleStatus(acc.id, acc.status)}
-                          className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 hover:text-green-600 transition-colors"
+                          className={` p-2 rounded-full transition-colors ${
+                            isEdit
+                              ? "text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 hover:text-indigo-600"
+                              : "text-slate-400 opacity-50 cursor-not-allowed"
+                          }`}
+                          disabled={!isEdit}
                         >
                           <Unlock size={16} />
                         </button>

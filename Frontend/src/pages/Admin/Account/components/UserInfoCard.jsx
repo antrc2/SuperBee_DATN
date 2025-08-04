@@ -1,23 +1,10 @@
 import React from "react";
-
-const getRoleDisplayName = (roleName) => {
-  switch (roleName) {
-    case "admin":
-      return "Quản trị viên";
-    case "user":
-      return "Người dùng";
-    case "partner":
-      return "Đối tác";
-    case "reseller":
-      return "Đại lý";
-    default:
-      return roleName || "Không rõ";
-  }
-};
+import { usePermissions } from "@utils/usePermissions";
 
 const UserProfileSidebar = ({ account, activeTab, setActiveTab }) => {
+  const { can } = usePermissions();
   if (!account) return null;
-
+  const isRole = can("roles.edit");
   const TabButton = ({ tabName, label, icon }) => (
     <button
       onClick={() => setActiveTab(tabName)}
@@ -188,26 +175,28 @@ const UserProfileSidebar = ({ account, activeTab, setActiveTab }) => {
           }
         />
         {/* --- NÚT MỚI --- */}
-        <TabButton
-          tabName="role"
-          label="Cấp quyền"
-          icon={
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-              />
-            </svg>
-          }
-        />
+        {isRole && (
+          <TabButton
+            tabName="role"
+            label="Cấp quyền"
+            icon={
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                />
+              </svg>
+            }
+          />
+        )}
       </nav>
     </div>
   );

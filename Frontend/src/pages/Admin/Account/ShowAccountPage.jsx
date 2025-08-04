@@ -10,6 +10,7 @@ import FinancialStatCard from "./components/FinancialStatCard";
 import OrderCard from "./components/OrderCard";
 import RoleManagementTab from "./components/RoleManagementTab"; // <-- Import component mới
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
+import { usePermissions } from "@utils/usePermissions";
 // --- Helpers (Giữ nguyên) ---
 const formatCurrency = (amount, currency = "VND") => {
   if (amount === null || amount === undefined) return "0 VND";
@@ -71,6 +72,11 @@ const ShowAccountPage = () => {
   const [selectedRoles, setSelectedRoles] = useState([]);
   const [updatingRole, setUpdatingRole] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  const { can, hasRole } = usePermissions();
+  const isRole = can("roles.edit");
+  const ishasRole = hasRole("admin");
+
   // ----- Data Fetching -----
   useEffect(() => {
     const decoded = getDecodedToken();
@@ -335,8 +341,8 @@ const ShowAccountPage = () => {
           />
         );
       // --- RENDER TAB MỚI ---
-      case "role":
-        return (
+      case "role": {
+        return isRole ? (
           <RoleManagementTab
             allRoles={allRoles}
             selectedRoles={selectedRoles}
@@ -345,7 +351,10 @@ const ShowAccountPage = () => {
             updatingRole={updatingRole}
             targetUser={account}
           />
+        ) : (
+          <span></span>
         );
+      }
       default:
         return (
           <DataTable

@@ -14,7 +14,7 @@ class UserCategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::where('status', 1)->get();
+            $categories = Category::where('status', 1)->where('id','!=',1)->get();
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
 

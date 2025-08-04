@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             ProductSeeder::class,
             PostSeeder::class,
+            ChatRoomSeeder::class
         ]);
     }
 }

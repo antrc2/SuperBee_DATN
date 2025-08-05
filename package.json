@@ -6,8 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
   "license": "ISC",
@@ -19,7 +18,6 @@
     "mysql2": "^3.14.1",
     "nodemailer": "^7.0.3",
     "path": "^0.12.7",
-    "redis": "^5.7.0",
     "socket.io": "^4.8.1",
     "url": "^0.11.4",
     "uuid": "^11.1.0"

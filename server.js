@@ -17,7 +17,7 @@ const server = http.createServer(app);
 // Khởi tạo Socket.IO server
 const io = new Server(server, {
   cors: {
-    origin: "*", // Địa chỉ ReactJS FE của bạn
+    origin: "http://localhost:5173", // Địa chỉ ReactJS FE của bạn
     methods: ["GET", "POST"],
   },
 });
@@ -29,7 +29,6 @@ io.use(authMiddleware);
 setupSocketEvents(io);
 
 // Khởi tạo Redis client để subscribe
-console.log(config.redis)
 const redisSubscriber = new Redis(config.redis);
 
 redisSubscriber.on("connect", () => {

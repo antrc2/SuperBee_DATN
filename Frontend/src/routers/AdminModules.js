@@ -51,6 +51,9 @@ const AccountListPage = React.lazy(() =>
 const ShowAccountPage = React.lazy(() =>
   import("@pages/Admin/Account/ShowAccountPage")
 );
+const CreateAccountPage = React.lazy(() =>
+  import("@pages/Admin/Account/CreateAccountPage")
+);
 
 const BannersListPage = React.lazy(() =>
   import("@pages/Admin/Banners/BannersListPage")
@@ -223,7 +226,7 @@ export const adminModules = [
     list: AccountListPage,
     show: ShowAccountPage,
     edit: NotFound,
-    create: NotFound,
+    create: CreateAccountPage,
     allowedRoles: [
       "admin",
       "admin-super",

@@ -34,7 +34,7 @@ const navItems = [
     subItems: [{ name: "Ecommerce", path: "/admin" }],
     view: [
       "admin",
-      "admin-super",
+      "admin_super",
       "reseller",
       "ke_toan",
       "nv_marketing",
@@ -54,7 +54,7 @@ const navItems = [
     icon: <Users />,
     name: "Tài Khoản",
     path: "/admin/users",
-    view: ["admin", "admin-super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
+    view: ["admin", "admin_super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
   },
     {
     icon: <Newspaper />,
@@ -70,59 +70,79 @@ const navItems = [
     icon: <TicketPercent />,
     name: "Mã Giảm giá",
     path: "/admin/discountcode",
-    view: ["admin", "admin-super", "reseller", "nv_marketing", "nv_ho_tro"],
+    view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <TicketPercent />,
     name: "Khuyến Mãi Nạp Thẻ",
     path: "/admin/donatePromotions",
-    view: ["admin", "admin-super", "reseller", "nv_marketing", "nv_ho_tro"],
+    view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
   },
   {
     icon: <LayoutList />,
     name: "Danh Mục Sản Phẩm",
     path: "/admin/categories",
-    view: ["admin", "admin-super", "reseller", "nv_kiem_duyet"],
+    view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
   },
   {
     icon: <Package />,
     name: "Sản Phẩm",
     path: "/admin/products",
-    view: ["admin", "admin-super", "reseller", "nv_kiem_duyet"],
+    view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
   },
   {
     icon: <Package />,
     name: "Duyệt Sản Phẩm",
     path: "/admin/pendingProducts",
-    view: ["admin", "admin-super", "nv_kiem_duyet"],
+    view: ["admin", "admin_super", "nv_kiem_duyet"],
   },
-
+  {
+    icon: <ShoppingCart />,
+    name: "Orders",
+    path: "/admin/orders",
+    view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
+  },
   {
     icon: <CircleDollarSign />,
     name: "Tài chính",
     path: "/admin/financials",
-    view: ["admin", "admin-super", "reseller", "ke_toan"],
+    view: ["admin", "admin_super", "reseller", "ke_toan"],
   },
-
+  {
+    icon: <Calendar />,
+    name: "Banners",
+    path: "/admin/banners",
+    view: ["admin", "admin_super", "reseller", "nv_marketing"],
+  },
   {
     icon: <Calendar />,
     name: "Tin Nhắn",
     path: "/admin/agent",
-    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
+    view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
   },
   {
     icon: <Folders />,
     name: "Danh Mục Tin Tức",
     path: "/admin/categoryPost",
-    view: ["admin", "admin-super", "reseller", "nv_marketing"],
+    view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
   {
     icon: <Newspaper />,
     name: "Tin Tức",
     path: "/admin/post",
-    view: ["admin", "admin-super", "reseller", "nv_marketing"],
+    view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
 
+  {
+    icon: <Newspaper />,
+    name: "Authorization",
+    view: ["admin"],
+    subItems: [
+      { name: " Dashboard ", path: "/admin/authorization" },
+      { name: "Roles", path: "/admin/authorization/roles" },
+      { name: "Permissions", path: "/admin/authorization/permissions" },
+    ],
+  },
   {
     icon: <Newspaper />,
     name: "Rút tiền",
@@ -147,6 +167,7 @@ const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
   const roles = useRoles();
+  console.log("🚀 ~ AppSidebar ~ roles:", roles);
 
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [activeMenuInfo, setActiveMenuInfo] = useState({

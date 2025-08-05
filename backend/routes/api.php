@@ -263,6 +263,13 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      */
     Route::prefix('/accounts')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view');
+         Route::get('/staff-roles', [UserController::class, 'getStaffRoles']);
+
+        // Route để lấy các quyền có thể gán trực tiếp (Cách 2)
+        Route::get('/assignable-permissions', [UserController::class, 'getAssignablePermissions']);
+
+        // Route để tạo tài khoản nhân viên (Xử lý cả 2 cách)
+        Route::post('/create-staff', [UserController::class, 'createStaffAccount']);
         Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:users.view');
         Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
         // key và restore là hành động chỉnh sửa user
@@ -270,6 +277,8 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}', [UserController::class, 'restore'])->middleware('permission:users.edit');
         // Gán vai trò cho user là quyền sửa vai trò
         Route::put('/{id}/role', [UserController::class, 'updateRoles'])->middleware('permission:roles.edit');
+        // Route để lấy các vai trò có sẵn (Cách 1)
+       
     });
 
     /**
@@ -439,6 +448,9 @@ Route::prefix('/assistant')->group(function () {
 });
 
 
+// Route::post("/export", [AdminWithdrawController::class, 'export']);
+
+
 Route::prefix('/auto')->group(function () {
         Route::prefix('/post')->group(function () {
 
@@ -449,4 +461,5 @@ Route::prefix('/auto')->group(function () {
         });
     });
 // Route::post("/export",[AdminWithdrawController::class,'export']);
+
 // Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

@@ -1,0 +1,6 @@
+import{c,j as e}from"./index-B6v2l7qZ.js";/**
+ * @license lucide-react v0.511.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const t=[["path",{d:"M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14",key:"e7tb2h"}],["path",{d:"m7.5 4.27 9 5.15",key:"1c824w"}],["polyline",{points:"3.29 7 12 12 20.71 7",key:"ousv84"}],["line",{x1:"12",x2:"12",y1:"22",y2:"12",key:"a4e8g8"}],["circle",{cx:"18.5",cy:"15.5",r:"2.5",key:"b5zd12"}],["path",{d:"M20.27 17.27 22 19",key:"1l4muz"}]],a=c("package-search",t);function s(){return e.jsxs("div",{className:"flex flex-col items-center justify-center w-full p-10 bg-background rounded-2xl border-2 border-dashed border-themed",children:[e.jsx("div",{className:"w-20 h-20 flex items-center justify-center bg-content-bg rounded-full mb-6",children:e.jsx(a,{className:"w-10 h-10 text-secondary/70"})}),e.jsx("h2",{className:"text-xl font-bold font-heading text-primary mb-2",children:"Chưa có sản phẩm nào"}),e.jsx("p",{className:"text-secondary text-center max-w-xs",children:"Hiện tại chưa có sản phẩm nào trong danh mục này. Vui lòng quay lại sau nhé!"})]})}export{s as N};

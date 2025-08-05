@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Exception;
+
 class DisputeController extends Controller
 {
     public function store(Request $request)
@@ -34,17 +35,19 @@ class DisputeController extends Controller
         if ($orderItem->order->user_id !== Auth::id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-        
+
         // Security check: Kiểm tra xem đã có khiếu nại cho item này chưa
         if (Dispute::where('order_item_id', $orderItem->id)->exists()) {
-             return response()->json(['message' => 'Sản phẩm này đã được khiếu nại trước đó.'], 409);
+            return response()->json(['message' => 'Sản phẩm này đã được khiếu nại trước đó.'], 409);
         }
 
+
+        $images = $request->file('attachments'); // Lấy mảng các file
         $attachmentPaths = [];
         if ($request->hasFile('attachments')) {
-            foreach ($request->file('attachments') as $file) {
-                $path = $file->store('disputes', 'public');
-                $attachmentPaths[] = $path;
+            $response = $this->uploadFiles($images, 'dispute_images/');
+            foreach ($response as $image) {
+                $attachmentPaths[] = $image['url'];
             }
         }
 
@@ -53,17 +56,17 @@ class DisputeController extends Controller
             'order_item_id' => $orderItem->id,
             'dispute_type' => $request->dispute_type,
             'description' => $request->description,
-            'attachments' => json_encode($attachmentPaths),
+            'attachments' => $attachmentPaths,
             'status' => 0, // Pending
         ]);
 
         return response()->json($dispute, 201);
     }
-     public function index(Request $request)
+    public function index(Request $request)
     {
         try {
             $query = Dispute::with([
-                'user:id,username,email', 
+                'user:id,username,email',
                 'orderItem.order:id,order_code',
                 'orderItem.product:id,sku'
             ]);
@@ -78,15 +81,15 @@ class DisputeController extends Controller
             if ($request->filled('end_date')) {
                 $query->whereDate('created_at', '<=', $request->end_date);
             }
-            
+
             if ($request->filled('search')) {
                 $searchTerm = '%' . $request->search . '%';
-                $query->where(function($q) use ($searchTerm) {
-                    $q->whereHas('orderItem.order', function($subq) use ($searchTerm) {
+                $query->where(function ($q) use ($searchTerm) {
+                    $q->whereHas('orderItem.order', function ($subq) use ($searchTerm) {
                         $subq->where('order_code', 'like', $searchTerm);
-                    })->orWhereHas('user', function($subq) use ($searchTerm) {
+                    })->orWhereHas('user', function ($subq) use ($searchTerm) {
                         $subq->where('email', 'like', $searchTerm)->orWhere('username', 'like', $searchTerm);
-                    })->orWhereHas('orderItem.product', function($subq) use ($searchTerm) {
+                    })->orWhereHas('orderItem.product', function ($subq) use ($searchTerm) {
                         $subq->where('sku', 'like', 'searchTerm');
                     });
                 });
@@ -95,7 +98,6 @@ class DisputeController extends Controller
             $disputes = $query->latest()->paginate(15);
 
             return response()->json($disputes);
-
         } catch (Exception $e) {
             Log::error('Admin DisputeController Index Error: ' . $e->getMessage());
             return response()->json(['message' => 'Đã có lỗi từ máy chủ, không thể tải danh sách khiếu nại.'], 500);
@@ -107,7 +109,7 @@ class DisputeController extends Controller
         try {
             // Sửa đổi: Tìm Dispute bằng id thay vì route model binding
             $dispute = Dispute::findOrFail($id);
-            
+
             $dispute->load([
                 'user:id,username,email',
                 'orderItem.order',
@@ -115,7 +117,6 @@ class DisputeController extends Controller
             ]);
 
             return response()->json($dispute);
-
         } catch (Exception $e) {
             // Sửa đổi: Ghi log với $id
             Log::error("Admin DisputeController Show Error for Dispute ID {$id}: " . $e->getMessage());
@@ -152,7 +153,6 @@ class DisputeController extends Controller
             $dispute->load('user:id,username,email', 'orderItem.order:id,order_code', 'orderItem.product:id,sku');
 
             return response()->json($dispute);
-
         } catch (Exception $e) {
             // Sửa đổi: Ghi log với $id
             Log::error("Admin DisputeController Update Error for Dispute ID {$id}: " . $e->getMessage());

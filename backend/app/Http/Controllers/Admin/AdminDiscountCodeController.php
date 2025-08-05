@@ -94,13 +94,14 @@ class AdminDiscountCodeController extends Controller
         }
     }
     public function store(Request $request)
+// Thiếu validate discount amount
     {
         try {
             // 1. Validate input
             $rules = [
                 'code'                  => 'required|string|unique:promotions,code',
                 'description'           => 'nullable|string|max:255',
-                'discount_value'        => 'required|integer|min:0',
+                'discount_value'        => 'required|integer|min:0|max:99',
                 'min_discount_amount'   => 'nullable|integer|min:0',
                 'max_discount_amount'   => 'nullable|integer|min:0',
                 'start_date'            => 'required|date',
@@ -108,6 +109,7 @@ class AdminDiscountCodeController extends Controller
                 'usage_limit'           => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'        => 'nullable|integer|min:-1|not_in:0',
                 'target_user_id'        => 'required|integer',
+                'status'=>'nullable|integer'
             ];
 
             $messages = [
@@ -121,6 +123,7 @@ class AdminDiscountCodeController extends Controller
                 'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
                 'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
                 'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 99%.",
 
                 'min_discount_amount.integer'   => 'Số tiền giảm giá tối thiểu phải là số nguyên.',
                 'min_discount_amount.min'       => 'Số tiền giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
@@ -182,6 +185,8 @@ class AdminDiscountCodeController extends Controller
             $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
+            $validated['status'] = $request->status;
+            $validated['code'] = strtoupper($request->code);
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();
@@ -241,7 +246,7 @@ class AdminDiscountCodeController extends Controller
             }
 
             $rules = [
-                'code'                 => 'required|string|unique:promotions,code,' . $id,
+                // 'code'                 => 'required|string|unique:promotions,code,' . $id,
                 'description'          => 'nullable|string|max:255',
                 'usage_limit'          => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'       => 'nullable|integer|min:-1|not_in:0',
@@ -255,9 +260,9 @@ class AdminDiscountCodeController extends Controller
             ];
 
             $messages = [
-                'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
-                'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
-                'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
+                // 'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
+                // 'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
+                // 'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
 
                 'description.string'            => 'Mô tả phải là chuỗi ký tự.',
                 'description.max'               => 'Mô tả không được vượt quá 255 ký tự.',

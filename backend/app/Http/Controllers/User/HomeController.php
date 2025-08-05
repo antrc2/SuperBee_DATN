@@ -55,11 +55,11 @@ class HomeController extends Controller
         // $topNap = [];
         // Lấy 8 sản phẩm nổi bật
         $featuredProducts = Product::with("images", "category", "gameAttributes")
-            ->where('status', 1)->whereNotNull('sale')->orderBy('price', 'desc')->limit(8)->get();
+            ->where('status', 1)->where('category_id','!=',1)->whereNotNull('sale')->orderBy('price', 'desc')->limit(8)->get();
 
         // Lấy 8 sản phẩm mới nhất
         $newestProducts = Product::with("images", "category", "gameAttributes")
-            ->where('status', 1)->latest()->limit(8)->get();
+            ->where('status', 1)->where('category_id','!=',1)->latest()->limit(8)->get();
 
         return response()->json([
             'status' => 200,

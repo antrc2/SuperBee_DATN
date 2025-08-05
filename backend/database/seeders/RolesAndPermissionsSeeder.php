@@ -263,7 +263,7 @@ class RolesAndPermissionsSeeder extends Seeder
             'chat.view', // Có thể xem chat để hỗ trợ
             'wallet.view'
         ]);
-
+$roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nhân viên cơ bản với quyền tùy chỉnh.', 'guard_name' => 'api']);
 
         $this->command->info('Đã tạo và gán quyền cho tất cả các Roles.');
 
@@ -276,21 +276,21 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $userList = [
             ['username' => 'admin', 'role' => 'admin', 'web_id' => $mainWeb->id],
-            // ['username' => 'adminsuper', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
-            // ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $resellerWeb->id],
-            // ['username' => 'partner', 'role' => 'partner', 'web_id' => $resellerWeb->id],
-            // ['username' => 'user', 'role' => 'user', 'web_id' => $resellerWeb->id],
-            // ['username' => 'ketoan', 'role' => 'ke-toan', 'web_id' => $mainWeb->id],
-            // ['username' => 'hotro', 'role' => 'nv-ho-tro', 'web_id' => $mainWeb->id],
-            // ['username' => 'marketing', 'role' => 'nv-marketing', 'web_id' => $mainWeb->id],
-            // ['username' => 'kiemduyet', 'role' => 'nv-kiem-duyet', 'web_id' => $mainWeb->id], // <-- BỔ SUNG TÀI KHOẢN MẪU
+            ['username' => 'adminsuper', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
+            ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $mainWeb->id],
+            ['username' => 'partner', 'role' => 'partner', 'web_id' => $mainWeb->id],
+            ['username' => 'user', 'role' => 'user', 'web_id' => $mainWeb->id],
+            ['username' => 'ketoan', 'role' => 'ke-toan', 'web_id' => $mainWeb->id],
+            ['username' => 'hotro', 'role' => 'nv-ho-tro', 'web_id' => $mainWeb->id],
+            ['username' => 'marketing', 'role' => 'nv-marketing', 'web_id' => $mainWeb->id],
+            ['username' => 'kiemduyet', 'role' => 'nv-kiem-duyet', 'web_id' => $mainWeb->id], // <-- BỔ SUNG TÀI KHOẢN MẪU
         ];
 
         foreach ($userList as $userData) {
             $user = User::create([
                 'username' => $userData['username'],
-                'email' => "admin@superbee.site",
-                'password' => Hash::make('SuperBee'),
+                'email' => $userData['username'] . '@app.com',
+                'password' => Hash::make('password'),
                 'web_id' => $userData['web_id'],
                 'status' => 1,
                 'phone' => '090000000' . (count(User::all())),
@@ -305,7 +305,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
             Wallet::create([
                 "user_id" => $user->id,
-                "balance" => "0",
+                "balance" => "1000000",
                 "currency" => "VND"
             ]);
 
@@ -317,11 +317,11 @@ class RolesAndPermissionsSeeder extends Seeder
             $mainWeb->user_id = $adminUser->id;
             $mainWeb->save();
         }
-        // $resellerUser = User::where('username', 'reseller')->first();
-        // if ($resellerUser) {
-        //     $resellerWeb->user_id = $resellerUser->id;
-        //     $resellerWeb->save();
-        // }
+        $resellerUser = User::where('username', 'reseller')->first();
+        if ($resellerUser) {
+            $mainWeb->user_id = $resellerUser->id;
+            $mainWeb->save();
+        }
         $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
 
         $this->command->info('Hoàn tất Seeder!');

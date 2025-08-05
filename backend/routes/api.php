@@ -20,8 +20,10 @@ use App\Http\Controllers\Admin\AuthorizationDashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
+use App\Http\Controllers\Assistant\AssistantCartController;
 use App\Http\Controllers\Assistant\AssistantCategoryController;
 use App\Http\Controllers\Assistant\AssistantProductController;
+use App\Http\Controllers\Auto\AutoTransactionController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
@@ -43,6 +45,7 @@ use App\Http\Controllers\User\UserWithdrawController;
 use App\Http\Controllers\User\UserReviewController;
 
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 
 /*
 |--------------------------------------------------------------------------
@@ -203,11 +206,22 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
             Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
         });
+        Route::prefix('/disputes')->group(function () {
+            // Từ chối rồi nhưng lại thành công
+            Route::post('/', [DisputeController::class, 'store']);
+
+            // Route để lấy danh sách tất cả khiếu nại của người dùng
+            Route::get('/', [UserProfileController::class, 'getDisputes']);
+
+            // Route để lấy chi tiết một khiếu nại cụ thể (dựa vào ID)
+            Route::get('/{id}', [UserProfileController::class, 'getDisputeDetails']);
+        });
 
 
 
 
-        Route::post('/disputes', [DisputeController::class, 'store']);
+
+
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
 });
@@ -249,6 +263,13 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      */
     Route::prefix('/accounts')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view');
+         Route::get('/staff-roles', [UserController::class, 'getStaffRoles']);
+
+        // Route để lấy các quyền có thể gán trực tiếp (Cách 2)
+        Route::get('/assignable-permissions', [UserController::class, 'getAssignablePermissions']);
+
+        // Route để tạo tài khoản nhân viên (Xử lý cả 2 cách)
+        Route::post('/create-staff', [UserController::class, 'createStaffAccount']);
         Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:users.view');
         Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
         // key và restore là hành động chỉnh sửa user
@@ -256,6 +277,8 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}', [UserController::class, 'restore'])->middleware('permission:users.edit');
         // Gán vai trò cho user là quyền sửa vai trò
         Route::put('/{id}/role', [UserController::class, 'updateRoles'])->middleware('permission:roles.edit');
+        // Route để lấy các vai trò có sẵn (Cách 1)
+       
     });
 
     /**
@@ -370,12 +393,24 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
 
     Route::prefix("/withdraws")->group(function () {
         Route::get('/', [AdminWithdrawController::class, 'index']);
+        Route::put('/{id}', [AdminWithdrawController::class, 'update']);
         Route::post("/export", [AdminWithdrawController::class, 'export']);
     });
     Route::prefix("/disputes")->group(function () {
         Route::get('/', [DisputeController::class, 'index']);
         Route::get('/{id}', [DisputeController::class, 'show']);
         Route::put('/{id}', [DisputeController::class, 'update']);
+    });
+
+
+    Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
     });
 });
 
@@ -407,7 +442,24 @@ Route::prefix('/assistant')->group(function () {
         Route::get("/", [AssistantProductController::class, 'index']);
         Route::get("/{sku}", [AssistantProductController::class, 'show']);
     });
+    Route::prefix('/carts')->group(function(){
+        Route::post("/",[AssistantCartController::class,'store'])->middleware('jwt');
+    });
 });
 
+
+// Route::post("/export", [AdminWithdrawController::class, 'export']);
+
+
+Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
+    });
 // Route::post("/export",[AdminWithdrawController::class,'export']);
+
 // Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

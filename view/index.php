@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><?= $title ? isset($title) : "SuperBee Gaming Store - Trang chủ" ?></title>
   <meta name="description" content="<?= $description ? isset($description) : "SuperBee – Nơi mua bán tài khoản game Liên Quân, Free Fire, Roblox… chất lượng Premium, giá tốt nhất, bảo hành 24h và hỗ trợ 24/7 qua Zalo/Facebook. Giao dịch an toàn, nhận nick ngay!" ?>">
-    <script type="module" crossorigin src="/assets/index-C-Tm1Ach.js"></script>
+    <script type="module" crossorigin src="/assets/index-Ck68-v7X.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-BzCfW8u1.css">
   
 </head>

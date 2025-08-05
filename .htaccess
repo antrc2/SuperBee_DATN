@@ -1,8 +1,21 @@
 RewriteEngine On
 
-RewriteCond %{REQUEST_URI} ^/(backend|python|node) [NC]
+RewriteCond %{REQUEST_URI} ^/(backend|node|python) [NC]
 RewriteRule .* - [L]
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteCond %{HTTP:Upgrade} =WebSocket [NC]
+RewriteCond %{HTTP:Connection} upgrade [NC]
+RewriteRule ^socket\.io(/.*)?$ ws://127.0.0.1:3000/socket.io$1 [P,L,QSA]
+
+
+RewriteRule ^socket\.io(/.*)?$ http://127.0.0.1:3000/socket.io$1 [P,L,QSA]
+
+
+
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+
 RewriteRule ^ index.php [QSA,L]

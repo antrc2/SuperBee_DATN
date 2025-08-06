@@ -7,7 +7,7 @@ const defaultConfig = {
   baseURL: import.meta.env.VITE_BACKEND_URL,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
-  timeout: 10_000,
+  timeout: 30_000,
 };
 
 const api = axios.create(defaultConfig);

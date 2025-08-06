@@ -156,15 +156,15 @@ class PartnerProductController extends Controller
                 'category_id'                 => 'required|integer|exists:categories,id',
                 // 'sku'                      => 'required|string|unique:products,sku',
                 'import_price'                => 'required|numeric|min:0',
-                'price'                       => 'required|numeric|min:0',
-                'sale'                        => 'nullable|numeric|min:0',
+                // 'price'                       => 'required|numeric|min:0',
+                // 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
-                'images'                      => 'required|array',
-                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'images'                      => 'nullable|array',
+                'images.*'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
                 'description'                 => 'nullable|string',
             ];
             $messages = [
@@ -226,7 +226,7 @@ class PartnerProductController extends Controller
                 if ($request->import_price !== $product->import_price) {
                     return response()->json([
                         "status"=>False,
-                        "message"=>"Bạn không thể sửa giá nhập"
+                        "message"=>"Bạn không thể sửa giá bán"
                     ],422);
                 }
             } elseif ($product->status === 4) {
@@ -264,6 +264,7 @@ class PartnerProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 "import_price" => $validated['import_price'],
+                 "description"=>$validated['description'] ?? null,
                 // 'price' => $validated['price'] ?? $product->price,
                 // 'sale' => $validated['sale'] ?? $product->sale,
                 'updated_by' => $request->user_id,
@@ -424,8 +425,8 @@ class PartnerProductController extends Controller
                 'category_id'                 => 'required|integer|exists:categories,id',
                 // 'sku'                      => 'required|string|unique:products,sku',
                 'import_price'                => 'required|numeric|min:0',
-                'price'                       => 'required|numeric|min:0',
-                'sale'                        => 'nullable|numeric|min:0',
+                // 'price'                       => 'required|numeric|min:0',
+                // 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
                 'attributes'                  => 'required|array',
@@ -507,6 +508,7 @@ class PartnerProductController extends Controller
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
+                "description"=>$validatedData['description']??null,
                 "price"=>0,
                 "import_price" => $validatedData['import_price'], 
                 "web_id" => $request->web_id,

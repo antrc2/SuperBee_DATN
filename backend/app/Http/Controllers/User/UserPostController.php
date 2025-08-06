@@ -16,19 +16,19 @@ use League\CommonMark\MarkdownConverter;
 
 class UserPostController extends Controller
 {
-    public function index()
+   public function index(Request $request)
     {
         try {
-            $post = Post::with("category", "author")->paginate(20);
+            // Hàm này giờ chỉ lấy tất cả bài viết, không lọc nữa
+            $posts = Post::query()
+                ->with("category", "author")
+                ->orderBy('created_at', 'desc')
+                ->paginate(20);
+
             return response()->json([
                 "message" => "Lấy danh sách bài viết thành công",
                 "status" => true,
-                "data" => $post
-            ]);
-            return response()->json([
-                "message" => "Lấy danh sách bài viết thành công",
-                "status" => true,
-                "data" => $post
+                "data" => $posts
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -36,7 +36,31 @@ class UserPostController extends Controller
                 "status" => false
             ], 500);
         }
+    }public function getByCategory(Request $request, $slug)
+    {
+        try {
+            $query = Post::query()
+                ->with("category", "author")
+                ->orderBy('created_at', 'desc')
+                ->whereHas('category', function ($q) use ($slug) {
+                    $q->where('slug', $slug);
+                });
+
+            $posts = $query->paginate(20);
+
+            return response()->json([
+                "message" => "Lấy bài viết theo danh mục '" . $slug . "' thành công",
+                "status" => true,
+                "data" => $posts
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                "message" => "Lỗi khi lấy bài viết theo danh mục: " . $e->getMessage(),
+                "status" => false
+            ], 500);
+        }
     }
+
     public function show($slug)
     {
         try {

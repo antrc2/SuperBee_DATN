@@ -1,5 +1,6 @@
 import React from "react";
-
+import WithdrawPage from "../pages/Clients/Profile/WithdrawPage";
+import DisputeHistoryPage from "../pages/Clients/Profile/DisputeHistory";
 
 // Thay đổi các import trực tiếp thành React.lazy
 const Home = React.lazy(() => import("@pages/Clients/Home/Home"));
@@ -50,12 +51,9 @@ const ResetPassword = React.lazy(() =>
 const UnauthorizedPage = React.lazy(() =>
   import("../pages/Error/UnauthorizedPage")
 );
-const News = React.lazy(() =>
-  import("../pages/Clients/Post/News"));
+const News = React.lazy(() => import("../pages/Clients/Post/News"));
 
-const NewDetail = React.lazy(() =>
-  import("../pages/Clients/Post/NewDetail"));
-
+const NewDetail = React.lazy(() => import("../pages/Clients/Post/NewDetail"));
 
 const SearchPage = React.lazy(() =>
   import("../pages/Clients/SearchPage/SearchPage ")
@@ -63,7 +61,9 @@ const SearchPage = React.lazy(() =>
 const NotificationPage = React.lazy(() =>
   import("../pages/Clients/Notification/NotificationPage")
 );
-const AffiliateHistory = React.lazy(() => import("@pages/Clients/Profile/AffiliateHistory"));
+const AffiliateHistory = React.lazy(() =>
+  import("@pages/Clients/Profile/AffiliateHistory")
+);
 
 export const clientModules = [
   {
@@ -147,12 +147,17 @@ export const clientModules = [
     requiresAuth: true, // Hoặc false tùy vào yêu cầu của bạn
   },
   {
-    path: "/news",
+    path: "/tin-tuc",
     view: News,
     requiresAuth: false,
   },
   {
-    path: "/news/:slug",
+    path: "/tin-tuc/:categorySlug",
+    view: News,
+    requiresAuth: false,
+  },
+  {
+    path: "/tin-tuc/:categorySlug/:slug",
     view: NewDetail,
     requiresAuth: false,
   },
@@ -196,6 +201,16 @@ export const profileModule = [
   {
     path: "/info/affiliate-history",
     view: AffiliateHistory,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/withdraw",
+    view: WithdrawPage,
+    requiresAuth: true,
+  },
+  {
+    path: "/info/disputes",
+    view: DisputeHistoryPage,
     requiresAuth: true,
   },
 ];

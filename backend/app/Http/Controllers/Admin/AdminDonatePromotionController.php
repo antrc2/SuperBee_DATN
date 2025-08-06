@@ -16,7 +16,7 @@ class AdminDonatePromotionController extends Controller
     {
         DonatePromotion::where('end_date', '<', now())
             ->where('status', 1)
-            ->update(['status' => 0]);
+            ->update(['status' => 2]);
     }
     public function index(Request $request)
     {
@@ -105,8 +105,8 @@ class AdminDonatePromotionController extends Controller
                 'end_date'         => 'required|date|after:start_date',
                 'usage_limit'      => 'nullable|integer',
                 'per_user_limit'   => 'nullable|integer',
-                'total_used'       => 'nullable|integer',
-                'status'           => 'nullable|string',
+           
+                'status'           => 'nullable',
             ];
 
             $messages = [
@@ -127,10 +127,6 @@ class AdminDonatePromotionController extends Controller
                 'per_user_limit.integer'  => 'Giới hạn mỗi người dùng phải là số nguyên.',
                 'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
 
-                'total_used.integer'      => 'Tổng số đã sử dụng phải là số nguyên.',
-                'total_used.min'          => 'Tổng số đã sử dụng phải ≥ 0.',
-
-                'status.string'           => 'Trạng thái phải là chuỗi ký tự.',
             ];
 
 
@@ -152,12 +148,11 @@ class AdminDonatePromotionController extends Controller
                 'end_date'    => $validatedData['end_date'],
                 'usage_limit' => $validatedData['usage_limit'],
                 "per_user_limit" => $validatedData['per_user_limit'],
-                "total_used" => $validatedData['total_used'],
                 'created_by' => $request->user_id,
                 "updated_by" => $request->user_id,
                 "status" => $validatedData['status']
             ]);
-            $this->sendNotification(1,"Khuyến mãi {$request->amount}% khi nạp số dư từ {$request->start_date} đến {$request->end_date}");
+            $this->sendNotification(1, "Khuyến mãi {$request->amount}% khi nạp số dư từ {$request->start_date} đến {$request->end_date}");
             return response()->json([
                 "status" => True,
                 "message" => "Tạo khuyến mãi nạp thẻ thành công",
@@ -207,7 +202,8 @@ class AdminDonatePromotionController extends Controller
             ], 500);
         }
     }
-    public function undo(String $id)
+    public function undo(Request $request, String $id)
+    // Thêm tí message khi hết hạn
     {
         try {
             if (DonatePromotion::where('id', $id)->first() == NULL) {
@@ -215,19 +211,31 @@ class AdminDonatePromotionController extends Controller
                     'status' => False,
                     'message' => "Không tìm thấy khuyến mãi"
                 ], 404);
-            } else {
-                DonatePromotion::where("id", $id)->update(['status' => 1]);
+            } 
+
+            if (DonatePromotion::where('id',$id)->first()->end_date < now()){
+                return response()->json([
+                    "status"=>False,
+                    'message'=>"Khuyến mãi dã hết hạn"
+                ],400);
             }
 
+            if (DonatePromotion::where('web_id', $request->web_id)->where("status", 1)->first() != NULL) { // Có tìm thấy
+                return response()->json([
+                    "status" => False,
+                    "message" => "Không thể khôi phục, vì đã có khuyến mãi khác đang hoạt động"
+                ], 400);
+            }
+            DonatePromotion::where("id", $id)->update(['status' => 1]);
             return response()->json([
                 'status' => True,
-                'message' => "Khôi phục thành công"
+                'message' => "Khôi phục thành công",
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => False,
                 'message' => "Khôi phục thất bại"
-            ]);
+            ],500);
         }
     }
 }

@@ -10,10 +10,11 @@ use App\Models\Promotion;
 use App\Models\User;
 use App\Models\Web;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
 
 class AdminDiscountCodeController extends Controller
 {
@@ -21,24 +22,47 @@ class AdminDiscountCodeController extends Controller
     public function index(Request $request)
     {
         try {
-            // $query = DiscountCode::orderBy('created_at', 'desc');
-            $codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
-            if ($codes->count() == 0) {
-                return response()->json([
-                    'message' => 'Không có mã giảm giá nào',
-                    'status' => true,
-                    'data' => []
-                ]);
-            }
+            // Validate request parameters
+            $request->validate([
+                'sort_by' => 'sometimes|in:code,discount_value,end_date,created_at',
+                'sort_direction' => 'sometimes|in:asc,desc',
+                'status' => 'sometimes|in:0,1',
+                'search' => 'sometimes|string|max:50',
+                'page' => 'sometimes|integer|min:1',
+            ]);
+
+            // Start building the query from Promotion model
+            $query = Promotion::query();
+
+            // Handle search by promotion code
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('code', 'like', '%' . $request->search . '%');
+            });
+
+            // Handle status filtering
+            $query->when($request->filled('status'), function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+
+            // Handle sorting
+            $sortBy = $request->input('sort_by', 'created_at');
+            $sortDirection = $request->input('sort_direction', 'desc');
+            $query->orderBy($sortBy, $sortDirection);
+
+            // Paginate the results
+            $promotions = $query->paginate(15)->withQueryString();
+
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
                 'status' => true,
-                'data' => $codes
+                'data' => $promotions,
             ]);
         } catch (\Exception $e) {
+            Log::error('Error fetching promotions: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Đã có lỗi xảy ra.',
+                'message' => 'Đã có lỗi xảy ra ở phía máy chủ.',
                 'status' => false,
+                'error' => 'Could not fetch promotions.',
             ], 500);
         }
     }
@@ -70,13 +94,14 @@ class AdminDiscountCodeController extends Controller
         }
     }
     public function store(Request $request)
+// Thiếu validate discount amount
     {
         try {
             // 1. Validate input
             $rules = [
                 'code'                  => 'required|string|unique:promotions,code',
                 'description'           => 'nullable|string|max:255',
-                'discount_value'        => 'required|integer|min:0',
+                'discount_value'        => 'required|integer|min:0|max:99',
                 'min_discount_amount'   => 'nullable|integer|min:0',
                 'max_discount_amount'   => 'nullable|integer|min:0',
                 'start_date'            => 'required|date',
@@ -84,6 +109,7 @@ class AdminDiscountCodeController extends Controller
                 'usage_limit'           => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'        => 'nullable|integer|min:-1|not_in:0',
                 'target_user_id'        => 'required|integer',
+                'status'=>'nullable|integer'
             ];
 
             $messages = [
@@ -97,6 +123,7 @@ class AdminDiscountCodeController extends Controller
                 'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
                 'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
                 'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 99%.",
 
                 'min_discount_amount.integer'   => 'Số tiền giảm giá tối thiểu phải là số nguyên.',
                 'min_discount_amount.min'       => 'Số tiền giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
@@ -158,15 +185,17 @@ class AdminDiscountCodeController extends Controller
             $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
+            $validated['status'] = $request->status;
+            $validated['code'] = strtoupper($request->code);
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();
             $code = Promotion::create($validated);
             DB::commit();
             if ($request->target_user_id == -1) {
-                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
             } else {
-                $this->sendNotification(1,"Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}",null,$request->user_id);
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->user_id);
             }
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
@@ -202,9 +231,22 @@ class AdminDiscountCodeController extends Controller
                     'status' => false
                 ], 404);
             }
+            if (Carbon::parse($code->end_date)->isPast()) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã hết hạn và không thể chỉnh sửa.',
+                    'status' => false
+                ], 400); // 400 Bad Request
+            }
+            $luotsudung = $code->total_used;
+            if ($luotsudung > 0) {
+                return response()->json([
+                    'message' => 'Mã khuyến mãi đã được sử dụng ',
+                    'status' => false
+                ], 400);
+            }
 
             $rules = [
-                'code'                 => 'required|string|unique:promotions,code,' . $id,
+                // 'code'                 => 'required|string|unique:promotions,code,' . $id,
                 'description'          => 'nullable|string|max:255',
                 'usage_limit'          => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'       => 'nullable|integer|min:-1|not_in:0',
@@ -218,9 +260,9 @@ class AdminDiscountCodeController extends Controller
             ];
 
             $messages = [
-                'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
-                'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
-                'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
+                // 'code.required'                 => 'Vui lòng nhập mã khuyến mãi.',
+                // 'code.string'                   => 'Mã khuyến mãi phải là chuỗi ký tự.',
+                // 'code.unique'                   => 'Mã khuyến mãi này đã tồn tại.',
 
                 'description.string'            => 'Mô tả phải là chuỗi ký tự.',
                 'description.max'               => 'Mô tả không được vượt quá 255 ký tự.',
@@ -271,7 +313,7 @@ class AdminDiscountCodeController extends Controller
 
             $validated = $validator->validated();
 
-            $validated['user_id'] = $request->per_user_limit;
+            $validated['user_id'] = $request->target_user_id;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
 

@@ -50,7 +50,7 @@ class UserOrderController extends Controller
     {
         try {
             $user_id = $request->user_id;
-            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images'])->where('user_id', $user_id)->where('id', $id)->first();
+            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images','items.dispute'])->where('user_id', $user_id)->where('id', $id)->first();
             return response()->json([
                 "status" => True,
                 "message" => "Lấy đơn hàng thành công",
@@ -61,7 +61,8 @@ class UserOrderController extends Controller
             return response()->json([
                 "status" => False,
                 "message" => "Đã xảy ra lỗi",
-                "data" => []
+                "data" => [],
+                'e'=>$th->getMessage()
             ], 500);
         }
     }
@@ -622,15 +623,25 @@ class UserOrderController extends Controller
                     // }
 
                     $affiliate = Affiliate::where('user_id', $user_id)->first();
-                    // $tax = env("TAX");
-                    // $total_price = $total_price + $total_price * $tax / 100;
+                    $tax = env("TAX");
+                    $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
-                    $wallet->balance -= $total_price;
+                    if ($wallet->promotion_balance >= $total_price){
+                        $wallet->promotion_balance -= $total_price;
+                    } else {
+                        $wallet->promotion_balance = 0;
+                        $wallet->balance -= $total_price - $wallet->promotion_balance;
+                    }
                     $wallet->save();
 
+                    
+
+                    // $wallet->balance -= $total_price;
+                    // $wallet->save();
+
                     if ($promotion_code !== null) {
-                        $promotion = Promotion::where("code", $promotion_code)->get();
+                        $promotion = Promotion::where("code", $promotion_code)->first();
                         $promotion->total_used += 1;
                         $promotion->save();
                     }
@@ -708,6 +719,8 @@ class UserOrderController extends Controller
                     //         "status"=>1
                     //     ]);
                     // }
+                    $wallet_transaction->related_id = $order->id;
+                    $wallet_transaction->save();
                     DB::commit();
                     return response()->json([
                         "status" => True,

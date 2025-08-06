@@ -59,6 +59,7 @@ return new class extends Migration
             $table->json('header_settings')->nullable();
             $table->json('footer_settings')->nullable();
             $table->boolean('auto_post')->default(false)->comment('0: Tắt, 1: Bật');
+            $table->boolean('auto_transaction')->default(false)->comment('0: Tắt, 1: Bật');
             $table->unsignedInteger('auto_post_interval')->default(90)->comment('Khoảng thời gian đăng bài tự động (phút)');
             $table->timestamps();
         });
@@ -139,18 +140,20 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id'); // Ai đánh giá
             $table->unsignedBigInteger('web_id'); // Đánh giá web nào
             $table->integer('star'); // Số sao (1-5), không null
+            $table->text('comment')->nullable(); // Đổi tên ở đây
             $table->timestamps();
         });
 
         // Bảng product_reports (Khiếu nại sản phẩm)
-        Schema::create('product_reports', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id'); // Ai khiếu nại
-            $table->unsignedBigInteger('product_id'); // Khiếu nại sản phẩm nào
-            $table->text('reason'); // Lý do không null
-            $table->integer('status')->default(0); // Mặc định chờ xử lý (0: pending, 1: resolved, 2: rejected)
-            $table->timestamps();
-        });
+        // Schema::create('product_reports', function (Blueprint $table) {
+        //     $table->id();
+        //     $table->unsignedBigInteger('user_id'); // Ai khiếu nại
+        //     $table->unsignedBigInteger('product_id'); // Khiếu nại sản phẩm nào
+        //     $table->text('reason'); // Lý do không null
+        //     $table->integer('status')->default(0); // Mặc định chờ xử lý (0: pending, 1: resolved, 2: rejected)
+        //     $table->timestamps();
+        // });
+
 
         // Bảng carts (Giỏ hàng)
         Schema::create('carts', function (Blueprint $table) {
@@ -211,6 +214,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->unique(); // Mỗi user có 1 ví duy nhất
             $table->decimal('balance', 15, 0)->default(0.00); // Số dư mặc định 0
             $table->string('currency', 10)->default('VND'); // Đơn vị tiền tệ
+            $table->decimal('promotion_balance', 15, 0)->default(0.00);
             $table->timestamps();
         });
 
@@ -503,6 +507,19 @@ return new class extends Migration
             $table->string('user_agent', 255)->nullable(); // Thông tin user agent
             $table->timestamps(); // Thêm timestamps để quản lý tốt hơn
         });
+        Schema::create('disputes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            // Liên kết trực tiếp với order_items.id
+            $table->foreignId('order_item_id')->constrained()->onDelete('cascade')->unique(); // Mỗi item chỉ được khiếu nại 1 lần
+
+            $table->string('dispute_type'); // 'incorrect_login', 'account_banned', ...
+            $table->text('description');
+            $table->json('attachments')->nullable(); // Lưu array các đường dẫn file
+            $table->tinyInteger('status')->default(0); // 0: Pending, 1: Processing, 2: Resolved, 3: Rejected
+            $table->text('resolution')->nullable(); // Ghi chú của Admin
+            $table->timestamps();
+        });
     }
 
     public function down(): void
@@ -538,7 +555,7 @@ return new class extends Migration
             $table->dropColumn('business_settings_id');
         });
         // Schema::dropIfExists('general_complaints'); // Bảng mới
-        Schema::dropIfExists('product_reports');
+        Schema::dropIfExists('disputes');
         Schema::dropIfExists('reviews');
         Schema::dropIfExists('product_images');
         Schema::dropIfExists('product_credentials');

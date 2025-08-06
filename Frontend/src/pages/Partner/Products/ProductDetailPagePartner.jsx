@@ -6,7 +6,9 @@ import api from "../../../utils/http";
 // Component con để hiển thị một mục thông tin
 const DetailItem = ({ label, value, className = "" }) => (
   <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-    <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">{label}</dt>
+    <dt className="text-sm font-medium text-gray-500 dark:text-gray-300">
+      {label}
+    </dt>
     <dd
       className={`mt-1 text-sm text-gray-900 dark:text-gray-100 sm:mt-0 sm:col-span-2 ${className}`}
     >
@@ -78,7 +80,7 @@ export default function ProductDetailPagePartner() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-8">
+    <div className="p-4 mx-auto max-w-(--breakpoint-2xl) md:p-6">
       <div className="bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-800 p-6 transition">
         <div className="flex justify-between items-center mb-6">
           <Link
@@ -107,6 +109,10 @@ export default function ProductDetailPagePartner() {
               value={`${product.import_price.toLocaleString()}đ`}
             />
             <DetailItem
+              label="Mô tả"
+              value={product.description || "Không có mô tả"}
+            />
+            <DetailItem
               label="Giá khuyến mãi"
               value={
                 product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"
@@ -120,26 +126,33 @@ export default function ProductDetailPagePartner() {
                 switch (product.status) {
                   case 1:
                     label = "Đang bán";
-                    style = "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+                    style =
+                      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
                     break;
                   case 2:
                     label = "Chờ kiểm duyệt";
-                    style = "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+                    style =
+                      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
                     break;
                   case 3:
                     label = "Đã hủy bán";
-                    style = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+                    style =
+                      "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
                     break;
                   case 4:
                     label = "Bán thành công";
-                    style = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+                    style =
+                      "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
                     break;
                   default:
                     label = "Không xác định";
-                    style = "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+                    style =
+                      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
                 }
                 return (
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${style}`}>
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-semibold shadow-sm ${style}`}
+                  >
                     {label}
                   </span>
                 );
@@ -165,7 +178,9 @@ export default function ProductDetailPagePartner() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Không có thông tin đăng nhập.</p>
+            <p className="text-sm text-gray-500">
+              Không có thông tin đăng nhập.
+            </p>
           )}
         </div>
 
@@ -195,9 +210,14 @@ export default function ProductDetailPagePartner() {
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
               {product.images.map((image) => (
-                <div key={image.id} className="border rounded-xl overflow-hidden border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow">
+                <div
+                  key={image.id}
+                  className="border rounded-xl overflow-hidden border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow"
+                >
                   <img
-                    src={`${import.meta.env.VITE_BACKEND_IMG}${image.image_url}`}
+                    src={`${import.meta.env.VITE_BACKEND_IMG}${
+                      image.image_url
+                    }`}
                     alt={image.alt_text || `Ảnh sản phẩm ${product.sku}`}
                     className="w-full h-40 object-cover rounded-lg"
                   />

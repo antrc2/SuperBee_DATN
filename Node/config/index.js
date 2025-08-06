@@ -10,7 +10,7 @@ const config = {
     // path: process.env.REDIS_PATH || "redis.sock"
   },
   // redis: {
-    // path: process.env.REDIS_PATH || "redis.sock"
+  //   path: process.env.REDIS_PATH || "redis.sock"
   // },
   notificationChannel: "global_notifications_channel",
 };

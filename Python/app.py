@@ -1,27 +1,91 @@
-from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi import FastAPI, UploadFile, File, Form, Request, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
-from io import BytesIO
 from threading import Thread
-from controller import S3Controller
+from controller.S3Controller import S3Controller
 from cronjob import queue_money, event
+from controller.TransactionController import getListBank
+from controller.AssistantController import chat
+from cronjob.withdraw import withdraw
+import os
+# from controller.NewsAgent import generate_and_post_article
+
+ 
+from dotenv import load_dotenv
+load_dotenv()
+
+username = os.getenv("MBBANK_USERNAME")
+password = os.getenv("MBBANK_PASSWORD")
 app = FastAPI()
 s3_client = S3Controller()
-from controller.ChatAssistance import router as chat_router
+
+
+
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
+    allow_origins=["*"],  # hoặc ["*"] nếu muốn cho mọi nguồn truy cập
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(chat_router, prefix="/chat", tags=["Chat"])
+
+@app.post("/assistant/chat")
+async def doibuonjqk(request: Request):
+    data = await request.json()
+    if 'access_token' in data:
+        access_token = data['access_token']
+    else:
+        access_token = None
+    # data['access_token']
+    return StreamingResponse(
+        chat(data['messages'],access_token),
+        media_type="text/event-stream",
+        headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive',
+                'Access-Control-Allow-Origin': '*',
+                'X-Accel-Buffering': 'no'
+            }
+    )
+
+
+
+@app.get('/transaction/bank_list')
+async def getBankList():
+    return {
+        "status": True,
+        "message": "Lấy danh sách ngân hàng thành công",
+        "data": getListBank()
+    }
+
+
+# @app.get('/transaction/bulk_payment')
+# async def get_bulk_payment():
+#     transaction = Transaction(username=username,password=password)
+#     bulks = transaction.getBulkPaymentStatus()
+#     return {
+#         "status": True,
+#         'message': "Lấy danh sách chuyển tiền theo lô thành công",
+#         'data': bulks
+#     }
+
+# @app.get('/transaction/bulk_payment_detail/{id}')
+# async def get_bulk_payment_detail(id: str):
+#     transaction = Transaction(username=username,password=password)
+#     bulk_detail = transaction.getBulkPaymentDetail(id) 
+#     return {
+#         'status': True,
+#         'message': "Xem chi tiết chuyển tiền theo lô thành công",
+#         "data": bulk_detail
+#     }
+
 
 @app.post("/upload_file")
 async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
-    print(thread)
     object_name = f"uploads/{folder}/"
 
     # # Đọc nội dung file vào bộ nhớ
@@ -50,9 +114,7 @@ async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), t
     #     })
         # print(file_contents)
         # print(type(BytesIO(await file.read())))
-    print(files)
     response = await s3_client.uploads(files,object_name,thread)
-    print(response)
     return response
     # return "Xong"
 
@@ -74,12 +136,25 @@ async def deletes(request: Request):
 
 @app.on_event("startup")
 def start_background_thread():
+    Thread(target=withdraw,args=(),daemon=True).start()
     Thread(target=queue_money, args=(), daemon=True).start()
+    
 
 @app.on_event("shutdown")
 def stop_background_thread():
     print("Shutting down, stopping background thread...")
     event.set()
+
+# @app.post("/agent/create-post", tags=["News Agent"])
+# def create_facebook_post(background_tasks: BackgroundTasks):
+#     background_tasks.add_task(generate_and_post_article)
+    
+#     return {
+#         "status": True,
+#         "message": "Đã nhận yêu cầu. Agent đang bắt đầu quá trình tạo và đăng bài trong nền."
+#     }
+
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=5000)

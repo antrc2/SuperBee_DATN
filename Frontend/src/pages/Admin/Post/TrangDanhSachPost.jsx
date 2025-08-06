@@ -1,7 +1,8 @@
 // @pages/Admin/Posts/TrangDanhSachBaiViet.jsx
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import Layout from "@components/Admin/Layout/Layout.jsx";
+// Sửa lại đường dẫn nếu cần thiết, giả sử cấu trúc là components/Admin/Layout/Layout.jsx
+import Layout from "../../../components/Admin/Layout/Layout.jsx";
 import PostsListPage from "./ListPostPage";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import api from "../../../utils/http";
@@ -33,7 +34,6 @@ const TrangDanhSachBaiViet = () => {
   const [searchTermLocal, setSearchTermLocal] = useState("");
   const [isAutoPostEnabled, setIsAutoPostEnabled] = useState(false);
 
-
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,29 +46,31 @@ const TrangDanhSachBaiViet = () => {
         currentFilters[config.name] = params.get(config.name);
       }
     });
+    // Thêm các filter khác nếu có từ URL
+    params.forEach((value, key) => {
+      if (!currentFilters.hasOwnProperty(key)) {
+        currentFilters[key] = value;
+      }
+    });
     return currentFilters;
   }, [location.search]);
 
-  // Gọi API để lấy danh sách bài viết
   const getPosts = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams(location.search);
-    
       const response = await api.get("/admin/post", { params });
-     
-      const postsData = Array.isArray(response.data?.data?.data) ? response.data.data.data : [];
+
+      const postsData = Array.isArray(response.data?.data?.data)
+        ? response.data.data.data
+        : [];
       const meta = response.data?.data ? { ...response.data.data } : {};
-      delete meta.data; // Loại bỏ trường data khỏi meta
+      delete meta.data;
+
       setPosts(postsData);
       setPaginationMeta(meta);
-      console.log("Posts state:", postsData); // Debug
     } catch (error) {
-      console.error("Lỗi khi tải dữ liệu:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      }); // Debug chi tiết
+      console.error("Lỗi khi tải dữ liệu:", error);
       pop("Lấy danh sách bài viết thất bại", "e");
       setPosts([]);
       setPaginationMeta(null);
@@ -77,47 +79,62 @@ const TrangDanhSachBaiViet = () => {
     }
   }, [location.search, pop]);
 
-  // Gọi API khi component mount hoặc URL thay đổi
+  const fetchAutoPostStatus = useCallback(async () => {
+    try {
+      const response = await api.get("/admin/post/business");
+      const setting = response.data?.data;
+      setIsAutoPostEnabled(setting?.auto_post === 1);
+    } catch (error) {
+      console.error("Lỗi khi lấy trạng thái auto_post:", error);
+    }
+  }, []);
+
   useEffect(() => {
     getPosts();
-  }, [getPosts]);
+    fetchAutoPostStatus();
+  }, [getPosts, fetchAutoPostStatus]);
 
-  // Hàm áp dụng bộ lọc
   const handleApplyFilters = (newFilters) => {
+    const currentParams = new URLSearchParams(location.search);
+    const page = currentParams.get("page");
+
     const params = new URLSearchParams();
+    if (page) {
+      params.set("page", page);
+    }
+
     for (const key in newFilters) {
-      if (newFilters[key]) params.set(key, newFilters[key]);
+      if (newFilters[key]) {
+        params.set(key, newFilters[key]);
+      }
     }
     navigate({ search: params.toString() });
   };
 
-  // Hàm reset bộ lọc
   const handleResetFilters = () => {
     navigate({ search: "" });
     setSearchTermLocal("");
   };
 
-  // Hàm xử lý tìm kiếm cục bộ
+  const handlePageChange = (page) => {
+    const params = new URLSearchParams(location.search);
+    params.set("page", page);
+    navigate({ search: params.toString() });
+  };
+
   const displayedPosts = useMemo(() => {
+    if (!searchTermLocal) return posts || [];
 
-    if (!searchTermLocal && !filters.status) return posts || [];
-    let filteredPosts = Array.isArray(posts) ? posts : [];
-    if (filters.status) {
-      filteredPosts = filteredPosts.filter((post) => post.status.toString() === filters.status);
-    }
-    if (searchTermLocal) {
-      const lowercasedTerm = searchTermLocal.toLowerCase();
-      filteredPosts = filteredPosts.filter((post) =>
-        LOCAL_SEARCHABLE_KEYS.some((key) =>
-          post[key]?.toString().toLowerCase().includes(lowercasedTerm)
-        )
-      );
-    }
-    return filteredPosts;
-  }, [posts, searchTermLocal, filters]);
+    const lowercasedTerm = searchTermLocal.toLowerCase();
+    return posts.filter((post) =>
+      LOCAL_SEARCHABLE_KEYS.some((key) =>
+        post[key]?.toString().toLowerCase().includes(lowercasedTerm)
+      )
+    );
+  }, [posts, searchTermLocal]);
 
-  // Các hàm hành động
   const handleAddPost = () => navigate("/admin/post/new");
+
   const handleAction = async (actionType, id, confirmMessage) => {
     const ok = await conFim(confirmMessage);
     if (ok) {
@@ -125,57 +142,40 @@ const TrangDanhSachBaiViet = () => {
         const url = `/admin/post/${id}/${actionType}`;
         await api.patch(url);
         getPosts();
-        pop(`${actionType === "publish" ? "Xuất bản" : "Hủy xuất bản"} thành công`, "s");
+        pop(
+          `${actionType === "publish" ? "Xuất bản" : "Lưu trữ"} thành công`,
+          "s"
+        );
       } catch (err) {
-        pop(`Lỗi khi ${actionType === "publish" ? "xuất bản" : "hủy xuất bản"} bài viết`, "e");
+        pop(
+          `Lỗi khi ${
+            actionType === "publish" ? "xuất bản" : "lưu trữ"
+          } bài viết`,
+          "e"
+        );
         console.error(`Lỗi khi thực hiện hành động ${actionType}:`, err);
       }
     }
   };
-  const  AutoPost =async (confirmMessage) => {
-    try {
-      if (isAutoPostEnabled) {
-      const ok = await conFim("Bạn có chắc chắn muốn hủy tự động đăng bài không?");
-      if (!ok) return;
-      const response = await api.post("/admin/post/RefreshAuto");
-      if (response.data.status == true) {
-        // pop("Đã hủy tự động đăng bài thành công", "s");
-      } else {
-        pop("Không thể hủy tự động đăng bài", "e");
+
+  const toggleAutoPost = async () => {
+    const action = isAutoPostEnabled ? "hủy" : "bật";
+    const endpoint = isAutoPostEnabled
+      ? "/admin/post/RefreshAuto"
+      : "/admin/post/auto";
+
+    const ok = await conFim(`Bạn có chắc muốn ${action} tự động đăng bài?`);
+    if (ok) {
+      try {
+        await api.post(endpoint);
+        pop(`Đã ${action} tự động đăng bài thành công.`, "s");
+        fetchAutoPostStatus(); // Cập nhật lại trạng thái nút
+      } catch (error) {
+        pop(`Lỗi khi ${action} tự động đăng bài.`, "e");
+        console.error(`Lỗi khi ${action} tự động đăng bài:`, error);
       }
-    }else{
-
-      const ok = await conFim("Bạn có chắc chắn muốn bật tự động đăng bài không?");
-        if (!ok) return;
-        const response = await api.post("/admin/post/auto");
-        if (response.data.status == true) {
-          // pop("Đã bật tự động đăng bài thành công", "s");
-        } else {
-          pop("Không thể bật tự động đăng bài", "e");
-        }
-
     }
-    await fetchAutoPostStatus(); 
-    } catch (error) {
-      
-      pop("Lỗi khi bật tự động đăng bài", "e");
-      console.error("Lỗi khi bật tự động đăng bài:", error);
-    }
-  }
-  const fetchAutoPostStatus = async () => {
-  try {
-    const response = await api.get("/admin/post/business");
-    const setting = response.data?.data;
-    console.log("Auto Post Setting:", setting);
-    setIsAutoPostEnabled(setting?.auto_post === 1);
-  } catch (error) {
-    console.error("Lỗi khi lấy trạng thái auto_post:", error);
-  }
-};
- useEffect(() => {
-  fetchAutoPostStatus();
-}, []);
-
+  };
 
   if (loading) return <LoadingDomain />;
 
@@ -185,8 +185,10 @@ const TrangDanhSachBaiViet = () => {
       showBackButton={false}
       showAddButton={true}
       showAuToPost={true}
-      autoPostButtonLabel={isAutoPostEnabled ? "Hủy tự động đăng bài" : "Bật tự động đăng bài"}
-      onshow={AutoPost}
+      autoPostButtonLabel={
+        isAutoPostEnabled ? "Hủy tự động đăng" : "Bật tự động đăng"
+      }
+      onshow={toggleAutoPost}
       onAdd={handleAddPost}
       onLocalSearch={setSearchTermLocal}
       initialSearchTermLocal={searchTermLocal}
@@ -194,15 +196,24 @@ const TrangDanhSachBaiViet = () => {
       onResetFilters={handleResetFilters}
       initialFilters={filters}
       filterConfig={POST_FILTERS_CONFIG}
-      activeFilterCount={Object.keys(filters).length}
+      activeFilterCount={
+        Object.keys(filters).filter((k) => k !== "page").length
+      }
       paginationMeta={paginationMeta}
+      onPageChange={handlePageChange}
     >
       <PostsListPage
-        posts={displayedPosts || []}
+        posts={displayedPosts}
         handleKey={(id) =>
-          handleAction("publish", id, "Xuất bản bài viết này?")
+          handleAction("publish", id, "Bạn có chắc muốn xuất bản bài viết này?")
         }
-        handleLock={(id) => handleAction("unpublish", id, "Hủy xuất bản bài viết này?")}
+        handleLock={(id) =>
+          handleAction(
+            "unpublish",
+            id,
+            "Bạn có chắc muốn lưu trữ bài viết này?"
+          )
+        }
       />
     </Layout>
   );

@@ -9,7 +9,10 @@ use App\Models\Product;
 use App\Models\Wallet;
 use App\Models\Category;
 use App\Models\Message;
+use App\Models\Post;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -23,16 +26,40 @@ class HomeController extends Controller
         $banners = Banner::where('web_id', $request->web_id)->where('status', 1)->orderBy('id', 'asc')->get();
         $category = new UserCategoryController();
         $categories = $category->index()->getData();
-        $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
-            ->select('balance', 'user_id')->orderBy('balance', 'desc')->limit(5)->get();
+        // $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
 
+        //     // Tôi muốn cộng thêm dữ liệu ở cột promotion_balance vào cột balance
+        //     ->selectRaw('balance + promotion_balance as balance, user_id')
+        //     ->orderBy('balance', 'desc')->limit(5)->get();
+        $topWallets = DB::table('wallet_transactions')
+            ->select('wallet_id', DB::raw('SUM(amount) as total_amount'))
+            ->where('type', 'like', 'recharge_%')
+            ->groupBy('wallet_id')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+        $topNap = [];
+        foreach ($topWallets as $topWallet) {
+            $wallet = Wallet::where("id",$topWallet->wallet_id)->with("user")->first();
+            $topNap[] = [
+                "wallet_id"=>$topWallet->wallet_id,
+                "balance"=>$topWallet->total_amount,
+                "user_id"=>$wallet->user_id,
+                'user'=>[
+                    "id"=>$wallet->user->id,
+                    "username"=>$wallet->user->username
+                ]
+                ];
+        }
+        
+        // $topNap = [];
         // Lấy 8 sản phẩm nổi bật
         $featuredProducts = Product::with("images", "category", "gameAttributes")
-            ->where('status', 1)->whereNotNull('sale')->orderBy('price', 'desc')->limit(8)->get();
+            ->where('status', 1)->where('category_id','!=',1)->whereNotNull('sale')->orderBy('price', 'desc')->limit(8)->get();
 
         // Lấy 8 sản phẩm mới nhất
         $newestProducts = Product::with("images", "category", "gameAttributes")
-            ->where('status', 1)->latest()->limit(8)->get();
+            ->where('status', 1)->where('category_id','!=',1)->latest()->limit(8)->get();
 
         return response()->json([
             'status' => 200,
@@ -43,6 +70,7 @@ class HomeController extends Controller
                 'top_users' => $topNap,
                 'featured_products' => $featuredProducts,
                 'newest_products' => $newestProducts,
+                'topwallet'=>$topWallets
             ]
         ], 200);
     }
@@ -123,71 +151,126 @@ class HomeController extends Controller
     }
     // app/Http/Controllers/YourController.php
 
-public function messages(Request $request)
-{
-    try {
-        $userId = $request->user_id;
+    public function messages(Request $request)
+    {
+        try {
+            $userId = $request->user_id;
 
-        // Tối ưu eager loading: chỉ chọn các cột cần thiết từ bảng user
-        $chatRoom = ChatRoom::whereHas('participants', function ($query) use ($userId) {
-            $query->where('user_id', $userId)->where('role', 'customer');
-        })
-        ->with([
-            'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
-            },
-            // Chỉ lấy các trường id, username, avatar_url từ user của participant
-            'participants.user:id,username,avatar_url' 
-        ])
-        ->first();
+            // Tối ưu eager loading: chỉ chọn các cột cần thiết từ bảng user
+            $chatRoom = ChatRoom::whereHas('participants', function ($query) use ($userId) {
+                $query->where('user_id', $userId)->where('role', 'customer');
+            })
+                ->with([
+                    'messages' => function ($query) {
+                        $query->orderBy('created_at', 'asc');
+                    },
+                    // Chỉ lấy các trường id, username, avatar_url từ user của participant
+                    'participants.user:id,username,avatar_url'
+                ])
+                ->first();
 
-        if (!$chatRoom) {
+            if (!$chatRoom) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Không tìm thấy phòng chat.',
+                ], 200); // 200 OK vẫn hợp lý vì đây là trường hợp nghiệp vụ, không phải lỗi server
+            }
+
+            $agent = null;
+            $customer = null;
+            $customerParticipant = null;
+
+            foreach ($chatRoom->participants as $participant) {
+                if ($participant->role === 'agent' && $participant->user) {
+                    $agent = $participant->user;
+                }
+                if ($participant->role === 'customer' && $participant->user) {
+                    $customer = $participant->user;
+                    $customerParticipant = $participant; // Lưu lại thông tin participant của customer
+                }
+            }
+
+            // Tính số tin nhắn chưa đọc
+            $lastReadMessageId = $customerParticipant ? $customerParticipant->last_read_message_id : 0;
+            $unreadCount = $chatRoom->messages->where('id', '>', $lastReadMessageId)->count();
+
+
+            // Dữ liệu trả về đã gọn hơn
+            $responseData = [
+                'roomInfo' => $chatRoom, // roomInfo đã chứa messages và participants
+                'messages' => $chatRoom->messages, // Vẫn giữ lại để FE không cần đổi logic (res.data.data.messages)
+                'agentDetails' => $agent,
+                'customerDetails' => $customer,
+                'unreadCount' => $unreadCount, // Thêm số tin nhắn chưa đọc
+            ];
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Lấy thông tin chat thành công.',
+                'data' => $responseData
+            ]);
+        } catch (\Throwable $e) {
+            // Log lỗi để debug
             return response()->json([
                 'status' => false,
-                'message' => 'Không tìm thấy phòng chat.',
-            ], 200); // 200 OK vẫn hợp lý vì đây là trường hợp nghiệp vụ, không phải lỗi server
+                'message' => "Lỗi hệ thống khi lấy thông tin chat.",
+            ], 500);
         }
-
-        $agent = null;
-        $customer = null;
-        $customerParticipant = null;
-
-        foreach ($chatRoom->participants as $participant) {
-            if ($participant->role === 'agent' && $participant->user) {
-                $agent = $participant->user;
-            }
-            if ($participant->role === 'customer' && $participant->user) {
-                $customer = $participant->user;
-                $customerParticipant = $participant; // Lưu lại thông tin participant của customer
-            }
-        }
-        
-        // Tính số tin nhắn chưa đọc
-        $lastReadMessageId = $customerParticipant ? $customerParticipant->last_read_message_id : 0;
-        $unreadCount = $chatRoom->messages->where('id', '>', $lastReadMessageId)->count();
-
-
-        // Dữ liệu trả về đã gọn hơn
-        $responseData = [
-            'roomInfo' => $chatRoom, // roomInfo đã chứa messages và participants
-            'messages' => $chatRoom->messages, // Vẫn giữ lại để FE không cần đổi logic (res.data.data.messages)
-            'agentDetails' => $agent,
-            'customerDetails' => $customer,
-            'unreadCount' => $unreadCount, // Thêm số tin nhắn chưa đọc
-        ];
-
-        return response()->json([
-            'status' => true,
-            'message' => 'Lấy thông tin chat thành công.',
-            'data' => $responseData
-        ]);
-
-    } catch (\Throwable $e) {
-        // Log lỗi để debug
-        return response()->json([
-            'status' => false,
-            'message' => "Lỗi hệ thống khi lấy thông tin chat.",
-        ], 500);
     }
-}
+    public function post_sitemap()
+    {
+        try {
+            // 1. Lấy URL frontend và danh sách bài viết
+            $frontend = env('FRONTEND_URL', 'https://yourdomain.com');
+            $posts    = Post::all();
+
+            // 2. Khai báo XML + optional XSL stylesheet
+            $xml  = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+
+            // 3. Mở thẻ urlset với các namespace
+            $xml .= '<urlset'
+                . ' xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"'
+                . ' xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"'
+                . ' xmlns:news="http://www.google.com/schemas/sitemap-news/0.9"'
+                . ' xmlns:xhtml="http://www.w3.org/1999/xhtml">'
+                . "\n";
+
+            // 4. Loop từng bài và build <url>…</url>
+            foreach ($posts as $post) {
+                $link    = "{$frontend}/news/{$post->slug}";
+                $lastmod = $post->updated_at->toAtomString(); // ISO 8601 format
+                $img     = $post->image_thumbnail_url;
+
+                $xml .= "  <url>\n";
+                $xml .= "    <loc>{$link}</loc>\n";
+                $xml .= "    <lastmod>{$lastmod}</lastmod>\n";
+
+                if ($img) {
+                    $xml .= "    <image:image>\n";
+                    $xml .= "      <image:loc>{$img}</image:loc>\n";
+                    $xml .= "    </image:image>\n";
+                }
+
+                // Ví dụ alternate cho tiếng Việt
+                $xml .= "    <xhtml:link"
+                    . " rel=\"alternate\""
+                    . " hreflang=\"vi\""
+                    . " href=\"{$link}\""
+                    . " />\n";
+
+                $xml .= "  </url>\n";
+            }
+
+            // 5. Đóng thẻ urlset
+            $xml .= '</urlset>';
+
+            // 6. Trả về response XML
+            return response($xml, 200)
+                ->header('Content-Type', 'application/xml; charset=UTF-8');
+        } catch (\Throwable $th) {
+            // Tuỳ chỉnh: log lỗi, abort 500, hoặc trả về view lỗi riêng
+            // \Log::error('[Sitemap] ', ['err' => $th->getMessage()]);
+            return response('Server Error', 500);
+        }
+    }
 }

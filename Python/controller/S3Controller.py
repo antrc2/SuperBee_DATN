@@ -26,9 +26,10 @@ class S3Controller:
         ).client('s3')
         self.nsfw = NSFWController()
     async def detect_file(self,byte_file):
-        return self.nsfw.detect(byte_file)
+        output = self.nsfw.detect(byte_file)
+        return output
     def upload(self,file_content,file_name):
-        self.s3_client.upload_fileobj(file_content, self.aws_bucket, file_name)
+        print(self.s3_client.upload_fileobj(file_content, self.aws_bucket, file_name))
     def random_str(self,rand_len=8):
         alphabet = string.ascii_letters + string.digits
         rand_str = ''.join(random.choice(alphabet) for _ in range(rand_len))
@@ -110,7 +111,7 @@ class S3Controller:
         responses = []
         for file in files:
             responses.append( await self.add(file, folder,thread))
-        # print(responses)
+        print(responses)
         return responses
             # await self.detect_file(file)
         # return "Xong"
@@ -129,13 +130,13 @@ class S3Controller:
         #     )
         # print(response)
         # return response
-    def delete(self,path):
+    def deletez(self,path):
         self.s3_client.delete_object(Bucket=self.aws_bucket, Key=path)
     def delete(self,path):
         
-        Thread(target=self.delete,args=(path,)).start()
+        Thread(target=self.deletez,args=(path,)).start()
         return True
     def deletes(self,paths):
         for path in paths:
-            Thread(target=self.delete,args=(path,)).start()
+            Thread(target=self.deletez,args=(path,)).start()
         return True

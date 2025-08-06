@@ -1,9 +1,7 @@
 // components/Admin/Layout/Layout.jsx
-
 import React, { useState } from "react";
 import Pagination from "../../Pagination/Pagination";
 import FilterModal from "./FilterModal";
-// Thay đổi: import icon từ lucide-react
 import { Plus, Filter, Search, ChevronLeft } from "lucide-react";
 
 const Layout = ({
@@ -14,8 +12,6 @@ const Layout = ({
   showBrowse = false,
   onBack,
   onAdd,
-  onshow, // Giả sử bạn có hàm này để hiển thị sản phẩm
-  onApprove, // Giả sử bạn có hàm này để duyệt sản phẩm  
   onLocalSearch,
   initialSearchTermLocal,
   paginationMeta,
@@ -25,125 +21,104 @@ const Layout = ({
   activeFilterCount,
   initialFilters,
   filterConfig,
-  autoPostButtonLabel,
-  showfilter = true,
-  showAuToPost= false, // Giả sử bạn có tùy chọn này
 }) => {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   return (
-    <div className="flex h-screen flex-col bg-xl-100">
-      <div className="section flex-grow flex flex-col">
-        <div className="section p-6 flex-grow flex flex-col">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-4">
-              {showBackButton && (
-                <button
-                  onClick={onBack}
-                  className="flex items-center gap-2 px-4 py-2 bg-sm border border-xl-300 text-xl-700 rounded-md hover:bg-xl-50 transition-colors"
-                >
-                  {/* Thay đổi: Sử dụng icon <ChevronLeft /> */}
-                  <ChevronLeft size={18} />
-                  Quay lại
-                </button>
-              )}
-              <h2 className="text-2xl font-bold text-xl-800">{title}</h2>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="relative">
-                {/* Thay đổi: Sử dụng icon <Search /> */}
-                <Search
-                  size={18}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-sm"
-                />
+    <div className="flex-1 bg-gray-100 dark:bg-gray-900 transition-colors duration-200">
+      <main className="p-4 sm:p-6 lg:p-8 space-y-6">
+        {/* Header */}
+        <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {title}
+            </h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {showAddButton
+                ? "Thêm, xem, và quản lý các sản phẩm của bạn."
+                : "Xem thông tin chi tiết về sản phẩm."}
+            </p>
+          </div>
+          <div className="flex w-full sm:w-auto items-center gap-2">
+            {showBackButton && (
+              <button
+                onClick={onBack}
+                className="flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-4 py-2 transition-colors"
+              >
+                <ChevronLeft size={16} />
+                <span>Quay lại</span>
+              </button>
+            )}
+            {showAddButton && (
+              <button
+                onClick={onAdd}
+                className="flex w-full sm:w-auto items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+              >
+                <Plus size={18} />
+                <span className="hidden sm:inline">Thêm mới</span>
+              </button>
+            )}
+          </div>
+        </header>
+
+        {/* Filter & Search Bar */}
+        {onLocalSearch && (
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm border dark:border-gray-700">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-grow">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                  <Search className="text-gray-400" size={18} />
+                </div>
                 <input
                   type="text"
-                  placeholder="Tìm kiếm nhanh (FE)..."
+                  placeholder="Tìm kiếm theo SKU..."
                   value={initialSearchTermLocal}
                   onChange={(e) => onLocalSearch(e.target.value)}
-                  className="pl-10 pr-4 py-2 w-64 border border-themed/50 text-sm-700 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 transition"
+                  className="w-full pl-10 p-2 text-sm text-gray-900 dark:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
                 />
               </div>
-              {showfilter && (
-
-              <div className="relative">
+              {onApplyFilters && (
                 <button
                   onClick={() => setIsFilterModalOpen(true)}
-                  className="relative flex items-center gap-2 px-4 py-2 bg-sm border border-xl-300 text-xl-700 rounded-md hover:bg-xl-50 transition-colors"
+                  className="relative flex-shrink-0 flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-4 py-2 transition-colors"
                 >
-                  {/* Thay đổi: Sử dụng icon <Filter /> */}
                   <Filter size={16} />
                   <span>Bộ lọc</span>
                   {activeFilterCount > 0 && (
-                    <span className="absolute -top-2 -right-2 flex items-center justify-center w-5 h-5 bg-indigo-600 text-sm text-xs rounded-full">
+                    <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center border-2 border-white dark:border-gray-800">
                       {activeFilterCount}
                     </span>
                   )}
                 </button>
+              )}
+            </div>
+            {isFilterModalOpen && (
+              <div className="mt-4">
+                <FilterModal
+                  isOpen={isFilterModalOpen}
+                  onClose={() => setIsFilterModalOpen(false)}
+                  onApplyFilters={onApplyFilters}
+                  onResetFilters={onResetFilters}
+                  initialFilters={initialFilters}
+                  filterConfig={filterConfig}
+                />
               </div>
-              )
-              }
-
-              {showAddButton && (
-              
-                <button
-                  onClick={onAdd}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {/* Thay đổi: Sử dụng icon <Plus /> */}
-                  <Plus size={18} />
-                  Thêm mới
-                </button>
-
-               
-              )}
-              {showAuToPost && (
-              
-                <button
-                  onClick={onshow}
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  {/* Thay đổi: Sử dụng icon <Plus /> */}
-                  <Plus size={18} />
-                  {autoPostButtonLabel || "Bật tự động đăng bài"}
-                </button>
-
-               
-              )}
-              {showBrowse && (
-                
-                
-                <button
-                  onClick={onApprove}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-whitey rounded-md hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Duyệt SP
-                </button>
-             
-              )}
-            </div>
+            )}
           </div>
-          {isFilterModalOpen && (
-            <FilterModal
-              isOpen={isFilterModalOpen}
-              onClose={() => setIsFilterModalOpen(false)}
-              onApplyFilters={onApplyFilters}
-              onResetFilters={onResetFilters}
-              initialFilters={initialFilters}
-              filterConfig={filterConfig}
-            />
-          )}
-          <div className="flex-grow bg-sm p-6 rounded-lg shadow-sm">
-            {children}
-          </div>
+        )}
 
-          {paginationMeta && paginationMeta.last_page > 1 && (
-            <div className="mt-6 flex justify-end">
-              <Pagination meta={paginationMeta} onPageChange={onPageChange} />
-            </div>
-          )}
+        {/* Main Content */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700 overflow-hidden">
+          {children}
         </div>
-      </div>
+
+        {/* Pagination */}
+        {paginationMeta && paginationMeta.last_page > 1 && (
+          <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg border dark:border-gray-700 py-3 px-4">
+            <Pagination meta={paginationMeta} onPageChange={onPageChange} />
+          </div>
+        )}
+      </main>
     </div>
   );
 };

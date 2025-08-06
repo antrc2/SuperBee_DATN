@@ -23,9 +23,22 @@ class ProductSeeder extends Seeder
         return $code;
     }
     public function run(): void
-    {
-        // Tạo danh mục cha và con
+    {   
+        DB::table('categories')->insertGetId([
+                'parent_id' => null,
+                'name' => 'Khác',
+                'slug' => 'khac',
+                'image_url' => 'https://picsum.photos/400/300?random='  . 12,
+                'status' => 1,
+                'created_by' => 1,
+                'updated_by' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
         $parent_categories = [];
+        // $parent_categories[] = 
+        // Tạo danh mục cha và con
+        
         for ($i = 1; $i <= 7; $i++) {
             $parent_categories[] = DB::table('categories')->insertGetId([
                 'parent_id' => null,
@@ -55,7 +68,7 @@ class ProductSeeder extends Seeder
         }
 
         // Tạo sản phẩm
-        $category_ids = DB::table('categories')->pluck('id')->toArray();
+        $category_ids = DB::table('categories')->where('id','!=',1)->pluck('id')->toArray();
         for ($i = 1; $i <= 30; $i++) {
             $product_id = DB::table('products')->insertGetId([
                 'category_id' => $category_ids[array_rand($category_ids)],
@@ -64,7 +77,7 @@ class ProductSeeder extends Seeder
                 'price' => rand(100000, 500000),
                 'sale' => rand(80000, 450000),
                 'status' => rand(0, 1),
-                'web_id' => rand(1, 2),
+                'web_id' => 1,
                 'created_by' => rand(1, 3),
                 'updated_by' => rand(1, 3),
                 'created_at' => now(),

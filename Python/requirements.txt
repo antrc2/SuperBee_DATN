@@ -4,7 +4,9 @@ boto3
 python-multipart
 python-dotenv
 requests
-tensorflow
+tf-nightly
 openai
 PyJWT
 Pillow
+mbbank-lib
+playwright

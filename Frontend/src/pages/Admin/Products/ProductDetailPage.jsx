@@ -3,17 +3,74 @@ import { useParams, Link } from "react-router-dom";
 import { LoaderCircle, ArrowLeft, Edit } from "lucide-react";
 import api from "../../../utils/http";
 
-// Component con để hiển thị một mục thông tin
-const DetailItem = ({ label, value, className = "" }) => (
-  <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-    <dt className="text-sm font-medium text-sm-500">{label}</dt>
-    <dd
-      className={`mt-1 text-sm text-sm-900 sm:mt-0 sm:col-span-2 ${className}`}
-    >
-      {value}
+// --- Helper Components for Clean UI ---
+
+// Card component for grouping information
+const InfoCard = ({ title, children }) => (
+  <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border dark:border-gray-700">
+    <div className="p-4 sm:p-6">
+      <h3 className="text-base font-semibold leading-6 text-gray-900 dark:text-gray-100">
+        {title}
+      </h3>
+      <div className="mt-4 border-t border-gray-200 dark:border-gray-700">
+        <dl className="divide-y divide-gray-200 dark:divide-gray-700">
+          {children}
+        </dl>
+      </div>
+    </div>
+  </div>
+);
+
+// Component to display a single detail item (label and value)
+const DetailItem = ({ label, children }) => (
+  <div className="py-3 sm:py-4 grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
+    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
+      {label}
+    </dt>
+    <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2 sm:mt-0">
+      {children}
     </dd>
   </div>
 );
+
+// Component for displaying status with colors
+const StatusBadge = ({ status }) => {
+  let label = "";
+  let style = "";
+
+  switch (status) {
+    case 1:
+      label = "Đang bán";
+      style =
+        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      break;
+    case 2:
+      label = "Chờ duyệt";
+      style =
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      break;
+    case 3:
+      label = "Đã hủy";
+      style = "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      break;
+    case 4:
+      label = "Bán thành công";
+      style = "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      break;
+    default:
+      label = "Bị từ chối";
+      style =
+        "bg-violet-100 text-violet-800 dark:bg-violet-900 dark:text-violet-300";
+  }
+
+  return (
+    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${style}`}>
+      {label}
+    </span>
+  );
+};
+
+// --- Main Page Component ---
 
 export default function ProductDetailPage() {
   const { id } = useParams();
@@ -28,7 +85,6 @@ export default function ProductDetailPage() {
         const response = await api.get(`/admin/products/${id}`);
         const productData = response.data.data;
         if (Array.isArray(productData) && productData.length > 0) {
-          // Lấy sản phẩm đầu tiên từ mảng data và chuẩn hóa game_attributes thành mảng nếu cần
           const productItem = productData[0];
           if (
             productItem.game_attributes &&
@@ -55,18 +111,18 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
-        <LoaderCircle className="animate-spin text-blue-500" size={48} />
+        <LoaderCircle className="animate-spin text-indigo-500" size={48} />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center text-red-600 bg-red-50 p-4 rounded-md">
-        <p>{error}</p>
+      <div className="m-8 text-center text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/20 p-6 rounded-lg">
+        <p className="font-semibold">{error}</p>
         <Link
           to="/admin/products"
-          className="mt-4 inline-block text-blue-600 hover:underline"
+          className="mt-4 inline-block text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"
         >
           Quay lại danh sách
         </Link>
@@ -79,171 +135,117 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <Link
-          to="/admin/products"
-          className="flex items-center gap-2 text-sm-600 hover:text-sm-900"
-        >
-          <ArrowLeft size={20} />
-          Quay lại danh sách
-        </Link>
-        {/* <Link
-          to={`/admin/products/${product.id}/edit`}
-          className="flex items-center gap-2 bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors"
-        >
-          <Edit size={18} />
-          Chỉnh sửa
-        </Link> */}
-      </div>
-
-      <h1 className="text-2xl font-bold text-sm-900 mb-4">
-        Chi tiết sản phẩm {product.sku}
-      </h1>
-
-      {/* Thông tin chung */}
-      <div className="border-t border-sm-200">
-        <dl>
-          <DetailItem label="SKU" value={product.sku} />
-          <DetailItem
-            label="Danh mục"
-            value={product.category?.name || "Chưa phân loại"}
-          />
-          <DetailItem
-            label="Giá bán"
-            value={`${product.price.toLocaleString()}đ`}
-          />
-          <DetailItem
-            label="Giá nhập"
-            value={`${product.import_price.toLocaleString()}đ`}
-          />
-          <DetailItem
-            label="Giá khuyến mãi"
-            value={
-              product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"
-            }
-          />
-          <DetailItem
-  label="Trạng thái"
-  value={
-    (() => {
-      let label = "";
-      let style = "";
-
-      switch (product.status) {
-        case 1:
-          label = "Đang bán";
-          style = "bg-green-100 text-green-800";
-          break;
-        case 2:
-          label = "Chờ kiểm duyệt";
-          style = "bg-yellow-100 text-yellow-800";
-          break;
-        case 3:
-          label = "Đã hủy bán";
-          style = "bg-red-100 text-red-800";
-          break;
-        case 4:
-          label = "Bán thành công";
-          style = "bg-blue-100 text-blue-800";
-          break;
-        default:
-          label = "Sản phẩm bị từ chối!";
-          style = "bg-gray-100 text-gray-800";
-      }
-
-      return (
-        <span className={`px-2 py-1 text-sm font-semibold rounded-full ${style}`}>
-          {label}
-        </span>
-      );
-    })()
-  }
-/>
-
-        </dl>
-      </div>
-
-      {/* Thông tin đăng nhập */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
-          Thông tin đăng nhập
-        </h3>
-        {product.credentials && product.credentials.length > 0 ? (
-          <div>
-            {product.credentials.map((cred) => (
-              <div key={cred.id} className="mb-4">
-                <h4 className="text-sm font-medium text-sm-700"></h4>
-                <dl>
-                  <DetailItem label="Tài khoản" value={cred.username} />
-                  <DetailItem label="Mật khẩu" value={cred.password} />
-                </dl>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-sm-500">Không có thông tin đăng nhập.</p>
-        )}
-      </div>
-
-      {/* Thuộc tính game (EAV) */}
-      {product.game_attributes && product.game_attributes.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
-            Thuộc tính riêng
-          </h3>
-          <dl>
-            {product.game_attributes.map((attr) => (
-              <DetailItem
-                key={attr.id}
-                label={attr.attribute_key}
-                value={attr.attribute_value}
-              />
-            ))}
-          </dl>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Header */}
+      <header className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">
+            Chi tiết sản phẩm
+          </h1>
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            SKU:{" "}
+            <span className="font-medium text-gray-700 dark:text-gray-300">
+              {product.sku}
+            </span>
+          </p>
         </div>
-      )}
-
-      {/* Hình ảnh sản phẩm */}
-      {product.images && product.images.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
-            Hình ảnh
-          </h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-            {product.images.map((image) => (
-              <div key={image.id} className="border rounded-lg overflow-hidden">
-                <img
-                  src={`${import.meta.env.VITE_BACKEND_IMG}${image.image_url}`}
-                  alt={image.alt_text || `Ảnh sản phẩm ${product.sku}`}
-                  className="w-full h-40 object-cover"
-                />
-              </div>
-            ))}
-          </div>
+        <div className="flex w-full sm:w-auto items-center gap-2">
+          <Link
+            to="/admin/products"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-4 py-2 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            <span>Quay lại</span>
+          </Link>
+          <Link
+            to={`/admin/products/${product.id}/edit`}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+          >
+            <Edit size={16} />
+            <span>Chỉnh sửa</span>
+          </Link>
         </div>
-      )}
+      </header>
 
-      {/* Thông tin bổ sung */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-sm-800 mb-2 border-b pb-2">
-          Thông tin bổ sung
-        </h3>
-        <dl>
-          <DetailItem
-            label="Ngày tạo"
-            value={new Date(product.created_at).toLocaleString("vi-VN")}
-          />
-          <DetailItem
-            label="Ngày cập nhật"
-            value={new Date(product.updated_at).toLocaleString("vi-VN")}
-          />
-          <DetailItem label="Người tạo" value={product?.creator?.username} />
-          <DetailItem
-            label="Người cập nhật"
-            value={product?.updater?.username}
-          />
-        </dl>
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column */}
+        <div className="lg:col-span-2 space-y-6">
+          <InfoCard title="Thông tin chung">
+            <DetailItem label="Danh mục">
+              {product.category?.name || "Chưa phân loại"}
+            </DetailItem>
+            <DetailItem label="Giá bán">{`${product.price.toLocaleString()}đ`}</DetailItem>
+            <DetailItem label="Giá nhập">{`${product.import_price.toLocaleString()}đ`}</DetailItem>
+            <DetailItem label="Giá sale">
+              {product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"}
+            </DetailItem>
+            <DetailItem label="Trạng thái">
+              <StatusBadge status={product.status} />
+            </DetailItem>
+            <DetailItem label="Mô tả">
+              {product.description || "Không có mô tả"}
+            </DetailItem>
+          </InfoCard>
+
+          {product.game_attributes && product.game_attributes.length > 0 && (
+            <InfoCard title="Thuộc tính riêng">
+              {product.game_attributes.map((attr) => (
+                <DetailItem key={attr.id} label={attr.attribute_key}>
+                  {attr.attribute_value}
+                </DetailItem>
+              ))}
+            </InfoCard>
+          )}
+
+          {product.credentials && product.credentials.length > 0 && (
+            <InfoCard title="Thông tin đăng nhập">
+              {product.credentials.map((cred) => (
+                <React.Fragment key={cred.id}>
+                  <DetailItem label="Tài khoản">{cred.username}</DetailItem>
+                  <DetailItem label="Mật khẩu">{cred.password}</DetailItem>
+                </React.Fragment>
+              ))}
+            </InfoCard>
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div className="lg:col-span-1 space-y-6">
+          {product.images && product.images.length > 0 && (
+            <InfoCard title="Hình ảnh">
+              <div className="grid grid-cols-2 gap-4 pt-4">
+                {product.images.map((image) => (
+                  <div
+                    key={image.id}
+                    className="aspect-square border dark:border-gray-600 rounded-lg overflow-hidden group"
+                  >
+                    <img
+                      src={image.image_url}
+                      alt={image.alt_text || `Ảnh sản phẩm ${product.sku}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  </div>
+                ))}
+              </div>
+            </InfoCard>
+          )}
+
+          <InfoCard title="Thông tin bổ sung">
+            <DetailItem label="Ngày tạo">
+              {new Date(product.created_at).toLocaleString("vi-VN")}
+            </DetailItem>
+            <DetailItem label="Cập nhật lần cuối">
+              {new Date(product.updated_at).toLocaleString("vi-VN")}
+            </DetailItem>
+            <DetailItem label="Người tạo">
+              {product.creator?.username || "Không rõ"}
+            </DetailItem>
+            <DetailItem label="Người sửa">
+              {product.updater?.username || "Chưa có"}
+            </DetailItem>
+          </InfoCard>
+        </div>
       </div>
     </div>
   );

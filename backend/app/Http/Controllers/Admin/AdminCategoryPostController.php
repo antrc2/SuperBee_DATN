@@ -7,35 +7,77 @@ use App\Models\Categorypost;
 use AWS\CRT\HTTP\Response;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Support\Facades\Log;
 class AdminCategoryPostController extends Controller
 {
 
 
 
-    public function getCategoryPost()
+    // public function getCategoryPost()
+    // {
+    //     try {
+    //         $categories = Categorypost::get();
+    //         if ($categories->isEmpty()) {
+    //             return response()->json([
+    //                 "message" => "Không có danh mục bài viết nào",
+    //                 "status" => false,
+    //                 "data" => []
+    //             ]);
+    //         }
+    //         return response()->json([
+    //             "message" => "Lấy danh mục bài viết thành công",
+    //             "status" => true,
+    //             "data" => $categories
+    //         ]);
+    //     } catch (\Exception $th) {
+    //         return response()->json([
+    //             "message" => "Đã xảy ra lỗi.",
+    //             "status" => false
+    //         ], 500);
+    //     }
+    // }
+      public function getCategoryPost(Request $request)
     {
         try {
-            $categories = Categorypost::get();
-            if ($categories->isEmpty()) {
-                return response()->json([
-                    "message" => "Không có danh mục bài viết nào",
-                    "status" => false,
-                    "data" => []
-                ]);
-            }
-            return response()->json([
-                "message" => "Lấy danh mục bài viết thành công",
-                "status" => true,
-                "data" => $categories
+            $request->validate([
+                'search' => 'sometimes|string|max:100',
+                'start_date' => 'sometimes|date',
+                'end_date' => 'sometimes|date|after_or_equal:start_date',
             ]);
-        } catch (\Exception $th) {
+
+            $query = CategoryPost::query();
+
+            // Tìm kiếm theo tên hoặc mô tả
+            $query->when($request->filled('search'), function ($q) use ($request) {
+                $searchTerm = '%' . $request->search . '%';
+                $q->where(function ($subQuery) use ($searchTerm) {
+                    $subQuery->where('name', 'like', $searchTerm)
+                             ->orWhere('description', 'like', 'searchTerm');
+                });
+            });
+
+            // Lọc theo khoảng ngày tạo
+            $query->when($request->filled('start_date'), fn($q) => $q->whereDate('created_at', '>=', $request->start_date));
+            $query->when($request->filled('end_date'), fn($q) => $q->whereDate('created_at', '<=', $request->end_date));
+
+            // Sắp xếp và phân trang
+            $categories = $query->latest()->paginate(15)->withQueryString();
+
             return response()->json([
-                "message" => "Đã xảy ra lỗi.",
-                "status" => false
+                'status' => true,
+                'message' => 'Lấy danh mục bài viết thành công',
+                'data' => $categories
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching post categories: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'Lỗi khi lấy danh mục bài viết.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
+    
     public function getCategoryPostBySlug($slug)
     {
         try {

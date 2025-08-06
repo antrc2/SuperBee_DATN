@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Log; // Added for logging
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redis;
 use Throwable;
+use Illuminate\Support\Facades\Http; // Added for Cloudflare Turnstile validation
 
 class AuthController extends Controller
 {
@@ -140,7 +141,7 @@ class AuthController extends Controller
             'role_ids' => $user->getRoleNames()->toArray(),
             'money' => $wallet->balance ?? "0",
             'donate_code' => $user->donate_code,
-            'roomId'=>$roomId
+            'roomId' => $roomId
         ];
         $expireTime = (int) env('JWT_ACCESS_TOKEN_TTL', 3600); // Default to 1 hour
         // dd(time() + $expireTime, date('Y-m-d H:i:s'));
@@ -514,12 +515,61 @@ class AuthController extends Controller
                 'username' => 'required|string',
                 'password' => 'required|string',
                 'web_id' => 'required|exists:webs,id',
+                // 'cf-turnstile-response' => 'required|string',
             ], [
                 'username.required' => 'Tên đăng nhập không được để trống.',
                 'password.required' => 'Mật khẩu không được để trống.',
                 'web_id.required' => 'Không xác định được trang web.',
                 'web_id.exists' => 'Web ID không hợp lệ.',
+                // 'cf-turnstile-response.required' => 'Vui lòng xác thực CAPTCHA.',
             ]);
+
+            // Cloudflare Turnstile CAPTCHA validation
+            // $turnstileSecret = env('TURNSTILE_SECRET_KEY');
+            // $turnstileResponse = $request->input('cf-turnstile-response');
+            // $remoteIp = $request->ip();
+
+            // // Debug logs
+            // Log::info('Turnstile Secret Key: ' . $turnstileSecret);
+            // Log::info('Turnstile Response Token: ' . $turnstileResponse);
+            // Log::info('Remote IP: ' . $remoteIp);
+
+            // $verifyResponse = null;
+            // try {
+            //     $requestData = [
+            //         'secret' => $turnstileSecret,
+            //         'response' => $turnstileResponse,
+            //         'remoteip' => $remoteIp,
+            //     ];
+            //     Log::info('Turnstile Request Data: ' . json_encode($requestData));
+
+            //     $verifyResponse = Http::asForm()->post('https://challenges.cloudflare.com/turnstile/v0/siteverify', $requestData);
+            //     // var_dump($verifyResponse);
+            //     // return response()->json([
+            //     //     'hehe'=>$verifyResponse
+            //     // ]);
+            //     Log::info('Turnstile Response Status: ' . $verifyResponse->status());
+            //     Log::info('Turnstile Response Body: ' . $verifyResponse->body());
+            //     Log::info('Turnstile Response JSON: ' . json_encode($verifyResponse->json()));
+
+            // } catch (\Exception $e) {
+            //     Log::error('Turnstile Exception: ' . $e->getMessage());
+            //     return response()->json([
+            //         'message' => 'Không thể xác thực CAPTCHA. Vui lòng thử lại.',
+            //         'status' => false,
+            //         'code' => 'CAPTCHA_ERROR',
+            //     ], 422);
+            // }
+            // if (!$verifyResponse || !$verifyResponse->json('success')) {
+            //     Log::error('Turnstile verification failed. Response: ' . $verifyResponse->body());
+            //     return response()->json([
+            //         'message' => 'Xác thực CAPTCHA thất bại. Vui lòng thử lại.',
+            //         'status' => false,
+            //         'code' => 'CAPTCHA_FAILED',
+            //     ], 422);
+            // }
+
+            // Log::info('Turnstile verification successful');
 
             $web = Web::findOrFail($validatedData['web_id']);
 

@@ -1,7 +1,17 @@
 "use client";
 
 import { NavLink } from "react-router-dom";
-import { User, Lock, Wallet, Package, LogOut, Coins, Copy, X } from "lucide-react";
+import {
+  User,
+  Lock,
+  Wallet,
+  Package,
+  LogOut,
+  Coins,
+  Copy,
+  X,
+  BanknoteArrowDown,
+} from "lucide-react";
 import { useAuth } from "@contexts/AuthContext";
 
 export default function Sidebar() {
@@ -66,6 +76,10 @@ export default function Sidebar() {
               <Copy className="h-5 w-5" />
               <span>Tiếp thị liên kết</span>
             </NavLink>
+            <NavLink to="/info/withdraw" className={navLinkClass}>
+              <BanknoteArrowDown className="h-5 w-5" />
+              <span>Rút Tiền</span>
+            </NavLink>
           </div>
         </div>
         <div>
@@ -80,6 +94,10 @@ export default function Sidebar() {
             <NavLink to="/info/orders" className={navLinkClass}>
               <Package className="h-5 w-5" />
               <span>Lịch sử đơn hàng</span>
+            </NavLink>
+            <NavLink to="/info/disputes" className={navLinkClass}>
+              <Package className="h-5 w-5" />
+              <span>Lịch sử khiếu lại</span>
             </NavLink>
           </div>
         </div>

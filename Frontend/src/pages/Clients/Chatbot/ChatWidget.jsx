@@ -29,6 +29,7 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
+  const python_url = import.meta.env.VITE_PYTHON_URL;
   // const [product, setProduct] = useState(null);
   const toggleChat = async () => {
     if (!open) {
@@ -84,7 +85,7 @@ export default function ChatWidget() {
         sessionStorage.getItem("guest_id") ||
         "guest_" + Math.random().toString(36).substring(2);
 
-      const res = await fetch("http://localhost:5000/chat", {
+      const res = await fetch(`${python_url}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

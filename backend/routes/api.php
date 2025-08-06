@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
 use App\Http\Controllers\Admin\AdminNotificationController;
 use App\Http\Controllers\Admin\AdminProductController;
+use App\Http\Controllers\Admin\DisputeController;
 use App\Http\Controllers\Partner\PartnerProductController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
@@ -19,11 +20,16 @@ use App\Http\Controllers\Admin\AuthorizationDashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
+use App\Http\Controllers\Assistant\AssistantCartController;
+use App\Http\Controllers\Assistant\AssistantCategoryController;
+use App\Http\Controllers\Assistant\AssistantProductController;
+use App\Http\Controllers\Auto\AutoTransactionController;
 use App\Http\Controllers\AWSController;
 use App\Http\Controllers\Callback\BankController;
 use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Partner\PartnerOrderController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\User\DiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
@@ -36,13 +42,19 @@ use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
 use App\Http\Controllers\User\UserPostController;
 use App\Http\Controllers\User\UserProfileController;
 use App\Http\Controllers\User\UserWithdrawController;
+use App\Http\Controllers\User\UserReviewController;
+
 use Illuminate\Support\Facades\Route;
+use PHPUnit\Framework\Attributes\Group;
 
 /*
 |--------------------------------------------------------------------------
 | API Routes
 |--------------------------------------------------------------------------
 */
+
+// Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
+
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
@@ -61,6 +73,12 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
     // xác minh tài khoản
@@ -84,6 +102,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/post')->group(function () {
         Route::get('/', [UserPostController::class, 'index']);
         Route::get('/{id}', [UserPostController::class, 'show']);
+        Route::get('/getcategory/{slug}', [UserPostController::class, 'getByCategory']);
         Route::get('/category/{id}', [UserPostController::class, 'getCategoryById']);
         Route::get('/bycategory/{id}', [UserPostController::class, 'getPostByCategory']);
     });
@@ -162,14 +181,46 @@ Route::middleware('auth')->group(function () {
             Route::put('/personal/{id}', [AdminNotificationController::class, 'updatePersonalNotification']);
             Route::post('/global/{globalNotificationId}/read', [AdminNotificationController::class, 'markGlobalNotificationAsRead']);
         });
+
+        //         Route::prefix('user/withdraws')->group(function () {
+        //             Route::get('/balance', [UserWithdrawController::class, 'showBalance'])->name('user.withdraws.balance')->middleware('permission:wallet.view');
+        //             Route::post('/', [UserWithdrawController::class, 'requestWithdraw'])->name('user.withdraws.request')->middleware('permission:withdrawals.create');
+        //             Route::get('/history', [UserWithdrawController::class, 'listWithdraws'])->name('user.withdraws.history')->middleware('permission:withdrawals.view');
+        //             Route::post('/cancel', [UserWithdrawController::class, 'cancelWithdraw'])->name('user.withdraws.cancel')->middleware('permission:withdrawals.edit'); // Hoặc quyền riêng nếu cần
+
         Route::prefix('/withdraws')->group(function () {
-            Route::get('/balance', [UserProfileController::class, 'balance'])->name('user.withdraws.balance');
+            Route::get('/balance', [UserWithdrawController::class, 'balance'])->name('user.withdraws.balance');
             Route::post('/', [UserWithdrawController::class, 'store'])->name('user.withdraws.request');
             Route::get('/', [UserWithdrawController::class, 'index'])->name('user.withdraws.history');
             // Route::post('/{id}/cancel', [UserWithdrawController::class, 'cancel'])->name('user.withdraws.cancel');
-            Route::delete("/{id}",[UserWithdrawController::class,'cancel']);
-            Route::put("/{id}",[UserWithdrawController::class,'update']);
+            Route::delete("/{id}", [UserWithdrawController::class, 'cancel']);
+            Route::put("/{id}", [UserWithdrawController::class, 'update']);
+            Route::get("/allow_banks", [UserWithdrawController::class, 'allowBanks']);
         });
+
+
+        Route::prefix('/reviews')->group(function () {
+            Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
+            Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
+            Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
+            Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
+            Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
+        });
+        Route::prefix('/disputes')->group(function () {
+            // Từ chối rồi nhưng lại thành công
+            Route::post('/', [DisputeController::class, 'store']);
+
+            // Route để lấy danh sách tất cả khiếu nại của người dùng
+            Route::get('/', [UserProfileController::class, 'getDisputes']);
+
+            // Route để lấy chi tiết một khiếu nại cụ thể (dựa vào ID)
+            Route::get('/{id}', [UserProfileController::class, 'getDisputeDetails']);
+        });
+
+
+
+
+
 
         Route::get('messages', [HomeController::class, 'messages'])->middleware('permission:chat.view|chat.create');
     });
@@ -197,14 +248,14 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
     /**
-     * Quản lý Danh mục sản phẩm - Gán vào quyền sản phẩm
+     * Quản lý Danh mục sản phẩm - === BỔ SUNG: SỬ DỤNG QUYỀN categories.* ===
      */
     Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:products.view');
-        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:products.create');
-        Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:products.edit');
-        Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:products.delete');
-        Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:products.view');
+        Route::get('/', [CategoryController::class, 'index'])->middleware('permission:categories.view');
+        Route::post('/', [CategoryController::class, 'store'])->middleware('permission:categories.create');
+        Route::put('/{id}', [CategoryController::class, 'update'])->middleware('permission:categories.edit');
+        Route::delete('/{id}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete');
+        Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:categories.view');
     });
 
     /**
@@ -212,6 +263,13 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      */
     Route::prefix('/accounts')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view');
+         Route::get('/staff-roles', [UserController::class, 'getStaffRoles']);
+
+        // Route để lấy các quyền có thể gán trực tiếp (Cách 2)
+        Route::get('/assignable-permissions', [UserController::class, 'getAssignablePermissions']);
+
+        // Route để tạo tài khoản nhân viên (Xử lý cả 2 cách)
+        Route::post('/create-staff', [UserController::class, 'createStaffAccount']);
         Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:users.view');
         Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.delete');
         // key và restore là hành động chỉnh sửa user
@@ -219,6 +277,8 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}', [UserController::class, 'restore'])->middleware('permission:users.edit');
         // Gán vai trò cho user là quyền sửa vai trò
         Route::put('/{id}/role', [UserController::class, 'updateRoles'])->middleware('permission:roles.edit');
+        // Route để lấy các vai trò có sẵn (Cách 1)
+       
     });
 
     /**
@@ -272,6 +332,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::get('/', [AdminPostController::class, 'index'])->middleware('permission:posts.view');
         Route::get('/{id}', [AdminPostController::class, 'show'])->middleware('permission:posts.view');
         Route::post('/', [AdminPostController::class, 'store'])->middleware('permission:posts.create');
+        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
         Route::post('/{id}', [AdminPostController::class, 'update'])->middleware('permission:posts.edit');
         Route::delete('/{id}', [AdminPostController::class, 'destroy'])->middleware('permission:posts.delete');
         // publish/unpublish là hành động sửa bài viết
@@ -279,20 +340,20 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::patch('/{id}/unpublish', [AdminPostController::class, 'unpublish'])->middleware('permission:posts.edit');
 
         // Các route tiện ích yêu cầu quyền tạo hoặc sửa
-        Route::post('/upload', [AdminPostController::class, 'upload'])->middleware('permission:posts.create|posts.edit');
+
         Route::get('/load-images', [AdminPostController::class, 'loadImages'])->middleware('permission:posts.create|posts.edit');
         Route::post('/delete-image', [AdminPostController::class, 'deleteImage'])->middleware('permission:posts.create|posts.edit');
     });
 
     /**
-     * Quản lý Danh mục Bài viết - Gán vào quyền bài viết
+     * Quản lý Danh mục Bài viết - === BỔ SUNG: SỬ DỤNG QUYỀN post_categories.* ===
      */
     Route::prefix('/categoryPost')->group(function () {
-        Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost'])->middleware('permission:posts.view');
-        Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost'])->middleware('permission:posts.create');
-        Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug'])->middleware('permission:posts.view');
-        Route::post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost'])->middleware('permission:posts.edit');
-        Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost'])->middleware('permission:posts.delete');
+        Route::get('/', [AdminCategoryPostController::class, 'getCategoryPost'])->middleware('permission:post_categories.view');
+        Route::post('/', [AdminCategoryPostController::class, 'createCategoryPost'])->middleware('permission:post_categories.create');
+        Route::get('/{id}', [AdminCategoryPostController::class, 'getCategoryPostBySlug'])->middleware('permission:post_categories.view');
+        Route::post('/{id}', [AdminCategoryPostController::class, 'updateCategoryPost'])->middleware('permission:post_categories.edit');
+        Route::delete('/{id}', [AdminCategoryPostController::class, 'deleteCategoryPost'])->middleware('permission:post_categories.delete');
     });
 
     /**
@@ -330,24 +391,75 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
 
 
-    Route::prefix("/withdraws")->group(function(){
-        Route::get('/',[AdminWithdrawController::class,'index']);
-        Route::post("/export",[AdminWithdrawController::class,'export']);
+    Route::prefix("/withdraws")->group(function () {
+        Route::get('/', [AdminWithdrawController::class, 'index']);
+        Route::put('/{id}', [AdminWithdrawController::class, 'update']);
+        Route::post("/export", [AdminWithdrawController::class, 'export']);
+    });
+    Route::prefix("/disputes")->group(function () {
+        Route::get('/', [DisputeController::class, 'index']);
+        Route::get('/{id}', [DisputeController::class, 'show']);
+        Route::put('/{id}', [DisputeController::class, 'update']);
+    });
+
+
+    Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
     });
 });
 
 // =================== PARTNER ROUTES ===================
+// === BỔ SUNG: THÊM MIDDLEWARE PERMISSION CHI TIẾT ===
 Route::middleware(['jwt', 'role:partner'])->prefix('/partner')->group(function () {
-    // Các quyền của partner được định nghĩa sẵn trong vai trò, không cần middleware permission chi tiết ở đây
+    // Các quyền của partner được định nghĩa sẵn trong vai trò, nhưng kiểm tra chi tiết sẽ chặt chẽ hơn
     Route::prefix("/orders")->group(function () {
-        Route::post("/purchase", [UserOrderController::class, 'purchase']);
+        // Partner có thể không tự mua hàng, nhưng nếu có thì cần quyền orders.create
+        Route::post("/purchase", [UserOrderController::class, 'purchase'])->middleware('permission:orders.create');
     });
     Route::prefix('/products')->group(function () {
-        Route::get('/', [PartnerProductController::class, 'index']);
-        Route::get('/{id}', [PartnerProductController::class, 'show']);
-        Route::post('/', [PartnerProductController::class, 'store']);
-        Route::put('/{id}', [PartnerProductController::class, 'update']);
-        Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel']);
-        Route::post('/{id}/restore', [PartnerProductController::class, 'restore']);
+        Route::get('/', [PartnerProductController::class, 'index'])->middleware('permission:products.view');
+        Route::get('/{id}', [PartnerProductController::class, 'show'])->middleware('permission:products.view');
+        Route::post('/', [PartnerProductController::class, 'store'])->middleware('permission:products.create');
+        Route::put('/{id}', [PartnerProductController::class, 'update'])->middleware('permission:products.edit');
+        Route::post('/{id}/cancel', [PartnerProductController::class, 'cancel'])->middleware('permission:products.edit');
+        Route::post('/{id}/restore', [PartnerProductController::class, 'restore'])->middleware('permission:products.edit');
     });
 });
+
+Route::prefix('/assistant')->group(function () {
+    Route::prefix("/categories")->group(function () {
+        Route::get("/", [AssistantCategoryController::class, 'index']);
+        Route::get("/category_name", [AssistantCategoryController::class, 'get_category_name']);
+        Route::get("/{id}", [AssistantCategoryController::class, 'show']);
+    });
+    Route::prefix('/products')->group(function () {
+        Route::get("/", [AssistantProductController::class, 'index']);
+        Route::get("/{sku}", [AssistantProductController::class, 'show']);
+    });
+    Route::prefix('/carts')->group(function(){
+        Route::post("/",[AssistantCartController::class,'store'])->middleware('jwt');
+    });
+});
+
+
+// Route::post("/export", [AdminWithdrawController::class, 'export']);
+
+
+Route::prefix('/auto')->group(function () {
+        Route::prefix('/post')->group(function () {
+
+        });
+        Route::prefix('/transaction')->group(function () {
+            Route::get('/', [AutoTransactionController::class, 'status']);
+            // Route::post("/", [AutoTransactionController::class, 'turn']);
+        });
+    });
+// Route::post("/export",[AdminWithdrawController::class,'export']);
+
+// Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

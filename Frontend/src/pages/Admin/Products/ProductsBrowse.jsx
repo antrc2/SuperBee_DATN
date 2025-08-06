@@ -1,76 +1,108 @@
+// ProductsBrowse.jsx
+
 import React from "react";
 import { Link } from "react-router-dom";
-import { FilePenLine, Eye, Lock, Key,ShieldCheck  } from "lucide-react";
+import { Eye } from "lucide-react";
 
-export default function ProductsBrowse({products }) {
+export default function ProductsBrowse({ products }) {
+  // Hàm ánh xạ status sang màu sắc và text, tối ưu cho cả dark và light mode
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 1:
+        return {
+          text: "Đang bán",
+          className:
+            "bg-green-100 text-green-800 dark:bg-green-500/20 dark:text-green-400",
+        };
+      case 2:
+        return {
+          text: "Chờ duyệt",
+          className:
+            "bg-yellow-100 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-400",
+        };
+      case 3:
+        return {
+          text: "Đã hủy",
+          className:
+            "bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-400",
+        };
+      case 4:
+        return {
+          text: "Bán thành công",
+          className:
+            "bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-400",
+        };
+      default:
+        return {
+          text: "Bị từ chối",
+          className:
+            "bg-gray-100 text-gray-800 dark:bg-gray-500/20 dark:text-gray-400",
+        };
+    }
+  };
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white">
-        <thead className="bg-gray-100">
+    <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
+      <table className="min-w-full bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+        <thead className="bg-gray-100 dark:bg-gray-800">
           <tr>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">SKU</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Tên sản phẩm (Tạm)</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Giá bán</th>
-            <th className="py-3 px-4 text-left text-sm font-semibold text-gray-600">Trạng thái</th>
-            <th className="py-3 px-4 text-center text-sm font-semibold text-gray-600">Hành động</th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider dark:text-gray-300">
+              SKU
+            </th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider dark:text-gray-300">
+              Tên sản phẩm (Tạm)
+            </th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider dark:text-gray-300">
+              Giá bán
+            </th>
+            <th className="py-3 px-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider dark:text-gray-300">
+              Trạng thái
+            </th>
+            <th className="py-3 px-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider dark:text-gray-300">
+              Hành động
+            </th>
           </tr>
         </thead>
-        <tbody>
-          {products.map((product) => (
-            <tr key={product.id} className="border-b hover:bg-gray-50">
-              <td className="py-3 px-4 text-sm text-gray-700">{product.sku}</td>
-              <td className="py-3 px-4 text-sm text-gray-700">Sản phẩm #{product.id}</td>
-              <td className="py-3 px-4 text-sm text-gray-700">
-                {product.import_price?.toLocaleString?.() || 0}đ
-              </td>
-              <td className="py-3 px-4 text-sm">
-                <span
-                  className={`px-2 py-1 text-xs font-semibold rounded-full ${
-                    product.status === 1
-                      ? "bg-green-100 text-green-800"
-                      : product.status === 2
-                      ? "bg-yellow-100 text-yellow-800"
-                      : product.status === 3
-                      ? "bg-red-100 text-red-800"
-                      : product.status === 4
-                      ? "bg-blue-100 text-blue-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {product.status === 1
-                    ? "Đang bán"
-                    : product.status === 2
-                    ? "Chờ duyệt"
-                    : product.status === 3
-                    ? "Đã hủy"
-                    : product.status === 4
-                    ? "Bán thành công"
-                    : "Bị từ chối"}
-                </span>
-              </td>
-              <td className="py-3 px-4 text-center">
-                <div className="flex justify-center gap-4">
-                  <Link to={`/admin/products/${product.id}`} title="Xem chi tiết">
-                    <Eye className="text-green-500 hover:text-green-700 cursor-pointer" size={20} />
-                  </Link>
-
-                  <Link to={`/admin/products/${product.id}/update`} title="Chỉnh sửa">
-                    <ShieldCheck className="text-blue-500 hover:text-blue-700 cursor-pointer" size={20} />
-                  </Link>
-
-                  {/* {product.status === 1 || product.status === 2 ? (
-                    <button onClick={() => handleLock(product.id)} title="Hủy Bán">
-                      <Lock className="text-red-500 hover:text-red-700 cursor-pointer" size={20} />
-                    </button>
-                  ) : (
-                    <button onClick={() => handleKey(product.id)} title="Bán Lại">
-                      <Key className="text-red-500 hover:text-red-700 cursor-pointer" size={20} />
-                    </button>
-                  )} */}
-                </div>
-              </td>
-            </tr>
-          ))}
+        <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+          {products.map((product) => {
+            const statusInfo = getStatusInfo(product.status);
+            return (
+              <tr
+                key={product.id}
+                className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200"
+              >
+                <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-300 font-mono">
+                  {product.sku}
+                </td>
+                <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-300">
+                  Sản phẩm #{product.id}
+                </td>
+                <td className="py-4 px-4 text-sm text-gray-500 dark:text-gray-300">
+                  {product.import_price?.toLocaleString?.() || 0}đ
+                </td>
+                <td className="py-4 px-4 text-sm">
+                  <span
+                    className={`px-2.5 py-1 text-xs font-semibold rounded-full ${statusInfo.className}`}
+                  >
+                    {statusInfo.text}
+                  </span>
+                </td>
+                <td className="py-4 px-4 text-center">
+                  <div className="flex justify-center items-center">
+                    <Link
+                      to={`/admin/pendingProducts/${product.id}`}
+                      title="Xem chi tiết"
+                    >
+                      <Eye
+                        className="text-green-500 hover:text-green-400 dark:text-green-400 dark:hover:text-green-300 cursor-pointer transition-colors"
+                        size={22}
+                      />
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

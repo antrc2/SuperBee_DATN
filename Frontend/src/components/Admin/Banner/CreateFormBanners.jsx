@@ -26,9 +26,9 @@ export default function CreateFormBanners({
         link: initialData.link || "",
         status: initialData.status ?? 1,
       });
-      setExistingImage(
-        initialData.image_url ? { image_url: initialData.image_url } : null
-      );
+      if (initialData.image_url) {
+        setExistingImage({ image_url: initialData.image_url });
+      }
       setNewImage(null);
     }
   }, [initialData]);
@@ -41,11 +41,12 @@ export default function CreateFormBanners({
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
     const withPreview = Object.assign(file, {
       preview: URL.createObjectURL(file),
     });
     setNewImage(withPreview);
-    setExistingImage(null); // Nếu chọn ảnh mới thì bỏ ảnh cũ
+    setExistingImage(null);
   };
 
   const removeImage = () => {
@@ -63,8 +64,10 @@ export default function CreateFormBanners({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!existingImage && !newImage)
-      return alert("Vui lòng chọn một ảnh banner.");
+    if (!existingImage && !newImage) {
+      alert("Vui lòng chọn một ảnh banner.");
+      return;
+    }
 
     const data = new FormData();
     Object.entries(formData).forEach(([k, v]) => data.append(k, v));
@@ -73,113 +76,141 @@ export default function CreateFormBanners({
       data.append("image", newImage);
     }
 
-    if (isEditing && existingImage) {
-      data.append("existing_images", JSON.stringify([existingImage.image_url]));
+    // Không cần gửi lại `existing_images` nếu không thay đổi
+    // API có thể được thiết kế để không cần trường này
+    if (isEditing && !newImage && existingImage) {
+      data.delete("image_url"); // Xóa image_url để không gửi đi
     }
 
     onSubmit(data);
   };
 
+  // --- Lớp CSS cho input và label để tái sử dụng ---
+  const labelClass =
+    "block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300";
+  const inputClass =
+    "w-full p-2.5 bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      {/* Thông tin cơ bản */}
-      <div className="p-6 border bg-white rounded shadow-sm">
-        <h3 className="mb-4 font-medium text-gray-900">Thông tin banner</h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <label htmlFor="title" className="block mb-1 text-sm">
-              Tiêu đề
-            </label>
-            <input
-              name="title"
-              id="title"
-              value={formData.title}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-            />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Cột trái: Thông tin */}
+        <div className="lg:col-span-2 p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
+            Thông tin banner
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="md:col-span-2">
+              <label htmlFor="title" className={labelClass}>
+                Tiêu đề
+              </label>
+              <input
+                type="text"
+                name="title"
+                id="title"
+                value={formData.title}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="Ví dụ: Banner khuyến mãi hè"
+              />
+            </div>
+            <div>
+              <label htmlFor="link" className={labelClass}>
+                Link (URL)
+              </label>
+              <input
+                type="url"
+                name="link"
+                id="link"
+                value={formData.link}
+                onChange={handleChange}
+                className={inputClass}
+                placeholder="https://example.com/khuyen-mai"
+              />
+            </div>
+            <div>
+              <label htmlFor="status" className={labelClass}>
+                Trạng thái
+              </label>
+              <select
+                name="status"
+                id="status"
+                value={formData.status}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value={1}>Hiển thị</option>
+                <option value={0}>Ẩn</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label htmlFor="link" className="block mb-1 text-sm">
-              Link
-            </label>
-            <input
-              name="link"
-              id="link"
-              value={formData.link}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
-            />
-          </div>
-          <div>
-            <label htmlFor="status" className="block mb-1 text-sm">
-              Trạng thái
-            </label>
-            <select
-              name="status"
-              id="status"
-              value={formData.status}
-              onChange={handleChange}
-              className="w-full p-2 rounded border"
+        </div>
+
+        {/* Cột phải: Hình ảnh */}
+        <div className="p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
+          <h3 className="mb-6 text-lg font-semibold text-gray-900 dark:text-white">
+            Hình ảnh
+          </h3>
+          <input
+            type="file"
+            accept="image/png, image/jpeg, image/gif, image/webp"
+            ref={fileInputRef}
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+
+          {existingImage || newImage ? (
+            <div className="relative group w-full aspect-video border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+              <img
+                src={newImage ? newImage.preview : existingImage.image_url}
+                alt="Xem trước banner"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current.click()}
+                  className="text-white text-sm bg-gray-800 bg-opacity-70 py-1 px-3 rounded-md mr-2"
+                >
+                  Thay đổi
+                </button>
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current.click()}
+              className="flex flex-col items-center justify-center w-full aspect-video border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition"
             >
-              <option value={1}>Hiển thị</option>
-              <option value={0}>Ẩn</option>
-            </select>
-          </div>
+              <ImagePlus
+                size={40}
+                className="text-gray-400 dark:text-gray-500 mb-2"
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-semibold">Nhấn để tải ảnh lên</span>
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">
+                PNG, JPG, GIF hoặc WEBP
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Hình ảnh banner */}
-      <div className="p-6 border rounded-lg bg-white shadow-sm">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
-          Hình ảnh banner
-        </h3>
-        <input
-          type="file"
-          accept="image/png, image/jpeg, image/gif, image/webp"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          className="hidden"
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current.click()}
-          className="mb-4 flex items-center gap-2 text-sm text-white bg-gray-700 hover:bg-gray-800 py-2 px-3 rounded-md"
-        >
-          <ImagePlus size={18} /> Chọn ảnh từ máy tính
-        </button>
-
-        {(existingImage || newImage) ? (
-          <div className="relative w-48 aspect-square border rounded-md overflow-hidden">
-            <img
-              src={
-                newImage
-                  ? newImage.preview
-                  : `${import.meta.env.VITE_BACKEND_IMG}${existingImage.image_url}`
-              }
-              alt="Banner"
-              className="w-full h-full object-cover"
-            />
-            <button
-              type="button"
-              onClick={removeImage}
-              className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-0.5"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500">Chưa chọn ảnh nào.</p>
-        )}
-      </div>
-
       {/* Nút Submit */}
-      <div className="pt-6 flex justify-end">
+      <div className="flex justify-end pt-4">
         <button
           type="submit"
           disabled={isLoading}
-          className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:bg-blue-400"
+          className="bg-blue-600 text-white py-2.5 px-6 rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 disabled:bg-blue-400 dark:focus:ring-blue-800 transition-colors"
         >
-          {isLoading ? "Đang lưu..." : isEditing ? "Cập nhật Banner" : "Tạo Banner"}
+          {isLoading ? "Đang xử lý..." : isEditing ? "Cập nhật" : "Lưu banner"}
         </button>
       </div>
     </form>

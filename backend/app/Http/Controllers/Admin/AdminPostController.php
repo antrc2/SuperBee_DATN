@@ -251,7 +251,8 @@ class AdminPostController extends Controller
      */
     public function upload(Request $request)
     {
-        if ($request->hasFile('file')) {
+        try {
+            if ($request->hasFile('file')) {
             $uploadedFile = $request->file('file');
             $imageUrl = $this->uploadFile($uploadedFile, 'froala_image', false);
 
@@ -259,12 +260,16 @@ class AdminPostController extends Controller
                 return response()->json(['link' => $imageUrl], 200);
             }
 
-            return response()->json([
-                'error' => 'Tải ảnh lên thất bại. Vui lòng kiểm tra log server.'
-            ], 500);
+            
         }
 
         return response()->json(['error' => 'Không tìm thấy file ảnh để tải lên.'], 400);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'error' => 'Tải ảnh lên thất bại. Vui lòng kiểm tra log server.',
+                "hehe"=>$th->getMessage()
+            ], 500);
+        }
     }
 
     /**

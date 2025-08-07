@@ -13,7 +13,7 @@ api_key = os.getenv("OPENAI_API_KEY")
 chat_model = os.getenv("CHAT_MODEL")
 python_url = os.getenv("PYTHON_URL")
 # frontend_url = os.getenv("FRONTEND_URL",'')
-backend_api = os.getenv("BACKEND_API",'http://localhost/api')
+backend_api = os.getenv("BACKEND_API")
 client = OpenAI(
 
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -106,7 +106,6 @@ def execute_agent(agent_name,messages,access_token):
             model=chat_model
         )
 
-        print(response)
         if (response.choices[0].message.tool_calls == None):
             # return response.choices[0].message
             return ""

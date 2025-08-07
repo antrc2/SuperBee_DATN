@@ -325,8 +325,6 @@ const CreateDiscountCodePage = () => {
                     id="discount_value"
                     value={form.discount_value}
                     onChange={handleChange}
-                    min="1"
-                    max="100"
                     className={inputClasses}
                     placeholder="VD: 20"
                   />
@@ -364,7 +362,6 @@ const CreateDiscountCodePage = () => {
                       id="usage_limit"
                       value={form.usage_limit}
                       onChange={handleChange}
-                      min="-1"
                       className={inputClasses}
                       placeholder="-1 là không giới hạn"
                     />
@@ -381,7 +378,6 @@ const CreateDiscountCodePage = () => {
                     id="per_user_limit"
                     value={form.per_user_limit}
                     onChange={handleChange}
-                    min="-1"
                     className={inputClasses}
                     placeholder="-1 là không giới hạn"
                   />
@@ -397,7 +393,6 @@ const CreateDiscountCodePage = () => {
                     id="min_discount_amount"
                     value={form.min_discount_amount}
                     onChange={handleChange}
-                    min="0"
                     className={inputClasses}
                     placeholder="Bỏ trống nếu không có"
                   />
@@ -413,7 +408,6 @@ const CreateDiscountCodePage = () => {
                     id="max_discount_amount"
                     value={form.max_discount_amount}
                     onChange={handleChange}
-                    min="0"
                     className={inputClasses}
                     placeholder="Bỏ trống nếu không có"
                   />

@@ -197,7 +197,7 @@ class AdminWithdrawController extends Controller
             );
 
             // Gọi hàm uploadFile
-            $url = $this->uploadFile($file, 'Transaction');
+            $url = $this->uploadFile($file, 'Transaction',False);
             // Xoá file tạm
             if (file_exists($savePath)) {
                 unlink($savePath);

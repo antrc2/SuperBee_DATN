@@ -457,7 +457,7 @@ Route::prefix('/auto')->group(function () {
         });
         Route::prefix('/transaction')->group(function () {
             Route::get('/', [AutoTransactionController::class, 'status']);
-            // Route::post("/", [AutoTransactionController::class, 'turn']);
+            Route::post("/", [AutoTransactionController::class, 'turn']);
         });
     });
 // Route::post("/export",[AdminWithdrawController::class,'export']);

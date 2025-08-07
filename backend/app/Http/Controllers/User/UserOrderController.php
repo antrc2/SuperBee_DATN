@@ -623,8 +623,8 @@ class UserOrderController extends Controller
                     // }
 
                     $affiliate = Affiliate::where('user_id', $user_id)->first();
-                    $tax = env("TAX");
-                    $total_price = $total_price + $total_price * $tax / 100;
+                    // $tax = env("TAX");
+                    // $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
                     if ($wallet->promotion_balance >= $total_price){

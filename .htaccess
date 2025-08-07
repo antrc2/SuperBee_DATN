@@ -1,21 +1,16 @@
 RewriteEngine On
 
-RewriteCond %{REQUEST_URI} ^/(backend|node|python) [NC]
-RewriteRule .* - [L]
+# WebSocket qua wss:// (SSL)
+ProxyPass /node/socket.io wss://localhost:3000/socket.io
+ProxyPassReverse /node/socket.io wss://localhost:3000/socket.io
 
+# Proxy toàn bộ route /node/* tới NodeJS
+RewriteRule ^node/(.*) https://localhost:3000/$1 [P,L]
 
-RewriteCond %{HTTP:Upgrade} =WebSocket [NC]
-RewriteCond %{HTTP:Connection} upgrade [NC]
-RewriteRule ^socket\.io(/.*)?$ ws://127.0.0.1:3000/socket.io$1 [P,L,QSA]
-
-
-RewriteRule ^socket\.io(/.*)?$ http://127.0.0.1:3000/socket.io$1 [P,L,QSA]
-
-
-
+# Bỏ qua nếu là file thật
 RewriteCond %{REQUEST_FILENAME} -f [OR]
 RewriteCond %{REQUEST_FILENAME} -d
 RewriteRule ^ - [L]
 
-
-RewriteRule ^ index.php [QSA,L]
+# Phục vụ frontend nếu không match gì
+RewriteRule ^ index.html [QSA,L]

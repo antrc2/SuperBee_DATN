@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ChevronLeft, ChevronRight, Gamepad2 } from "lucide-react";
 import CategoryCard from "../../components/Client/Category/CategoryCon";
+import CategoryCha from "../../components/Client/Category/CategoryCha";
 
 export default function CategorySlider({ categories = [] }) {
   const scrollContainerRef = useRef(null);
@@ -92,7 +93,7 @@ export default function CategorySlider({ categories = [] }) {
               key={category.id || category.slug}
               className="flex-shrink-0 w-[240px] sm:w-[260px]"
             >
-              <CategoryCard item={category} />
+              <CategoryCha item={category} />
             </div>
           ))}
 

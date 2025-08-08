@@ -35,7 +35,7 @@ api.interceptors.response.use(
   (error) => {
     const originalReq = error.config;
     const code = error.response?.data?.errorCode;
-    if (code === "TOKEN_EXPIRED" && error.response.status === 401) {
+    if (code === "TOKEN_EXPIRED" || error.response.status === 401) {
       if (!originalReq._retry) {
         originalReq._retry = true;
         if (!isRefreshing) {

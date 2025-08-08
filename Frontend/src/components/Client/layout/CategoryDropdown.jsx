@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useHome } from "@contexts/HomeContext";
 import CategoryCha from "../Category/CategoryCha";
+import CategoryCard from "../Category/CategoryCon";
 
 export default function CategoryDropdown({ isOpen, onClose }) {
   const dropdownRef = useRef(null);
@@ -23,9 +24,9 @@ export default function CategoryDropdown({ isOpen, onClose }) {
       ref={dropdownRef}
       className="absolute left-0 md:left-auto top-full z-20 mt-3 w-full md:w-[700px] lg:w-[800px] rounded-2xl bg-dropdown backdrop-blur-xl p-6 shadow-2xl border-themed"
     >
-      <div className="grid grid-cols-3 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         {categories.treeCategories?.map((e, i) => (
-          <CategoryCha item={e} key={i} onClose={onClose} />
+          <CategoryCard item={e} key={i} onClose={onClose} />
         ))}
       </div>
       <div className="mt-6 pt-4 border-t border-themed">

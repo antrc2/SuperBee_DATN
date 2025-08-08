@@ -8,6 +8,7 @@ import { useQuery } from "@tanstack/react-query";
 import ServerErrorDisplay from "../../../components/Loading/ServerErrorDisplay";
 import { getProductsBySlug } from "../../../services/productService.js";
 import CategoryCon from "../../../components/Client/Category/CategoryCon.jsx";
+import CategoryCha from "../../../components/Client/Category/CategoryCha.jsx";
 export default function ListProducts() {
   const { slug } = useParams();
 
@@ -50,7 +51,7 @@ export default function ListProducts() {
               <Product key={product.id || index} product={product} /> // Ưu tiên dùng product.id làm key
             ))
           : ListProducts?.data?.categories.map((cate, index) => (
-              <CategoryCon key={index} item={cate} /> // Ưu tiên dùng product.id làm key
+              <CategoryCha key={index} item={cate} /> // Ưu tiên dùng product.id làm key
             ))}
       </div>
       {ListProducts?.data?.type == 1 ? (

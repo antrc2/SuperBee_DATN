@@ -24,7 +24,9 @@ class RoleController extends Controller
     {
         try {
             $roles = Role::with('permissions:id,name,description')
-                ->where('guard_name', 'api')
+                ->where('name','!=','admin')
+                ->where('name','!=','admin-super')
+                ->where('name','!=','reseller')
                 ->select('id', 'name', 'description', 'created_at')
                 ->get();
             return response()->json(['status' => true, 'data' => $roles]);

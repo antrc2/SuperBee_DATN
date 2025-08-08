@@ -6,7 +6,7 @@ export default function CategoryCha({ item, onClose }) {
   const category = {
     name: item?.name || "Tên danh mục",
     slug: item?.slug || "category-slug",
-    image: item?.image || "https://i.imgur.com/g0j4g4A.jpeg",
+    image: item?.image || item?.image_url,
     count: item?.count || 0,
   };
 

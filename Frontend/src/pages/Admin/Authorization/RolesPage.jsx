@@ -195,12 +195,8 @@ function AssignPermissionsModal({
   };
   if (!role) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] flex flex-col">
-        <h2 className="text-xl md:text-2xl font-bold mb-4">
-          Gán quyền cho vai trò:{" "}
-          <span className="text-indigo-600">{role.name}</span>
-        </h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-[20] flex justify-center items-center p-4">
+      <div className="bg-white rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[80vh] flex flex-col">
         <div className="flex-grow overflow-y-auto pr-2 border-t border-b py-4">
           {Object.entries(allPermissions).map(([groupName, permissions]) => (
             <PermissionGroup
@@ -426,11 +422,11 @@ export default function RolesPage() {
         </div>
       )}
 
-      <RoleForm
+      {/* <RoleForm
         role={editingRole}
         onSave={handleSaveRole}
         onCancel={() => setEditingRole(null)}
-      />
+      /> */}
 
       <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -490,18 +486,6 @@ export default function RolesPage() {
                     className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200"
                   >
                     Gán quyền
-                  </button>
-                  <button
-                    onClick={() => setEditingRole(role)}
-                    className="px-3 py-1 text-xs bg-yellow-100 text-yellow-700 rounded-md hover:bg-yellow-200"
-                  >
-                    Sửa
-                  </button>
-                  <button
-                    onClick={() => setRoleToDelete(role)}
-                    className="px-3 py-1 text-xs bg-red-100 text-red-700 rounded-md hover:bg-red-200"
-                  >
-                    Xóa
                   </button>
                 </td>
               </tr>

@@ -58,6 +58,13 @@ class CheckApiKey
                         'errorCode' => 'USER_NOT_FOUND'
                     ], 401);
                 }
+                if($user->status == 2){
+                     return response()->json([
+                        'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên.',
+                        'status' => false,
+                        'code' => 'LOCKED_ACCOUNT'
+                    ], 401);
+                }
                 Auth::guard(name: 'api')->setUser($user);
                 $roles = $user->getRoleNames();
                 $request->merge([

@@ -23,7 +23,7 @@ import { useRoles } from "../../utils/role";
 
 // Mảng cấu hình các mục menu, giữ nguyên từ file gốc
 const navItems = [
-    {
+  {
     icon: <Home />,
     name: "Trang chủ",
     path: "/",
@@ -44,7 +44,7 @@ const navItems = [
     ],
   },
 
-    {
+  {
     icon: <Calendar />,
     name: "Ảnh Banners",
     path: "/admin/banners",
@@ -56,7 +56,7 @@ const navItems = [
     path: "/admin/users",
     view: ["admin", "admin_super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
   },
-    {
+  {
     icon: <Newspaper />,
     name: "Phân quyền",
     view: ["admin"],
@@ -149,7 +149,7 @@ const navItems = [
     view: ["admin", "admin-super", "reseller"],
     path: "/admin/withdrawals",
   },
-    {
+  {
     icon: <ShoppingCart />,
     name: "Đơn Hàng",
     path: "/admin/orders",

@@ -174,7 +174,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Cấp 2: Admin Super (Quản lý cấp cao)
         $roleAdminSuper = Role::create(['name' => 'admin-super', 'description' => 'Quản lý cấp cao, có mọi quyền trừ phân quyền.', 'guard_name' => 'api']);
-        $roleAdminSuper->givePermissionTo(Permission::where('group_name', '!=', 'Quản lý Phân quyền')->get());
+        $roleAdminSuper->givePermissionTo(Permission::all());
 
         // Cấp 3: Reseller (Quản lý Web con)
         $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Quản trị viên của một trang web con.', 'guard_name' => 'api']);

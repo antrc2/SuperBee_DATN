@@ -163,7 +163,7 @@ class AdminProductController extends Controller
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
-            if ($product->status == 4){
+            if ($product->status == 4 || $product->status == 2){
                 return response()->json([
                     "status"=>False,
                     "message"=>"Không thể sửa sản phẩm"
@@ -360,9 +360,10 @@ class AdminProductController extends Controller
                 }
             }
 
-            DB::commit();
+            
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}/edit",null,'products.*');
+            $this->sendNotification(1,"Sản phẩm {$sku} đã sửa thành công","{$frontend_link}/admin/products/{$product->id}/edit",null,'products.view');
+            DB::commit();
             return response()->json([
                 'status'  => true,
                 'message' => 'Cập nhật sản phẩm thành công',
@@ -577,7 +578,7 @@ class AdminProductController extends Controller
             // Commit transaction
             DB::commit();
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.*');
+            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.view);
             return response()->json([
                 "status" => true,
                 "message" => "Thêm sản phẩm thành công",

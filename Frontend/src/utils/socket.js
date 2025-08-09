@@ -34,6 +34,10 @@ export const getSocket = () => {
       currentGuestId
     );
     socket = io(SOCKET_URL, {
+      // Trên product thì sẽ cần   path: '/node/socket.io', còn trên dev thì không
+        // path: '/node/socket.io',
+
+        
       transports: ["websocket", "polling"],
       // CHỈ GỬI GUESTID QUA QUERY BAN ĐẦU
       query: {

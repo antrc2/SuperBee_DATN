@@ -72,14 +72,29 @@ class UserProductController extends Controller
                     404
                 );
             }
-
-            return response()->json(
-                [
-                    "status" => True,
-                    "message" => "Xem chi tiết sản phẩm thành công",
-                    "data" => $product
-                ]
-            );
+            // return response()->json(
+            //         [
+            //             "status" => True,
+            //             "message" => "Xem chi tiết sản phẩm thành công",
+            //             "data" => $product
+            //         ]
+            //     );
+            if ($product[0]->category->status == 1) {
+                return response()->json(
+                    [
+                        "status" => True,
+                        "message" => "Xem chi tiết sản phẩm thành công",
+                        "data" => $product
+                    ]
+                );
+            } else {
+                return response()->json([
+                    'status'=>False,
+                    'message'=>"Không tìm thấy danh mục sản phẩm",
+                    'data'=>[]
+                ],404);
+            }
+            
         } catch (\Throwable $th) {
             return response()->json([
                 "status" => False,

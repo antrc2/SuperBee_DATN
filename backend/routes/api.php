@@ -159,6 +159,11 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::prefix("/donate")->group(function () {
+            Route::prefix('/history')->group(function(){
+                Route::get("/",[HomeController::class,'donate_history']);
+                Route::get("/card",[CardController::class,'history']);
+                Route::get("/bank",[BankController::class,'history']);
+            });
             Route::prefix("/card")->group(function () {
                 Route::post("/", [CardController::class, 'store'])->middleware('permission:recharges.create');
             });

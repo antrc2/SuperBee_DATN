@@ -289,7 +289,7 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
         foreach ($userList as $userData) {
             $user = User::create([
                 'username' => $userData['username'],
-                'email' => $userData['username'] . '@app.com',
+                'email' => $userData['username'] . '@superbee.site',
                 'password' => Hash::make('password'),
                 'web_id' => $userData['web_id'],
                 'status' => 1,
@@ -317,11 +317,11 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
             $mainWeb->user_id = $adminUser->id;
             $mainWeb->save();
         }
-        $resellerUser = User::where('username', 'reseller')->first();
-        if ($resellerUser) {
-            $mainWeb->user_id = $resellerUser->id;
-            $mainWeb->save();
-        }
+        // $resellerUser = User::where('username', 'reseller')->first();
+        // if ($resellerUser) {
+        //     $mainWeb->user_id = $resellerUser->id;
+        //     $mainWeb->save();
+        // }
         $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
 
         $this->command->info('Hoàn tất Seeder!');

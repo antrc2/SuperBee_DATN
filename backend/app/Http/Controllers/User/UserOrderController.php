@@ -169,12 +169,12 @@ class UserOrderController extends Controller
                 // $total_price = $total_price - $total_price * 20 / 100;
             } elseif ($role == 'admin') {
             }
-            $tax_value = $total_price * $tax_amount / 100;
-            $total_price = $total_price + $tax_value;
+            
 
             $discount_amount = $total_price * $discount_value / 100;
             $total_price = $total_price - $discount_amount;
-
+            $tax_value = $total_price * $tax_amount / 100;
+            $total_price = $total_price + $tax_value;
             if (!$cart['status']) {
                 return [
                     "status" => false,
@@ -368,8 +368,11 @@ class UserOrderController extends Controller
                     "tax_amount" => $tax_amount,
                     "tax_value" => $tax_value,
                 ];
-            }
-
+            }   
+            $total_price = $total_price - $discount_amount;
+            $total_price = $total_price - $tax_value;
+            $tax_value = $total_price * $tax_amount / 100;
+            $total_price = $total_price + $tax_value;
             return [
                 "status" => true,
                 'message' => "Áp dụng mã giảm giá {$promotion_code} thành công",
@@ -377,7 +380,7 @@ class UserOrderController extends Controller
                 "discount_amount" => $discount_amount + $discount_amount_clone,
                 "discount_value" => $discount_value * 100 + $discount_value_clone,
                 "total_price" => $total_price_clone,
-                "total_price_after_discount" => $total_price - $discount_amount,
+                "total_price_after_discount" => $total_price,
                 "status_code" => 200,
                 "tax_amount" => $tax_amount,
                 "tax_value" => $tax_value,

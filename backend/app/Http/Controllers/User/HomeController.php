@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Callback\BankController;
+use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\ChatRoom;
@@ -10,12 +12,38 @@ use App\Models\Wallet;
 use App\Models\Category;
 use App\Models\Message;
 use App\Models\Post;
+use App\Models\RechargeBank;
+use App\Models\RechargeCard;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
+    public function donate_history(Request $request){
+        try {
+            $cards = RechargeCard::where("status",1)->with(['walletTransaction.wallet.user'])->limit(5)->get();
+            $banks = RechargeBank::where("status",1)->with(['walletTransaction.wallet.user'])->limit(5)->get();
+            return response()->json([
+                'status'=>True,
+                'message'=>"Lấy lịch sử nạp thẻ thành công",
+                'data'=> [
+                    "cards"=>$cards,
+                    "banks"=>$banks
+                ]
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'=>False,
+                'message'=>"Lấy lịch sử nạp thẻ thất bại",
+                'data'=> [
+                    "cards"=>[],
+                    "banks"=>[]
+                ]
+            ],500);
+            //throw $th;
+        }
+    }
     /**
      * Lấy dữ liệu chính cho trang chủ.
      * Dữ liệu sản phẩm ở đây đã được giới hạn sẵn (limit 8).

@@ -143,7 +143,7 @@ class PartnerProductController extends Controller
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
-
+            $sku = $product->skuy;
             // Nếu attributes là JSON string, decode nó
             $attrs = $request->input('attributes');
             if (is_string($attrs)) {
@@ -360,7 +360,9 @@ class PartnerProductController extends Controller
                     ]);
                 }
             }
-
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1,"Sản phẩm {$sku} đang chờ duyệt","{$frontend_link}/admin/pendingProducts/{$product->id}",null,'products.view');
+            
             DB::commit();
 
             return response()->json([
@@ -569,6 +571,8 @@ class PartnerProductController extends Controller
             }
 
             // Commit transaction
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1,"Sản phẩm {$sku} đang chờ duyệt","{$frontend_link}/admin/pendingProducts/{$product->id}",null,'products.view');
             DB::commit();
 
             return response()->json([

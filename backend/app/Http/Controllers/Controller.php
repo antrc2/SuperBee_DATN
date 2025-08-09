@@ -293,7 +293,8 @@ abstract class Controller
                     return true;
                 }
             } else {
-                $users = User::permission('posts.*')->get();
+                $users = User::permission($permission)->get();
+                Log::info("usser: {$users}");
                 foreach ($users as $user) {
                     $noti = Notification::create([
                         'user_id'      => $user->id,
@@ -313,10 +314,11 @@ abstract class Controller
                             "published_at" => $published_at,
                             "link" => $link,
                             "is_read" => 0,
-                            'user_id' => $user_id
+                            'user_id' => $user->id
                         ]
                     ));
                 }
+                return true;
             }
         } catch (\Throwable $e) {
             Log::error('Lỗi khi gửi thông báo: ' . $e->getMessage());

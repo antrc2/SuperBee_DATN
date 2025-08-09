@@ -34,7 +34,7 @@ export function HomeProvider({ children }) {
         "https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/SuperBee.png";
       link.type = "image/png"; // Giả định là png, bạn có thể cần kiểm tra định dạng thực tế
     } else {
-      document.title = "Ứng Dụng Web";
+      document.title = "SuperBee Gaming Store - Trang web bán tài khoản game";
       let link = document.querySelector("link[rel~='icon']");
       if (link) {
         link.href =

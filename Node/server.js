@@ -16,8 +16,9 @@ const server = http.createServer(app);
 
 // Khởi tạo Socket.IO server
 const io = new Server(server, {
+  path: "/socket.io",
   cors: {
-    origin: "http://localhost:5173", // Địa chỉ ReactJS FE của bạn
+    origin: "*", // Địa chỉ ReactJS FE của bạn
     methods: ["GET", "POST"],
   },
 });

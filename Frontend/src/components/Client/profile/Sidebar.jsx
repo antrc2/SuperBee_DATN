@@ -97,7 +97,7 @@ export default function Sidebar() {
             </NavLink>
             <NavLink to="/info/disputes" className={navLinkClass}>
               <Package className="h-5 w-5" />
-              <span>Lịch sử khiếu lại</span>
+              <span>Lịch sử khiếu nại</span>
             </NavLink>
           </div>
         </div>

@@ -425,7 +425,7 @@ class UserOrderController extends Controller
     {
         try {
             $tax_value = env("TAX");
-            $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
+            $promotion_codes = Promotion::withCount(['orders'])->where('end_date',">",now())->orderBy('created_at', 'desc')->get();
 
             $wallet = Wallet::where('user_id', $request->user_id)->first();
             if ($wallet == null) {

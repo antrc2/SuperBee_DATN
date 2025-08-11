@@ -154,7 +154,7 @@ class AdminProductController extends Controller
     {
         try {
             // Lấy product kèm quan hệ
-            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials'])
+            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials','creator'])
                 ->find($id);
             
             if (!$product) {

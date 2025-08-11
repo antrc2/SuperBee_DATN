@@ -154,7 +154,7 @@ class AdminProductController extends Controller
     {
         try {
             // Lấy product kèm quan hệ
-            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials'])
+            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials','creator'])
                 ->find($id);
             
             if (!$product) {
@@ -578,7 +578,7 @@ class AdminProductController extends Controller
             // Commit transaction
             DB::commit();
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.view);
+            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.view');
             return response()->json([
                 "status" => true,
                 "message" => "Thêm sản phẩm thành công",

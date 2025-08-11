@@ -5,12 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+
 class AdminBannerController extends Controller
 {
-  public function index(Request $request)
+    public function index(Request $request)
     {
         try {
             $request->validate([
@@ -42,7 +41,6 @@ class AdminBannerController extends Controller
                 'message' => 'Lấy danh sách banner thành công',
                 'data' => $banners
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error fetching banners: ' . $e->getMessage());
             return response()->json([
@@ -76,20 +74,19 @@ class AdminBannerController extends Controller
             'alt_text' => 'nullable|string|max:255',
         ]);
 
-         $imageUrl = null;
+        $imageUrl = null;
 
-            // 2. Kiểm tra và tải ảnh nếu có
-            if ($request->hasFile('image')) {
-                $imageUrl = $this->uploadFile(
-                    $request->file('image'),
-                    'Banner_image' 
-                );
+        // Kiểm tra và tải ảnh nếu có
+        if ($request->hasFile('image')) {
+            $imageUrl = $this->uploadFile(
+                $request->file('image'),
+                'Banner_image'
+            );
 
-                if (is_null($imageUrl)) {
-                    // Xử lý lỗi nếu việc tải ảnh không thành công
-                    return response()->json(['message' => 'Failed to upload Banner image.'], 500);
-                }
+            if (is_null($imageUrl)) {
+                return response()->json(['message' => 'Failed to upload Banner image.'], 500);
             }
+        }
 
         $banner = Banner::create([
             'title' => $validated['title'] ?? null,
@@ -117,32 +114,39 @@ class AdminBannerController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'nullable|string|max:255',
-            'link' => 'nullable|url',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,svg|max:10000',
-            'alt_text' => 'nullable|string|max:255',
-            'status' => 'nullable|in:0,1',
+            'title'     => 'nullable|string|max:255',
+            'link'      => 'nullable|url',
+            'image'     => 'nullable|image|mimes:jpeg,png,jpg,svg|max:10000',
+            'alt_text'  => 'nullable|string|max:255',
+            'status'    => 'nullable|in:0,1',
+            'keep_image' => 'nullable|boolean', // Client gửi true nếu giữ ảnh cũ
         ]);
 
-        if ($request->hasFile('image')) {
-            // Xoá ảnh cũ
-            if ($banner->image_url) {
-                $old = str_replace('/storage/', '', $banner->image_url);
-                Storage::disk('public')->delete($old);
-            }
-            $path = $request->file('image')->store('banners', 'public');
-            $banner->image_url = '/storage/' . $path;
+        // Nếu client KHÔNG giữ ảnh cũ
+        if (empty($validated['keep_image']) && !empty($banner->image_url)) {
+            $relative = ltrim(parse_url($banner->image_url, PHP_URL_PATH), '/');
+            $this->deleteFile($relative);
+            $banner->image_url = null;
         }
 
-        $banner->update(array_merge(
-            $validated,
-            ['updated_by' => $request->user_id]
-        ));
+        // Nếu có file ảnh mới thì upload
+        if ($request->hasFile('image')) {
+            $imageUrl = $this->uploadFile($request->file('image'), 'Banner_image');
+            if (is_null($imageUrl)) {
+                return response()->json(['status' => false, 'message' => 'Upload Banner image thất bại.'], 500);
+            }
+            $validated['image_url'] = $imageUrl;
+        }
+
+        unset($validated['keep_image']); // Không lưu field này vào DB
+        $validated['updated_by'] = $request->user_id;
+
+        $banner->update($validated);
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Cập nhật banner thành công',
-            'data' => $banner
+            'data'    => $banner
         ]);
     }
 
@@ -150,18 +154,22 @@ class AdminBannerController extends Controller
     {
         $banner = Banner::find($id);
         if (!$banner) {
-            return response()->json(['status' => false, 'message' => 'Không tìm thấy banner'], 404);
+            return response()->json([
+                'status' => false,
+                'message' => 'Không tìm thấy banner'
+            ], 404);
         }
 
-        if ($banner->image_url) {
-            $old = str_replace('/storage/', '', $banner->image_url);
-            Storage::disk('public')->delete($old);
+        // Xóa ảnh nếu tồn tại
+        if (!empty($banner->image_url)) {
+            $relativePath = ltrim(parse_url($banner->image_url, PHP_URL_PATH), '/');
+            $this->deleteFile($relativePath);
         }
 
         $banner->delete();
 
         return response()->json([
-            'status' => true,
+            'status'  => true,
             'message' => 'Xoá banner thành công'
         ]);
     }

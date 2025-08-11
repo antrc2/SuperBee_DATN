@@ -110,12 +110,6 @@ const navItems = [
   },
   {
     icon: <Calendar />,
-    name: "Banners",
-    path: "/admin/banners",
-    view: ["admin", "admin_super", "reseller", "nv_marketing"],
-  },
-  {
-    icon: <Calendar />,
     name: "Tin Nhắn",
     path: "/admin/agent",
     view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
@@ -133,16 +127,6 @@ const navItems = [
     view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
 
-  {
-    icon: <Newspaper />,
-    name: "Authorization",
-    view: ["admin"],
-    subItems: [
-      { name: " Dashboard ", path: "/admin/authorization" },
-      { name: "Roles", path: "/admin/authorization/roles" },
-      { name: "Permissions", path: "/admin/authorization/permissions" },
-    ],
-  },
   {
     icon: <Newspaper />,
     name: "Rút tiền",

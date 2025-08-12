@@ -159,10 +159,10 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::prefix("/donate")->group(function () {
-            Route::prefix('/history')->group(function(){
-                Route::get("/",[HomeController::class,'donate_history']);
-                Route::get("/card",[CardController::class,'history']);
-                Route::get("/bank",[BankController::class,'history']);
+            Route::prefix('/history')->group(function () {
+                Route::get("/", [HomeController::class, 'donate_history']);
+                Route::get("/card", [CardController::class, 'history']);
+                Route::get("/bank", [BankController::class, 'history']);
             });
             Route::prefix("/card")->group(function () {
                 Route::post("/", [CardController::class, 'store'])->middleware('permission:recharges.create');
@@ -268,7 +268,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      */
     Route::prefix('/accounts')->group(function () {
         Route::get('/', [UserController::class, 'index'])->middleware('permission:users.view');
-         Route::get('/staff-roles', [UserController::class, 'getStaffRoles']);
+        Route::get('/staff-roles', [UserController::class, 'getStaffRoles']);
 
         // Route để lấy các quyền có thể gán trực tiếp (Cách 2)
         Route::get('/assignable-permissions', [UserController::class, 'getAssignablePermissions']);
@@ -283,7 +283,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         // Gán vai trò cho user là quyền sửa vai trò
         Route::put('/{id}/role', [UserController::class, 'updateRoles'])->middleware('permission:roles.edit');
         // Route để lấy các vai trò có sẵn (Cách 1)
-       
+
     });
 
     /**
@@ -409,9 +409,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
 
 
     Route::prefix('/auto')->group(function () {
-        Route::prefix('/post')->group(function () {
-
-        });
+        Route::prefix('/post')->group(function () {});
         Route::prefix('/transaction')->group(function () {
             Route::get('/', [AutoTransactionController::class, 'status']);
             Route::post("/", [AutoTransactionController::class, 'turn']);
@@ -447,9 +445,14 @@ Route::prefix('/assistant')->group(function () {
         Route::get("/", [AssistantProductController::class, 'index']);
         Route::get("/{sku}", [AssistantProductController::class, 'show']);
     });
-    Route::prefix('/carts')->group(function(){
-        Route::post("/",[AssistantCartController::class,'store'])->middleware('jwt');
+    Route::prefix('/carts')->group(function () {
+        Route::post("/", [AssistantCartController::class, 'store'])->middleware('jwt');
     });
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 });
 
 
@@ -457,14 +460,12 @@ Route::prefix('/assistant')->group(function () {
 
 
 Route::prefix('/auto')->group(function () {
-        Route::prefix('/post')->group(function () {
-
-        });
-        Route::prefix('/transaction')->group(function () {
-            Route::get('/', [AutoTransactionController::class, 'status']);
-            Route::post("/", [AutoTransactionController::class, 'turn']);
-        });
+    Route::prefix('/post')->group(function () {});
+    Route::prefix('/transaction')->group(function () {
+        Route::get('/', [AutoTransactionController::class, 'status']);
+        Route::post("/", [AutoTransactionController::class, 'turn']);
     });
+});
 // Route::post("/export",[AdminWithdrawController::class,'export']);
 
 // Route::get("/allow_banks",[UserWithdrawController::class,'allowBanks']);

@@ -54,7 +54,11 @@ use PHPUnit\Framework\Attributes\Group;
 */
 
 // Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
-
+Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);

@@ -1,3 +1,4 @@
+import string
 from openai import OpenAI
 import os
 import requests
@@ -8,6 +9,7 @@ import asyncio
 from playwright.async_api import async_playwright
 from threading import Thread
 import copy
+import random
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 chat_model = os.getenv("CHAT_MODEL")
@@ -112,19 +114,60 @@ def execute_agent(agent_name,messages,access_token):
             return ""
         else :
             tool_calls = response.choices[0].message.tool_calls
-            response = ""
+            # response = ""
             print(f"Product Tool calls: {tool_calls}")
-            
+            tool_calls_ = []
+            # tool_calls_id_ = []
+            # def random_text(length=8):
+            #     chars = string.ascii_letters + string.digits
+            #     # random.choices() trả về list ký tự, join để nối thành chuỗi
+            #     return ''.join(random.choices(chars, k=length))
+                            
+            for tool_call in tool_calls:
+                # id_ = random_text()
+                tool_calls_.append(
+                    {
+                        "id": tool_call.id,
+                        'type': "function",
+                        'function': {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }
+                )
+                # tool_calls_id_.append(id_)
+            yield {
+                "role": "assistant",
+                "tool_calls": tool_calls_
+            }
+            # index=0
             for tool_call in tool_calls:
                 argument = json.loads(tool_call.function.arguments)
                 function_name = tool_call.function.name
                 if (function_name == "search_product_detail_by_sku"):
                     result = search_product_detail_by_sku(argument['sku'])
-                    response += result
+                    # response += result
                 if (function_name == "add_product_to_cart"):
                     result = add_product_to_cart(argument['id'],access_token)
-                    response += result
-            return response
+                    # response += result
+                yield {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                }
+                # index+=1
+                # yield [
+                #     {
+                #         "role": "assistant",
+                #         'tool_calls': tool_calls_
+                #     },
+                #     {
+                #         "role": "tool",
+                #         "tool_call_id": tool_call.id,
+                #         "content": result
+                #     }
+                # ]
+            # return response
     elif (agent_name == 'category'):
         response = client.chat.completions.create(
             messages=messages,
@@ -161,21 +204,42 @@ def execute_agent(agent_name,messages,access_token):
             response = ""
             # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
             print(f"Category Tool calls: {tool_calls}")
-            
+            tool_calls_ = []
+            for tool_call in tool_calls:
+                # id_ = random_text()
+                tool_calls_.append(
+                    {
+                        "id": tool_call.id,
+                        'type': "function",
+                        'function': {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }
+                )
+                # tool_calls_id_.append(id_)
+            yield {
+                "role": "assistant",
+                "tool_calls": tool_calls_
+            }
             for tool_call in tool_calls:
                 argument = json.loads(tool_call.function.arguments)
                 function_name = tool_call.function.name
                 if (function_name == "get_list_product_by_category"):
                     result = get_list_product_by_category(argument['category_id'])
-                    response += result
-            return response
+                    # response += result
+                yield {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                }
+            # return response
     elif (agent_name == 'news'):
         tools = [
             {
                 "type": "function",
                 "function": {
                     "name": "sitemap_crawl",
-
                     "description": "Lấy link sitemap con theo link sitemap tổng",
                     "parameters": {
                         "type": "object",
@@ -227,18 +291,40 @@ def execute_agent(agent_name,messages,access_token):
             response = ""
             # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
             print(f"News Tool calls: {tool_calls}")
-            
+            tool_calls_ = []
+            for tool_call in tool_calls:
+                # id_ = random_text()
+                tool_calls_.append(
+                    {
+                        "id": tool_call.id,
+                        'type': "function",
+                        'function': {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments
+                        }
+                    }
+                )
+                # tool_calls_id_.append(id_)
+            yield {
+                "role": "assistant",
+                "tool_calls": tool_calls_
+            }
             for tool_call in tool_calls:
                 argument = json.loads(tool_call.function.arguments)
                 function_name = tool_call.function.name
                 if (function_name == "sitemap_crawl"):
                     result =  sitemap_crawl(argument['url'])
                     # result = Thread
-                    response += result
+                    # response += result
                 elif (function_name == 'url_crawl'):
                     result = url_crawl_sync(argument['url'])
-                    response += result
-            return response
+                    # response += result
+            yield {
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": result
+                }
+            # return response
             
 def chat(messages,access_token):
     results = {}
@@ -339,9 +425,9 @@ def chat(messages,access_token):
             tools=tools,
 
             tool_choice=tool_choice,
-            max_tokens=1024,
+            max_tokens=32768,
             stream=True,
-            temperature=0.7
+            temperature=0.3
         )
         tool_call = True
         generated_text = ""
@@ -401,16 +487,28 @@ def chat(messages,access_token):
                             messages_clone = copy.deepcopy(user_content)
                             messages_clone[-1]['content'] = data['content']
                             print(f"Message clone: {messages_clone}")
-                            result = execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token)
+                            # results = execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token)
                             messages.append({
                                 "role": "tool",
                                 "tool_call_id": tool_call.id,
-                                "content": result
+                                "content": f"Đang sử dụng Agent {data['router']}"
 
                             })
                             yield json.dumps({
                                 "messages": messages[1:]
                             })
+                            for result in execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token):
+                                
+                                print(f"\n\nResult while use tool: {result}\n\n")
+                                messages.append(result)
+                                # print(f"\n\nMessage while use tool: {messages}\n\n")
+                                yield json.dumps({
+                                    "messages": messages[1:]
+                                })
+                            
+                            print(f"\n\nMessage after use tool: {messages}\n\n")
+                            
+
                     # messages.append(
                     #     {
                     #         "role": "assistant",

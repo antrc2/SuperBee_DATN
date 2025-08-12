@@ -13,11 +13,11 @@ class AssistantCategoryController extends Controller
     {
         try {
             // $categories = Category::all(['name','slug']);
-            $categories = Category::where('id','!=',1)->where('status',1)->with(['products' => function ($query) {
-                $query->select('sku', 'category_id'); // Phải có khóa ngoại để Eloquent ánh xạ đúng
+            $categories = Category::where('id','!=',1)->where('status',1)->where('parent_id','!=',null)->with(['products' => function ($query) {
+                $query->select('sku', 'category_id')->where('status', 1); // Phải có khóa ngoại để Eloquent ánh xạ đúng
             }])->get(['id', 'name']); // Phải lấy 'id' để match với 'category_id'
             return response()->json([
-                "status" => False,
+                "status" => True,
                 'message' => "Lấy danh sách danh mục sản phẩm thành công",
                 'data' => $categories
             ]);
@@ -35,7 +35,7 @@ class AssistantCategoryController extends Controller
             $category = Category::where('id',$id)->where('status',1)->with('products.gameAttributes')->with("products.images")->first();
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
-                'status'=>False,
+                'status'=>True,
                 'message'=>"Lấy danh sách sản phẩm theo id danh mục {$id} thành công",
                 'data'=>$category,
                 "link"=>"{$frontend_link}/mua-acc/{$category->slug}"

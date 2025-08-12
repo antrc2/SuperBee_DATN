@@ -113,7 +113,6 @@ def execute_agent(agent_name,messages,access_token):
         else :
             tool_calls = response.choices[0].message.tool_calls
             response = ""
-            # if (response.choices[0].message.tool_calls[0].function.name == "search_product_detail_by_sku"):
             print(f"Product Tool calls: {tool_calls}")
             
             for tool_call in tool_calls:
@@ -297,15 +296,15 @@ def chat(messages,access_token):
 
             Dưới đây là sitemap của cả trang web:
             {sitemap}
-            Đưa ra link và ảnh ở dạng markdown cho tôi
+            Nếu được thì hãy đưa ra link và ảnh ở dạng markdown cho tôi, nếu không có thì thôi
             """
         }
     
     messages = [system_content] + messages
     print(f"Messages: {messages}")
     prepare_end = False
-    router = ['category','product','news']
-    tool_choice = 'auto'
+    router = ['category','product','news','other']
+    tool_choice = 'required'
     user_content = copy.deepcopy(messages)
     while True:
         tools = [
@@ -376,38 +375,42 @@ def chat(messages,access_token):
                 elif delta.tool_calls:
                     tool_call = True
                     for tool_call in delta.tool_calls:
-                        messages.append({
-                            "role": "assistant",
-                            "tool_calls": [{
-                                "id": tool_call.id,
-                                "type": "function",
-                                "function": {
-                                    "name": tool_call.function.name,
-                                    "arguments": tool_call.function.arguments
-                                }
-                            }]
-                        })
-                        yield json.dumps({
-                            "messages": messages[1:]
-                        })
                         print(f"ID Chat: {chunk.id}")
-                        # print(f"Message: {messages}")
+                            # print(f"Message: {messages}")
                         print(f"\n[TOOL CALL]: {tool_call.function.name} - {tool_call.function.arguments}")
-                        data = json.loads(tool_call.function.arguments)
-                        # messages_clone = user_content.copy()
-                        messages_clone = copy.deepcopy(user_content)
-                        messages_clone[-1]['content'] = data['content']
-                        print(f"Message clone: {messages_clone}")
-                        result = execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token)
-                        messages.append({
-                            "role": "tool",
-                            "tool_call_id": tool_call.id,
-                            "content": result
+                        if tool_call.function.name == 'other':
+                            pass
+                        else:
+                            messages.append({
+                                "role": "assistant",
+                                "tool_calls": [{
+                                    "id": tool_call.id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": tool_call.function.name,
+                                        "arguments": tool_call.function.arguments
+                                    }
+                                }]
+                            })
+                            yield json.dumps({
+                                "messages": messages[1:]
+                            })
+                            
+                            data = json.loads(tool_call.function.arguments)
+                            # messages_clone = user_content.copy()
+                            messages_clone = copy.deepcopy(user_content)
+                            messages_clone[-1]['content'] = data['content']
+                            print(f"Message clone: {messages_clone}")
+                            result = execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token)
+                            messages.append({
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "content": result
 
-                        })
-                        yield json.dumps({
-                            "messages": messages[1:]
-                        })
+                            })
+                            yield json.dumps({
+                                "messages": messages[1:]
+                            })
                     # messages.append(
                     #     {
                     #         "role": "assistant",

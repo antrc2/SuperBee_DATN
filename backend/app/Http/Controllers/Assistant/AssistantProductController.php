@@ -27,7 +27,7 @@ class AssistantProductController extends Controller
     }
     public function show(Request $request,$sku){
         try {
-            $product = Product::where("sku",$sku)->where('status',1)->with(['category','gameAttributes','images'])->get();
+            $product = Product::where("sku",$sku)->where('status',1)->with(['category','gameAttributes','images'])->first();
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>True,

@@ -10,7 +10,7 @@ class AssistantProductController extends Controller
 {
     public function index(Request $request){
         try {
-            $skus = Product::all(['sku','created_at','updated_at']);
+            $skus = Product::where('status',1)->get(['sku','created_at','updated_at']);
             return response()->json([
                 "status"=>True,
                 'message'=>"Lấy danh sách sku của sản phẩm thành công",
@@ -27,7 +27,7 @@ class AssistantProductController extends Controller
     }
     public function show(Request $request,$sku){
         try {
-            $product = Product::where("sku",$sku)->with(['category','gameAttributes','images'])->get();
+            $product = Product::where("sku",$sku)->where('status',1)->with(['category','gameAttributes','images'])->get();
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>True,

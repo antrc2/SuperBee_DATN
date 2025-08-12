@@ -342,7 +342,7 @@ def chat(messages,access_token):
             tool_choice=tool_choice,
             max_tokens=1024,
             stream=True,
-            temperature=0.3
+            temperature=0.7
         )
         tool_call = True
         generated_text = ""

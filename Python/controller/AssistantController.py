@@ -17,6 +17,7 @@ backend_api = os.getenv("BACKEND_API")
 client = OpenAI(
 
     base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    # base_url="http://127.0.0.1:1234/v1",
     api_key=api_key
 )
 def now():
@@ -303,8 +304,8 @@ def chat(messages,access_token):
     messages = [system_content] + messages
     print(f"Messages: {messages}")
     prepare_end = False
-    router = ['category','product','news','other']
-    tool_choice = 'required'
+    router = ['category','product','news']
+    tool_choice = 'auto'
     user_content = copy.deepcopy(messages)
     while True:
         tools = [
@@ -312,7 +313,7 @@ def chat(messages,access_token):
                 "type": "function",
                 "function": {
                     "name": "query_router",
-                    "description": "Phân loại câu hỏi theo danh mục và tóm tắt câu hỏi",
+                    "description": "Ưu tiên sử dụng tool này để phân loại câu hỏi theo danh mục và tóm tắt câu hỏi",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -356,9 +357,18 @@ def chat(messages,access_token):
                 if delta.content:
                     tool_call = False
                     generated_text += delta.content
+                    if (messages[-1]['role'] == 'assistant'):
+                        pass
+                    else:
+                        messages.append(
+                            {
+                                "role": "assistant",
+                                'content': ""
+                            }
+                        )
                     messages[-1]['content'] = generated_text
                     yield json.dumps({
-                        "messages": messages
+                        "messages": messages[1:]
                     })
                     print(f"Final Message: {messages}")
                     # print(delta.content, end="", flush=True)
@@ -378,7 +388,7 @@ def chat(messages,access_token):
                             }]
                         })
                         yield json.dumps({
-                            "messages": messages
+                            "messages": messages[1:]
                         })
                         print(f"ID Chat: {chunk.id}")
                         # print(f"Message: {messages}")
@@ -396,14 +406,14 @@ def chat(messages,access_token):
 
                         })
                         yield json.dumps({
-                            "messages": messages
+                            "messages": messages[1:]
                         })
-                    messages.append(
-                        {
-                            "role": "assistant",
-                            'content': generated_text
-                        }
-                    )
+                    # messages.append(
+                    #     {
+                    #         "role": "assistant",
+                    #         'content': generated_text
+                    #     }
+                    # )
 
         tool_choice = 'auto'
         # break

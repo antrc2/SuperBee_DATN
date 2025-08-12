@@ -4,17 +4,7 @@ import ReactMarkdown from "react-markdown";
 import { Link } from "react-router-dom";
 import { useCart } from "@contexts/CartContext";
 
-function getUserIdFromJWT(token) {
-  try {
-    const payload = token.split(".")[1]; // Lấy phần payload của JWT
-    const decoded = JSON.parse(atob(payload));
-    return decoded.user_id || null;
-  } catch (e) {
-    console.error("Không lấy được user_id từ token:", e);
-    return null;
-  }
-}
-
+import { getApiKey } from "@utils/hook.js";
 export default function ChatWidget() {
   const { handleAddToCart, handlePayNow, loadingCart, cartError } = useCart();
   const [open, setOpen] = useState(false);
@@ -32,8 +22,6 @@ export default function ChatWidget() {
   const python_url = import.meta.env.VITE_PYTHON_URL;
   // const [product, setProduct] = useState(null);
   const toggleChat = async () => {
-    if (!open) {
-    }
     setOpen(!open);
   };
   // Auto-scroll to the latest message
@@ -69,65 +57,95 @@ export default function ChatWidget() {
     if (!input.trim()) return;
 
     const userMsg = { role: "user", content: input };
-    setMessages((msgs) => [...msgs, userMsg]);
+    const newMessages = [...messages, userMsg];
+
+    setMessages(newMessages);
     setInput("");
     setLoading(true);
 
+    // Thêm một tin nhắn rỗng của assistant để chuẩn bị nhận dữ liệu
+    setMessages((prev) => [...prev, { role: "assistant", content: "" }]);
+
     try {
-      const accessToken = sessionStorage.getItem("access_token");
+      const token = sessionStorage.getItem("access_token");
+      const headers = {
+        "Content-Type": "application/json",
+      };
 
-      const apiKey = sessionStorage.getItem("web");
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+      // Logic dự phòng dùng API key (nếu cần)
+      // else {
+      //   const apiKey = getApiKey();
+      //   if (!apiKey) {
+      //     throw new Error("Lỗi xác thực: Không tìm thấy token hoặc API key.");
+      //   }
+      //   headers["X-API-KEY"] = apiKey;
+      // }
 
-      const userId =
-        getUserIdFromJWT(accessToken) || sessionStorage.getItem("guestId");
-
-      const guestId =
-        sessionStorage.getItem("guest_id") ||
-        "guest_" + Math.random().toString(36).substring(2);
-
-      const res = await fetch(`${python_url}/chat`, {
+      const response = await fetch(`${python_url}/assistant/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-API-KEY": apiKey,
-          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        },
+        headers: headers,
         body: JSON.stringify({
-          message: input,
-          user_id: userId || guestId,
+          messages: newMessages,
         }),
       });
 
-      const data = await res.json();
-      console.log(data);
+      if (!response.ok) {
+        throw new Error(
+          `Lỗi từ máy chủ: ${response.status} ${response.statusText}`
+        );
+      }
 
-      if (data.type === "product_list") {
-        setMessages((msgs) => [
-          ...msgs,
-          {
-            role: "assistant",
-            content: data.message,
-            products: data.products,
-            type: "product_list",
-          },
-        ]);
-      } else {
-        setMessages((msgs) => [
-          ...msgs,
-          {
-            role: "assistant",
-            content: data.message || "Xin lỗi, tôi chưa hiểu ý bạn.",
-          },
-        ]);
+      // Lấy trình đọc và bộ giải mã
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+
+      // Vòng lặp để đọc stream
+      while (true) {
+        // Đọc từng đoạn dữ liệu
+        const { value, done } = await reader.read();
+
+        if (done) {
+          // Kết thúc stream, thoát vòng lặp
+          break;
+        }
+
+        // === THAY ĐỔI CHÍNH NẰM Ở ĐÂY ===
+        // Giải mã đoạn dữ liệu nhận được và nối trực tiếp vào tin nhắn cuối cùng
+        const chunk = decoder.decode(value, { stream: true });
+        console.log("🚀 ~ sendMessage ~ chunk:", chunk);
+
+        setMessages((prev) => {
+          const lastMsgIndex = prev.length - 1;
+          // Tạo một bản sao mới của mảng để tránh thay đổi trực tiếp state
+          const updatedMessages = [...prev];
+
+          if (updatedMessages[lastMsgIndex]) {
+            updatedMessages[lastMsgIndex].content += chunk;
+          }
+
+          return updatedMessages;
+        });
       }
     } catch (err) {
       console.error("Lỗi:", err);
-      setMessages((msgs) => [
-        ...msgs,
-        { role: "assistant", content: "Lỗi kết nối máy chủ: " + err.message },
-      ]);
+      // Cập nhật tin nhắn cuối cùng với thông báo lỗi
+      setMessages((prev) => {
+        const lastMsgIndex = prev.length - 1;
+        const updatedMessages = [...prev];
+        if (updatedMessages[lastMsgIndex]) {
+          updatedMessages[lastMsgIndex].content =
+            "Đã xảy ra lỗi khi kết nối tới AI: " + err.message;
+        }
+        return updatedMessages;
+      });
     } finally {
       setLoading(false);
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     }
   };
 
@@ -176,7 +194,10 @@ export default function ChatWidget() {
       {/* ####################################### */}
       {/* Khung chat */}
       {open && (
-        <div ref={chatRef} className="fixed bottom-[130px] right-6 z-90 w-[800px] h-full max-h-[500px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+        <div
+          ref={chatRef}
+          className="fixed bottom-[130px] right-6 z-90 w-[800px] h-full max-h-[500px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        >
           <div className="flex items-center justify-between p-4 bg-content-bg border-b border-themed flex-shrink-0">
             <span className="font-bold text-lg text-primary">13Bee</span>
             <button

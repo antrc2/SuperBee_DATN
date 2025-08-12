@@ -13,8 +13,8 @@ class AssistantCategoryController extends Controller
     {
         try {
             // $categories = Category::all(['name','slug']);
-            $categories = Category::with(['products' => function ($query) {
-                $query->select('sku', 'category_id'); // Phải có khóa ngoại để Eloquent ánh xạ đúng
+            $categories = Category::where('id','!=',1)->where('status',1)->with(['products' => function ($query) {
+                $query->select('sku', 'category_id')->where('status',1); // Phải có khóa ngoại để Eloquent ánh xạ đúng
             }])->get(['id', 'name']); // Phải lấy 'id' để match với 'category_id'
             return response()->json([
                 "status" => False,
@@ -32,7 +32,7 @@ class AssistantCategoryController extends Controller
     }
     public function show(Request $request,$id){
         try {
-            $category = Category::where('id',$id)->with('products.gameAttributes')->with("products.images")->get();
+            $category = Category::where('id',$id)->where('status',1)->where('id','!=',1)->with('products.gameAttributes')->with("products.images")->get();
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>False,

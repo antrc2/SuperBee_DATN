@@ -245,21 +245,21 @@ def chat(messages,access_token):
 
     def fetch_categories():
         results['categories'] = requests.get(
-            '{backend_api}/assistant/categories'
+            f'{backend_api}/assistant/categories'
         ).text
 
     def fetch_products():
         results['products'] = requests.get(
-            '{backend_api}/assistant/products'
+            f'{backend_api}/assistant/products'
         ).text
 
     def fetch_sitemaps():
         results['post_sitemaps'] = requests.get(
-            '{backend_api}/tin-tuc.xml'
+            f'{backend_api}/assistant/tin-tuc.xml'
         ).text
     def get_sitemap():
         results['sitemap'] = requests.get(
-            '{backend_api}/sitemap.xml'
+            f'{backend_api}/assistant/sitemap.xml'
         ).text
 
     # Tạo các Thread
@@ -281,8 +281,10 @@ def chat(messages,access_token):
     # Lúc này results đã có
     categories    = results['categories']
     products      = results['products']
-    post_sitemaps = results['post_sitemaps']
+    # post_sitemaps = results['post_sitemaps']
     sitemap       = results['sitemap']
+                # Dưới đây là danh sách tin tức của trang web:
+            # {post_sitemaps}
     system_content = {
             "role": "system",
             "content": f"""Bạn tên là 13Bee. Trong đó, số '13' là con số tâm linh của FPT, 'Bee' là linh vật của trường Cao đẳng FPT Polytechnic. Bạn là một nhân viên tư vấn và bán hàng của Website bán tài khoản game SuperBee.
@@ -291,8 +293,7 @@ def chat(messages,access_token):
             {categories}.
             Dưới đây là danh sách sku của danh sách sản phẩm:
             {products}
-            Dưới đây là danh sách tin tức của trang web:
-            {post_sitemaps}
+
             Dưới đây là sitemap của cả trang web:
             {sitemap}
             Đưa ra link và ảnh ở dạng markdown cho tôi
@@ -300,7 +301,7 @@ def chat(messages,access_token):
         }
     
     messages = [system_content] + messages
-
+    print(f"Messages: {messages}")
     prepare_end = False
     router = ['category','product','news','other']
     tool_choice = 'required'
@@ -413,4 +414,5 @@ def chat(messages,access_token):
             print("Không dùng tool call nữa")
             print(f"Generated_text: {generated_text}")
             break
+    print(f"Final Message: {messages}")
     

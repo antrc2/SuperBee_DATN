@@ -423,7 +423,6 @@ def chat(messages,access_token):
             model=chat_model,
             messages=messages,
             tools=tools,
-
             tool_choice=tool_choice,
             max_tokens=32768,
             stream=True,

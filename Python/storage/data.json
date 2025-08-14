@@ -1,5 +1,63 @@
 [
     {
+        "id": "25081313570067574",
+        "detail": [
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "1000000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WD3QXREHC756ZRZU",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25225352902307",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25225546900323",
+                "totalAmount": "1000000.000000"
+            }
+        ]
+    },
+    {
+        "id": "25081219335965939",
+        "detail": [
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970407",
+                "detailAmount": "10000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDMXAJLB283OKIZA",
+                "status": "DONE",
+                "errorCode": "VS500",
+                "errorMessage": "LOI CAT TIEN TONG: NO,PAYMENT.DETAILS:1:1=INVALID SWIFT CHAR.,Y.ISO.RESPONSE:1:1=05",
+                "errorDetail": null,
+                "ft": null,
+                "refundTransactionFT": null,
+                "totalTransactionFT": null,
+                "totalAmount": null
+            },
+            {
+                "detailDestNumber": "234567890",
+                "detailDestName": "NGUYE NNGOC AN",
+                "detailBenBankCd": "970422",
+                "detailAmount": "20000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WD7NQO18OHECQMOE",
+                "status": "DONE",
+                "errorCode": "5002",
+                "errorMessage": "T\u00ean ng th\u1ee5 h\u01b0\u1edfng kh\u00f4ng kh\u1edbp",
+                "errorDetail": "TEN NGUOI THU HUONG KHONG KHOP",
+                "ft": null,
+                "refundTransactionFT": "FT25224855028390",
+                "totalTransactionFT": "FT25224677283983",
+                "totalAmount": "20000"
+            }
+        ]
+    },
+    {
         "id": "25080121452933198",
         "detail": [
             {

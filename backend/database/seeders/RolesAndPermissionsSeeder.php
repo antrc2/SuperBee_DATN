@@ -289,7 +289,7 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
         foreach ($userList as $userData) {
             $user = User::create([
                 'username' => $userData['username'],
-                'email' => $userData['username'] . '@superbee.site',
+                'email' => "support@superbee.site",
                 'password' => Hash::make('password'),
                 'web_id' => $userData['web_id'],
                 'status' => 1,

@@ -6,7 +6,7 @@ import json
 from threading import Event
 from controller.TransactionController import Transaction
 import time
-sleep = 3
+sleep = 5
 backend_url = os.getenv("BACKEND_URL")
 backend_api_key = os.getenv("BACKEND_API_KEY")
 username = os.getenv('MBBANK_USERNAME')
@@ -76,7 +76,7 @@ def execute_withdraw():
                 if (id == bulk_payment['id']):
                     for data in bulk_payment['detail']:
 
-                        if (data['status'] == "DONE"):
+                        if (data['ft'] is not None):
                             json_data = {
                                 "amount": data['detailAmount'],
                                 'status': True,
@@ -86,11 +86,12 @@ def execute_withdraw():
                             # amount = data['detailAmont']
                             # pass
                         else:
+                            message = data['errorDetail'] if data['errorDetail'] is not None else data['errorMessage']
                             json_data = {
                                 "status": False,
                                 "amount": None,
                                 "withdraw_code": data['detailDescription'],
-                                'message': data['errorMessage']
+                                'message': message
                             }
                         for i in range(0,5):
                             response = requests.post(f"{backend_url}/callback/bank/withdraw",json=json_data,headers={"Authorization": f"Apikey {backend_api_key}"})
@@ -105,9 +106,21 @@ def execute_withdraw():
     except Exception as e:
         print(f"Lỗi: {e}")
         pass
-    time.sleep(sleep)
+    # time.sleep(sleep)
 
 def withdraw():
     while not event.is_set():
+        response = requests.get(f"{backend_url}/auto/transaction")
+        data = response.json()
+        status_transaction = data['data']
+        if (status_transaction == 0):
+            # print("Auto transaction đang tắt")
+            pass
+        else:
+            # print("Auto transaction đang bật")
+            execute_withdraw()
+        # print(data['data'])
+        time.sleep(sleep)
+        # execute_withdraw()
         pass
         

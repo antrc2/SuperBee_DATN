@@ -33,7 +33,7 @@ const WithdrawalTable = ({ withdrawals, onEdit }) => {
             <th className="px-4 py-3">Ngân hàng</th>
             <th className="px-4 py-3">Trạng thái</th>
             <th className="px-4 py-3">Ngày tạo</th>
-            <th className="px-4 py-3">Hành động</th>
+            <th className="px-4 py-3">Ghi chú</th>
           </tr>
         </thead>
         <tbody className="divide-y dark:divide-gray-700">
@@ -58,14 +58,15 @@ const WithdrawalTable = ({ withdrawals, onEdit }) => {
                   {new Date(w.created_at).toLocaleString("vi-VN")}
                 </td>
                 <td className="px-4 py-3">
-                  {w.status === 0 && (
+                  {w.note}
+                  {/* {w.status === 0 && (
                     <button
                       onClick={() => onEdit(w)}
                       className="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                     >
                       <Edit size={18} />
                     </button>
-                  )}
+                  )} */}
                 </td>
               </tr>
             ))

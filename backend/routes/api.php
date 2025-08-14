@@ -77,11 +77,11 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
-    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
-    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
-    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
-    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
-    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+    // Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    // Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    // Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    // Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    // Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);

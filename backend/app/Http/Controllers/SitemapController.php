@@ -15,7 +15,7 @@ class SitemapController extends Controller
     {
         try {
             // 1. Lấy URL frontend và danh sách bài viết
-            $frontend = env('FRONTEND_URL');
+            $frontend = env('URL_BACKEND')."/api";
 
             $xml = "
 <?xml version='1.0' encoding='UTF-8'?>

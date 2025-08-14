@@ -414,7 +414,8 @@ export default function ChatWidget() {
 
     try {
       const historyToSend = newMessages.slice(0, -1); // Không gửi placeholder
-      const response = await fetch("http://localhost:5000/assistant/chat", {
+      const python_url = import.meta.env.VITE_PYTHON_URL || "http://localhost:5000";
+      const response = await fetch(`${python_url}/assistant/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -437,6 +438,7 @@ export default function ChatWidget() {
 
         try {
           const parsed = JSON.parse(chunk);
+          console.log("Received chunk:", parsed);
           if (parsed.messages) {
             // Lấy các tin nhắn mới từ server (phần sau lịch sử đã gửi)
             const newMessagesFromChunk = parsed.messages.slice(
@@ -506,6 +508,7 @@ export default function ChatWidget() {
     let currentAssistantTurn = [];
 
     messages.forEach((msg, index) => {
+      console.log("Processing message:", msg);
       if (msg.role === "user") {
         if (currentAssistantTurn.length > 0) {
           grouped.push({

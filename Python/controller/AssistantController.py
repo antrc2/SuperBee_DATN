@@ -35,8 +35,8 @@ def get_list_product_by_category(id):
 def sitemap_crawl(url):
     response = requests.get(url).text
     return response
-def add_product_to_cart(id,access_token):
-    response = requests.post(f"{backend_api}/assistant/carts/",json={"product_id": id},headers={"Authorization": f"Bearer {access_token}","Content-Type": "application/json"}).text
+def add_product_to_cart(id,auth_headers):
+    response = requests.post(f"{backend_api}/assistant/carts",json={"product_id": id},headers={"Authorization": auth_headers,"Content-Type": "application/json"}).text
     return response
 async def fetch_body_html(url: str) -> str:
     print(f"Đang crawl {url}")
@@ -63,7 +63,7 @@ def url_crawl_sync(url: str) -> str:
     t.start()
     t.join()
     return result["body"]
-def execute_agent(agent_name,messages,access_token):
+def execute_agent(agent_name,messages,auth_headers):
     if (agent_name == 'product'):
         # print(f"Product message: {messages[1:]}")
 
@@ -148,7 +148,7 @@ def execute_agent(agent_name,messages,access_token):
                     result = search_product_detail_by_sku(argument['sku'])
                     # response += result
                 if (function_name == "add_product_to_cart"):
-                    result = add_product_to_cart(argument['id'],access_token)
+                    result = add_product_to_cart(argument['id'],auth_headers)
                     # response += result
                 yield {
                     "role": "tool",
@@ -326,7 +326,7 @@ def execute_agent(agent_name,messages,access_token):
                 }
             # return response
             
-def chat(messages,access_token):
+def chat(messages,auth_headers):
     results = {}
 
     def fetch_categories():
@@ -463,7 +463,8 @@ def chat(messages,access_token):
                         print(f"ID Chat: {chunk.id}")
                             # print(f"Message: {messages}")
                         print(f"\n[TOOL CALL]: {tool_call.function.name} - {tool_call.function.arguments}")
-                        if tool_call.function.name == 'other':
+                        data = json.loads(tool_call.function.arguments)
+                        if data['router'] == 'other':
                             pass
                         else:
                             messages.append({
@@ -496,7 +497,7 @@ def chat(messages,access_token):
                             yield json.dumps({
                                 "messages": messages[1:]
                             })
-                            for result in execute_agent(agent_name=data['router'],messages=messages_clone,access_token=access_token):
+                            for result in execute_agent(agent_name=data['router'],messages=messages_clone,auth_headers=auth_headers):
                                 
                                 print(f"\n\nResult while use tool: {result}\n\n")
                                 messages.append(result)

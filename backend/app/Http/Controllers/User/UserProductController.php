@@ -34,7 +34,13 @@ class UserProductController extends Controller
                 $products = Product::with("images")->with('category')->with("gameAttributes")->where('status', 1)->where('category_id', $category->id)->get();
             } else {
                 $type = 2;
-                $categories = Category::where('parent_id', $category->id)->get();
+                $categories = Category::where('parent_id', $category->id)
+                    ->withCount([
+                        'products as count' => function ($query) {
+                            $query->where('status', 1); // chỉ đếm sản phẩm active
+                        }
+                    ])
+                    ->get();
             }
             return response()->json(
                 [
@@ -89,12 +95,11 @@ class UserProductController extends Controller
                 );
             } else {
                 return response()->json([
-                    'status'=>False,
-                    'message'=>"Không tìm thấy danh mục sản phẩm",
-                    'data'=>[]
-                ],404);
+                    'status' => False,
+                    'message' => "Không tìm thấy danh mục sản phẩm",
+                    'data' => []
+                ], 404);
             }
-            
         } catch (\Throwable $th) {
             return response()->json([
                 "status" => False,

@@ -36,6 +36,7 @@ app.add_middleware(
 @app.post("/assistant/chat")
 async def doibuonjqk(request: Request):
     auth_headers = request.headers.get("Authorization")
+    print(f"Header: {auth_headers}")
     data = await request.json()
     return StreamingResponse(
         chat(data['messages'],auth_headers),

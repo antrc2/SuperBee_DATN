@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminBusinessSettingsController;
 use App\Http\Controllers\Admin\AdminCategoryPostController;
 use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
@@ -77,11 +78,11 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
-    // Route::get("/sitemap.xml", [SitemapController::class, 'index']);
-    // Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
-    // Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
-    // Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
-    // Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
@@ -418,6 +419,10 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
             Route::get('/', [AutoTransactionController::class, 'status']);
             Route::post("/", [AutoTransactionController::class, 'turn']);
         });
+    });
+    Route::prefix('/settings')->group(function () {
+        Route::get('/', [AdminBusinessSettingsController::class, 'show'])->middleware('permission:settings.view');
+        Route::put('/', [AdminBusinessSettingsController::class, 'update'])->middleware('permission:settings.edit');
     });
 });
 

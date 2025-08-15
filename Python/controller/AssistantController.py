@@ -35,8 +35,10 @@ def get_list_product_by_category(id):
 def sitemap_crawl(url):
     response = requests.get(url).text
     return response
-def add_product_to_cart(id,auth_headers):
-    response = requests.post(f"{backend_api}/assistant/carts",json={"product_id": id},headers={"Authorization": auth_headers,"Content-Type": "application/json"}).text
+def add_product_to_cart(id_,auth_headers):
+    if (auth_headers == "Bearer null"):
+        return "Bạn chưa đăng nhập để có thể thêm sản phẩm vào giỏ hàng"
+    response = requests.post(f"{backend_api}/assistant/carts",json={"product_id": id_},headers={"Authorization": auth_headers,"Content-Type": "application/json"}).text
     return response
 async def fetch_body_html(url: str) -> str:
     print(f"Đang crawl {url}")
@@ -155,19 +157,6 @@ def execute_agent(agent_name,messages,auth_headers):
                     "tool_call_id": tool_call.id,
                     "content": result
                 }
-                # index+=1
-                # yield [
-                #     {
-                #         "role": "assistant",
-                #         'tool_calls': tool_calls_
-                #     },
-                #     {
-                #         "role": "tool",
-                #         "tool_call_id": tool_call.id,
-                #         "content": result
-                #     }
-                # ]
-            # return response
     elif (agent_name == 'category'):
         response = client.chat.completions.create(
             messages=messages,
@@ -197,12 +186,10 @@ def execute_agent(agent_name,messages,auth_headers):
         print(f"Category Response: {response}")
         if (response.choices[0].message.tool_calls == None):
 
-            # return response.choices[0].message
             return ""
         else :
             tool_calls = response.choices[0].message.tool_calls
             response = ""
-            # if (response.choices[0].message.tool_calls[0].function.name == "get_list_product_by_category"):
             print(f"Category Tool calls: {tool_calls}")
             tool_calls_ = []
             for tool_call in tool_calls:
@@ -388,7 +375,7 @@ def chat(messages,auth_headers):
     
     messages = [system_content] + messages
     print(f"Messages: {messages}")
-    prepare_end = False
+
     router = ['category','product','news','other']
     tool_choice = 'required'
     user_content = copy.deepcopy(messages)

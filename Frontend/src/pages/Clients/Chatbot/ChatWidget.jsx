@@ -1,5 +1,5 @@
+// File: src/pages/Clients/Chatbot/ChatWidget.jsx (Fixed version)
 import {
-  X,
   Send,
   ChevronDown,
   ChevronUp,
@@ -7,12 +7,13 @@ import {
   Zap,
   Search,
   ShoppingCart,
-  Clock,
   CheckCircle,
+  Settings,
 } from "lucide-react";
 import React, { useState, useRef, useEffect } from "react";
+import Markdown from "markdown-to-jsx";
 
-// Component hiển thị sản phẩm
+// Sao chép các component từ ChatWidget gốc
 const ProductDisplay = ({ productData }) => {
   if (!productData) return null;
   let product = productData;
@@ -28,40 +29,40 @@ const ProductDisplay = ({ productData }) => {
   const defaultImage = "https://via.placeholder.com/128x128.png?text=No+Image";
 
   return (
-    <div className="flex items-center gap-4 p-3 bg-gray-800 rounded-xl border border-gray-700 w-full max-w-lg mx-auto">
+    <div className="flex items-center gap-4 p-4 bg-input border-themed rounded-xl transition-all duration-300 hover:border-hover category-card-glow w-full max-w-lg mx-auto">
       <div className="flex-shrink-0 w-24 h-24">
         <img
           src={product.image || defaultImage}
           alt={product.name || product.title || "Product"}
-          className="w-full h-full object-cover rounded-lg border border-gray-600"
+          className="w-full h-full object-cover rounded-lg border border-themed"
           onError={(e) => {
             e.target.src = defaultImage;
           }}
         />
       </div>
       <div className="flex-1 min-w-0">
-        <h4 className="text-sm font-semibold text-white mb-1 truncate">
+        <h4 className="text-sm font-heading font-bold text-primary mb-2 truncate">
           {product.name || product.title || "Tên sản phẩm"}
         </h4>
         {product.price && (
-          <div className="text-xl font-bold text-green-400 mb-1">
+          <div className="text-lg font-bold text-accent mb-2">
             {typeof product.price === "number"
               ? product.price.toLocaleString("vi-VN") + " VND"
               : product.price}
           </div>
         )}
         {product.description && (
-          <p className="text-gray-400 text-xs line-clamp-2">
+          <p className="text-secondary text-xs line-clamp-2 mb-3">
             {product.description}
           </p>
         )}
-        <div className="flex flex-wrap gap-2 mt-2">
+        <div className="flex flex-wrap gap-2">
           {product.url && (
             <a
               href={product.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-xs font-medium px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+              className="modal-button modal-button-cancel text-xs"
             >
               Xem chi tiết
             </a>
@@ -71,7 +72,7 @@ const ProductDisplay = ({ productData }) => {
               href={product.buyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-xs font-medium px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors"
+              className="modal-button modal-button-confirm text-xs inline-flex items-center"
             >
               <ShoppingCart className="w-3 h-3 mr-1" /> Mua ngay
             </a>
@@ -82,16 +83,15 @@ const ProductDisplay = ({ productData }) => {
   );
 };
 
-// Component hiển thị nhiều sản phẩm
 const ProductGrid = ({ products }) => {
   if (!products || !Array.isArray(products) || products.length === 0)
     return null;
   return (
-    <div className="space-y-2">
-      <h5 className="text-xs font-medium text-gray-400">
+    <div className="space-y-3">
+      <h5 className="text-xs font-heading font-semibold text-secondary">
         Tìm thấy {products.length} sản phẩm:
       </h5>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {products.map((product, index) => (
           <ProductDisplay key={index} productData={product} />
         ))}
@@ -99,7 +99,7 @@ const ProductGrid = ({ products }) => {
     </div>
   );
 };
-// Component parse và render nội dung phức tạp
+
 const RichContentRenderer = ({ content }) => {
   if (!content) return null;
 
@@ -129,47 +129,138 @@ const RichContentRenderer = ({ content }) => {
     .replace(/\{[^{}]*"(?:name|title|sku|price)"[^{}]*\}/g, "")
     .trim();
 
-  const processMarkdown = (text) => {
-    return text
-      .replace(
-        /!\[([^\]]*)\]\(([^)]+)\)/g,
-        '<img src="$2" alt="$1" class="max-w-full h-auto rounded-lg my-2" />'
-      )
-      .replace(
-        /\[([^\]]+)\]\(([^)]+)\)/g,
-        '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">$1</a>'
-      )
-      .replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold">$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
-      .replace(
-        /`(.*?)`/g,
-        '<code class="bg-gray-700 px-1 py-0.5 rounded text-green-400 text-sm">$1</code>'
-      )
-      .replace(
-        /^### (.*$)/gm,
-        '<h3 class="text-lg font-semibold text-white mt-4 mb-2">$1</h3>'
-      )
-      .replace(
-        /^## (.*$)/gm,
-        '<h2 class="text-xl font-bold text-white mt-4 mb-2">$1</h2>'
-      )
-      .replace(
-        /^# (.*$)/gm,
-        '<h1 class="text-2xl font-bold text-white mt-4 mb-2">$1</h1>'
-      )
-      .replace(/\n/g, "<br>");
+  // ✅ MARKDOWN OPTIONS
+  const markdownOptions = {
+    overrides: {
+      // Headers
+      h1: {
+        component: "h1",
+        props: {
+          className: "text-2xl font-heading font-bold text-primary mt-5 mb-4",
+        },
+      },
+      h2: {
+        component: "h2",
+        props: {
+          className: "text-xl font-heading font-bold text-primary mt-5 mb-3",
+        },
+      },
+      h3: {
+        component: "h3",
+        props: {
+          className: "text-lg font-heading font-bold text-primary mt-4 mb-3",
+        },
+      },
+
+      // Text formatting
+      strong: {
+        component: "strong",
+        props: { className: "font-heading font-bold text-primary" },
+      },
+      em: {
+        component: "em",
+        props: { className: "italic text-secondary" },
+      },
+
+      // Links
+      a: {
+        component: "a",
+        props: {
+          className:
+            "text-accent hover:text-highlight underline transition-colors duration-200",
+          target: "_blank",
+          rel: "noopener noreferrer",
+        },
+      },
+
+      // Images
+      img: {
+        component: "img",
+        props: { className: "max-w-full h-auto rounded-lg my-3" },
+      },
+
+      // Code
+      code: {
+        component: "code",
+        props: {
+          className: "bg-same px-2 py-1 rounded text-accent text-sm font-mono",
+        },
+      },
+
+      // Code blocks
+      pre: {
+        component: "pre",
+        props: { className: "bg-same p-4 rounded-lg overflow-x-auto my-3" },
+      },
+
+      // Paragraphs
+      p: {
+        component: "p",
+        props: { className: "mb-3 last:mb-0" },
+      },
+
+      // Lists
+      ul: {
+        component: "ul",
+        props: { className: " mb-3 space-y-1 ml-4" },
+      },
+      ol: {
+        component: "ol",
+        props: { className: " mb-3 space-y-1 ml-4" },
+      },
+      li: {
+        component: "li",
+        props: { className: "text-primary" },
+      },
+
+      // Blockquotes
+      blockquote: {
+        component: "blockquote",
+        props: {
+          className: "border-l-4 border-accent pl-4 my-4 italic text-secondary",
+        },
+      },
+
+      // Tables (bonus)
+      table: {
+        component: "table",
+        props: {
+          className: "min-w-full border-collapse border border-themed my-4",
+        },
+      },
+      thead: {
+        component: "thead",
+        props: { className: "bg-input" },
+      },
+      th: {
+        component: "th",
+        props: {
+          className:
+            "border border-themed px-4 py-2 text-left font-heading font-semibold",
+        },
+      },
+      td: {
+        component: "td",
+        props: { className: "border border-themed px-4 py-2" },
+      },
+
+      // Horizontal rule
+      hr: {
+        component: "hr",
+        props: { className: "my-6 border-themed" },
+      },
+    },
   };
 
   return (
     <>
       {cleanContent && (
-        <div
-          className="text-gray-100 leading-relaxed"
-          dangerouslySetInnerHTML={{ __html: processMarkdown(cleanContent) }}
-        />
+        <div className="text-primary leading-relaxed">
+          <Markdown options={markdownOptions}>{cleanContent}</Markdown>
+        </div>
       )}
       {products && (
-        <div className="mt-3">
+        <div className="mt-4">
           <ProductGrid products={products} />
         </div>
       )}
@@ -177,32 +268,45 @@ const RichContentRenderer = ({ content }) => {
   );
 };
 
-// Component hiển thị thinking process theo thời gian thực
+// ✅ NEW: Enhanced thinking process with both tool calls and tool responses
 const RealTimeThinkingProcess = ({
-  toolCalls,
+  thinkingSteps,
   isVisible,
   onToggle,
   isProcessing = false,
   isComplete = false,
 }) => {
-  const getToolIcon = (toolName, isProcessing = false) => {
+  const getToolIcon = (stepType, toolName, isProcessing = false) => {
     const iconClass = isProcessing ? "animate-pulse" : "";
+
+    if (stepType === "tool_response") {
+      return <Settings className={`w-4 h-4 text-highlight ${iconClass}`} />;
+    }
+
     switch (toolName) {
       case "query_router":
-        return <Zap className={`w-4 h-4 text-yellow-400 ${iconClass}`} />;
+        return <Zap className={`w-4 h-4 text-accent ${iconClass}`} />;
       case "search_product_detail_by_sku":
       case "search_products":
-        return <Search className={`w-4 h-4 text-green-400 ${iconClass}`} />;
+      case "get_list_product_by_category":
+        return <Search className={`w-4 h-4 text-tertiary ${iconClass}`} />;
       case "add_to_cart":
         return (
-          <ShoppingCart className={`w-4 h-4 text-blue-400 ${iconClass}`} />
+          <ShoppingCart className={`w-4 h-4 text-highlight ${iconClass}`} />
         );
+      case "sitemap_crawl":
+      case "url_crawl":
+        return <Brain className={`w-4 h-4 text-accent ${iconClass}`} />;
       default:
-        return <Brain className={`w-4 h-4 text-purple-400 ${iconClass}`} />;
+        return <Brain className={`w-4 h-4 text-accent ${iconClass}`} />;
     }
   };
 
-  const getToolDisplayName = (toolName) => {
+  const getStepDisplayName = (stepType, toolName) => {
+    if (stepType === "tool_response") {
+      return "Kết quả từ công cụ";
+    }
+
     const toolNames = {
       query_router: "Phân tích yêu cầu",
       search_product_detail_by_sku: "Tìm kiếm sản phẩm",
@@ -210,90 +314,107 @@ const RealTimeThinkingProcess = ({
       add_to_cart: "Thêm vào giỏ hàng",
       get_product_info: "Lấy thông tin sản phẩm",
       calculate_price: "Tính toán giá",
+      sitemap_crawl: "Thu thập dữ liệu sitemap",
+      url_crawl: "Thu thập dữ liệu trang web",
+      get_list_product_by_category: "Tìm kiếm sản phẩm theo danh mục",
     };
-    // return toolNames[toolName] || toolName;
-    return JSON.stringify(toolNames[toolName]) || JSON.stringify(toolName);
+    return toolNames[toolName] || toolName;
   };
 
-  if (toolCalls?.length === 0 && !isProcessing) {
+  // ✅ Always show thinking process if there are steps OR if processing
+  if (!thinkingSteps && !isProcessing) {
     return null;
   }
 
+  const displaySteps = thinkingSteps || [];
+
   return (
-    <div className="mt-3 border-t border-gray-700 pt-3">
+    <div className="mt-4 border-t border-themed pt-4">
       <button
         onClick={onToggle}
-        className="flex items-center justify-between w-full p-2 bg-gray-800 hover:bg-gray-750 rounded-lg transition-colors mb-2"
+        className="flex items-center justify-between w-full p-3 bg-input hover:bg-same border-themed rounded-lg transition-all duration-200 mb-3 border-hover"
       >
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
           <Brain
-            className={`w-4 h-4 text-blue-400 ${
+            className={`w-5 h-5 text-accent ${
               isProcessing ? "animate-pulse" : ""
             }`}
           />
-          <span className="text-sm font-medium text-gray-300">
+          <span className="text-sm font-heading font-semibold text-primary">
             {isProcessing ? "Đang xử lý..." : "Tiến trình tư duy"}
           </span>
-          {toolCalls?.length > 0 && (
-            <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded-full">
-              {toolCalls.length} bước
+          {displaySteps.length > 0 && (
+            <span className="text-xs bg-gradient-button text-accent-contrast px-3 py-1 rounded-full font-bold">
+              {displaySteps.length} bước
             </span>
           )}
-          {isComplete && <CheckCircle className="w-4 h-4 text-green-400" />}
+          {isComplete && <CheckCircle className="w-4 h-4 text-tertiary" />}
         </div>
         {isVisible ? (
-          <ChevronUp className="w-4 h-4 text-gray-400" />
+          <ChevronUp className="w-5 h-5 text-secondary" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          <ChevronDown className="w-5 h-5 text-secondary" />
         )}
       </button>
 
       {isVisible && (
-        <div className="bg-gray-900 rounded-lg p-3 space-y-3">
-          {isProcessing && toolCalls?.length === 0 && (
-            <div className="flex items-center space-x-3 p-3 bg-gray-800 rounded-lg">
-              <div className="flex-shrink-0 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center border-2 border-blue-500">
-                <Brain className="w-4 h-4 text-blue-400 animate-pulse" />
+        <div className="section-bg space-y-4">
+          {isProcessing && displaySteps.length === 0 && (
+            <div className="flex items-center space-x-4 p-4 bg-input rounded-lg border-themed">
+              <div className="flex-shrink-0 w-10 h-10 bg-gradient-button rounded-full flex items-center justify-center">
+                <Brain className="w-5 h-5 text-accent-contrast animate-pulse" />
               </div>
               <div className="flex-1">
-                <h4 className="text-sm font-medium text-gray-200">
+                <h4 className="text-sm font-heading font-semibold text-primary">
                   Đang phân tích yêu cầu...
                 </h4>
               </div>
             </div>
           )}
-          {toolCalls?.map((tool, index) => {
-            const isLastTool = index === toolCalls.length - 1;
-            const isToolProcessing = isProcessing && isLastTool;
+          {displaySteps.map((step, index) => {
+            const isLastStep = index === displaySteps.length - 1;
+            const isStepProcessing = isProcessing && isLastStep;
             return (
-              <div key={tool.id || index} className="relative">
-                {index < toolCalls.length - 1 && (
-                  <div className="absolute left-4 top-8 bottom-0 w-px bg-gradient-to-b from-blue-500 to-transparent"></div>
+              <div key={step.id || `step-${index}`} className="relative">
+                {index < displaySteps.length - 1 && (
+                  <div className="absolute left-5 top-12 bottom-0 w-px bg-gradient-to-b from-accent to-transparent opacity-50"></div>
                 )}
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-4">
                   <div
-                    className={`flex-shrink-0 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center border-2 ${
-                      isToolProcessing
-                        ? "border-blue-500 animate-pulse"
-                        : "border-green-500"
+                    className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                      isStepProcessing
+                        ? "bg-gradient-button animate-pulse shadow-themed"
+                        : step.type === "tool_response"
+                        ? "bg-gradient-success"
+                        : "bg-gradient-success"
                     }`}
                   >
-                    {getToolIcon(tool.function?.name, isToolProcessing)}
+                    {getToolIcon(step.type, step.toolName, isStepProcessing)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="text-sm font-medium text-gray-200">
-                        {getToolDisplayName(tool.function?.name)}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <h4 className="text-sm font-heading font-semibold text-primary">
+                        {getStepDisplayName(step.type, step.toolName)}
                       </h4>
-                      {!isToolProcessing && (
-                        <CheckCircle className="w-3 h-3 text-green-400" />
+                      {!isStepProcessing && (
+                        <CheckCircle className="w-4 h-4 text-tertiary" />
                       )}
                     </div>
-                    {tool.function?.arguments && (
-                      <div className="bg-gray-800 rounded p-2 text-xs break-all">
-                        <code className="text-green-400 text-xs">
-                          {tool.function.arguments}
-                        </code>
+                    {step.content && (
+                      <div className="bg-same rounded-lg p-3 text-xs break-all border border-themed">
+                        {step.type === "tool_response" ? (
+                          <div className="text-highlight font-mono">
+                            {typeof step.content === "string"
+                              ? step.content.slice(0, 200) +
+                                (step.content.length > 200 ? "..." : "")
+                              : JSON.stringify(step.content).slice(0, 200) +
+                                "..."}
+                          </div>
+                        ) : (
+                          <code className="text-accent font-mono">
+                            {step.content}
+                          </code>
+                        )}
                       </div>
                     )}
                   </div>
@@ -301,9 +422,9 @@ const RealTimeThinkingProcess = ({
               </div>
             );
           })}
-          {isComplete && (
-            <div className="mt-4 flex items-center space-x-2 text-xs text-green-400">
-              <CheckCircle className="w-4 h-4" />
+          {isComplete && displaySteps.length > 0 && (
+            <div className="mt-5 flex items-center space-x-2 text-sm text-tertiary font-heading">
+              <CheckCircle className="w-5 h-5" />
               <span>Hoàn thành tất cả các bước.</span>
             </div>
           )}
@@ -313,25 +434,24 @@ const RealTimeThinkingProcess = ({
   );
 };
 
-// Component câu trả lời có thể inspect được
 const InspectableAnswer = ({
   content,
-  toolCalls,
+  thinkingSteps,
   isStreaming = false,
   isComplete = false,
 }) => {
-  const [showThinking, setShowThinking] = useState(true);
+  const [showThinking, setShowThinking] = useState(false);
   return (
     <div className="w-full max-w-none">
       <RealTimeThinkingProcess
-        toolCalls={toolCalls}
+        thinkingSteps={thinkingSteps}
         isVisible={showThinking}
         onToggle={() => setShowThinking(!showThinking)}
         isProcessing={isStreaming}
         isComplete={isComplete}
       />
       {content && (
-        <div className="bg-gray-800 text-gray-100 rounded-2xl px-4 py-3 shadow-lg mt-2">
+        <div className="bg-input border-themed rounded-2xl px-5 py-4 shadow-themed mt-3 border-hover transition-all duration-300">
           <div className="prose prose-invert prose-sm max-w-none">
             <RichContentRenderer content={content} />
           </div>
@@ -341,42 +461,24 @@ const InspectableAnswer = ({
   );
 };
 
+// Component đơn giản hóa chỉ chứa nội dung chat
 export default function ChatWidget() {
-  const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   const chatEndRef = useRef(null);
   const inputRef = useRef(null);
-  const chatRef = useRef(null);
   const abortControllerRef = useRef(null);
-
-  useEffect(() => {
-    if (open && messages.length === 0) {
-      setMessages([]);
-    }
-  }, [open]);
+  const pythonUrl = import.meta.env.VITE_PYTHON_URL;
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   useEffect(() => {
-    if (open) {
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (open && chatRef.current && !chatRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
+    setTimeout(() => inputRef.current?.focus(), 100);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -384,26 +486,64 @@ export default function ChatWidget() {
     };
   }, []);
 
+  // ✅ NEW: Function to process thinking steps from messages
+  const processThinkingSteps = (messages) => {
+    const steps = [];
+    const seenSignatures = new Set();
+
+    messages.forEach((msg, msgIndex) => {
+      // Add tool calls from assistant messages
+      if (
+        msg.role === "assistant" &&
+        msg.tool_calls &&
+        Array.isArray(msg.tool_calls)
+      ) {
+        msg.tool_calls.forEach((tc, tcIndex) => {
+          if (tc.type === "function" && tc.function) {
+            const signature = `${tc.function.name}:${JSON.stringify(
+              tc.function.arguments || {}
+            )}`;
+            if (!seenSignatures.has(signature)) {
+              seenSignatures.add(signature);
+              steps.push({
+                id: `tc-${msgIndex}-${tcIndex}`,
+                type: "tool_call",
+                toolName: tc.function.name,
+                content: tc.function.arguments || "{}",
+              });
+            }
+          }
+        });
+      }
+
+      // Add tool responses
+      if (msg.role === "tool" && msg.content) {
+        steps.push({
+          id: `tr-${msgIndex}`,
+          type: "tool_response",
+          toolName: msg.tool_call_id ? "response" : "unknown",
+          content: msg.content,
+        });
+      }
+    });
+
+    return steps;
+  };
+
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
 
     const userMessage = {
-      id: "user-" + Date.now(),
       role: "user",
       content: input,
-      created_at: new Date().toISOString(),
     };
 
-    // Thêm placeholder tạm thời để giữ chỗ cho lượt assistant
-    const assistantPlaceholderId = "assistant-placeholder-" + Date.now();
     const assistantPlaceholder = {
-      id: assistantPlaceholderId,
       role: "assistant",
       content: "",
       tool_calls: [],
       isStreaming: true,
       isComplete: false,
-      created_at: new Date().toISOString(),
     };
 
     const newMessages = [...messages, userMessage, assistantPlaceholder];
@@ -411,17 +551,37 @@ export default function ChatWidget() {
     setInput("");
     setLoading(true);
     abortControllerRef.current = new AbortController();
+    const api_token = sessionStorage.getItem("access_token") ?? null;
 
     try {
-      const historyToSend = newMessages.slice(0, -1); // Không gửi placeholder
-      const python_url = import.meta.env.VITE_PYTHON_URL || "http://localhost:5000";
-      const response = await fetch(`${python_url}/assistant/chat`, {
+      const historyToSend = newMessages.slice(0, -1);
+
+      const historyToSendAI = historyToSend.map((msg) => {
+        const cleanMsg = {
+          role: msg.role,
+          content: msg.content,
+          tool_call_id: msg.tool_call_id,
+        };
+
+        if (msg.tool_calls) {
+          cleanMsg.tool_calls = msg.tool_calls.map((tc) => {
+            return {
+              ...tc,
+              id: "",
+            };
+          });
+        }
+
+        return cleanMsg;
+      });
+
+      const response = await fetch(`${pythonUrl}/assistant/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: "Bearer YOUR_API_KEY",
+          Authorization: `Bearer ${api_token}`,
         },
-        body: JSON.stringify({ messages: historyToSend }),
+        body: JSON.stringify({ messages: historyToSendAI }),
         signal: abortControllerRef.current.signal,
       });
 
@@ -431,6 +591,9 @@ export default function ChatWidget() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
+      // ✅ NEW: Track the initial history length to process only new messages
+      const initialHistoryLength = historyToSend.length;
+
       while (true) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -438,38 +601,58 @@ export default function ChatWidget() {
 
         try {
           const parsed = JSON.parse(chunk);
-          console.log("Received chunk:", parsed);
           if (parsed.messages) {
-            // Lấy các tin nhắn mới từ server (phần sau lịch sử đã gửi)
-            const newMessagesFromChunk = parsed.messages.slice(
-              historyToSend.length
-            );
-            if (newMessagesFromChunk.length > 0) {
-              setMessages((prev) => {
-                // Loại bỏ placeholder
-                let base = prev.slice(0, -1);
-                // Tạo các tin nhắn mới cho lượt hiện tại, gán ID nếu cần và trạng thái streaming/complete
-                const updatedTurn = newMessagesFromChunk.map((m, idx) => ({
-                  ...m,
-                  id: m.id || `turn-msg-${Date.now()}-${idx}`,
-                  isStreaming:
-                    !parsed.finished && idx === newMessagesFromChunk.length - 1,
-                  isComplete: !!parsed.finished,
-                  created_at: m.created_at || new Date().toISOString(),
-                }));
-                return [...base, ...updatedTurn];
+            // ✅ FIXED: Replace entire message history with new data from server
+            // But only show messages from the current conversation
+            setMessages((prev) => {
+              // Keep user messages up to current conversation
+              const userMessages = prev.filter((msg) => msg.role === "user");
+
+              // Get new messages from server (excluding the history we sent)
+              const serverMessages = parsed.messages || [];
+
+              // Process all messages but mark streaming status correctly
+              const processedMessages = serverMessages.map((msg, idx) => {
+                let processedMsg = {
+                  ...msg,
+                  id: msg.id || `msg-${Date.now()}-${idx}`,
+                  created_at: msg.created_at || new Date().toISOString(),
+                };
+
+                // Only mark as streaming if it's the last assistant message and not finished
+                if (
+                  msg.role === "assistant" &&
+                  idx === serverMessages.length - 1
+                ) {
+                  processedMsg.isStreaming = !parsed.finished;
+                  processedMsg.isComplete = !!parsed.finished;
+                } else {
+                  processedMsg.isStreaming = false;
+                  processedMsg.isComplete = true;
+                }
+
+                // Keep all tool calls with unique IDs
+                if (msg.tool_calls && Array.isArray(msg.tool_calls)) {
+                  processedMsg.tool_calls = msg.tool_calls.map((tc, tcIdx) => ({
+                    ...tc,
+                    id: tc.id || `tc-${Date.now()}-${idx}-${tcIdx}`,
+                  }));
+                }
+
+                return processedMsg;
               });
-            }
+
+              return processedMessages;
+            });
           }
         } catch (e) {
-          // Bỏ qua lỗi parse cho các chunk không đầy đủ
+          console.warn("Chunk parse warning:", e);
         }
       }
     } catch (err) {
       if (err.name !== "AbortError") {
         console.error("Lỗi khi gửi tin nhắn:", err);
         setMessages((prev) => {
-          // Cập nhật placeholder thành thông báo lỗi
           return prev.map((msg) =>
             msg.role === "assistant" && msg.isStreaming
               ? {
@@ -485,13 +668,13 @@ export default function ChatWidget() {
     } finally {
       setLoading(false);
       abortControllerRef.current = null;
-      // Đảm bảo kết thúc streaming
+      // ✅ Ensure all messages are marked as complete
       setMessages((prev) =>
-        prev.map((msg) =>
-          msg.isStreaming
-            ? { ...msg, isStreaming: false, isComplete: true }
-            : msg
-        )
+        prev.map((msg) => ({
+          ...msg,
+          isStreaming: false,
+          isComplete: true,
+        }))
       );
     }
   };
@@ -508,7 +691,6 @@ export default function ChatWidget() {
     let currentAssistantTurn = [];
 
     messages.forEach((msg, index) => {
-      console.log("Processing message:", msg);
       if (msg.role === "user") {
         if (currentAssistantTurn.length > 0) {
           grouped.push({
@@ -518,7 +700,11 @@ export default function ChatWidget() {
           });
           currentAssistantTurn = [];
         }
-        grouped.push({ type: "user", message: msg, id: msg.id });
+        grouped.push({
+          type: "user",
+          message: msg,
+          id: msg.id || `user-${index}`,
+        });
       } else if (msg.role === "assistant" || msg.role === "tool") {
         currentAssistantTurn.push(msg);
       }
@@ -538,134 +724,81 @@ export default function ChatWidget() {
   const groupedMessages = getGroupedMessages();
 
   return (
-    <>
-      {!open ? (
-        <button
-          onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-110 group w-16 h-16"
-          aria-label="Chat với AI"
-        >
-          <div className="relative w-full h-full rounded-full overflow-hidden">
-            <img
-              src="https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/13Bee.png"
-              alt="13Bee Logo"
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            />
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 group-hover:from-blue-500/30 group-hover:to-purple-600/30 transition-all duration-300"></div>
-          </div>
-        </button>
-      ) : (
-        <div
-          ref={chatRef}
-          className="fixed bottom-6 right-6 z-40 bg-gray-900 border border-gray-700 rounded-3xl shadow-2xl flex flex-col transition-all duration-500 ease-out w-[800px] h-[80vh]"
-        >
-          <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-600 to-purple-600 border-b border-gray-700 rounded-t-3xl">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full overflow-hidden">
-                <img
-                  src="https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/13Bee.png"
-                  alt="13Bee Logo"
-                  className="w-full h-full object-cover"
+    <div className="flex flex-col h-full min-h-[480px] max-h-[62svh] ">
+      {/* Khu vực hiển thị tin nhắn */}
+      <div className="flex-1 p-6 overflow-y-auto space-y-5 custom-scrollbar-notification  ">
+        {groupedMessages.map((group) => {
+          if (group.type === "user") {
+            return (
+              <div key={group.id} className="flex justify-end">
+                <div className="max-w-md bg-gradient-button text-accent-contrast rounded-2xl px-5 py-4 shadow-themed category-card-glow">
+                  <div
+                    className="font-body leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{
+                      __html: (group.message.content || "").replace(
+                        /\n/g,
+                        "<br>"
+                      ),
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          }
+
+          if (group.type === "assistant") {
+            // ✅ NEW: Process thinking steps from all messages in the group
+            const thinkingSteps = processThinkingSteps(group.messages);
+
+            // Get the final content and streaming status
+            const finalContent =
+              group.messages.filter((m) => m.content && m.content.trim()).pop()
+                ?.content || "";
+
+            const isStreaming = group.messages.some((m) => m.isStreaming);
+            const isComplete =
+              group.messages.every((m) => m.isComplete) && !isStreaming;
+
+            return (
+              <div key={group.id} className="flex justify-start">
+                <InspectableAnswer
+                  content={finalContent}
+                  thinkingSteps={thinkingSteps}
+                  isStreaming={isStreaming}
+                  isComplete={isComplete}
                 />
               </div>
-              <div>
-                <span className="font-bold text-lg text-white">
-                  Trợ lý AI 13Bee
-                </span>
-                <div className="text-xs text-blue-100">Đang trực tuyến</div>
-              </div>
-            </div>
-            <button
-              onClick={() => setOpen(false)}
-              className="p-2 rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200"
-              aria-label="Đóng chat"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
+            );
+          }
+          return null;
+        })}
+        <div ref={chatEndRef} />
+      </div>
 
-          <div className="flex-1 p-6 overflow-y-auto bg-gray-900 space-y-4 scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-gray-800">
-            {groupedMessages.map((group) => {
-              if (group.type === "user") {
-                return (
-                  <div key={group.id} className="flex justify-end">
-                    <div className="max-w-md bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-2xl px-4 py-3 shadow-lg">
-                      <div
-                        className="text-white leading-relaxed whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{
-                          __html: (group.message.content || "").replace(
-                            /\n/g,
-                            "<br>"
-                          ),
-                        }}
-                      />
-                    </div>
-                  </div>
-                );
-              }
-
-              if (group.type === "assistant") {
-                const allToolCalls = group.messages
-                  .flatMap((m) => m.tool_calls || [])
-                  .filter((tc) => tc.type === "function");
-                const finalContent =
-                  group.messages
-                    .slice()
-                    .reverse()
-                    .find((m) => m.content)?.content || "";
-                const isStreaming = group.messages.some((m) => m.isStreaming);
-
-                const isComplete =
-                  !isStreaming && (finalContent || allToolCalls.length > 0);
-
-                return (
-                  <div key={group.id} className="flex justify-start">
-                    <InspectableAnswer
-                      content={finalContent}
-                      toolCalls={allToolCalls}
-                      isStreaming={isStreaming}
-                      isComplete={isComplete}
-                    />
-                  </div>
-                );
-              }
-              return null;
-            })}
-            <div ref={chatEndRef} />
-          </div>
-
-          <div className="p-4 border-t border-gray-700 bg-gray-900 rounded-b-3xl">
-            <div className="relative">
-              <textarea
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Hỏi trợ lý AI điều gì đó..."
-                className="w-full bg-gray-800 border border-gray-600 rounded-xl py-3 pl-4 pr-12 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[52px] max-h-[200px]"
-                rows="1"
-                disabled={loading}
-                onInput={(e) => {
-                  e.target.style.height = "auto";
-                  e.target.style.height = e.target.scrollHeight + "px";
-                }}
-              />
-              <button
-                onClick={sendMessage}
-                disabled={loading || !input.trim()}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
-                aria-label="Gửi tin nhắn"
-              >
-                {loading ? (
-                  <div className="w-5 h-5 border-2 border-t-transparent border-white rounded-full animate-spin"></div>
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
+      {/* Khu vực nhập tin nhắn */}
+      <div className="flex items-center p-3 bg-content-bg border-t border-themed flex-shrink-0">
+        <input
+          ref={inputRef}
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder="Nhập tin nhắn..."
+          className="flex-1 p-3 bg-input text-input border-themed rounded-xl focus:outline-none border-hover placeholder-theme"
+          disabled={loading}
+        />
+        <button
+          onClick={sendMessage}
+          className="action-button action-button-primary !w-auto ml-2 !px-5 !py-3"
+          disabled={!input.trim() || loading}
+        >
+          {loading ? (
+            <div className="w-5 h-5 border-2 border-t-transparent border-current rounded-full animate-spin"></div>
+          ) : (
+            <Send className="w-5 h-5" />
+          )}
+        </button>
+      </div>
+    </div>
   );
 }

@@ -1,31 +1,32 @@
-import React, { useState } from "react";
+// File: src/components/Client/layout/HomeLayout.jsx (Sửa để dùng component mới)
+import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import Header from "@components/Client/layout/Header";
 import Footer from "@components/Client/layout/Footer";
-import ChatComponent from "../../../pages/Chat/Chat";
-import { useChat } from "../../../contexts/ChatContext";
 import { ClientThemeProvider } from "../../../contexts/ClientThemeContext";
-import { MessageSquareText, X } from "lucide-react"; // Import icon
-import ChatWidget from "../../../pages/Clients/Chatbot/ChatWidget";
+import ChatContainer from "./ChatContainer"; // Import component mới
 
 export default function HomeLayout() {
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const {
-    isLoggedIn,
-    requestAgentChat,
-    agentChatRoom,
-    markChatAsRead,
-    unreadCount,
-  } = useChat();
-  const toggleChat = async () => {
-    if (!isChatOpen) {
-      if (isLoggedIn && !agentChatRoom) {
-        await requestAgentChat();
-      }
-      markChatAsRead();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  const handleScroll = () => {
+    if (window.scrollY > 400) {
+      setShowScrollTop(true);
+    } else {
+      setShowScrollTop(false);
     }
-    setIsChatOpen(!isChatOpen);
   };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   return (
     <ClientThemeProvider>
@@ -35,7 +36,12 @@ export default function HomeLayout() {
           <Outlet />
         </main>
         <Footer />
-        <ChatWidget />
+
+        {/* Sử dụng component mới để chứa các chat */}
+        <ChatContainer
+          showScrollTop={showScrollTop}
+          scrollToTop={scrollToTop}
+        />
       </div>
     </ClientThemeProvider>
   );

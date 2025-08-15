@@ -1,3 +1,4 @@
+// File: src/pages/Chat/Chat.jsx (Giữ nguyên, chỉ thêm min/max kích thước vào class nếu cần, nhưng vì đã có ở container, giữ nguyên)
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "../../contexts/ChatContext";
 import { Send, MessageCircleWarning, X, ArrowDown } from "lucide-react"; // Thay đổi: ArrowUp -> ArrowDown
@@ -109,9 +110,9 @@ const ChatComponent = ({ agent, onClose }) => {
     }
   };
   return (
-    <div className="flex flex-col h-full max-h-[600px] bg-dropdown border border-themed rounded-2xl shadow-2xl overflow-hidden">
+    <div className="flex flex-col h-full min-h-[500px] max-h-[62svh] bg-input border-themed rounded-2xl shadow-2xl overflow-hidden">
       {/* ... (Giữ nguyên Header của Chat) */}
-      <div className="flex items-center justify-between p-4 bg-content-bg border-b border-themed flex-shrink-0">
+      <div className="flex items-center justify-between p-4 bg-gradient-header border-b border-themed flex-shrink-0">
         <div className="flex items-center gap-3">
           <img
             src={agent?.agentAvatar ?? agent?.avatar_url}

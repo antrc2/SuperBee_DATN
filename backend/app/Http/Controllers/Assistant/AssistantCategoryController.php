@@ -32,7 +32,9 @@ class AssistantCategoryController extends Controller
     }
     public function show(Request $request,$id){
         try {
-            $category = Category::where('id',$id)->where('status',1)->with('products.gameAttributes')->with("products.images")->first();
+            $category = Category::where('id',$id)->where('status',1)->where('id','!=',1)->with(['products'=>function ($query) {
+                $query->where('status',1);
+            }])->with('products.gameAttributes')->with("products.images")->first();
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>True,

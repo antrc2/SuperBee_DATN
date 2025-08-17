@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBannerController;
-use App\Http\Controllers\Admin\AdminBusinessSettingsController;
+use App\Http\Controllers\Admin\AdminBusinessSettingController;
 use App\Http\Controllers\Admin\AdminCategoryPostController;
 use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
@@ -420,9 +420,9 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
             Route::post("/", [AutoTransactionController::class, 'turn']);
         });
     });
-    Route::prefix('/settings')->group(function () {
-        Route::get('/', [AdminBusinessSettingsController::class, 'show'])->middleware('permission:settings.view');
-        Route::put('/', [AdminBusinessSettingsController::class, 'update'])->middleware('permission:settings.edit');
+    Route::prefix('/business_settings')->group(function () {
+        Route::get('/', [AdminBusinessSettingController::class, 'index'])->middleware('permission:business_settings.view');
+        Route::put('/{id}', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
 });
 

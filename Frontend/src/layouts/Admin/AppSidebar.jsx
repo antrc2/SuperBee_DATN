@@ -15,6 +15,7 @@ import {
   CircleDollarSign,
   HomeIcon,
   Home,
+  Settings,
 } from "lucide-react";
 
 import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
@@ -125,6 +126,12 @@ const navItems = [
     name: "Tin Tức",
     path: "/admin/post",
     view: ["admin", "admin_super", "reseller", "nv_marketing"],
+  },
+  {
+    icon: <Settings />,
+    name: "Cấu hình Website",
+    path: "/admin/settings",
+    view: ["admin", "admin_super"],
   },
 
   {

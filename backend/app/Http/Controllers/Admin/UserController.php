@@ -346,7 +346,7 @@ class UserController extends Controller
     {
         try {
             // Lấy tất cả quyền trừ các quyền trong nhóm 'Quản lý Phân quyền'
-            $permissions = Permission::where('group_name', '!=', 'Quản lý Phân quyền')
+            $permissions = Permission::where('group_name', '!=', 'Quản lý Phân quyền')->where('group_name', '!=', 'Quản lý Web con')
                 ->get()
                 ->groupBy('group_name');
 
@@ -366,10 +366,10 @@ class UserController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function createStaffAccount(Request $request)
+   public function createStaffAccount(Request $request)
     {
         try {
-            // 1. Xác thực dữ liệu chung và loại phân quyền
+            // 1. Xác thực dữ liệu
             $validatedData = $request->validate([
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
@@ -380,19 +380,39 @@ class UserController extends Controller
                 'permissions' => 'required_if:assignment_type,permissions|array',
                 'permissions.*' => 'string|exists:permissions,name',
             ], [
-                //... (thêm các message tùy chỉnh nếu muốn)
+                // --- Bắt đầu phần thông báo tùy chỉnh bằng tiếng Việt ---
+                'username.required' => 'Vui lòng nhập tên đăng nhập.',
+                'username.string' => 'Tên đăng nhập phải là một chuỗi ký tự.',
+                'username.unique' => 'Tên đăng nhập này đã tồn tại.',
+
+                'email.required' => 'Vui lòng nhập địa chỉ email.',
+                'email.email' => 'Địa chỉ email không hợp lệ.',
+                'email.unique' => 'Địa chỉ email này đã được sử dụng.',
+
+                'password.required' => 'Vui lòng nhập mật khẩu.',
+                'password.string' => 'Mật khẩu phải là một chuỗi ký tự.',
+                'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
+
                 'assignment_type.required' => 'Vui lòng chọn phương thức gán quyền.',
-                'role_name.required_if' => 'Vui lòng chọn một vai trò.',
-                'permissions.required_if' => 'Vui lòng chọn ít nhất một quyền.',
+                'assignment_type.in' => 'Phương thức gán quyền không hợp lệ.',
+
+                'role_name.required_if' => 'Vui lòng chọn một vai trò khi phương thức là "gán theo vai trò".',
+                'role_name.exists' => 'Vai trò được chọn không tồn tại.',
+
+                'permissions.required_if' => 'Vui lòng chọn ít nhất một quyền khi phương thức là "gán theo quyền".',
+                'permissions.array' => 'Danh sách quyền phải là một mảng.',
+                'permissions.*.exists' => 'Một hoặc nhiều quyền được chọn không tồn tại.',
+                // --- Kết thúc phần thông báo tùy chỉnh ---
             ]);
+
             $donate_code = "";
             do {
                 $donate_code = $this->generateCode(16);
             } while (User::where("donate_code", $donate_code)->exists());
+
             DB::beginTransaction();
 
-            // 2. Tạo User và Wallet (chung cho cả 2 cách)
-
+            // 2. Tạo User và Wallet
             $user = User::create([
                 'username' => $validatedData['username'],
                 'email' => $validatedData['email'],
@@ -400,15 +420,15 @@ class UserController extends Controller
                 'web_id' => $request->web_id,
                 'status' => 1,
                 'email_verified_at' => now(),
-                'donate_code'=>$donate_code
-
+                'donate_code' => $donate_code,
             ]);
+
             Wallet::create(['user_id' => $user->id, "balance" => 0, "currency" => "VND"]);
 
             // Gán role 'user' để có các quyền cơ bản
             $user->assignRole('user');
 
-            // 3. Xử lý logic gán quyền dựa trên lựa chọn của admin
+            // 3. Xử lý logic gán quyền dựa trên lựa chọn
             if ($validatedData['assignment_type'] === 'role') {
                 // Cách 1: Gán vai trò đã có
                 $user->assignRole($validatedData['role_name']);
@@ -426,11 +446,18 @@ class UserController extends Controller
                 'data' => $user->load('roles', 'permissions')
             ], 201);
         } catch (ValidationException $e) {
-            return response()->json(['message' => 'Dữ liệu không hợp lệ.', 'status' => false, 'errors' => $e->errors()], 422);
+            return response()->json([
+                'message' => 'Dữ liệu không hợp lệ.',
+                'status' => false,
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Lỗi khi tạo tài khoản nhân viên: " . $e->getMessage());
-            return response()->json(['message' => 'Đã có lỗi xảy ra ở máy chủ.', 's' => $e->getMessage()], 500);
+            return response()->json([
+                'message' => 'Đã có lỗi xảy ra ở máy chủ.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

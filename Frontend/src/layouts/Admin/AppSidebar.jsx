@@ -23,7 +23,7 @@ import { useRoles } from "../../utils/role";
 
 // Mảng cấu hình các mục menu, giữ nguyên từ file gốc
 const navItems = [
-    {
+  {
     icon: <Home />,
     name: "Trang chủ",
     path: "/",
@@ -44,7 +44,7 @@ const navItems = [
     ],
   },
 
-    {
+  {
     icon: <Calendar />,
     name: "Ảnh Banners",
     path: "/admin/banners",
@@ -56,7 +56,7 @@ const navItems = [
     path: "/admin/users",
     view: ["admin", "admin_super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
   },
-    {
+  {
     icon: <Newspaper />,
     name: "Phân quyền",
     view: ["admin"],
@@ -96,23 +96,17 @@ const navItems = [
     path: "/admin/pendingProducts",
     view: ["admin", "admin_super", "nv_kiem_duyet"],
   },
-  {
-    icon: <ShoppingCart />,
-    name: "Orders",
-    path: "/admin/orders",
-    view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
-  },
+  // {
+  //   icon: <ShoppingCart />,
+  //   name: "Orders",
+  //   path: "/admin/orders",
+  //   view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
+  // },
   {
     icon: <CircleDollarSign />,
     name: "Tài chính",
     path: "/admin/financials",
     view: ["admin", "admin_super", "reseller", "ke_toan"],
-  },
-  {
-    icon: <Calendar />,
-    name: "Banners",
-    path: "/admin/banners",
-    view: ["admin", "admin_super", "reseller", "nv_marketing"],
   },
   {
     icon: <Calendar />,
@@ -135,21 +129,11 @@ const navItems = [
 
   {
     icon: <Newspaper />,
-    name: "Authorization",
-    view: ["admin"],
-    subItems: [
-      { name: " Dashboard ", path: "/admin/authorization" },
-      { name: "Roles", path: "/admin/authorization/roles" },
-      { name: "Permissions", path: "/admin/authorization/permissions" },
-    ],
-  },
-  {
-    icon: <Newspaper />,
     name: "Rút tiền",
     view: ["admin", "admin-super", "reseller"],
     path: "/admin/withdrawals",
   },
-    {
+  {
     icon: <ShoppingCart />,
     name: "Đơn Hàng",
     path: "/admin/orders",

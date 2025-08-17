@@ -73,7 +73,7 @@ return new class extends Migration
             $table->text('image_url')->nullable();
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->integer('count')->default(0); // Mặc định hoạt động
-            $table->string('description', 255)->nullable();
+            $table->text('description')->nullable();
             $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
             $table->unsignedBigInteger('updated_by'); // Có thể null
             $table->timestamps();
@@ -91,7 +91,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
             $table->string('sku', 50)->unique();           // SKU duy nhất
-            $table->string('description', 255)->nullable();           // SKU duy nhất
+            $table->text('description')->nullable();           // SKU duy nhất
             $table->integer('import_price');             // giá nhập
             $table->integer('price');
             $table->integer('sale')->nullable();
@@ -99,6 +99,7 @@ return new class extends Migration
             $table->unsignedBigInteger('web_id');          // Sản phẩm thuộc web con nào
             $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
             $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
+            $table->text("refusal_reason")->nullable();
             $table->timestamps();
         });
 

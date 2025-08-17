@@ -195,7 +195,7 @@ class AdminDiscountCodeController extends Controller
             if ($request->target_user_id == -1) {
                 $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
             } else {
-                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->user_id);
+                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->target_user_id);
             }
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
@@ -303,11 +303,18 @@ class AdminDiscountCodeController extends Controller
             // Áp dụng validator
             $validator = Validator::make($request->all(), $rules, $messages);
 
+            if ($code->code != $request->code){
+                return response()->json([
+                    "status"=>False,
+                    "message"=>"Bạn không được sửa tên mã giảm giá"
+                ],422);
+            }
+
             if ($validator->fails()) {
                 return response()->json([
-                    'message' => 'Dữ liệu không hợp lệ',
+                    'message' => $validator->errors()->first(),
                     'status'  => false,
-                    'errors'  => $validator->errors()
+                    // 'errors'  => $validator->errors()
                 ], 422);
             }
 

@@ -172,10 +172,10 @@ const ShowAccountPage = () => {
       render: (tx) => (
         <span
           className={`${
-            tx.amount > 0 ? "text-green-600" : "text-red-600"
+            tx.type == 'purchase' || tx.type == "withdraw" ? "text-red-600" : "text-green-600"
           } font-semibold`}
         >
-          {tx.amount > 0 ? "+" : ""}
+          {tx.type == 'purchase' || tx.type == "withdraw" ? "-" : "+"}
           {formatCurrency(tx.amount)}
         </span>
       ),

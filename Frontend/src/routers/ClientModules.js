@@ -64,12 +64,21 @@ const NotificationPage = React.lazy(() =>
 const AffiliateHistory = React.lazy(() =>
   import("@pages/Clients/Profile/AffiliateHistory")
 );
+const ChatWidget = React.lazy(() =>
+  import("@pages/Clients/Chatbot/ChatWidget")
+);
 
 export const clientModules = [
   {
     // Trang chủ
     path: "/",
     view: Home,
+    requiresAuth: false,
+  },
+  {
+    // Trang chủ
+    path: "/ai",
+    view: ChatWidget,
     requiresAuth: false,
   },
   {

@@ -174,7 +174,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Cấp 2: Admin Super (Quản lý cấp cao)
         $roleAdminSuper = Role::create(['name' => 'admin-super', 'description' => 'Quản lý cấp cao, có mọi quyền trừ phân quyền.', 'guard_name' => 'api']);
-        $roleAdminSuper->givePermissionTo(Permission::where('group_name', '!=', 'Quản lý Phân quyền')->get());
+        $roleAdminSuper->givePermissionTo(Permission::all());
 
         // Cấp 3: Reseller (Quản lý Web con)
         $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Quản trị viên của một trang web con.', 'guard_name' => 'api']);
@@ -289,7 +289,7 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
         foreach ($userList as $userData) {
             $user = User::create([
                 'username' => $userData['username'],
-                'email' => $userData['username'] . '@app.com',
+                'email' => "support@superbee.site",
                 'password' => Hash::make('password'),
                 'web_id' => $userData['web_id'],
                 'status' => 1,
@@ -317,11 +317,11 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
             $mainWeb->user_id = $adminUser->id;
             $mainWeb->save();
         }
-        $resellerUser = User::where('username', 'reseller')->first();
-        if ($resellerUser) {
-            $mainWeb->user_id = $resellerUser->id;
-            $mainWeb->save();
-        }
+        // $resellerUser = User::where('username', 'reseller')->first();
+        // if ($resellerUser) {
+        //     $mainWeb->user_id = $resellerUser->id;
+        //     $mainWeb->save();
+        // }
         $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
 
         $this->command->info('Hoàn tất Seeder!');

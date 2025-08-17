@@ -19,6 +19,7 @@
   --color-text-primary: #272343;
   --color-text-secondary: #2d334a;
   --color-text-placeholder: #2d334a;
+  --color-same:rgb(236 236 235);
   --color-accent: #ffd803;
   --color-accent-text: #272343;
   --color-highlight: #ffd803;
@@ -57,6 +58,7 @@
   --color-secondary: #72757e;
   --color-tertiary: #2cb67d;
   --color-stroke: #010101;
+  --color-same:#1f1f24;
   --color-main-white: #fffffe;
   --gradient-header: linear-gradient(135deg, #1a1a1f, #101014);
   --gradient-button: linear-gradient(to right, #7f5af0, #9d7bf5);
@@ -81,6 +83,7 @@
   --color-text-primary: #33272a;
   --color-text-secondary: #594a4e;
   --color-text-placeholder: #594a4e;
+  --color-same:rgb(231 221 214);
   --color-accent: #ff8ba7;
   --color-accent-text: #33272a;
   --color-highlight: #ff8ba7;
@@ -111,6 +114,7 @@
   --color-text-primary: #33272a;
   --color-text-secondary: #594a4e;
   --color-text-placeholder: #594a4e;
+  --color-same:rgb(214 226 231);
   --color-accent: #09adff;
   --color-accent-text: #33272a;
   --color-highlight: #09b1ff;
@@ -127,7 +131,7 @@
   --gradient-info: linear-gradient(to right, #a2d2ff, #bde0fe);
   --color-input-bg: #fefbf9;
   --color-input-text: #33272a;
-  --color-border: #c6f8ff;
+  --color-border: #a3cbff;
   --color-border-hover: #8bcbff;
   --color-dropdown-bg: rgba(231, 244, 250, 0.9);
   --color-notification-unread-bg: #c6f7ff;
@@ -142,6 +146,7 @@
     --color-text-primary: #2a3d2f;
     --color-text-secondary: #4a5c4e;
     --color-text-placeholder: #4a5c4e;
+    --color-same:rgb(215 231 214);
     --color-accent: #34c759;
     --color-accent-text: #2a3d2f;
     --color-highlight: #34c759;
@@ -158,7 +163,7 @@
     --gradient-info: linear-gradient(to right, #86efac, #a7f3d0);
     --color-input-bg: #f8fff7;
     --color-input-text: #2a3d2f;
-    --color-border: #c8ffd7;
+    --color-border: #a9e28f;
     --color-border-hover: #34c759;
     --color-dropdown-bg: rgba(232, 249, 231, 0.9);
     --color-notification-unread-bg: #c8ffd7;
@@ -173,6 +178,7 @@
     --color-text-primary: #3c2f4b;
     --color-text-secondary: #5c4a6b;
     --color-text-placeholder: #5c4a6b;
+    --color-same:rgb(225 215 237);
     --color-accent: #9e35ff;
     --color-accent-text: #3c2f4b;
     --color-highlight: #a855f7;
@@ -189,7 +195,7 @@
     --gradient-info: linear-gradient(to right, #c4b5fd, #ddd6fe);
     --color-input-bg: #faf8ff;
     --color-input-text: #3c2f4b;
-    --color-border: #e9d5ff;
+    --color-border: #cea6f8;
     --color-border-hover: #a855f7;
     --color-dropdown-bg: rgba(243, 232, 255, 0.9);
     --color-notification-unread-bg: #e9d5ff;
@@ -234,6 +240,9 @@
   }
   .text-info {
     color: var(--color-info, #38bdf8);
+  }
+  .text-same{
+    color: var(--color-same)
   }
   .placeholder-theme::placeholder {
     color: var(--color-text-placeholder);

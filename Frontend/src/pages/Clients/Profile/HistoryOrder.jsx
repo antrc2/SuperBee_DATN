@@ -1,6 +1,3 @@
-// Gợi ý đường dẫn: src/app/(client)/user/orders/page.jsx (hoặc tương tự)
-// File: HistoryOrder.jsx
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -19,14 +16,15 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
+  Copy,
 } from "lucide-react";
-import api from "../../../utils/http"; // Đảm bảo đường dẫn này đúng
+import api from "../../../utils/http";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import LoadingCon from "../../../components/Loading/LoadingCon";
+import { useNotification } from "@contexts/NotificationContext";
 
 // =====================================================================
 // COMPONENT CHO MODAL KHIẾU NẠI (DisputeModal)
-// Bạn nên tách component này ra một file riêng, ví dụ: src/components/Client/DisputeModal.jsx
 // =====================================================================
 const DISPUTE_TYPES = {
   incorrect_login: "Sai thông tin đăng nhập",
@@ -186,8 +184,7 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
                       key={index}
                       className="flex items-center text-sm text-secondary gap-2"
                     >
-                      {" "}
-                      <Paperclip className="h-4 w-4" /> {file.name}{" "}
+                      <Paperclip className="h-4 w-4" /> {file.name}
                     </li>
                   ))}
                 </ul>
@@ -249,7 +246,7 @@ const formatCurrency = (amount) => {
 // =====================================================================
 const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
   if (!order) return null;
-
+  const { pop } = useNotification();
   const [expandedItems, setExpandedItems] = useState({});
 
   const toggleDetails = (itemId) => {
@@ -257,6 +254,15 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
       ...prev,
       [itemId]: !prev[itemId],
     }));
+  };
+
+  const handleCopyPassword = (password) => {
+    if (!password) return;
+    navigator.clipboard.writeText(password).then(() => {
+        pop("Đã sao chép mật khẩu!", "success");
+    }).catch((err) => {
+        pop("Không thể sao chép mật khẩu!", "error");
+    });
   };
 
   const renderDisputeStatus = (dispute) => {
@@ -389,27 +395,35 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
                           <h5 className="font-semibold text-primary mb-2">
                             Thông tin tài khoản
                           </h5>
-                          <div className="bg-input p-3 rounded-lg space-y-2 border border-themed">
+                          <div className="space-y-3 bg-background/50 p-4 rounded-lg border border-themed">
                             <p className="text-sm text-secondary">
                               <span className="font-medium text-primary">
                                 Tên đăng nhập:
                               </span>{" "}
                               {item.product.credentials[0].username}
                             </p>
-                            <div className="text-sm text-secondary">
+                            <div className="flex items-center gap-2 text-sm text-secondary">
                               <span className="font-medium text-primary">
                                 Mật khẩu:
-                              </span>{" "}
+                              </span>
                               <input
                                 type="text"
                                 value={item.product.credentials[0].password}
                                 readOnly
-                                className="bg-background text-primary border border-themed p-1 rounded w-auto selection:bg-accent selection:text-accent-contrast"
+                                className="bg-background text-same border border-themed p-1 rounded w-auto selection:bg-accent selection:text-background"
                                 onFocus={(e) => e.target.select()}
                               />
+                              <button
+                                onClick={() => handleCopyPassword(item.product.credentials[0].password)}
+                                className="p-1.5 rounded-md bg-accent/10 hover:bg-accent/20 transition-colors"
+                                title="Sao chép mật khẩu"
+                              >
+                                <Copy className="h-4 w-4 text-accent" />
+                              </button>
+                              
                             </div>
                             <i className="text-xs text-secondary/70">
-                              *Click vào ô mật khẩu để copy.
+                              *Click vào ô mật khẩu để xem.
                             </i>
                           </div>
                         </div>
@@ -534,13 +548,10 @@ export default function HistoryOrder() {
   };
 
   const handleDisputeSuccess = async () => {
-    // Đóng modal khiếu nại
     setDisputingItem(null);
-    // Tải lại dữ liệu cho modal chi tiết đơn hàng để cập nhật trạng thái
     if (selectedOrder) {
       await handleViewDetails(selectedOrder);
     }
-    // Tải lại toàn bộ danh sách đơn hàng để đồng bộ
     await fetchAllOrders();
   };
 

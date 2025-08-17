@@ -54,7 +54,11 @@ use PHPUnit\Framework\Attributes\Group;
 */
 
 // Route::get('/post_sitemap.xml',[HomeController::class,'post_sitemap']);
-
+Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
 // Xác thực trang web
 Route::post("/domain/active", [AuthController::class, "active"]);
@@ -73,11 +77,11 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
-    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
-    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
-    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
-    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
-    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+    // Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    // Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    // Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    // Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    // Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
@@ -159,7 +163,11 @@ Route::middleware('auth')->group(function () {
         });
 
         Route::prefix("/donate")->group(function () {
-
+            Route::prefix('/history')->group(function () {
+                Route::get("/", [HomeController::class, 'donate_history']);
+                Route::get("/card", [CardController::class, 'history']);
+                Route::get("/bank", [BankController::class, 'history']);
+            });
             Route::prefix("/card")->group(function () {
                 Route::post("/", [CardController::class, 'store'])->middleware('permission:recharges.create');
             });
@@ -444,6 +452,11 @@ Route::prefix('/assistant')->group(function () {
     Route::prefix('/carts')->group(function () {
         Route::post("/", [AssistantCartController::class, 'store'])->middleware('jwt');
     });
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 });
 
 
@@ -454,7 +467,11 @@ Route::prefix('/auto')->group(function () {
     Route::prefix('/post')->group(function () {});
     Route::prefix('/transaction')->group(function () {
         Route::get('/', [AutoTransactionController::class, 'status']);
+<<<<<<< HEAD
         // Route::post("/", [AutoTransactionController::class, 'turn']);
+=======
+        Route::post("/", [AutoTransactionController::class, 'turn']);
+>>>>>>> 73b358a19a99f5803582c177da408c2360c95cbb
     });
 });
 // Route::post("/export",[AdminWithdrawController::class,'export']);

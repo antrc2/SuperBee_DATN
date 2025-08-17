@@ -39,7 +39,7 @@ class DiscountCodeController extends Controller
             return response()->json([
                 'message' => 'Đã có lỗi xảy ra',
                 'status' => false,
-                'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
+                // 'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
             ], 500);
         }
     }

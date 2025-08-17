@@ -23,6 +23,7 @@ class UserPostController extends Controller
             $posts = Post::query()
                 ->with("category", "author")
                 ->orderBy('created_at', 'desc')
+                ->where('status',1)
                 ->paginate(20);
 
             return response()->json([

@@ -10,7 +10,7 @@ class AutoTransactionController extends Controller
 {
     public function status(Request $request){
         try {
-            $business = Business_setting::where("web_id",$request->id)->first();
+            $business = Business_setting::where("web_id",1)->first();
             return response()->json([
                 'status'=>False,
                 "message"=>"Lấy trạng thái thành công",
@@ -27,7 +27,7 @@ class AutoTransactionController extends Controller
     }
     public function turn(Request $request){
         try {
-            $business = Business_setting::where("web_id",$request->id)->first();
+            $business = Business_setting::where("web_id",1)->first();
             // if ($business->auto_transaction)
             $business->auto_transaction = !$business->auto_transaction;
             $business->save();

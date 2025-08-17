@@ -441,8 +441,6 @@ const EditDiscountCodePage = () => {
                       id="discount_value"
                       value={form?.discount_value || ""}
                       onChange={handleChange}
-                      min="1"
-                      max="100"
                       className={inputClasses}
                       placeholder="VD: 20"
                     />
@@ -479,7 +477,6 @@ const EditDiscountCodePage = () => {
                         id="usage_limit"
                         value={form?.usage_limit || ""}
                         onChange={handleChange}
-                        min="-1"
                         className={inputClasses}
                         placeholder="-1 là không giới hạn"
                       />
@@ -496,7 +493,6 @@ const EditDiscountCodePage = () => {
                       id="per_user_limit"
                       value={form?.per_user_limit || ""}
                       onChange={handleChange}
-                      min="-1"
                       className={inputClasses}
                       placeholder="-1 là không giới hạn"
                     />
@@ -512,7 +508,6 @@ const EditDiscountCodePage = () => {
                       id="min_discount_amount"
                       value={form?.min_discount_amount || ""}
                       onChange={handleChange}
-                      min="0"
                       className={inputClasses}
                       placeholder="Bỏ trống nếu không có"
                     />
@@ -528,7 +523,6 @@ const EditDiscountCodePage = () => {
                       id="max_discount_amount"
                       value={form?.max_discount_amount || ""}
                       onChange={handleChange}
-                      min="0"
                       className={inputClasses}
                       placeholder="Bỏ trống nếu không có"
                     />

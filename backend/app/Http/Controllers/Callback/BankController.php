@@ -17,6 +17,23 @@ use Illuminate\Support\Facades\Http;
 
 class BankController extends Controller
 {   
+    public function history(Request $request){
+        try {
+            $cards = RechargeBank::where("status",1)->with('user')->limit(5)->get();
+            return response()->json([
+                'status'=>True,
+                'message'=>"Lấy danh sách lịch sử nạp bank thành công",
+                'data'=>$cards
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Lấy danh sách lịch sử nạp bank thất bại",
+                'data'=>[]
+            ],500);
+        }
+    }
     public function donate(Request $request){
         try {
             if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
@@ -115,10 +132,11 @@ class BankController extends Controller
                 ]);
             }
             // $wallet = Wallet::where("user_id",$withdraw->user_id)->first();
+            $frontend_link = env("FRONTEND_URL");
             if ($request->status){
                 $withdraw->status = 1;
                 // $withdraw->note = $request->message;
-                $this->sendNotification(1,"Rút {$withdraw->amount} thành công",null,$withdraw->user->id);
+                // $this->sendNotification(1,"Rút {$withdraw->amount} thành công",null,$withdraw->user->id);
                 WalletTransaction::create([
                     "wallet_id"=>$withdraw->user->id,
                     "type"=>'withdraw',
@@ -127,10 +145,18 @@ class BankController extends Controller
                     "amount"=>$withdraw->amount,
                     'status'=>1
                 ]);
+                $this->sendNotification(1,"Rút tiền thành công","{$frontend_link}/info/withdraw",$withdraw->user->id);
             } else {
                 $withdraw->status = 3;
                 $withdraw->note = $request->message;
+                $wallet = Wallet::where("user_id",$withdraw->user->id)->first();
+                $wallet->balance += $withdraw->amount;
+                $wallet->save(); 
+                $this->sendNotification(0,"Rút tiền thất bại","{$frontend_link}/info/withdraw",$withdraw->user->id);
             }
+            // return response()->json([
+            //     "withdraw"=>$withdraw
+            // ]);
             $withdraw->save();
             DB::commit();
             return response()->json([

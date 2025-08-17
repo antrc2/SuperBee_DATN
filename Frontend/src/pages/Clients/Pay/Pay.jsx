@@ -286,6 +286,12 @@ export default function Pay() {
         setBackendTotalPriceAfterDiscount(
           parseFloat(response.data.total_price_after_discount) || 0
         );
+        setBackendTaxAmount(
+          parseFloat(response.data.tax_value)  || 10
+        );
+        setBackendTaxValue(
+          parseFloat(response.data.tax_amount) || 0
+        );
         pop(response.data.message, "success");
         setDiscountCodeInput("");
         setDiscountErrorMessage("");
@@ -544,17 +550,7 @@ export default function Pay() {
                       </span>
                     </div>
                   )}
-                  {backendTaxAmount > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-secondary">
-                        Thuế ({backendTaxValue}%)
-                      </span>
-                      <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
-                      <span className="font-medium text-primary">
-                        +{formatCurrency(backendTaxAmount)}
-                      </span>
-                    </div>
-                  )}
+                  
                   {appliedDiscount && (
                     <div className="flex items-center justify-between text-accent">
                       <span className="font-semibold">
@@ -563,6 +559,17 @@ export default function Pay() {
                       <div className="flex-grow border-b border-dashed border-accent/50 mx-2"></div>
                       <span className="font-semibold">
                         -{formatCurrency(appliedDiscount.discount_amount)}
+                      </span>
+                    </div>
+                  )}
+                  {backendTaxAmount > 0 && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-secondary">
+                        Thuế ({backendTaxValue}%)
+                      </span>
+                      <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
+                      <span className="font-medium text-primary">
+                        +{formatCurrency(backendTaxAmount)}
                       </span>
                     </div>
                   )}

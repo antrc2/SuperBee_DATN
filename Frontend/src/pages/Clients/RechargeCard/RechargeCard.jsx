@@ -12,7 +12,14 @@ export default function RechargeCardPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [history, setHistory] = useState([]);
-
+  const formatCurrency = (amount) => {
+  const numberAmount = Number(amount);
+  if (isNaN(numberAmount)) return "0 ₫";
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(numberAmount);
+};
   useEffect(() => {
     // Nếu chưa đăng nhập, chuyển hướng về trang login
     if (user === null) {
@@ -24,6 +31,7 @@ export default function RechargeCardPage() {
         try {
           const historyRes = await api.get("/donate/history");
           setHistory(historyRes.data);
+          console.log("Lịch sử nạp tiền:", historyRes.data);
         } catch (error) {
           console.error("Lỗi khi tải lịch sử nạp:", error);
         }
@@ -42,17 +50,15 @@ export default function RechargeCardPage() {
         <div className="mb-8 flex justify-center border-b border-themed">
           <button
             onClick={() => setActiveTab("card")}
-            className={`tab-button !flex-none ${
-              activeTab === "card" ? "tab-button-active" : ""
-            }`}
+            className={`tab-button !flex-none ${activeTab === "card" ? "tab-button-active" : ""
+              }`}
           >
             <CreditCard size={18} className="inline mr-2" /> Nạp Thẻ Cào
           </button>
           <button
             onClick={() => setActiveTab("bank")}
-            className={`tab-button !flex-none ${
-              activeTab === "bank" ? "tab-button-active" : ""
-            }`}
+            className={`tab-button !flex-none ${activeTab === "bank" ? "tab-button-active" : ""
+              }`}
           >
             <Landmark size={18} className="inline mr-2" /> Nạp Qua Ngân Hàng
           </button>
@@ -70,9 +76,44 @@ export default function RechargeCardPage() {
             Tiền
           </h2>
           <div className="bg-content rounded-lg shadow-lg overflow-x-auto">
-            {history.length > 0 ? (
+            {history.status == true ? (
+
+
               <table className="w-full min-w-[600px] text-sm">
-                {/* JSX cho bảng lịch sử */}
+                <thead>
+                  <tr>
+                    <th className="p-4 text-center">Người dùng</th>
+                    <th className="p-4 text-center">Số Tiền</th>
+                    <th className="p-4 text-center">Ngày</th>
+                    <th className="p-4 text-center">Trạng Thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeTab === "card" ? (
+                    history?.data?.cards?.map((item) => (
+                      <tr key={item.id}>
+                        <td className="text-center">{item.wallet_transaction.wallet.user.username}</td>
+                        <td className="text-center">{formatCurrency(item.amount)}</td>
+                        <td className="text-center">{new Date(item.created_at).toLocaleString(
+                                  "vi-VN"
+                                )}</td>
+                        <td className="text-center">{item.status == 1 ? "Thành công" : "Thất bại"}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    history?.data?.banks?.map((item) => (
+                      <tr key={item.id}>
+                        <td className="text-center">{item.wallet_transaction.wallet.user.username}</td>
+                        <td className="text-center">{formatCurrency(item.amount)}</td>
+                        <td className="text-center">{new Date(item.created_at).toLocaleString(
+                                  "vi-VN"
+                                )}</td>
+                        <td className="text-center">{item.status == 1 ? "Thành công" : "Thất bại"}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+
               </table>
             ) : (
               <p className="p-6 text-center text-secondary">

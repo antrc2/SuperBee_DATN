@@ -14,7 +14,11 @@ class UserCategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::where('status', 1)->where('id','!=',1)->get();
+            $categories = Category::where('status', 1)->withCount([
+                        'products as count' => function ($query) {
+                            $query->where('status', 1); // chỉ đếm sản phẩm active
+                        }
+                    ])->where('id','!=',1)->get();
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
 

@@ -60,7 +60,6 @@ export default function Header() {
   const navLinks = [
     { name: " Trang chủ", href: "/", icon: Home },
     { name: " Mua Acc", href: "/mua-acc", icon: Gamepad2 },
-    { name: " Dịch vụ", href: "/services", icon: Briefcase },
     { name: " Tin Tức", href: "/tin-tuc", icon: Newspaper },
   ];
 

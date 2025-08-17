@@ -1,11 +1,5 @@
-// @components/Admin/DonatePromotion/DonatePromotionForm.jsx (Validate lỗi trực tiếp)
-
 import React, { useState } from "react";
-import { Calendar as CalendarIcon } from "lucide-react";
-import DatePicker from "react-datepicker";
 import dayjs from "dayjs";
-
-import "react-datepicker/dist/react-datepicker.css";
 
 // --- CÁC COMPONENT GIAO DIỆN NHỎ ---
 // Thêm prop `hasError` để thay đổi border khi có lỗi
@@ -56,9 +50,11 @@ export default function DonatePromotionForm({
   const [formData, setFormData] = useState({
     amount: initialData?.amount || "",
     start_date: initialData?.start_date
-      ? new Date(initialData.start_date)
-      : null,
-    end_date: initialData?.end_date ? new Date(initialData.end_date) : null,
+      ? dayjs(initialData.start_date).format("YYYY-MM-DDTHH:mm")
+      : "",
+    end_date: initialData?.end_date
+      ? dayjs(initialData.end_date).format("YYYY-MM-DDTHH:mm")
+      : "",
     usage_limit: initialData?.usage_limit ?? -1,
     per_user_limit: initialData?.per_user_limit ?? -1,
     status: initialData?.status ?? 1,
@@ -72,14 +68,6 @@ export default function DonatePromotionForm({
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     // Xóa lỗi khi người dùng bắt đầu nhập
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const handleDateChange = (name, date) => {
-    setFormData((prev) => ({ ...prev, [name]: date }));
-    // Xóa lỗi khi người dùng chọn ngày
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: null }));
     }
@@ -121,35 +109,6 @@ export default function DonatePromotionForm({
     };
     onSubmit(dataToSubmit);
   };
-
-  const CustomDatePickerInput = React.forwardRef(
-    ({ value, onClick, hasError }, ref) => (
-      <button
-        type="button"
-        onClick={onClick}
-        ref={ref}
-        className={`mt-2 flex w-full items-center justify-between rounded-md border bg-transparent px-3 py-2 text-left text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500
-        ${
-          hasError ? "border-red-500" : "border-slate-300 dark:border-slate-700"
-        }`}
-      >
-        <span
-          className={
-            !value
-              ? "text-slate-400"
-              : hasError
-              ? "text-red-600"
-              : "text-slate-800 dark:text-slate-200"
-          }
-        >
-          {value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Chọn ngày..."}
-        </span>
-        <CalendarIcon
-          className={`h-4 w-4 ${hasError ? "text-red-500" : "text-slate-500"}`}
-        />
-      </button>
-    )
-  );
 
   // -- GIAO DIỆN --
   return (
@@ -232,30 +191,28 @@ export default function DonatePromotionForm({
           </p>
           <div className="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
             <div className="sm:col-span-3">
-              <Label>Thời gian bắt đầu</Label>
-              <DatePicker
-                selected={formData.start_date}
-                onChange={(date) => handleDateChange("start_date", date)}
-                showTimeSelect
-                dateFormat="Pp"
-                customInput={
-                  <CustomDatePickerInput hasError={!!errors.start_date} />
-                } // **[MỚI]**
+              <Label htmlFor="start_date">Thời gian bắt đầu</Label>
+              <Input
+                id="start_date"
+                name="start_date"
+                type="datetime-local"
+                value={formData.start_date}
+                onChange={handleChange}
+                hasError={!!errors.start_date}
               />
               {errors.start_date && (
                 <p className="mt-1 text-sm text-red-600">{errors.start_date}</p>
               )}
             </div>
             <div className="sm:col-span-3">
-              <Label>Thời gian kết thúc</Label>
-              <DatePicker
-                selected={formData.end_date}
-                onChange={(date) => handleDateChange("end_date", date)}
-                showTimeSelect
-                dateFormat="Pp"
-                customInput={
-                  <CustomDatePickerInput hasError={!!errors.end_date} />
-                } // **[MỚI]**
+              <Label htmlFor="end_date">Thời gian kết thúc</Label>
+              <Input
+                id="end_date"
+                name="end_date"
+                type="datetime-local"
+                value={formData.end_date}
+                onChange={handleChange}
+                hasError={!!errors.end_date}
               />
               {errors.end_date && (
                 <p className="mt-1 text-sm text-red-600">{errors.end_date}</p>

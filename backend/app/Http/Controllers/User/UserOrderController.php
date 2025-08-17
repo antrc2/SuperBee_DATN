@@ -169,12 +169,12 @@ class UserOrderController extends Controller
                 // $total_price = $total_price - $total_price * 20 / 100;
             } elseif ($role == 'admin') {
             }
-            $tax_value = $total_price * $tax_amount / 100;
-            $total_price = $total_price + $tax_value;
+            
 
             $discount_amount = $total_price * $discount_value / 100;
             $total_price = $total_price - $discount_amount;
-
+            $tax_value = $total_price * $tax_amount / 100;
+            $total_price = $total_price + $tax_value;
             if (!$cart['status']) {
                 return [
                     "status" => false,
@@ -368,8 +368,11 @@ class UserOrderController extends Controller
                     "tax_amount" => $tax_amount,
                     "tax_value" => $tax_value,
                 ];
-            }
-
+            }   
+            $total_price = $total_price - $discount_amount;
+            $total_price = $total_price - $tax_value;
+            $tax_value = $total_price * $tax_amount / 100;
+            $total_price = $total_price + $tax_value;
             return [
                 "status" => true,
                 'message' => "Áp dụng mã giảm giá {$promotion_code} thành công",
@@ -377,7 +380,7 @@ class UserOrderController extends Controller
                 "discount_amount" => $discount_amount + $discount_amount_clone,
                 "discount_value" => $discount_value * 100 + $discount_value_clone,
                 "total_price" => $total_price_clone,
-                "total_price_after_discount" => $total_price - $discount_amount,
+                "total_price_after_discount" => $total_price,
                 "status_code" => 200,
                 "tax_amount" => $tax_amount,
                 "tax_value" => $tax_value,
@@ -422,7 +425,7 @@ class UserOrderController extends Controller
     {
         try {
             $tax_value = env("TAX");
-            $promotion_codes = Promotion::withCount(['orders'])->orderBy('created_at', 'desc')->get();
+            $promotion_codes = Promotion::withCount(['orders'])->where('end_date',">",now())->orderBy('created_at', 'desc')->get();
 
             $wallet = Wallet::where('user_id', $request->user_id)->first();
             if ($wallet == null) {
@@ -623,8 +626,8 @@ class UserOrderController extends Controller
                     // }
 
                     $affiliate = Affiliate::where('user_id', $user_id)->first();
-                    $tax = env("TAX");
-                    $total_price = $total_price + $total_price * $tax / 100;
+                    // $tax = env("TAX");
+                    // $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
                     if ($wallet->promotion_balance >= $total_price){
@@ -721,6 +724,7 @@ class UserOrderController extends Controller
                     // }
                     $wallet_transaction->related_id = $order->id;
                     $wallet_transaction->save();
+                    
                     DB::commit();
                     return response()->json([
                         "status" => True,

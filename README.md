@@ -1,3 +1,17 @@
+# Bug: 
+1. Gửi email kích hoạt tài khoản:
+* CHưa thấy validate email, và không được sử dụng required
+2. QUản lí mã giảm giá
+* Thêm phần  thêm mã giảm giá cho nhiều người
+3. CTV:
+* CTV không còn trang quản trị riêng, không còn được thêm sản phẩm nữa. Chỉ có quyền hơn user ở chỗ là mua hàng thì được giảm giá 20%, vì CTV chỉ là người bán hàng hộ mình
+4. Nhân viên:
+* Nhân viên nào đăng acc lên để bán, thì nhân viên đó phải bảo hành acc cho khách, nếu có gắn thông tin của nhân viên đó, khi nhân viên đó nghỉ việc thì phải bàn giao thông tin đó sang cho nhân viên khác hoặc admin
+5. Bảo hành:
+* Thêm cột ở bảng product_credentials:
+    * Email: Thông tin email của tài khoản (nullable)
+    * Phone: Thông tin sđt của tài khoản (nullable)
+    * CCCD: Thông tin cccd của tài khoản (nullable) (nếu đc thì để ảnh)
 # Deploy:
 ```bash
 redis-server --port 1234 --unixsocket /home/mptvweo/.application/redis.sock --unixsocketperm 777

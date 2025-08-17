@@ -294,7 +294,7 @@ return new class extends Migration
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
             $table->integer("user_id")->default(-1);
-            $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
+            $table->string('code', 50); // Mã khuyến mãi duy nhất
             $table->text('description')->nullable(); // Mô tả khuyến mãi
             // $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
             $table->decimal('discount_value', 15, 0); // Giá trị giảm giá

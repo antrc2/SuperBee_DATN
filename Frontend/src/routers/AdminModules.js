@@ -3,6 +3,9 @@ import EditCategoryPost from "../pages/Admin/CategoryPost/EditCategoryPostPage";
 import NotFound from "../pages/NotFound/NotFound";
 
 // ================== LAZY LOAD COMPONENTS ==================
+const BusinessSettingPage = React.lazy(() =>
+  import("@pages/Admin/BusinessSettings/BusinessSettingPage")
+);
 const CategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/CategoryPage")
 );
@@ -344,6 +347,17 @@ export const adminModules = [
     allowedRoles: ["admin", "admin-super", "nv-ho-tro"],
     permissions: {
       view: "chat.view",
+    },
+  },
+  {
+    name: "settings",
+    list: BusinessSettingPage,
+    show: NotFound,
+    create: NotFound,
+    edit: NotFound,
+    allowedRoles: ["admin", "admin-super"],
+    permissions: {
+      view: "settings.view",
     },
   },
 ];

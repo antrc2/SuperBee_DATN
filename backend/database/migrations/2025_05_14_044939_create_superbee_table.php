@@ -19,6 +19,10 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('email_verification_token')->nullable();
             $table->timestamp('email_verification_expires_at')->nullable();
+            $table->string('cccd_number')->nullable();
+            $table->string('cccd_frontend_url')->nullable();
+            $table->string('cccd_backend_url')->nullable();
+            $table->string("cccd_created_at")->nullable();
             // Nhưng với JWT token, việc lưu token reset vào bảng users tiện hơn để liên kết trực tiếp.
             $table->string('password_reset_token')->nullable();
             $table->string('phone', 20)->nullable(); // Có thể null

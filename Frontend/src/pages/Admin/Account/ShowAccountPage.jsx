@@ -2,15 +2,17 @@ import { useState, useEffect } from "react";
 import api from "@utils/http";
 import { useParams, useNavigate } from "react-router-dom";
 import { useNotification } from "../../../contexts/NotificationContext";
-import { getDecodedToken } from "@utils/tokenUtils";
+import { useAuth } from "../../../contexts/AuthContext"; // << THAY ĐỔI: Import useAuth
+
 // Import các component con
 import UserProfileSidebar from "./components/UserInfoCard";
 import DataTable from "./components/DataTable";
 import FinancialStatCard from "./components/FinancialStatCard";
 import OrderCard from "./components/OrderCard";
-import RoleManagementTab from "./components/RoleManagementTab"; // <-- Import component mới
+import RoleManagementTab from "./components/RoleManagementTab";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import { usePermissions } from "@utils/usePermissions";
+
 // --- Helpers (Giữ nguyên) ---
 const formatCurrency = (amount, currency = "VND") => {
   if (amount === null || amount === undefined) return "0 VND";
@@ -61,6 +63,7 @@ const ShowAccountPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { pop, conFim } = useNotification();
+  const { user: currentUser } = useAuth(); // << THAY ĐỔI: Lấy user từ context
 
   // ----- State Management -----
   const [account, setAccount] = useState(null);
@@ -68,21 +71,14 @@ const ShowAccountPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  // State và logic được chuyển từ trang cũ vào đây
-  const [selectedRoles, setSelectedRoles] = useState([]);
+  const [selectedRole, setSelectedRole] = useState("");
   const [updatingRole, setUpdatingRole] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
 
-  const { can, hasRole } = usePermissions();
+  const { can } = usePermissions();
   const isRole = can("roles.edit");
-  const ishasRole = hasRole("admin");
 
   // ----- Data Fetching -----
   useEffect(() => {
-    const decoded = getDecodedToken();
-    if (decoded) {
-      setCurrentUser({ id: decoded.user_id });
-    }
     const fetchAccount = async () => {
       setLoading(true);
       try {
@@ -90,8 +86,8 @@ const ShowAccountPage = () => {
         const userData = res.data?.data?.user || null;
         setAccount(userData);
         setAllRoles(res.data?.data?.role || []);
-        if (userData && userData.roles) {
-          setSelectedRoles(userData.roles.map((role) => role.name));
+        if (userData && userData.roles && userData.roles.length > 0) {
+          setSelectedRole(userData.roles[0].name);
         }
       } catch (err) {
         setError(err);
@@ -109,11 +105,7 @@ const ShowAccountPage = () => {
 
   // ----- Logic xử lý quyền -----
   const handleRoleChange = (roleName) => {
-    setSelectedRoles((prev) =>
-      prev.includes(roleName)
-        ? prev.filter((name) => name !== roleName)
-        : [...prev, roleName]
-    );
+    setSelectedRole(roleName);
   };
 
   const handleSaveChanges = async () => {
@@ -123,18 +115,18 @@ const ShowAccountPage = () => {
     }
     const check = await conFim("Bạn xác nhận hành động");
     if (!check) {
-      setSelectedRoles(account.roles.map((role) => role.name));
-
+      if (account.roles && account.roles.length > 0) {
+        setSelectedRole(account.roles[0].name);
+      }
       return;
     }
     setUpdatingRole(true);
     try {
       await api.put(`/admin/accounts/${id}/role`, {
-        roles: selectedRoles,
+        roles: selectedRole,
         user_id: currentUser.id,
       });
       pop("Cập nhật quyền thành công!", "s");
-
       navigate("/admin/users");
     } catch (err) {
       pop(
@@ -172,10 +164,12 @@ const ShowAccountPage = () => {
       render: (tx) => (
         <span
           className={`${
-            tx.type == 'purchase' || tx.type == "withdraw" ? "text-red-600" : "text-green-600"
+            tx.type == "purchase" || tx.type == "withdraw"
+              ? "text-red-600"
+              : "text-green-600"
           } font-semibold`}
         >
-          {tx.type == 'purchase' || tx.type == "withdraw" ? "-" : "+"}
+          {tx.type == "purchase" || tx.type == "withdraw" ? "-" : "+"}
           {formatCurrency(tx.amount)}
         </span>
       ),
@@ -340,12 +334,11 @@ const ShowAccountPage = () => {
             emptyMessage="Người dùng chưa có đơn hàng nào."
           />
         );
-      // --- RENDER TAB MỚI ---
       case "role": {
         return isRole ? (
           <RoleManagementTab
             allRoles={allRoles}
-            selectedRoles={selectedRoles}
+            selectedRole={selectedRole}
             handleRoleChange={handleRoleChange}
             handleSaveChanges={handleSaveChanges}
             updatingRole={updatingRole}

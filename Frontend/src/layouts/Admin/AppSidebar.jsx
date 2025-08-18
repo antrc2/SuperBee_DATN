@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   LayoutGrid,
@@ -13,15 +13,13 @@ import {
   Newspaper,
   Folders,
   CircleDollarSign,
-  HomeIcon,
   Home,
 } from "lucide-react";
 
 import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
 import { useSidebar } from "@contexts/SidebarContext";
-import { useRoles } from "../../utils/role";
+import { usePermissions } from "../../utils/usePermissions"; // Điều chỉnh đường dẫn nếu cần
 
-// Mảng cấu hình các mục menu, giữ nguyên từ file gốc
 const navItems = [
   {
     icon: <Home />,
@@ -31,127 +29,131 @@ const navItems = [
   {
     icon: <LayoutGrid />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/admin" }],
-    view: [
-      "admin",
-      "admin_super",
-      "reseller",
-      "ke_toan",
-      "nv_marketing",
-      "nv_ho_tro",
-      "nv_kiem_duyet",
-      "partner",
+    requiredPermissions: ["reports.view"],
+    subItems: [
+      { name: "Ecommerce", path: "/admin", requiredPermission: "reports.view" },
     ],
   },
-
   {
     icon: <Calendar />,
     name: "Ảnh Banners",
     path: "/admin/banners",
-    view: ["admin", "admin-super", "reseller", "nv_marketing"],
+    requiredPermission: "banners.view",
   },
   {
     icon: <Users />,
     name: "Tài Khoản",
     path: "/admin/users",
-    view: ["admin", "admin_super", "reseller", "nv_ho_tro", "nv_kiem_duyet"],
+    requiredPermission: "users.view",
   },
   {
     icon: <Newspaper />,
     name: "Phân quyền",
-    view: ["admin"],
+    requiredPermissions: ["roles.view", "permissions.view"],
     subItems: [
-      { name: "Tổng Quan", path: "/admin/authorization" },
-      { name: "Vai Trò", path: "/admin/authorization/roles" },
-      { name: "Quyền Hệ Thống", path: "/admin/authorization/permissions" },
+      {
+        name: "Tổng Quan",
+        path: "/admin/authorization",
+        requiredPermission: "roles.view",
+      },
+      {
+        name: "Vai Trò",
+        path: "/admin/authorization/roles",
+        requiredPermission: "roles.view",
+      },
+      {
+        name: "Quyền Hệ Thống",
+        path: "/admin/authorization/permissions",
+        requiredPermission: "permissions.view",
+      },
     ],
   },
   {
     icon: <TicketPercent />,
     name: "Mã Giảm giá",
     path: "/admin/discountcode",
-    view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
+    requiredPermission: "promotions.view",
   },
   {
     icon: <TicketPercent />,
     name: "Khuyến Mãi Nạp Thẻ",
     path: "/admin/donatePromotions",
-    view: ["admin", "admin_super", "reseller", "nv_marketing", "nv_ho_tro"],
+    requiredPermission: "donate_promotions.view",
   },
   {
     icon: <LayoutList />,
     name: "Danh Mục Sản Phẩm",
     path: "/admin/categories",
-    view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
+    requiredPermission: "categories.view",
   },
   {
     icon: <Package />,
     name: "Sản Phẩm",
     path: "/admin/products",
-    view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
+    requiredPermission: "products.view",
   },
   {
     icon: <Package />,
     name: "Duyệt Sản Phẩm",
     path: "/admin/pendingProducts",
-    view: ["admin", "admin_super", "nv_kiem_duyet"],
+    requiredPermission: "products.approve",
   },
-  // {
-  //   icon: <ShoppingCart />,
-  //   name: "Orders",
-  //   path: "/admin/orders",
-  //   view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
-  // },
+  // ===================== THAY ĐỔI CHÍNH Ở ĐÂY =====================
   {
     icon: <CircleDollarSign />,
     name: "Tài chính",
     path: "/admin/financials",
-    view: ["admin", "admin_super", "reseller", "ke_toan"],
+    // Sửa từ requiredPermission thành requiredPermissions
+    // Giờ đây, chỉ cần người dùng có 1 trong 3 quyền này là sẽ thấy mục "Tài chính"
+    requiredPermissions: [
+      "transactions.view",
+      "recharges.view",
+      "withdrawals.view",
+    ],
   },
+  // ================================================================
   {
     icon: <Calendar />,
     name: "Tin Nhắn",
     path: "/admin/agent",
-    view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
+    requiredPermission: "chat.view",
   },
   {
     icon: <Folders />,
     name: "Danh Mục Tin Tức",
     path: "/admin/categoryPost",
-    view: ["admin", "admin_super", "reseller", "nv_marketing"],
+    requiredPermission: "post_categories.view",
   },
   {
     icon: <Newspaper />,
     name: "Tin Tức",
     path: "/admin/post",
-    view: ["admin", "admin_super", "reseller", "nv_marketing"],
+    requiredPermission: "posts.view",
   },
-
   {
     icon: <Newspaper />,
     name: "Rút tiền",
-    view: ["admin", "admin-super", "reseller"],
     path: "/admin/withdrawals",
+    requiredPermission: "withdrawals.view",
   },
   {
     icon: <ShoppingCart />,
     name: "Đơn Hàng",
     path: "/admin/orders",
-    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
+    requiredPermission: "orders.view",
   },
   {
     icon: <Newspaper />,
     name: "Khiếu Nại",
-    view: ["admin", "admin-super", "reseller", "nv_ho_tro"],
     path: "/admin/disputes",
+    requiredPermission: "product_reports.view",
   },
 ];
 
 const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
-  const roles = useRoles();
-  console.log("🚀 ~ AppSidebar ~ roles:", roles);
+  const { can } = usePermissions();
 
   const [openSubmenu, setOpenSubmenu] = useState(null);
   const [activeMenuInfo, setActiveMenuInfo] = useState({
@@ -161,16 +163,30 @@ const AppSidebar = () => {
   const [subMenuHeight, setSubMenuHeight] = useState({});
   const subMenuRefs = useRef({});
 
+  const checkPermission = useCallback(
+    (item) => {
+      if (item.requiredPermissions) {
+        return item.requiredPermissions.some((p) => can(p));
+      }
+      if (item.requiredPermission) {
+        return can(item.requiredPermission);
+      }
+      return true;
+    },
+    [can]
+  );
+
+  const visibleItems = useMemo(() => {
+    return navItems.filter(checkPermission);
+  }, [checkPermission]);
+
   useEffect(() => {
     let bestMatch = { path: "", parent: null, self: null };
 
-    const visibleItems = navItems.filter(
-      (navItem) => !navItem.view || navItem.view.some((role) => roles[role])
-    );
-
     for (const navItem of visibleItems) {
       if (navItem.subItems) {
-        for (const subItem of navItem.subItems) {
+        const visibleSubItems = navItem.subItems.filter(checkPermission);
+        for (const subItem of visibleSubItems) {
           if (
             subItem.path &&
             location.pathname.startsWith(subItem.path) &&
@@ -195,7 +211,7 @@ const AppSidebar = () => {
 
     setActiveMenuInfo({ parent: bestMatch.parent, self: bestMatch.self });
     setOpenSubmenu(bestMatch.parent);
-  }, [location.pathname, roles]);
+  }, [location.pathname, visibleItems, checkPermission]);
 
   useEffect(() => {
     if (openSubmenu && subMenuRefs.current[openSubmenu]) {
@@ -212,28 +228,52 @@ const AppSidebar = () => {
     );
   };
 
-  const renderMenuItems = (items) => (
+  const renderMenuItems = () => (
     <ul className="flex flex-col gap-4">
-      {items
-        .filter(
-          (navItem) => !navItem.view || navItem.view.some((role) => roles[role])
-        )
-        .map((nav) => {
-          const isParentActive =
-            activeMenuInfo.parent === nav.name ||
-            activeMenuInfo.self === nav.name;
+      {visibleItems.map((nav) => {
+        const isParentActive =
+          activeMenuInfo.parent === nav.name ||
+          activeMenuInfo.self === nav.name;
 
-          return (
-            <li key={nav.name}>
-              {nav.subItems ? (
-                <button
-                  onClick={() => handleSubmenuToggle(nav.name)}
+        return (
+          <li key={nav.name}>
+            {nav.subItems ? (
+              <button
+                onClick={() => handleSubmenuToggle(nav.name)}
+                className={`menu-item group ${
+                  isParentActive ? "menu-item-active" : "menu-item-inactive"
+                } cursor-pointer ${
+                  !isExpanded && !isHovered
+                    ? "lg:justify-center"
+                    : "lg:justify-start"
+                }`}
+              >
+                <span
+                  className={`menu-item-icon-size ${
+                    isParentActive
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
+                  }`}
+                >
+                  {nav.icon}
+                </span>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className="menu-item-text">{nav.name}</span>
+                )}
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <ChevronDown
+                    className={`ml-auto w-5 h-5 transition-transform duration-200 ${
+                      openSubmenu === nav.name ? "rotate-180" : ""
+                    }`}
+                  />
+                )}
+              </button>
+            ) : (
+              nav.path && (
+                <Link
+                  to={nav.path}
                   className={`menu-item group ${
                     isParentActive ? "menu-item-active" : "menu-item-inactive"
-                  } cursor-pointer ${
-                    !isExpanded && !isHovered
-                      ? "lg:justify-center"
-                      : "lg:justify-start"
                   }`}
                 >
                   <span
@@ -248,81 +288,46 @@ const AppSidebar = () => {
                   {(isExpanded || isHovered || isMobileOpen) && (
                     <span className="menu-item-text">{nav.name}</span>
                   )}
-                  {(isExpanded || isHovered || isMobileOpen) && (
-                    <ChevronDown
-                      className={`ml-auto w-5 h-5 transition-transform duration-200 ${
-                        openSubmenu === nav.name ? "rotate-180" : ""
-                      }`}
-                    />
-                  )}
-                </button>
-              ) : (
-                nav.path && (
-                  <Link
-                    to={nav.path}
-                    className={`menu-item group ${
-                      isParentActive ? "menu-item-active" : "menu-item-inactive"
-                    }`}
-                  >
-                    <span
-                      className={`menu-item-icon-size ${
-                        isParentActive
-                          ? "menu-item-icon-active"
-                          : "menu-item-icon-inactive"
-                      }`}
-                    >
-                      {nav.icon}
-                    </span>
-                    {(isExpanded || isHovered || isMobileOpen) && (
-                      <span className="menu-item-text">{nav.name}</span>
-                    )}
-                  </Link>
-                )
-              )}
-              {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
-                <div
-                  ref={(el) => {
-                    if (el) subMenuRefs.current[nav.name] = el;
-                  }}
-                  className="overflow-hidden transition-all duration-300"
-                  style={{
-                    height:
-                      openSubmenu === nav.name
-                        ? `${subMenuHeight[nav.name] || 0}px`
-                        : "0px",
-                  }}
-                >
-                  <ul className="mt-2 space-y-1 ml-9">
-                    {nav.subItems
-                      .filter(
-                        (subItem) =>
-                          !subItem.view ||
-                          subItem.view.some((role) => roles[role])
-                      )
-                      .map((subItem) => {
-                        const isChildActive =
-                          activeMenuInfo.self === subItem.name;
-                        return (
-                          <li key={subItem.name}>
-                            <Link
-                              to={subItem.path}
-                              className={`menu-dropdown-item ${
-                                isChildActive
-                                  ? "menu-dropdown-item-active"
-                                  : "menu-dropdown-item-inactive"
-                              }`}
-                            >
-                              {subItem.name}
-                            </Link>
-                          </li>
-                        );
-                      })}
-                  </ul>
-                </div>
-              )}
-            </li>
-          );
-        })}
+                </Link>
+              )
+            )}
+            {nav.subItems && (isExpanded || isHovered || isMobileOpen) && (
+              <div
+                ref={(el) => {
+                  if (el) subMenuRefs.current[nav.name] = el;
+                }}
+                className="overflow-hidden transition-all duration-300"
+                style={{
+                  height:
+                    openSubmenu === nav.name
+                      ? `${subMenuHeight[nav.name] || 0}px`
+                      : "0px",
+                }}
+              >
+                <ul className="mt-2 space-y-1 ml-9">
+                  {nav.subItems.filter(checkPermission).map((subItem) => {
+                    const isChildActive = activeMenuInfo.self === subItem.name;
+                    return (
+                      <li key={subItem.name}>
+                        <Link
+                          to={subItem.path}
+                          className={`menu-dropdown-item ${
+                            isChildActive
+                              ? "menu-dropdown-item-active"
+                              : "menu-dropdown-item-inactive"
+                          }`}
+                        >
+                          {subItem.name}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 
@@ -347,7 +352,7 @@ const AppSidebar = () => {
         }`}
       >
         <div className="hidden lg:block">
-          <SuperBeeLogo className="w-8 h-8   " />
+          <SuperBeeLogo className="w-8 h-8" />
         </div>
       </div>
 
@@ -368,7 +373,7 @@ const AppSidebar = () => {
                   <MoreHorizontal className="size-6" />
                 )}
               </h2>
-              {renderMenuItems(navItems)}
+              {renderMenuItems()}
             </div>
           </div>
         </nav>

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Business_setting;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -296,6 +297,22 @@ class RolesAndPermissionsSeeder extends Seeder
         }
         $this->command->info('Đã cập nhật chủ sở hữu cho web chính.');
         $this->command->info('Hoàn tất Seeder!');
-        // ======================= KẾT THÚC THAY ĐỔI =======================
+
+        $shopname = "SuperBee";
+        Business_setting::create(
+            [
+                "web_id"=>$mainWeb->id,
+                "shop_name"=>$shopname,
+                "slogan"=>"{$shopname} – Nơi mua bán tài khoản game Liên Quân, Free Fire, Roblox… chất lượng Premium, giá tốt nhất, bảo hành 24h và hỗ trợ 24/7 qua Zalo/Facebook. Giao dịch an toàn, nhận nick ngay!",
+                "logo_url"=>"https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/SuperBee-nobackground.png",
+                "favicon_url"=>"https://superbeeimages.s3.ap-southeast-2.amazonaws.com/uploads/SuperBee.png",
+                "phone_number"=>"(+84) 838 411 897",
+                "email"=>"support@superbee.site",
+                "address"=>"Thôn Vĩnh Ninh - Xã Đại Thanh - Thành phố Hà Nội",
+                "zalo_link"=> "",
+                "facebook_link"=>"https://www.facebook.com/superbee.site",
+                "template_name"=>"default",
+            ]
+            );
     }
 }

@@ -159,7 +159,7 @@ const EditDiscountCodePage = () => {
 
   // State for user selection
   const [targetType, setTargetType] = useState("all");
-  const [targetUserId, setTargetUserId] = useState(-1);
+  const [targetUserId, setTargetUserId] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
@@ -223,7 +223,7 @@ const EditDiscountCodePage = () => {
           }
         } else {
           setTargetType("all");
-          setTargetUserId(-1);
+          setTargetUserId([]);
         }
         // --- BUG FIX ENDS HERE ---
 
@@ -254,7 +254,7 @@ const EditDiscountCodePage = () => {
   // --- Handlers ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value.toUpperCase() }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 

@@ -8,11 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 class ProductCredential extends Model
 {
     use HasFactory;
-public $timestamps = false;
+    public $timestamps = false;
     protected $fillable = [
         'product_id',
         'username',
         'password', // Ensure this is encrypted/decrypted at application level if sensitive
+        'email',
+        'phone',
+        'cccd',
         // 'login_method', // This was commented out
     ];
 

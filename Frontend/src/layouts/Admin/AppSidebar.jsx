@@ -92,13 +92,19 @@ const navItems = [
     path: "/admin/products",
     requiredPermission: "products.view",
   },
-  {
-    icon: <Package />,
-    name: "Duyệt Sản Phẩm",
-    path: "/admin/pendingProducts",
-    requiredPermission: "products.approve",
-  },
-  // ===================== THAY ĐỔI CHÍNH Ở ĐÂY =====================
+  // {
+  //   icon: <Package />,
+  //   name: "Duyệt Sản Phẩm",
+  //   path: "/admin/pendingProducts",
+  //   view: ["admin", "admin_super", "nv_kiem_duyet"],
+  // },
+  // {
+  //   icon: <ShoppingCart />,
+  //   name: "Orders",
+  //   path: "/admin/orders",
+  //   view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
+  // },
+
   {
     icon: <CircleDollarSign />,
     name: "Tài chính",

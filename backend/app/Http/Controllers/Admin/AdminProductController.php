@@ -154,20 +154,20 @@ class AdminProductController extends Controller
     {
         try {
             // Lấy product kèm quan hệ
-            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials','creator'])
+            $product = Product::with(['category', 'images', 'gameAttributes', 'credentials', 'creator'])
                 ->find($id);
-            
+
             if (!$product) {
                 return response()->json([
                     'status'  => false,
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
-            if ($product->status == 4 || $product->status == 2){
+            if ($product->status == 4 || $product->status == 2) {
                 return response()->json([
-                    "status"=>False,
-                    "message"=>"Không thể sửa sản phẩm"
-                ],400);
+                    "status" => False,
+                    "message" => "Không thể sửa sản phẩm"
+                ], 400);
             }
             $sku = $product->sku;
             // Nếu attributes là JSON string, decode nó
@@ -186,6 +186,9 @@ class AdminProductController extends Controller
                 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                    => 'nullable|string',
+                'phone'                    => 'nullable|string',
+                'cccd'                    => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -258,7 +261,7 @@ class AdminProductController extends Controller
             DB::beginTransaction();
 
             // Cập nhật fields cơ bản
-            
+
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 'description' => $validated['description'] ?? $product->description,
@@ -329,18 +332,24 @@ class AdminProductController extends Controller
                 }
             }
             // Cập nhật credentials nếu có
-            if (isset($validated['username'], $validated['password'])) {
+            if (isset($validated['username'], $validated['password'], $validated['email'], $validated['phone'], $validated['cccd'])) {
                 $cred = $product->credentials()->first();  // trả về ProductCredential|null
                 if ($cred) {
                     $cred->update([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 } else {
                     // Nếu chưa có credential, bạn có thể tạo mới:
                     $product->credentials()->create([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 }
             }
@@ -360,9 +369,9 @@ class AdminProductController extends Controller
                 }
             }
 
-            
+
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Sản phẩm {$sku} đã sửa thành công","{$frontend_link}/admin/products/{$product->id}/edit",null,'products.view');
+            $this->sendNotification(1, "Sản phẩm {$sku} đã sửa thành công", "{$frontend_link}/admin/products/{$product->id}/edit", null, 'products.view');
             DB::commit();
             return response()->json([
                 'status'  => true,
@@ -421,6 +430,9 @@ class AdminProductController extends Controller
                 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                    => 'nullable|string',
+                'phone'                    => 'nullable|string',
+                'cccd'                    => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -564,6 +576,9 @@ class AdminProductController extends Controller
                 'product_id' => $product->id,
                 'username' => $validatedData['username'],
                 'password' => $validatedData['password'],
+                "email"      => $validatedData['email'] ?? null,
+                "phone"      => $validatedData['phone'] ?? null,
+                "cccd"       => $validatedData['cccd'] ?? null
             ]);
 
             // Lưu attributes
@@ -578,7 +593,7 @@ class AdminProductController extends Controller
             // Commit transaction
             DB::commit();
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Sản phẩm {$sku} đã được thêm thành công","{$frontend_link}/admin/products/{$product->id}",null,'products.view');
+            $this->sendNotification(1, "Sản phẩm {$sku} đã được thêm thành công", "{$frontend_link}/admin/products/{$product->id}", null, 'products.view');
             return response()->json([
                 "status" => true,
                 "message" => "Thêm sản phẩm thành công",

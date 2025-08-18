@@ -1,4 +1,5 @@
 // Admin
+import BusinessSettingPage from "./Admin/BusinessSettings/BusinessSettingPage";
 import AccountListPage from "./Admin/Account/AccountPage";
 import ShowAccountPage from "./Admin/Account/ShowAccountPage";
 import CategoryPage from "./Admin/Category/CategoryPage";
@@ -68,6 +69,7 @@ import PermissionsPage from "./Admin/Authorization/PermissionsPage";
 import UserAssignRolesPage from "./Admin/Authorization/UserRolesPage";
 
 export {
+  BusinessSettingPage,
   RolesPage,
   PermissionsPage,
   UserAssignRolesPage,

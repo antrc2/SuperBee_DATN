@@ -166,16 +166,16 @@ def execute_agent(agent_name,messages,auth_headers):
                     "function": {
                         "name": "get_list_product_by_category",
 
-                        "description": "Tìm kiếm sản phẩm theo id danh mục",
+                        "description": "Tìm kiếm sản phẩm theo slug của danh mục",
                         "parameters": {
                             "type": "object",
                             "properties": {
-                                "category_id": {
+                                "category_slug": {
                                     "type": "string",
-                                    "description": "Dựa vào tên danh mục để đưa ra chính xác id danh mục"
+                                    "description": "Dựa vào tên danh mục để đưa ra chính xác slug của danh mục"
                                 },
                             },
-                            "required": ["category_id"]
+                            "required": ["category_slug"]
                         }
                     }
                 }
@@ -213,7 +213,7 @@ def execute_agent(agent_name,messages,auth_headers):
                 argument = json.loads(tool_call.function.arguments)
                 function_name = tool_call.function.name
                 if (function_name == "get_list_product_by_category"):
-                    result = get_list_product_by_category(argument['category_id'])
+                    result = get_list_product_by_category(argument['category_slug'])
                     # response += result
                 yield {
                     "role": "tool",

@@ -50,7 +50,7 @@ class UserOrderController extends Controller
     {
         try {
             $user_id = $request->user_id;
-            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images','items.dispute'])->where('user_id', $user_id)->where('id', $id)->first();
+            $order = Order::with(['items.product.category', 'items.product.gameAttributes', 'items.product.credentials', 'items.product.images', 'items.dispute'])->where('user_id', $user_id)->where('id', $id)->first();
             return response()->json([
                 "status" => True,
                 "message" => "Lấy đơn hàng thành công",
@@ -62,7 +62,7 @@ class UserOrderController extends Controller
                 "status" => False,
                 "message" => "Đã xảy ra lỗi",
                 "data" => [],
-                'e'=>$th->getMessage()
+                'e' => $th->getMessage()
             ], 500);
         }
     }
@@ -169,7 +169,7 @@ class UserOrderController extends Controller
                 // $total_price = $total_price - $total_price * 20 / 100;
             } elseif ($role == 'admin') {
             }
-            
+
 
             $discount_amount = $total_price * $discount_value / 100;
             $total_price = $total_price - $discount_amount;
@@ -204,7 +204,7 @@ class UserOrderController extends Controller
                 ];
             }
 
-            $promotion = Promotion::where("code", $promotion_code)->first();
+            $promotion = Promotion::where("code", $promotion_code)->with('promotion_user')->first();
 
             if ($promotion == null) {
                 return [
@@ -261,21 +261,42 @@ class UserOrderController extends Controller
                     "tax_value" => $tax_value,
                 ];
             }
-
-            $total_used_user = $this->total_used_promotion_code($promotion_code, $user_id);
-            if ($promotion->user_id != -1 && $promotion->user_id !== $user_id) {
-                return [
-                    "status" => false,
-                    "message" => "Mã giảm giá {$promotion_code} không tồn tại",
-                    "promotion_code" => $promotion_code,
-                    "discount_amount" => $discount_amount,
-                    "discount_value" => $discount_value,
-                    "total_price_after_discount" => $total_price,
-                    "status_code" => 404,
-                    "tax_amount" => $tax_amount,
-                    "tax_value" => $tax_value,
-                ];
+            if ($promotion->promotion_user_id == null) {
+                $count = 0;
+                foreach ($promotion->promotion_user as $item) {
+                    if ($user_id == $item->user_id) {
+                        $count++;
+                    }
+                }
+                if ($count == 0) {
+                    return [
+                        "status" => false,
+                        "message" => "Mã giảm giá {$promotion_code} không tồn tại",
+                        "promotion_code" => $promotion_code,
+                        "discount_amount" => $discount_amount,
+                        "discount_value" => $discount_value,
+                        "total_price_after_discount" => $total_price,
+                        "status_code" => 404,
+                        "tax_amount" => $tax_amount,
+                        "tax_value" => $tax_value,
+                    ];
+                }
             }
+            // if ($promotion->user_id != -1 && $promotion->user_id !== $user_id) {
+            //     return [
+            //         "status" => false,
+            //         "message" => "Mã giảm giá {$promotion_code} không tồn tại",
+            //         "promotion_code" => $promotion_code,
+            //         "discount_amount" => $discount_amount,
+            //         "discount_value" => $discount_value,
+            //         "total_price_after_discount" => $total_price,
+            //         "status_code" => 404,
+            //         "tax_amount" => $tax_amount,
+            //         "tax_value" => $tax_value,
+            //     ];
+            // }
+            $total_used_user = $this->total_used_promotion_code($promotion_code, $user_id);
+
             if ($total_used_user >= $promotion->per_user_limit & $promotion->per_user_limit != -1) {
                 return [
                     'status' => false,
@@ -368,7 +389,7 @@ class UserOrderController extends Controller
                     "tax_amount" => $tax_amount,
                     "tax_value" => $tax_value,
                 ];
-            }   
+            }
             $total_price = $total_price - $discount_amount;
             $total_price = $total_price - $tax_value;
             $tax_value = $total_price * $tax_amount / 100;
@@ -425,8 +446,20 @@ class UserOrderController extends Controller
     {
         try {
             $tax_value = env("TAX");
-            $promotion_codes = Promotion::withCount(['orders'])->where('end_date',">",now())->orderBy('created_at', 'desc')->get();
-
+            $promotion_codes = Promotion::withCount(['orders'])
+                ->with('promotion_user.user')
+                ->where('end_date', '>', now())
+                ->where(function ($query) use ($request) {
+                    $query->where('promotion_user_id', -1) // điều kiện 1
+                        ->orWhere(function ($q) use ($request) { // điều kiện 2
+                            $q->whereNull('promotion_user_id')
+                                ->whereHas('promotion_user', function ($sub) use ($request) {
+                                    $sub->where('user_id', $request->user_id);
+                                });
+                        });
+                })
+                ->orderBy('created_at', 'desc')
+                ->get();
             $wallet = Wallet::where('user_id', $request->user_id)->first();
             if ($wallet == null) {
                 $balance = 0;
@@ -443,7 +476,7 @@ class UserOrderController extends Controller
                 $discount_value = 0;
                 if ($role == 'user') {
                 } elseif ($role == 'partner') {
-                    $discount_value = 10;
+                    $discount_value = 15;
                     // $total_price = $total_price - $total_price * 10 / 100;
                 } elseif ($role == 'reseller') {
                     $discount_value = 20;
@@ -630,7 +663,7 @@ class UserOrderController extends Controller
                     // $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
-                    if ($wallet->promotion_balance >= $total_price){
+                    if ($wallet->promotion_balance >= $total_price) {
                         $wallet->promotion_balance -= $total_price;
                     } else {
                         $wallet->promotion_balance = 0;
@@ -638,7 +671,7 @@ class UserOrderController extends Controller
                     }
                     $wallet->save();
 
-                    
+
 
                     // $wallet->balance -= $total_price;
                     // $wallet->save();
@@ -677,7 +710,7 @@ class UserOrderController extends Controller
 
                     OrderQueue::create([
                         "order_id" => $order->id,
-                        "recieved_at" => now()->addDays(3),
+                        "recieved_at" => now()->addMinutes(3),
                         "status" => 0,
                     ]);
 
@@ -724,7 +757,7 @@ class UserOrderController extends Controller
                     // }
                     $wallet_transaction->related_id = $order->id;
                     $wallet_transaction->save();
-                    
+
                     DB::commit();
                     return response()->json([
                         "status" => True,

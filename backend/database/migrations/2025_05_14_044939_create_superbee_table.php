@@ -121,6 +121,9 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id')->unique(); // Mỗi sản phẩm chỉ có 1 bộ credentials duy nhất
             $table->string('username', 255);       // Email đăng nhập
             $table->string('password', 255);    // Mật khẩu (hãy mã hóa ở tầng ứng dụng)
+            $table->string("email",255)->nullable();
+            $table->string("phone",255)->nullable();
+            $table->string('cccd',255)->nullable();
             // $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
             // $table->timestamps();
         });
@@ -293,8 +296,8 @@ return new class extends Migration
         // Bảng promotions (Mã khuyến mãi cho sản phẩm)
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
-            $table->integer("user_id")->default(-1);
-            $table->string('code', 50); // Mã khuyến mãi duy nhất
+            $table->integer("promotion_user_id")->nullable();
+            $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
             $table->text('description')->nullable(); // Mô tả khuyến mãi
             // $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
             $table->decimal('discount_value', 15, 0); // Giá trị giảm giá
@@ -309,6 +312,11 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by'); // Ai tạo
             $table->unsignedBigInteger('updated_by'); // Ai cập nhật
             $table->timestamps();
+        });
+        Schema::create('promotion_users', function (Blueprint $table){
+            $table->id();
+            $table->unsignedBigInteger("user_id");
+            $table->unsignedBigInteger('promotion_id');
         });
 
         // Bảng domate_promotions (Mã khuyến mãi cho nạp thẻ/ngân hàng)

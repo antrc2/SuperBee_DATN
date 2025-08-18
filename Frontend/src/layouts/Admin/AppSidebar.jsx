@@ -90,12 +90,12 @@ const navItems = [
     path: "/admin/products",
     view: ["admin", "admin_super", "reseller", "nv_kiem_duyet"],
   },
-  {
-    icon: <Package />,
-    name: "Duyệt Sản Phẩm",
-    path: "/admin/pendingProducts",
-    view: ["admin", "admin_super", "nv_kiem_duyet"],
-  },
+  // {
+  //   icon: <Package />,
+  //   name: "Duyệt Sản Phẩm",
+  //   path: "/admin/pendingProducts",
+  //   view: ["admin", "admin_super", "nv_kiem_duyet"],
+  // },
   // {
   //   icon: <ShoppingCart />,
   //   name: "Orders",

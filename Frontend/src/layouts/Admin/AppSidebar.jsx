@@ -14,6 +14,7 @@ import {
   Folders,
   CircleDollarSign,
   Home,
+  Settings,
 } from "lucide-react";
 
 import SuperBeeLogo from "../../components/Client/layout/SuperBeeLogo";
@@ -141,6 +142,12 @@ const navItems = [
     name: "Rút tiền",
     path: "/admin/withdrawals",
     requiredPermission: "withdrawals.view",
+  },
+  {
+    icon: <Settings />,
+    name: "Cấu hình Website",
+    path: "/admin/business_settings",
+    requiredPermission: "business_settings.view",
   },
   {
     icon: <ShoppingCart />,

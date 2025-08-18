@@ -356,14 +356,14 @@ export const adminModules = [
     },
   },
   {
-    name: "settings",
+    name: "business_settings",
     list: BusinessSettingPage,
     show: NotFound,
     create: NotFound,
     edit: NotFound,
     allowedRoles: ["admin", "admin-super"],
     permissions: {
-      view: "settings.view",
+      view: "business_settings.view",
     },
   },
 ];

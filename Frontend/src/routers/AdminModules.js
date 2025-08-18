@@ -133,22 +133,22 @@ export const adminModules = [
   {
     name: "authorization",
     list: AuthorizationDashboardPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/roles",
     list: RolesPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/permissions",
     list: PermissionsPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/users",
     list: UserListPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
 
   // Khuyến mãi sản phẩm
@@ -264,7 +264,13 @@ export const adminModules = [
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-kiem-duyet"],
+    allowedRoles: [
+      "admin",
+      "admin-super",
+      "reseller",
+      "nv-kiem-duyet",
+      "nv-ho-tro",
+    ],
     permissions: {
       create: "products.create",
       edit: "products.edit",

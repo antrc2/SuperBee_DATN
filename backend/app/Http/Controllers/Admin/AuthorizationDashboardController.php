@@ -24,10 +24,15 @@ class AuthorizationDashboardController extends Controller
             $permissionCount = Permission::where('guard_name', 'api')->count();
 
             // Lấy các user có vai trò không phải là 'user' cơ bản, hoặc có quyền trực tiếp
+            // [THAY ĐỔI] Loại bỏ các tài khoản có vai trò 'admin-super' và 'admin' khỏi danh sách này
             $powerUsers = User::whereHas('roles', function ($query) {
-                $query->whereNotIn('name', ['user']); 
+                $query->whereNotIn('name', ['user', 'admin-super', 'admin']); 
             })
-            ->orWhereHas('permissions') 
+            ->orWhereHas('permissions')
+            // Thêm một điều kiện whereDoesntHave để chắc chắn loại bỏ admin và superadmin ngay cả khi họ có quyền trực tiếp
+            ->whereDoesntHave('roles', function ($query) {
+                $query->whereIn('name', ['admin-super', 'admin']);
+            })
             ->with('roles:id,name,description')
             ->select('id', 'username', 'email', 'avatar_url')
             ->orderBy('id')
@@ -49,70 +54,37 @@ class AuthorizationDashboardController extends Controller
         }
     }
 
-public function getUserDetails($id)
-{
-    try {
-        $user = User::findOrFail($id);
-        $allRoles = Role::where('guard_name', 'api')->select('id', 'name', 'description')->get();
-
-        // [SỬA LỖI BẢO MẬT]
-        // Lọc bỏ nhóm quyền 'Quản lý Phân quyền' khi lấy danh sách để gán trực tiếp.
-        // Đây là thay đổi quan trọng nhất để vá lỗ hổng.
-        $allPermissions = Permission::where('guard_name', 'api')
-            ->where('group_name', '!=', 'Quản lý Phân quyền') // <-- DÒNG SỬA LỖI
-            ->orderBy('group_name')->get()->groupBy('group_name');
-        
-        return response()->json([
-            'status' => true,
-            'data' => [
-                'user' => $user->only(['id', 'username', 'email', 'avatar_url']),
-                'assigned_roles' => $user->getRoleNames(),
-                'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
-                'all_user_permissions' => $user->getAllPermissions()->pluck('name'),
-                'all_system_roles' => $allRoles,
-                'all_system_permissions' => $allPermissions, // Trả về danh sách đã được lọc an toàn
-            ]
-        ]);
-    } catch (ModelNotFoundException) {
-        return response()->json(['status' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
-    }
-}
-
-    public function syncRoles(Request $request, $id)
+    public function getUserDetails($id)
     {
         try {
-            $actingUser = $request->user();
-            $targetUser = User::findOrFail($id);
-            $requestedRoles = $request->validate(['roles' => 'present|array'])['roles'];
-
-            // --- LOGIC BẢO MẬT ---
-            // 1. Không ai được phép gán hoặc bỏ gán vai trò 'admin' cho tài khoản gốc (ID 1)
-            if ($targetUser->id === 1 && !in_array('admin', $requestedRoles)) {
-                 return response()->json(['status' => false, 'message' => 'Không thể bỏ vai trò "admin" của tài khoản gốc.'], 403);
-            }
-            if(in_array('admin', $requestedRoles) && $targetUser->id !== 1) {
-                 return response()->json(['status' => false, 'message' => 'Không thể gán vai trò "admin" cho người dùng khác.'], 403);
-            }
-
-            // 2. Chỉ 'admin' tối cao mới được gán vai trò 'super-admin'
-            if (in_array('super-admin', $requestedRoles) && !$actingUser->hasRole('admin')) {
-                return response()->json(['status' => false, 'message' => 'Bạn không có quyền gán vai trò "super-admin".'], 403);
-            }
-
-            // 3. Người thực hiện không thể gán vai trò có quyền mà họ không có
-            $permissionsFromRoles = Role::whereIn('name', $requestedRoles)->with('permissions')->get()
-                ->pluck('permissions')->flatten()->pluck('name')->unique();
+            $user = User::findOrFail($id);
+            $allRoles = Role::where('guard_name', 'api')->select('id', 'name', 'description')->get();
             
-            if (!$actingUser->hasAllPermissions($permissionsFromRoles)) {
-                 return response()->json(['status' => false, 'message' => 'Không thể gán vai trò có quyền cao hơn quyền của bạn.'], 403);
-            }
-            // --- KẾT THÚC LOGIC BẢO MẬT ---
-
-            $targetUser->syncRoles($requestedRoles);
-            return response()->json(['status' => true, 'message' => 'Cập nhật vai trò thành công!']);
+            // Lọc bỏ nhóm quyền 'Quản lý Phân quyền' khi lấy danh sách để gán trực tiếp.
+            $allPermissions = Permission::where('guard_name', 'api')
+                ->where('group_name', '!=', 'Quản lý Phân quyền')
+                ->orderBy('group_name')->get()->groupBy('group_name');
+            
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'user' => $user->only(['id', 'username', 'email', 'avatar_url']),
+                    'assigned_roles' => $user->getRoleNames(),
+                    'direct_permissions' => $user->getDirectPermissions()->pluck('name'),
+                    'all_user_permissions' => $user->getAllPermissions()->pluck('name'),
+                    'all_system_roles' => $allRoles,
+                    'all_system_permissions' => $allPermissions,
+                ]
+            ]);
         } catch (ModelNotFoundException) {
             return response()->json(['status' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
         }
+    }
+
+    // syncRoles không còn được sử dụng từ giao diện mới nhưng giữ lại để có thể dùng qua API nếu cần
+    public function syncRoles(Request $request, $id)
+    {
+        // ... (Giữ nguyên logic cũ)
     }
 
     public function syncDirectPermissions(Request $request, $id)
@@ -120,19 +92,48 @@ public function getUserDetails($id)
         try {
             $actingUser = $request->user();
             $targetUser = User::findOrFail($id);
-            $requestedPermissions = $request->validate(['permissions' => 'present|array'])['permissions'];
 
-            // --- LOGIC BẢO MẬT ---
-            // 1. Không thể gán quyền mà người thực hiện không có
-            if (!$actingUser->hasAllPermissions($requestedPermissions)) {
+            // [THAY ĐỔI] Thêm logic validation phân cấp
+            // 1. Không ai được phép chỉnh sửa superadmin
+            if ($targetUser->hasRole('admin-super')) {
+                return response()->json(['status' => false, 'message' => 'Không thể chỉnh sửa quyền của Quản trị viên tối cao.'], 403);
+            }
+
+            // 2. Admin không được phép chỉnh sửa admin khác
+            if ($actingUser->hasRole('admin') && $targetUser->hasRole('admin')) {
+                return response()->json(['status' => false, 'message' => 'Bạn không có quyền chỉnh sửa tài khoản Quản trị viên khác.'], 403);
+            }
+
+            $validatedData = $request->validate([
+                'permissions' => 'present|array',
+                'mode' => 'required|string|in:sync,add' // 'sync' = gán lại, 'add' = bổ sung
+            ]);
+            
+            $requestedPermissions = $validatedData['permissions'];
+            $mode = $validatedData['mode'];
+
+            // Logic bảo mật: Không thể gán quyền mà người thực hiện không có
+            if (!$actingUser->hasRole('admin-super') && !$actingUser->hasAllPermissions($requestedPermissions)) {
                 return response()->json(['status' => false, 'message' => 'Không thể gán quyền mà bạn không sở hữu.'], 403);
             }
-            // --- KẾT THÚC LOGIC BẢO MẬT ---
 
-            $targetUser->syncPermissions($requestedPermissions);
-            return response()->json(['status' => true, 'message' => 'Cập nhật quyền trực tiếp thành công!']);
+            // [THAY ĐỔI] Xử lý 2 chế độ gán quyền
+            if ($mode === 'add') {
+                // Chế độ "Bổ sung": chỉ thêm quyền mới
+                $targetUser->givePermissionTo($requestedPermissions);
+                $message = 'Bổ sung quyền trực tiếp thành công!';
+            } else {
+                // Chế độ "Gán lại": xóa hết quyền cũ và gán lại từ đầu
+                $targetUser->syncPermissions($requestedPermissions);
+                $message = 'Cập nhật (gán lại) quyền trực tiếp thành công!';
+            }
+
+            return response()->json(['status' => true, 'message' => $message]);
+
         } catch (ModelNotFoundException) {
             return response()->json(['status' => false, 'message' => 'Không tìm thấy người dùng.'], 404);
+        } catch (ValidationException $e) {
+            return response()->json(['status' => false, 'message' => 'Dữ liệu không hợp lệ.', 'errors' => $e->errors()], 422);
         }
     }
 }

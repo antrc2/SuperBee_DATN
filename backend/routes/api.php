@@ -37,6 +37,7 @@ use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserBannerController;
+use App\Http\Controllers\User\UserBusinessSettingController;
 use App\Http\Controllers\User\UserCategoryPostController;
 use App\Http\Controllers\User\UserCommentPostController;
 // use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
@@ -140,6 +141,11 @@ Route::middleware('auth')->group(function () {
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show'])->middleware('permission:donate_promotions.view');
     });
     Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsForUser']);
+
+    // Cấu hình web
+    Route::prefix('/settings')->group(function(){
+        Route::get('/',[UserBusinessSettingController::class,'index']);
+    });
     //   đã đăng nhập
     Route::middleware(['jwt'])->group(function () {
         // đăng xuất

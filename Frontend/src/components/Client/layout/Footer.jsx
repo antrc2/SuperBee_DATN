@@ -9,8 +9,26 @@ import {
   CreditCard,
   HelpCircle,
 } from "lucide-react";
+import api from "../../../utils/http";
+import { useCallback, useEffect, useState } from "react";
+const Footer = () => {
+  const [settings, setSettings] = useState({});
+  const fetchData = useCallback(async () => {
+    const response = await api.get("/settings");
+    console.log(response.data);
 
-export default function Footer() {
+    setSettings(response.data.data);
+  }, []);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+  const business = settings.businessSettings?.[0] || {};
+  const generals = settings.generalSettings || [];
+  const products = settings.productSettings || [];
+  // console.log(business);
+  // console.log(general);
+  // console.log(products);
+
   return (
     <footer className="bg-gradient-header text-secondary py-12 ">
       <div className="max-w-screen-xl mx-auto px-4">
@@ -18,18 +36,19 @@ export default function Footer() {
           {/* Company Info */}
           <div className="space-y-6">
             <div className="flex items-center space-x-2">
-              <div className="bg-accent p-2 rounded-lg">
-                <Zap className="h-6 w-6 text-accent-contrast" />
+              <div className="p-2 rounded-lg">
+                <img src={business.logo_url} alt="Logo" className="h-12 w-12 rounded-lg"/>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-primary">SuperBee</h3>
+                <h3 className="text-xl font-bold text-primary">
+                  {business.shop_name}
+                </h3>
                 <p className="text-secondary text-sm">Gaming Store Premium</p>
               </div>
             </div>
 
             <p className="text-secondary text-sm leading-relaxed">
-              Bán nick Liên quân, Free fire, Roblox với chất lượng cao và giá cả
-              hợp lý nhất thị trường.
+              {business.slogan}
             </p>
           </div>
 
@@ -40,42 +59,18 @@ export default function Footer() {
               THÔNG TIN CHUNG
             </h4>
             <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
-                >
-                  <Users className="h-4 w-4 mr-2" />
-                  Về chúng tôi
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Chính sách bảo mật và đổi trả
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
-                >
-                  <HelpCircle className="h-4 w-4 mr-2" />
-                  Điều khoản sử dụng
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
-                >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  Hướng dẫn nạp tiền thẻ cào
-                </a>
-              </li>
+              {generals.map((item) => (
+                <li key={item.id}>
+                  {" "}
+                  <a
+                    href={`/tin-tuc/huong-dan/${item.slug}`}
+                    className="text-secondary hover:text-highlight transition-colors flex items-center text-sm"
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    {item.title}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -86,55 +81,22 @@ export default function Footer() {
               SẢN PHẨM
             </h4>
             <ul className="space-y-3">
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
-                >
-                  Nick Liên Quân Giá Rẻ
-                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
-                    HOT
-                  </span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors text-sm"
-                >
-                  Nick Random Freefire 2k
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors text-sm"
-                >
-                  Nick Random Liên quân 2k
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
-                >
-                  Nick Random Blox Fruit 20k
-                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
-                    HOT
-                  </span>
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
-                >
-                  Tặng 100 acc liên quân miễn phí
-                  <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
-                    HOT
-                  </span>
-                </a>
-              </li>
+              {products.map((product) => (
+                <li key={product.id}>
+                  <a
+                    href={`/mua-acc/${product.slug}`}
+                    className="text-secondary hover:text-highlight transition-colors flex items-center justify-between text-sm"
+                  >
+                    {product.name}
+                    {/* Bạn có thể thêm logic hiển thị HOT ở đây nếu cần */}
+                    {/* {product.is_hot && (
+                      <span className="bg-gradient-danger text-white text-xs px-2 py-1 rounded-full">
+                        HOT
+                      </span>
+                    )} */}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -145,32 +107,40 @@ export default function Footer() {
               HỖ TRỢ
             </h4>
             <div className="space-y-4">
-              <div className="flex items-center space-x-3">
-                <div className="bg-gradient-success p-2 rounded-lg">
-                  <MessageCircle className="h-5 w-5 text-white" />
+              {/* Zalo Support */}
+              <a href={business.zalo_link}>
+                <div className="flex items-center space-x-3">
+                  <div className="bg-gradient-success p-2 rounded-lg">
+                    <MessageCircle className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-primary font-medium">Zalo Support</p>
+                    <p className="font-bold text-lg text-tertiary">
+                      {business.phone_number}
+                    </p>
+                    <p className="text-secondary text-xs">
+                      Bấm vào đây để chat
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-primary font-medium">Zalo Support</p>
-                  <p className="font-bold text-lg text-tertiary">0987654321</p>
-                  <p className="text-secondary text-xs">Bấm vào đây để chat</p>
-                </div>
-              </div>
+              </a>
 
-              <div className="flex items-center space-x-3">
-                <div className="p-2 rounded-lg bg-gradient-info">
-                  <Facebook className="h-5 w-5 text-white" />
+              {/* Facebook Admin */}
+              <a href={business.facebook_link}>
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 rounded-lg bg-gradient-info">
+                    <Facebook className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="text-primary font-medium">Facebook Admin</p>
+                    <span className="text-info hover:brightness-110 transition-all text-sm">
+                      {business.shop_name}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-primary font-medium">Facebook Admin</p>
-                  <a
-                    href="#"
-                    className="text-info hover:brightness-110 transition-all text-sm"
-                  >
-                    SuperBee
-                  </a>
-                </div>
-              </div>
+              </a>
 
+              {/* Địa chỉ */}
               <div className="flex items-start space-x-3">
                 <div className="p-2 rounded-lg mt-1 bg-gradient-danger">
                   <MapPin className="h-5 w-5 text-white" />
@@ -178,14 +148,8 @@ export default function Footer() {
                 <div>
                   <p className="text-primary font-medium">Địa chỉ</p>
                   <p className="text-secondary text-sm leading-relaxed">
-                    Số 1, Trịnh Văn Bô, Nam Từ Liêm, Hà Nội
+                    {business.address}
                   </p>
-                  <a
-                    href="#"
-                    className="text-info hover:brightness-110 transition-all text-sm"
-                  >
-                    facebook.com/superbee
-                  </a>
                 </div>
               </div>
             </div>
@@ -229,4 +193,5 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+};
+export default Footer;

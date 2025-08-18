@@ -105,12 +105,8 @@ const DiscountCodePage = () => {
       try {
         const res = await api.delete(`/admin/discountcode/${id}`);
 
-        if (res.data?.data) {
-          setPromotions((prev) =>
-            prev.map((item) =>
-              item.id === id ? { ...item, ...res.data.data } : item
-            )
-          );
+        if (res.data?.status) {
+          fetchPromotions();
           pop("Tắt thành công", "s");
         }
       } catch (err) {

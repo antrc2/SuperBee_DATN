@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import api from "@utils/http"; // Giả định đường dẫn đúng
-import { useNotification } from "../../../contexts/NotificationContext"; // Giả định đường dẫn đúng
+import api from "@utils/http";
+import { useNotification } from "../../../contexts/NotificationContext";
 import LoadingDomain from "@components/Loading/LoadingDomain";
+
 // --- Icons ---
 const BackIcon = () => (
   <svg
@@ -36,22 +37,6 @@ const EditIcon = () => (
     />
   </svg>
 );
-const UserCircleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="w-6 h-6"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z"
-    />
-  </svg>
-);
 const UsersIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -73,19 +58,20 @@ const UsersIcon = () => (
     />
   </svg>
 );
-const AdminPanelSettingsIcon = () => (
+const SearchIcon = () => (
   <svg
+    className="w-4 h-4 text-gray-400"
+    aria-hidden="true"
     xmlns="http://www.w3.org/2000/svg"
     fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="currentColor"
-    className="w-6 h-6"
+    viewBox="0 0 20 20"
   >
     <path
+      stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
-      d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008h-.008v-.008z"
+      strokeWidth="2"
+      d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
     />
   </svg>
 );
@@ -106,7 +92,6 @@ const DetailItem = ({ label, value, children, className = "" }) => {
     </div>
   );
 };
-
 const StatusBadge = ({ status }) => {
   const isActived = status === 1;
   const badgeClasses = isActived
@@ -127,6 +112,8 @@ const ShowDiscountCodePage = () => {
   const { pop } = useNotification();
   const [promotion, setPromotion] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     const fetchPromotion = async () => {
@@ -143,6 +130,17 @@ const ShowDiscountCodePage = () => {
     fetchPromotion();
   }, [id, navigate, pop]);
 
+  const filteredUsers = useMemo(() => {
+    if (!promotion?.promotion_user) return [];
+    if (!searchTerm) return promotion.promotion_user;
+    const lowercasedFilter = searchTerm.toLowerCase();
+    return promotion.promotion_user.filter(
+      ({ user }) =>
+        user.username.toLowerCase().includes(lowercasedFilter) ||
+        user.email.toLowerCase().includes(lowercasedFilter)
+    );
+  }, [searchTerm, promotion]);
+
   const formatCurrency = (value) => {
     if (value === null || value === undefined) return "N/A";
     return new Intl.NumberFormat("vi-VN", {
@@ -150,7 +148,6 @@ const ShowDiscountCodePage = () => {
       currency: "VND",
     }).format(value);
   };
-
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     return new Date(dateString).toLocaleString("vi-VN", {
@@ -159,20 +156,47 @@ const ShowDiscountCodePage = () => {
     });
   };
 
-  if (loading) {
-    return <LoadingDomain />;
-  }
-
-  if (!promotion) {
+  if (loading) return <LoadingDomain />;
+  if (!promotion)
     return (
       <div className="flex justify-center items-center h-screen bg-slate-50 dark:bg-gray-900 text-red-500">
         Không có dữ liệu để hiển thị.
       </div>
     );
-  }
 
-  const isForAllUsers = promotion.user_id === -1;
-  const creatorUser = promotion.user; // User who created the promotion
+  const isForAllUsers =
+    promotion.promotion_user_id === -1 ||
+    !promotion.promotion_user ||
+    promotion.promotion_user.length === 0;
+  const creatorUser = promotion.user;
+
+  const UserItem = ({ user }) => (
+    <div key={user.id} className="p-4 flex items-center space-x-4">
+      <img
+        className="h-12 w-12 rounded-full object-cover bg-gray-100"
+        src={user.avatar_url}
+        alt={`Avatar of ${user.username}`}
+        onError={(e) => {
+          e.target.onerror = null;
+          e.target.src = "https://placehold.co/48x48/e2e8f0/64748b?text=U";
+        }}
+      />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+          {user.username}
+        </p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {user.email}
+        </p>
+      </div>
+      <Link
+        to={`/admin/users/${user.id}`}
+        className="flex-shrink-0 text-xs font-medium text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200 hover:underline"
+      >
+        Xem
+      </Link>
+    </div>
+  );
 
   return (
     <div className="font-sans bg-slate-50 dark:bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8">
@@ -201,9 +225,7 @@ const ShowDiscountCodePage = () => {
             </Link>
           </div>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Promotion Details */}
           <div className="lg:col-span-2">
             <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
               <div className="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-700">
@@ -271,10 +293,7 @@ const ShowDiscountCodePage = () => {
               </dl>
             </div>
           </div>
-
-          {/* Side Column */}
           <div className="lg:col-span-1 space-y-8">
-            {/* Target Audience Card */}
             <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
               <div className="p-5 border-b border-gray-200 dark:border-gray-700">
                 <h3 className="text-lg font-semibold leading-6 text-gray-900 dark:text-gray-100 flex items-center">
@@ -290,31 +309,32 @@ const ShowDiscountCodePage = () => {
                     Tất cả người dùng
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Mã khuyến mãi này áp dụng cho mọi khách hàng.
+                    Mã này áp dụng cho mọi khách hàng.
                   </p>
                 </div>
-              ) : (
-                <div className="p-6 flex flex-col items-center justify-center text-center">
-                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full">
-                    <UserCircleIcon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+              ) : promotion.promotion_user.length > 5 ? (
+                <div className="p-6 text-center">
+                  <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full inline-block">
+                    <UsersIcon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <p className="mt-4 font-semibold text-gray-800 dark:text-gray-200">
-                    Người dùng cá nhân
+                    Áp dụng cho {promotion.promotion_user.length} người dùng
                   </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    ID: {promotion.user_id}
-                  </p>
-                  <Link
-                    to={`/admin/users/${promotion.user_id}`}
-                    className="mt-2 text-sky-600 dark:text-sky-400 hover:underline text-sm font-medium"
+                  <button
+                    onClick={() => setIsModalOpen(true)}
+                    className="mt-2 text-sm font-medium text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200 hover:underline"
                   >
-                    Xem chi tiết người dùng &rarr;
-                  </Link>
+                    Xem chi tiết &rarr;
+                  </button>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {promotion.promotion_user.map(({ user }) => (
+                    <UserItem user={user} key={user.id} />
+                  ))}
                 </div>
               )}
             </div>
-
-            {/* Creator Info Card */}
             {creatorUser && (
               <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg overflow-hidden">
                 <div className="p-5 border-b border-gray-200 dark:border-gray-700">
@@ -369,6 +389,54 @@ const ShowDiscountCodePage = () => {
           </div>
         </div>
       </div>
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center p-4"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                Danh sách người dùng ({promotion.promotion_user.length})
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none"
+              >
+                &times;
+              </button>
+            </div>
+            <div className="p-5">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <SearchIcon />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Tìm theo tên hoặc email..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 dark:text-white"
+                />
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto divide-y divide-gray-200 dark:divide-gray-700">
+              {filteredUsers.length > 0 ? (
+                filteredUsers.map(({ user }) => (
+                  <UserItem user={user} key={user.id} />
+                ))
+              ) : (
+                <p className="text-center text-gray-500 p-8">
+                  Không tìm thấy người dùng nào.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -63,8 +63,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'Quản lý Người dùng' => [
                 'users.view' => 'Xem danh sách người dùng',
                 'users.create' => 'Tạo người dùng mới',
-                'users.edit' => 'Sửa thông tin người dùng',
-                'users.delete' => 'Xóa người dùng',
+                'users.edit' => 'Sửa thông tin người dùng', 
+                'users.delete' => 'Xóa người dùng', 
                 'profile.view_own' => 'Xem hồ sơ cá nhân',
                 'profile.edit_own' => 'Sửa hồ sơ cá nhân',
             ],
@@ -76,7 +76,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'business_settings.view' => 'Xem cài đặt web',
                 'business_settings.edit' => 'Sửa cài đặt web',
             ],
-            // === BỔ SUNG / CHỈNH SỬA ===: Thêm nhóm quyền quản lý danh mục
             'Quản lý Danh mục' => [
                 'categories.view' => 'Xem danh mục sản phẩm',
                 'categories.create' => 'Tạo danh mục sản phẩm',
@@ -92,12 +91,11 @@ class RolesAndPermissionsSeeder extends Seeder
                 'products.create' => 'Tạo sản phẩm',
                 'products.edit' => 'Sửa sản phẩm',
                 'products.delete' => 'Xóa sản phẩm',
+                'products.approve' => 'Duyệt/Từ chối sản phẩm',
             ],
             'Quản lý Đơn hàng' => [
                 'orders.view' => 'Xem đơn hàng',
                 'orders.create' => 'Tạo đơn hàng',
-                'orders.edit' => 'Sửa đơn hàng',
-                'orders.delete' => 'Xóa đơn hàng',
             ],
             'Quản lý Tài chính' => [
                 'recharges.view' => 'Xem giao dịch nạp tiền',
@@ -132,10 +130,6 @@ class RolesAndPermissionsSeeder extends Seeder
                 'donate_promotions.create' => 'Tạo khuyến mãi nạp thẻ',
                 'donate_promotions.edit' => 'Sửa khuyến mãi nạp thẻ',
                 'donate_promotions.delete' => 'Xóa khuyến mãi nạp thẻ',
-                'notifications.view' => 'Xem thông báo',
-                'notifications.create' => 'Tạo thông báo',
-                'notifications.edit' => 'Sửa thông báo',
-                'notifications.delete' => 'Xóa thông báo',
             ],
             'Quản lý Tương tác' => [
                 'reviews.create' => 'Tạo đánh giá',
@@ -166,131 +160,114 @@ class RolesAndPermissionsSeeder extends Seeder
         }
         $this->command->info('Đã tạo tất cả Permissions chi tiết.');
 
-        // === PHẦN 3: TẠO CÁC VAI TRÒ (ROLES) VÀ GÁN QUYỀN TƯƠNG ỨNG ===
+        // === PHẦN 3: TẠO CÁC VAI TRÒ (ROLES) VÀ GÁN QUYỀN ===
         $this->command->info('Bắt đầu tạo Roles và gán Permissions...');
 
-        // Cấp 1: Admin Tổng (Toàn quyền)
-        $roleAdminTong = Role::create(['name' => 'admin', 'description' => 'Quản trị viên tối cao, có mọi quyền hạn.', 'guard_name' => 'api']);
-        $roleAdminTong->givePermissionTo(Permission::all());
+        // Cấp 1: Super Admin (Toàn quyền)
+        $roleSuperAdmin = Role::create(['name' => 'admin-super', 'description' => 'Quản trị viên tối cao, có mọi quyền hạn.', 'guard_name' => 'api']);
+        $roleSuperAdmin->givePermissionTo(Permission::all());
 
-        // Cấp 2: Admin Super (Quản lý cấp cao)
-        $roleAdminSuper = Role::create(['name' => 'admin-super', 'description' => 'Quản lý cấp cao, có mọi quyền trừ phân quyền.', 'guard_name' => 'api']);
-        $roleAdminSuper->givePermissionTo(Permission::all());
+        // Cấp 2: Admin (Quản lý vận hành)
+        $roleAdmin = Role::create(['name' => 'admin', 'description' => 'Quản lý cấp cao, có quyền quản lý nhân viên và vai trò cấp dưới.', 'guard_name' => 'api']);
+        $roleAdmin->givePermissionTo(Permission::all());
 
-        // Cấp 3: Reseller (Quản lý Web con)
-        $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Quản trị viên của một trang web con.', 'guard_name' => 'api']);
-        $roleReseller->givePermissionTo([
+        // ======================= BẮT ĐẦU THAY ĐỔI =======================
+        
+        // Định nghĩa các quyền cơ bản của người dùng
+        $userPermissions = [
+            'profile.view_own', 'profile.edit_own',
+            'orders.create', 'orders.view',
+            'wallet.view', 'recharges.create', 'withdrawals.create', 'withdrawals.view', 'transactions.view',
+            'comments.create', 'reviews.create', 'product_reports.create',
+            'promotions.view', 'donate_promotions.view',
+            'chat.create','chat.view',
+        ];
 
-            'users.view', 'users.create', 'users.edit', 'users.delete',
-            'categories.view', 'categories.create', 'categories.edit', 'categories.delete', // <-- BỔ SUNG QUYỀN DANH MỤC SP
+        // Cấp 3: Reseller (Đại lý) - Đã bao gồm quyền User
+        $roleReseller = Role::create(['name' => 'reseller', 'description' => 'Đại lý (bao gồm quyền người dùng).', 'guard_name' => 'api']);
+        $resellerPermissions = array_unique(array_merge($userPermissions, [
+            'users.view', 'users.create',
+            'categories.view', 'categories.create', 'categories.edit', 'categories.delete',
             'products.view', 'products.create', 'products.edit', 'products.delete',
-            'orders.view', 'orders.edit',
+            'products.approve',
             'business_settings.view', 'business_settings.edit',
             'banners.view', 'banners.create', 'banners.edit', 'banners.delete',
-            'promotions.view', 'promotions.create', 'promotions.edit', 'promotions.delete',
-            'donate_promotions.view', 'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete',
-            'withdrawals.create', 'withdrawals.view',
+            'promotions.create', 'promotions.edit', 'promotions.delete',
+            'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete',
             'reports.view',
-        ]);
+        ]));
+        $roleReseller->givePermissionTo($resellerPermissions);
 
-        // Cấp 4: Partner (Đối tác bán hàng)
-        $rolePartner = Role::create(['name' => 'partner', 'description' => 'Đối tác bán hàng, chỉ quản lý sản phẩm của mình.', 'guard_name' => 'api']);
-        $rolePartner->givePermissionTo([
+        // Cấp 4: Partner (Đối tác) - Đã bao gồm quyền User
+        $rolePartner = Role::create(['name' => 'partner', 'description' => 'Đối tác (bao gồm quyền người dùng).', 'guard_name' => 'api']);
+        $partnerPermissions = array_unique(array_merge($userPermissions, [
             'products.view', 'products.create', 'products.edit', 'products.delete',
-            'withdrawals.create', 'withdrawals.view',
-            'product_reports.view',"chat.view",
-            'wallet.view'
-        ]);
+            'product_reports.view',
+            'reports.view',
+        ]));
+        $rolePartner->givePermissionTo($partnerPermissions);
 
         // Cấp 5: User (Người dùng)
         $roleUser = Role::create(['name' => 'user', 'description' => 'Người dùng/khách hàng thông thường.', 'guard_name' => 'api']);
-        $roleUser->givePermissionTo([
-            'profile.view_own', 'profile.edit_own',
-            'orders.create', 'orders.view',
-            'wallet.view', 'recharges.create', 'withdrawals.create', 'transactions.view',
-            'comments.create', 'reviews.create', 'product_reports.create',
-            'promotions.view', 'donate_promotions.view', 
-            'withdrawals.create', 'withdrawals.view',
-            'chat.create','chat.view',
-
-        ]);
+        $roleUser->givePermissionTo($userPermissions);
 
         // --- Nhóm vai trò nhân viên ---
-
-        // Kế toán
         $roleKeToan = Role::create(['name' => 'ke-toan', 'description' => 'Nhân viên tài chính, duyệt giao dịch.', 'guard_name' => 'api']);
         $roleKeToan->givePermissionTo([
-            'recharges.view',
-            'recharges.edit',
-            'withdrawals.view',
-            'withdrawals.edit',
-            'transactions.view',
-            'reports.view',
-            "wallet.view",
-            "chat.view"
+            'recharges.view', 'recharges.edit',
+            'withdrawals.view', 'withdrawals.edit',
+            'transactions.view', 'reports.view', 'wallet.view', "chat.view"
         ]);
-
-        // Nhân viên Hỗ trợ
         $roleHoTro = Role::create(['name' => 'nv-ho-tro', 'description' => 'Nhân viên hỗ trợ, tư vấn khách hàng.', 'guard_name' => 'api']);
         $roleHoTro->givePermissionTo([
-
             'chat.view', 'chat.create', 'chat.edit',
             'users.view', 'orders.view', 'products.view', 'transactions.view',
-            'product_reports.view', 'product_reports.edit',"wallet.view","chat.view",
-            'promotions.view', 'donate_promotions.view', 
-
+            'product_reports.view', 'product_reports.edit',
+            'wallet.view', 'promotions.view', 'donate_promotions.view',
         ]);
-
-        // Nhân viên Marketing
         $roleMarketing = Role::create(['name' => 'nv-marketing', 'description' => 'Nhân viên marketing và nội dung.', 'guard_name' => 'api']);
         $roleMarketing->givePermissionTo([
             'posts.view', 'posts.create', 'posts.edit', 'posts.delete',
-            'post_categories.view', 'post_categories.create', 'post_categories.edit', 'post_categories.delete', // <-- BỔ SUNG QUYỀN DANH MỤC BÀI VIẾT
+            'post_categories.view', 'post_categories.create', 'post_categories.edit', 'post_categories.delete',
             'comments.view', 'comments.edit', 'comments.delete',
             'promotions.view', 'promotions.create', 'promotions.edit', 'promotions.delete',
             'donate_promotions.view', 'donate_promotions.create', 'donate_promotions.edit', 'donate_promotions.delete',
             'banners.view', 'banners.create', 'banners.edit', 'banners.delete',
-            'notifications.view', 'notifications.create', 'notifications.edit', 'notifications.delete',"wallet.view","chat.view"
-
+            'wallet.view', 'chat.view'
         ]);
-
-        // === BỔ SUNG / CHỈNH SỬA ===: Thêm vai trò mới và gán quyền
         $roleKiemDuyet = Role::create(['name' => 'nv-kiem-duyet', 'description' => 'Nhân viên kiểm duyệt sản phẩm, xử lý khiếu nại.', 'guard_name' => 'api']);
         $roleKiemDuyet->givePermissionTo([
-            'products.view', 'products.edit', // Xem và duyệt (sửa trạng thái) sản phẩm
-            'categories.view', // Cần xem danh mục để biết sản phẩm thuộc loại nào
-            'users.view', // Cần xem thông tin người bán
-            'product_reports.view', 'product_reports.edit', // Xem và xử lý khiếu nại
-            'chat.view', // Có thể xem chat để hỗ trợ
+            'products.view', 'products.edit',
+            'products.approve',
+            'categories.view',
+            'users.view',
+            'product_reports.view', 'product_reports.edit',
+            'chat.view',
             'wallet.view'
         ]);
-$roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nhân viên cơ bản với quyền tùy chỉnh.', 'guard_name' => 'api']);
+        $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nhân viên cơ bản với quyền tùy chỉnh.', 'guard_name' => 'api']);
 
         $this->command->info('Đã tạo và gán quyền cho tất cả các Roles.');
 
-        // === PHẦN 4: TẠO DỮ LIỆU MẪU (WEBS, USERS, WALLETS) ===
+        // === PHẦN 4: TẠO DỮ LIỆU MẪU ===
         $this->command->info('Bắt đầu tạo dữ liệu mẫu...');
-
         $mainWeb = Web::create(['subdomain' => 'main-site', 'api_key' => 'D9BD170B6093FF737C754C8A5070FC97', 'status' => 1]);
-        // $resellerWeb = Web::create(['subdomain' => 'reseller-site', 'api_key' => 'RESELLER-API-KEY-HERE', 'status' => 1]);
         $this->command->info('Đã tạo web mẫu.');
-
         $userList = [
+            ['username' => 'superadmin', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
             ['username' => 'admin', 'role' => 'admin', 'web_id' => $mainWeb->id],
-            ['username' => 'adminsuper', 'role' => 'admin-super', 'web_id' => $mainWeb->id],
             ['username' => 'reseller', 'role' => 'reseller', 'web_id' => $mainWeb->id],
             ['username' => 'partner', 'role' => 'partner', 'web_id' => $mainWeb->id],
             ['username' => 'user', 'role' => 'user', 'web_id' => $mainWeb->id],
             ['username' => 'ketoan', 'role' => 'ke-toan', 'web_id' => $mainWeb->id],
             ['username' => 'hotro', 'role' => 'nv-ho-tro', 'web_id' => $mainWeb->id],
             ['username' => 'marketing', 'role' => 'nv-marketing', 'web_id' => $mainWeb->id],
-            ['username' => 'kiemduyet', 'role' => 'nv-kiem-duyet', 'web_id' => $mainWeb->id], // <-- BỔ SUNG TÀI KHOẢN MẪU
+            ['username' => 'kiemduyet', 'role' => 'nv-kiem-duyet', 'web_id' => $mainWeb->id],
         ];
-
         foreach ($userList as $userData) {
             $user = User::create([
                 'username' => $userData['username'],
-                'email' => "support@superbee.site",
+                'email' => $userData['username'] . "@superbee.site",
                 'password' => Hash::make('password'),
                 'web_id' => $userData['web_id'],
                 'status' => 1,
@@ -298,34 +275,29 @@ $roleStaffBase = Role::create(['name' => 'staff-nhan-vien', 'description' => 'Nh
                 'donate_code' => $this->generateCode(16),
             ]);
 
+            // Gán một vai trò duy nhất
             $user->assignRole($userData['role']);
 
-            if (in_array($userData['role'], ['partner', 'reseller'])) {
-                $user->assignRole('user');
-            }
+            // ĐÃ LOẠI BỎ logic gán thêm vai trò 'user'
+            // if (in_array($userData['role'], ['partner', 'reseller'])) {
+            //     $user->assignRole('user');
+            // }
 
             Wallet::create([
                 "user_id" => $user->id,
                 "balance" => "1000000",
                 "currency" => "VND"
             ]);
-
             $this->command->info("Đã tạo tài khoản: {$userData['username']} với vai trò: {$userData['role']}");
         }
-
-        $adminUser = User::where('username', 'admin')->first(); // Sửa lỗi logic nhỏ
-        if ($adminUser) {
-            $mainWeb->user_id = $adminUser->id;
+        $superAdminUser = User::where('username', 'superadmin')->first();
+        if ($superAdminUser) {
+            $mainWeb->user_id = $superAdminUser->id;
             $mainWeb->save();
         }
-        // $resellerUser = User::where('username', 'reseller')->first();
-        // if ($resellerUser) {
-        //     $mainWeb->user_id = $resellerUser->id;
-        //     $mainWeb->save();
-        // }
-        $this->command->info('Đã cập nhật chủ sở hữu cho các web.');
-
+        $this->command->info('Đã cập nhật chủ sở hữu cho web chính.');
         $this->command->info('Hoàn tất Seeder!');
+
         $shopname = "SuperBee";
         Business_setting::create(
             [

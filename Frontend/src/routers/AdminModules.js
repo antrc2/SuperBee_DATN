@@ -3,6 +3,9 @@ import EditCategoryPost from "../pages/Admin/CategoryPost/EditCategoryPostPage";
 import NotFound from "../pages/NotFound/NotFound";
 
 // ================== LAZY LOAD COMPONENTS ==================
+const BusinessSettingPage = React.lazy(() =>
+  import("@pages/Admin/BusinessSettings/BusinessSettingPage")
+);
 const CategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/CategoryPage")
 );
@@ -130,22 +133,22 @@ export const adminModules = [
   {
     name: "authorization",
     list: AuthorizationDashboardPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/roles",
     list: RolesPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/permissions",
     list: PermissionsPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
   {
     name: "authorization/users",
     list: UserListPage,
-    allowedRoles: ["admin"],
+    allowedRoles: ["admin", "admin-super"],
   },
 
   // Khuyến mãi sản phẩm
@@ -261,7 +264,13 @@ export const adminModules = [
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-kiem-duyet"],
+    allowedRoles: [
+      "admin",
+      "admin-super",
+      "reseller",
+      "nv-kiem-duyet",
+      "nv-ho-tro",
+    ],
     permissions: {
       create: "products.create",
       edit: "products.edit",
@@ -344,6 +353,17 @@ export const adminModules = [
     allowedRoles: ["admin", "admin-super", "nv-ho-tro"],
     permissions: {
       view: "chat.view",
+    },
+  },
+  {
+    name: "settings",
+    list: BusinessSettingPage,
+    show: NotFound,
+    create: NotFound,
+    edit: NotFound,
+    allowedRoles: ["admin", "admin-super"],
+    permissions: {
+      view: "settings.view",
     },
   },
 ];

@@ -30,7 +30,7 @@ const PermissionWarning = ({ message }) => (
 
 const RoleManagementTab = ({
   allRoles,
-  selectedRoles,
+  selectedRole,
   handleRoleChange,
   handleSaveChanges,
   updatingRole,
@@ -38,52 +38,36 @@ const RoleManagementTab = ({
 }) => {
   const { hasRole } = usePermissions();
 
-  // ---- BƯỚC 1: XÁC ĐỊNH VAI TRÒ CỦA CÁC BÊN ----
-
-  // 1. Người dùng đang đăng nhập (Người thực hiện hành động)
-  const isActingAdmin = hasRole("admin");
+  // === LOGIC MỚI: Kiểm tra quyền hạn chi tiết ===
   const isActingAdminSuper = hasRole("admin-super");
+  const isActingAdmin = hasRole("admin");
 
-  // 2. Người dùng đang được xem/sửa (Tài khoản mục tiêu)
-  const isTargetAdmin = targetUser?.roles?.some((r) => r.name === "admin");
   const isTargetAdminSuper = targetUser?.roles?.some(
     (r) => r.name === "admin-super"
   );
+  const isTargetAdmin = targetUser?.roles?.some((r) => r.name === "admin");
 
-  // ---- BƯỚC 2: TÍNH TOÁN LOGIC PHÂN QUYỀN ----
+  // Logic quyết định có được chỉnh sửa hay không
+  // 1. Super Admin có thể sửa bất kỳ ai, trừ Super Admin khác.
+  // 2. Admin chỉ có thể sửa những người không phải là Admin hoặc Super Admin.
+  const canEditRoles =
+    (isActingAdminSuper && !isTargetAdminSuper) ||
+    (isActingAdmin && !isTargetAdminSuper && !isTargetAdmin);
+  // ===============================================
 
-  // Biến xác định xem người dùng có được phép xem và sửa tab này không
-  let canEditRoles = false;
-
-  if (isActingAdmin) {
-    // Nếu người đăng nhập là ADMIN:
-    // -> Được sửa tất cả, TRỪ KHI tài khoản mục tiêu cũng là ADMIN.
-    canEditRoles = !isTargetAdmin;
-  } else if (isActingAdminSuper) {
-    // Nếu người đăng nhập là SUPER ADMIN:
-    // -> Chỉ được sửa tài khoản nhân viên.
-    // -> KHÔNG được sửa tài khoản ADMIN hoặc SUPER ADMIN khác.
-    canEditRoles = !isTargetAdmin && !isTargetAdminSuper;
-  }
-  // Các vai trò khác mặc định canEditRoles = false (không được sửa)
-
-  // ---- BƯỚC 3: HIỂN THỊ GIAO DIỆN DỰA TRÊN QUYỀN ----
-
-  // Nếu không có quyền sửa, hiển thị thông báo và dừng lại
   if (!canEditRoles) {
     let warningMessage =
       "Bạn không có quyền chỉnh sửa vai trò của tài khoản này.";
-    if (isActingAdmin && isTargetAdmin) {
+    if (isTargetAdminSuper) {
       warningMessage =
-        "Không thể chỉnh sửa vai trò của một Quản trị viên tối cao khác.";
-    } else if (isActingAdminSuper) {
+        "Không thể chỉnh sửa vai trò của một Quản trị viên tối cao.";
+    } else if (isTargetAdmin && isActingAdmin) {
       warningMessage =
-        "Bạn chỉ có thể chỉnh sửa vai trò của tài khoản nhân viên cấp dưới.";
+        "Quản trị viên không thể chỉnh sửa vai trò của Quản trị viên khác.";
     }
     return <PermissionWarning message={warningMessage} />;
   }
 
-  // Nếu có quyền, hiển thị giao diện chỉnh sửa
   return (
     <div>
       <div className="pb-4 border-b border-zinc-200 dark:border-zinc-700">
@@ -91,7 +75,7 @@ const RoleManagementTab = ({
           Quản lý & Cấp quyền
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          Chọn các quyền bạn muốn gán cho tài khoản này.
+          Chọn một vai trò bạn muốn gán cho tài khoản này.
         </p>
       </div>
       <div className="py-6">
@@ -100,12 +84,13 @@ const RoleManagementTab = ({
             <LoadingCon />
           ) : (
             allRoles.map((role) => {
-              // Vô hiệu hóa checkbox dựa trên quyền của người sửa
+              // === LOGIC MỚI: Vô hiệu hóa lựa chọn vai trò ===
+              // 1. Luôn vô hiệu hóa vai trò 'admin-super'.
+              // 2. Nếu người thực hiện là 'admin', hãy vô hiệu hóa luôn cả vai trò 'admin'.
               const isDisabled =
-                // Luôn vô hiệu hóa quyền 'admin' để tránh gán nhầm
-                role.name === "admin" ||
-                // Nếu người sửa là Super Admin, không cho phép gán quyền 'admin-super'
-                (isActingAdminSuper && role.name === "admin-super");
+                role.name === "admin-super" ||
+                (isActingAdmin && role.name === "admin");
+              // =============================================
 
               return (
                 <label
@@ -118,9 +103,10 @@ const RoleManagementTab = ({
                     }`}
                 >
                   <input
-                    type="checkbox"
-                    className="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
-                    checked={selectedRoles.includes(role.name)}
+                    type="radio"
+                    name="role-selection"
+                    className="h-5 w-5 border-gray-300 text-indigo-600 focus:ring-indigo-500 disabled:opacity-50"
+                    checked={selectedRole === role.name}
                     onChange={() => handleRoleChange(role.name)}
                     disabled={isDisabled}
                   />

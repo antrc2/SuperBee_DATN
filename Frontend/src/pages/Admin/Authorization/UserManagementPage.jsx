@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../../../utils/http";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
+// Component nút Tab
 const TabButton = ({ activeTab, tabName, children, onClick }) => (
   <button
     onClick={onClick}
@@ -16,16 +17,21 @@ const TabButton = ({ activeTab, tabName, children, onClick }) => (
     {children}
   </button>
 );
+
+// Component nhóm quyền
 const PermissionGroup = ({
   groupName,
   permissions,
   selected,
   onCheckboxChange,
   onSelectAll,
+  initialPermissions, // [MỚI] Nhận vào các quyền ban đầu
+  permissionMode, // [MỚI] Nhận vào chế độ đang chọn
 }) => {
   const [isOpen, setIsOpen] = useState(true);
   const allInGroup = permissions.map((p) => p.name);
   const isAllSelected = allInGroup.every((p) => selected.includes(p));
+
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-md mb-2">
       <div
@@ -54,26 +60,45 @@ const PermissionGroup = ({
       </div>
       {isOpen && (
         <div className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {permissions.map((p) => (
-            <div key={p.id} className="flex items-center">
-              <input
-                id={`perm-${p.id}`}
-                type="checkbox"
-                className="h-4 w-4 text-indigo-600 rounded"
-                checked={selected.includes(p.name)}
-                onChange={() => onCheckboxChange(p.name)}
-              />
-              <label
-                htmlFor={`perm-${p.id}`}
-                className="ml-2 block text-sm text-gray-900 dark:text-gray-300"
-              >
-                <span className="font-mono">
-                  {p.name.split(".")[1] || p.name}
-                </span>
-                <p className="text-xs text-gray-500">{p.description}</p>
-              </label>
-            </div>
-          ))}
+          {permissions.map((p) => {
+            const isInitial = initialPermissions.includes(p.name);
+            const isDisabled = permissionMode === "add" && isInitial;
+
+            return (
+              <div key={p.id} className="flex items-center">
+                <input
+                  id={`perm-${p.id}`}
+                  type="checkbox"
+                  className={`h-4 w-4 text-indigo-600 rounded ${
+                    isDisabled
+                      ? "bg-gray-200 border-gray-300 cursor-not-allowed opacity-50"
+                      : ""
+                  }`}
+                  checked={selected.includes(p.name)}
+                  onChange={() => onCheckboxChange(p.name)}
+                  disabled={isDisabled}
+                />
+                <label
+                  htmlFor={`perm-${p.id}`}
+                  className={`ml-2 block text-sm ${
+                    isDisabled
+                      ? "text-gray-500 dark:text-gray-400 cursor-not-allowed opacity-75"
+                      : "text-gray-900 dark:text-gray-300"
+                  }`}
+                >
+                  <span className="font-medium">
+                    {p.description}
+                    {isDisabled && (
+                      <span className="text-xs ml-1 text-blue-600 dark:text-blue-400">
+                        (Đã có)
+                      </span>
+                    )}
+                  </span>
+                  <p className="text-xs text-gray-500 font-mono">{p.name}</p>
+                </label>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -87,12 +112,12 @@ export default function UserManagementPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [userData, setUserData] = useState(null);
-  const [allSystemRoles, setAllSystemRoles] = useState([]);
   const [allSystemPermissions, setAllSystemPermissions] = useState({});
-  const [assignedRoles, setAssignedRoles] = useState([]);
   const [directPermissions, setDirectPermissions] = useState([]);
-  const [activeTab, setActiveTab] = useState("summary");
+  const [initialDirectPermissions, setInitialDirectPermissions] = useState([]);
+  const [activeTab, setActiveTab] = useState("permissions");
   const [allUserPermissions, setAllUserPermissions] = useState([]);
+  const [permissionMode, setPermissionMode] = useState("sync");
 
   const clearMessages = () => {
     setTimeout(() => {
@@ -110,10 +135,9 @@ export default function UserManagementPage() {
       if (response.data.status) {
         const data = response.data.data;
         setUserData(data.user);
-        setAllSystemRoles(data.all_system_roles);
         setAllSystemPermissions(data.all_system_permissions);
-        setAssignedRoles(data.assigned_roles);
         setDirectPermissions(data.direct_permissions);
+        setInitialDirectPermissions(data.direct_permissions);
         setAllUserPermissions(data.all_user_permissions);
       } else {
         setError(response.data.message || "Lỗi tải dữ liệu.");
@@ -129,27 +153,38 @@ export default function UserManagementPage() {
     fetchData();
   }, [fetchData]);
 
-  const handleSaveChanges = async (type) => {
+  // [SỬA LỖI] Thêm useEffect để xử lý khi permissionMode thay đổi
+  useEffect(() => {
+    if (permissionMode === "add") {
+      // Khi chuyển sang chế độ 'Bổ sung', đảm bảo tất cả các quyền ban đầu đều được chọn
+      // Bằng cách hợp nhất (union) mảng quyền hiện tại với mảng quyền ban đầu
+      setDirectPermissions((prev) => {
+        const newPermissions = [
+          ...new Set([...prev, ...initialDirectPermissions]),
+        ];
+        return newPermissions;
+      });
+    } else if (permissionMode === "sync") {
+      // Khi chuyển về 'Gán lại', reset về trạng thái ban đầu
+      setDirectPermissions([...initialDirectPermissions]);
+    }
+  }, [permissionMode, initialDirectPermissions]);
+
+  const handleSaveChanges = async () => {
     setSuccess("");
     setError("");
-    let url = "";
-    let payload = {};
 
-    if (type === "roles") {
-      url = `/admin/authorization/users/${userId}/manage/roles`;
-      payload = { roles: assignedRoles };
-    } else if (type === "permissions") {
-      url = `/admin/authorization/users/${userId}/manage/permissions`;
-      payload = { permissions: directPermissions };
-    } else {
-      return;
-    }
+    const url = `/admin/authorization/users/${userId}/manage/permissions`;
+    const payload = {
+      permissions: directPermissions,
+      mode: permissionMode,
+    };
 
     try {
       const res = await api.post(url, payload);
       if (res.data.status) {
         setSuccess(res.data.message);
-        fetchData(); // Tải lại tất cả dữ liệu để đồng bộ
+        fetchData();
       } else {
         setError(res.data.message || "Đã có lỗi xảy ra.");
       }
@@ -160,6 +195,44 @@ export default function UserManagementPage() {
     } finally {
       clearMessages();
     }
+  };
+
+  // [MỚI] Hàm xử lý thay đổi checkbox với logic đặc biệt cho chế độ "add"
+  const handleCheckboxChange = (permissionName) => {
+    // Nếu đang ở chế độ "add" và quyền này là quyền ban đầu, không cho phép bỏ chọn
+    if (
+      permissionMode === "add" &&
+      initialDirectPermissions.includes(permissionName)
+    ) {
+      return;
+    }
+
+    setDirectPermissions((prev) =>
+      prev.includes(permissionName)
+        ? prev.filter((p) => p !== permissionName)
+        : [...prev, permissionName]
+    );
+  };
+
+  // [MỚI] Hàm xử lý chọn tất cả với logic đặc biệt cho chế độ "add"
+  const handleSelectAll = (groupPerms, isSelected) => {
+    setDirectPermissions((prev) => {
+      const otherPerms = prev.filter((p) => !groupPerms.includes(p));
+
+      if (isSelected) {
+        // Chọn tất cả quyền trong nhóm
+        return [...otherPerms, ...groupPerms];
+      } else {
+        // Bỏ chọn tất cả, nhưng nếu đang ở chế độ "add" thì giữ lại các quyền ban đầu
+        if (permissionMode === "add") {
+          const initialInGroup = initialDirectPermissions.filter((p) =>
+            groupPerms.includes(p)
+          );
+          return [...otherPerms, ...initialInGroup];
+        }
+        return otherPerms;
+      }
+    });
   };
 
   if (loading) return <LoadingDomain />;
@@ -181,7 +254,6 @@ export default function UserManagementPage() {
         </Link>
       </div>
 
-      {/* Thông báo động */}
       {error && (
         <div
           className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4"
@@ -223,31 +295,24 @@ export default function UserManagementPage() {
           <nav className="flex space-x-4 sm:space-x-8 px-6" aria-label="Tabs">
             <TabButton
               activeTab={activeTab}
+              tabName="permissions"
+              onClick={() => setActiveTab("permissions")}
+            >
+              Quản lý Quyền trực tiếp
+            </TabButton>
+            <TabButton
+              activeTab={activeTab}
               tabName="summary"
               onClick={() => setActiveTab("summary")}
             >
               Tổng hợp Quyền
-            </TabButton>
-            <TabButton
-              activeTab={activeTab}
-              tabName="roles"
-              onClick={() => setActiveTab("roles")}
-            >
-              Quản lý Vai trò
-            </TabButton>
-            <TabButton
-              activeTab={activeTab}
-              tabName="permissions"
-              onClick={() => setActiveTab("permissions")}
-            >
-              Quyền trực tiếp
             </TabButton>
           </nav>
         </div>
 
         <div className="p-6">
           {activeTab === "summary" && (
-            <div className="">
+            <div>
               <h2 className="text-2xl font-semibold mb-4">
                 Tất cả quyền người dùng đang có
               </h2>
@@ -267,64 +332,81 @@ export default function UserManagementPage() {
               </div>
             </div>
           )}
-          {activeTab === "roles" && (
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-semibold">Quản lý Vai trò</h2>
-                <button
-                  onClick={() => handleSaveChanges("roles")}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-                >
-                  Lưu Vai trò
-                </button>
-              </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {allSystemRoles.map((role) => (
-                  <div key={role.id} className="flex items-center">
-                    <input
-                      id={`role-${role.id}`}
-                      type="checkbox"
-                      className="h-4 w-4 text-indigo-600 rounded"
-                      checked={assignedRoles.includes(role.name)}
-                      onChange={() =>
-                        setAssignedRoles((prev) =>
-                          prev.includes(role.name)
-                            ? prev.filter((r) => r !== role.name)
-                            : [...prev, role.name]
-                        )
-                      }
-                    />
-                    <label
-                      htmlFor={`role-${role.id}`}
-                      className="ml-2 block text-sm"
-                    >
-                      <span className="capitalize font-medium">
-                        {role.name}
-                      </span>
-                      <p className="text-xs text-gray-500">
-                        {role.description}
-                      </p>
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+
           {activeTab === "permissions" && (
-            <div className="">
-              <div className="flex justify-between items-center mb-4">
+            <div>
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-4">
                 <h2 className="text-2xl font-semibold">
                   Quản lý Quyền trực tiếp
                 </h2>
                 <button
-                  onClick={() => handleSaveChanges("permissions")}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                  onClick={handleSaveChanges}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 font-semibold shadow-md"
                 >
-                  Lưu Quyền
+                  Lưu thay đổi
                 </button>
               </div>
+
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg border dark:border-gray-600">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">
+                  Chế độ lưu:
+                </h3>
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="mode_sync"
+                      name="permission_mode"
+                      value="sync"
+                      checked={permissionMode === "sync"}
+                      onChange={() => setPermissionMode("sync")}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 disabled:opacity-50"
+                      disabled={loading}
+                    />
+                    <label htmlFor="mode_sync" className="ml-2">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        Gán lại từ đầu
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Xóa hết quyền cũ, chỉ áp dụng các quyền được chọn.
+                      </p>
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      id="mode_add"
+                      name="permission_mode"
+                      value="add"
+                      checked={permissionMode === "add"}
+                      onChange={() => setPermissionMode("add")}
+                      className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 disabled:opacity-50"
+                      disabled={loading}
+                    />
+                    <label htmlFor="mode_add" className="ml-2">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        Bổ sung quyền
+                      </span>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Giữ các quyền hiện có, chỉ thêm các quyền mới được chọn.
+                      </p>
+                    </label>
+                  </div>
+                </div>
+                {permissionMode === "add" && (
+                  <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/30 rounded border border-blue-200 dark:border-blue-700">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <strong>Chế độ Bổ sung:</strong> Các quyền đã có sẽ được
+                      đánh dấu và không thể bỏ chọn. Bạn chỉ có thể chọn thêm
+                      các quyền mới.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
                 Các quyền này được gán thêm, ngoài các quyền đã có từ vai trò.
+                Các checkbox được tích sẵn là các quyền người dùng đang có.
               </p>
               {Object.entries(allSystemPermissions).map(
                 ([groupName, permissions]) => (
@@ -333,21 +415,10 @@ export default function UserManagementPage() {
                     groupName={groupName}
                     permissions={permissions}
                     selected={directPermissions}
-                    onCheckboxChange={(p) =>
-                      setDirectPermissions((prev) =>
-                        prev.includes(p)
-                          ? prev.filter((i) => i !== p)
-                          : [...prev, p]
-                      )
-                    }
-                    onSelectAll={(groupPerms, isSelected) =>
-                      setDirectPermissions((prev) => {
-                        const other = prev.filter(
-                          (p) => !groupPerms.includes(p)
-                        );
-                        return isSelected ? [...other, ...groupPerms] : other;
-                      })
-                    }
+                    initialPermissions={initialDirectPermissions}
+                    permissionMode={permissionMode}
+                    onCheckboxChange={handleCheckboxChange}
+                    onSelectAll={handleSelectAll}
                   />
                 )
               )}

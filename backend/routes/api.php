@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminBannerController;
+use App\Http\Controllers\Admin\AdminBusinessSettingController;
 use App\Http\Controllers\Admin\AdminCategoryPostController;
 use App\Http\Controllers\Admin\AdminCommentPostController;
 use App\Http\Controllers\Admin\AdminDonatePromotionController;
@@ -36,6 +37,7 @@ use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
 use App\Http\Controllers\User\UserOrderController;
 use App\Http\Controllers\User\UserBannerController;
+use App\Http\Controllers\User\UserBusinessSettingController;
 use App\Http\Controllers\User\UserCategoryPostController;
 use App\Http\Controllers\User\UserCommentPostController;
 // use App\Http\Controllers\User\UserCommentPostControllerCommentPostController;
@@ -77,11 +79,11 @@ Route::get("/partner/money/queue", [PartnerOrderController::class, 'queue_money'
 
 // Những router client chưa và đã đăng nhập
 Route::middleware('auth')->group(function () {
-    // Route::get("/sitemap.xml", [SitemapController::class, 'index']);
-    // Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
-    // Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
-    // Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
-    // Route::get("/san-pham.xml", [SitemapController::class, 'product']);
+    Route::get("/sitemap.xml", [SitemapController::class, 'index']);
+    Route::get('/trang-khac.xml', [SitemapController::class, 'home']);
+    Route::get("/tin-tuc.xml", [SitemapController::class, 'post']);
+    Route::get('/danh-muc.xml', [SitemapController::class, 'category']);
+    Route::get("/san-pham.xml", [SitemapController::class, 'product']);
 
     // cấp lại token
     Route::post('/refreshToken', [AuthController::class, "refreshToken"]);
@@ -139,6 +141,11 @@ Route::middleware('auth')->group(function () {
         Route::get("/{id}", [AdminDonatePromotionController::class, 'show'])->middleware('permission:donate_promotions.view');
     });
     Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsForUser']);
+
+    // Cấu hình web
+    Route::prefix('/settings')->group(function(){
+        Route::get('/',[UserBusinessSettingController::class,'index']);
+    });
     //   đã đăng nhập
     Route::middleware(['jwt'])->group(function () {
         // đăng xuất
@@ -418,6 +425,10 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
             Route::get('/', [AutoTransactionController::class, 'status']);
             Route::post("/", [AutoTransactionController::class, 'turn']);
         });
+    });
+    Route::prefix('/business_settings')->group(function () {
+        Route::get('/', [AdminBusinessSettingController::class, 'index'])->middleware('permission:business_settings.view');
+        Route::put('/{id}', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
 });
 

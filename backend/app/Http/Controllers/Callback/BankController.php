@@ -16,44 +16,46 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
 class BankController extends Controller
-{   
-    public function history(Request $request){
+{
+    public function history(Request $request)
+    {
         try {
-            $cards = RechargeBank::where("status",1)->with('user')->limit(5)->get();
+            $cards = RechargeBank::where("status", 1)->with('user')->limit(5)->get();
             return response()->json([
-                'status'=>True,
-                'message'=>"Lấy danh sách lịch sử nạp bank thành công",
-                'data'=>$cards
+                'status' => True,
+                'message' => "Lấy danh sách lịch sử nạp bank thành công",
+                'data' => $cards
             ]);
         } catch (\Throwable $th) {
             //throw $th;
             return response()->json([
-                "status"=>False,
-                'message'=>"Lấy danh sách lịch sử nạp bank thất bại",
-                'data'=>[]
-            ],500);
+                "status" => False,
+                'message' => "Lấy danh sách lịch sử nạp bank thất bại",
+                'data' => []
+            ], 500);
         }
     }
-    public function donate(Request $request){
+    public function donate(Request $request)
+    {
         try {
-            if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
+            if ($request->header('Authorization') !== "Apikey " . env("SEPAY_API_TOKEN")) {
                 return response()->json([
-                    "status"=>false,
-                    'message'=>"Fail to callback"
-                ],403);
+                    "status" => false,
+                    'message' => "Fail to callback"
+                ], 403);
             };
             $contents = explode(" ", $request->content);
             $frontend_link = env("FRONTEND_URL");
-            foreach ($contents as $donate_code){
-                $user = User::where("donate_code",$donate_code)->with('wallet')->first();
-                if (!$user){
+            foreach ($contents as $donate_code) {
+                $user = User::where("donate_code", $donate_code)->with('wallet')->first();
+                if (!$user) {
                     // Không tìm thấy thông tin về user theo donate_code
                 } else {
                     $user_id = $user->id;
                     $web_id = $user->web_id;
                     $wallet_id = $user->wallet->id;
                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", $request->transactionDate)->where("end_date", ">", $request->transactionDate)->where('status', 1)->orderBy('id', 'desc')->first();
-                    $result = $this->donate_promotion($donate_promotion,$user_id);
+                    $result = $this->donate_promotion($donate_promotion, $user_id);
                     $donate_promotion_id = $result['donate_promotion_id'];
                     $donate_promotion_amount = $result['donate_promotion_amount'];
                     $amount = $request->transferAmount;
@@ -61,10 +63,10 @@ class BankController extends Controller
                     $bonus = $amount * ($donate_promotion_amount / 100);
                     $amount += $bonus;
                     $wallet_transaction = WalletTransaction::create([
-                        "wallet_id"=>$wallet_id,
-                        "type"=>"recharge_bank",
-                        "amount"=>$amount,
-                        "related_type"=> "App\Models\RechargeBank"
+                        "wallet_id" => $wallet_id,
+                        "type" => "recharge_bank",
+                        "amount" => $amount,
+                        "related_type" => "App\Models\RechargeBank"
                     ]);
                     $wallet_transaction_id = $wallet_transaction->id;
                     $wallet = Wallet::find($wallet_id);
@@ -72,38 +74,37 @@ class BankController extends Controller
                     $wallet->increment('promotion_balance', $bonus);
                     $recharge_bank =  RechargeBank::create([
                         'wallet_transaction_id' => $wallet_transaction_id,
-                        "user_id"=>$user_id,
-                        "web_id"=>$web_id,
-                        'amount'=>$amount,
-                        "transaction_reference"=>$request->referenceCode,
-                        "status"=>1,
-                        "donate_promotion_id"=>$donate_promotion_id,
+                        "user_id" => $user_id,
+                        "web_id" => $web_id,
+                        'amount' => $amount,
+                        "transaction_reference" => $request->referenceCode,
+                        "status" => 1,
+                        "donate_promotion_id" => $donate_promotion_id,
                         // "donate_amount"=>$donate_amount
                     ]);
-                    WalletTransaction::where("id",$wallet_transaction_id)->update(
+                    WalletTransaction::where("id", $wallet_transaction_id)->update(
                         [
-                            "related_id"=>$recharge_bank->id
+                            "related_id" => $recharge_bank->id
                         ]
-                        );
-                    $this->sendNotification(1,"Nạp {$amount} thành công",$frontend_link . "/info/transactions",$user_id);
+                    );
+                    $this->sendNotification(1, "Nạp {$amount} thành công", $frontend_link . "/info/transactions", $user_id);
                     return response()->json([
-                        "status"=>True,
-                        "success"=>True,
-                        "message"=>"Nạp thẻ thành công"
+                        "status" => True,
+                        "success" => True,
+                        "message" => "Nạp thẻ thành công"
                     ], 200);
                 }
             }
             return response()->json([
-                "status"=>False,
-                'success'=>True,
-                "message"=>"Không tìm thấy giao dịch liên quan"
+                "status" => False,
+                'success' => True,
+                "message" => "Không tìm thấy giao dịch liên quan"
             ], 200);
-            
         } catch (\Throwable $th) {
             return response()->json([
-                "status"=>false,
-                "message"=>"Đã có lỗi xảy ra"
-            ],500);
+                "status" => false,
+                "message" => "Đã có lỗi xảy ra"
+            ], 500);
             // return response()->json(['error' => 'Internal Server Error'], 500);
             // return response()->json([
             //     "error"=>$th->getMessage()
@@ -111,48 +112,59 @@ class BankController extends Controller
         }
     }
 
-    public function withdraw(Request $request){
+    public function withdraw(Request $request)
+    {
         try {
-            if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
+            if ($request->header('Authorization') !== "Apikey " . env("SEPAY_API_TOKEN")) {
                 return response()->json([
-                    "status"=>false,
-                    'message'=>"Fail to callback"
-                ],403);
+                    "status" => false,
+                    'message' => "Fail to callback"
+                ], 403);
             };
             // return response()->json([
             //     "hehe"=>$request->withdraw_code
             // ]);
             DB::beginTransaction();
-            $withdraw = Withdraw::where("withdraw_code",$request->withdraw_code)->with("user")->first();
+            $withdraw = Withdraw::where("withdraw_code", $request->withdraw_code)->with("user")->first();
             if ($withdraw == null) {
 
                 // return "{'hehe'=>'không tìm thấy withdrawcode tương ứng'}";
                 return response()->json([
-                    "hehe"=>"Không tìm thấy withdraw_code {$request->withdraw_code} tương ứng"
+                    "hehe" => "Không tìm thấy withdraw_code {$request->withdraw_code} tương ứng"
                 ]);
             }
             // $wallet = Wallet::where("user_id",$withdraw->user_id)->first();
             $frontend_link = env("FRONTEND_URL");
-            if ($request->status){
+            if ($request->status) {
                 $withdraw->status = 1;
-                // $withdraw->note = $request->message;
-                // $this->sendNotification(1,"Rút {$withdraw->amount} thành công",null,$withdraw->user->id);
+                if ($withdraw->amount < $request->amount) {
+                    $amount = $request->amount;
+                    
+                    $withdraw->amount -= $request->amount;
+                } else {
+                    $amount = $withdraw->amount;
+                    
+                }
                 WalletTransaction::create([
-                    "wallet_id"=>$withdraw->user->id,
-                    "type"=>'withdraw',
-                    'related_id'=>$withdraw->id,
-                    "related_type"=>"App\Models\Withdraw",
-                    "amount"=>$withdraw->amount,
-                    'status'=>1
-                ]);
-                $this->sendNotification(1,"Rút tiền thành công","{$frontend_link}/info/withdraw",$withdraw->user->id);
+                        "wallet_id" => $withdraw->user->id,
+                        "type" => 'withdraw',
+                        'related_id' => $withdraw->id,
+                        "related_type" => "App\Models\Withdraw",
+                        "amount" => $amount,
+                        'status' => 1
+                    ]);
+
+                $withdraw->note = $request->message;
+                // $this->sendNotification(1,"Rút {$withdraw->amount} thành công",null,$withdraw->user->id);
+
+                $this->sendNotification(1, "Rút tiền thành công", "{$frontend_link}/info/withdraw", $withdraw->user->id);
             } else {
                 $withdraw->status = 3;
                 $withdraw->note = $request->message;
-                $wallet = Wallet::where("user_id",$withdraw->user->id)->first();
+                $wallet = Wallet::where("user_id", $withdraw->user->id)->first();
                 $wallet->balance += $withdraw->amount;
-                $wallet->save(); 
-                $this->sendNotification(0,"Rút tiền thất bại","{$frontend_link}/info/withdraw",$withdraw->user->id);
+                $wallet->save();
+                $this->sendNotification(0, "Rút tiền thất bại", "{$frontend_link}/info/withdraw", $withdraw->user->id);
             }
             // return response()->json([
             //     "withdraw"=>$withdraw
@@ -160,8 +172,8 @@ class BankController extends Controller
             $withdraw->save();
             DB::commit();
             return response()->json([
-                "status"=>True,
-                'message'=>$request->message
+                "status" => True,
+                'message' => $request->message
             ]);
 
 
@@ -172,7 +184,7 @@ class BankController extends Controller
             // foreach ($bulks['data'] as $bulk){
             //     // Log::info(['bulk_details'=>$bulk]);
             //     $bulk_details = Http::get("{$python_url}/transaction/bulk_payment_detail/{$bulk['bulkId']}")->json();
-                
+
             //     foreach ($bulk_details['data'] as $bulk_detail){
             //         $detailDescription = $bulk_detail['detailDescription'];
             //         $withdraw = Withdraw::where("withdraw_code",$detailDescription)->first();
@@ -197,7 +209,7 @@ class BankController extends Controller
             //             return response()->json([
             //                 'success'=>True,
             //             ]);
-                        
+
             //         }
             //     }    
             // }
@@ -224,8 +236,8 @@ class BankController extends Controller
             //         $user_id = $withdraw->user->id;
             //         $web_id = $withdraw->user->web_id;
             //         $wallet_id = $withdraw->user->wallet->id;
-                    
-                    
+
+
 
             //         $wallet = Wallet::find($wallet_id);
             //         if ($wallet->balance >= $request->transferAmount){
@@ -257,7 +269,7 @@ class BankController extends Controller
             //                 "message"=>"Số dư không đủ",
             //             ]);
             //         }
-                    
+
 
             //     }
             // }
@@ -268,10 +280,10 @@ class BankController extends Controller
         } catch (\Throwable $th) {
             DB::rollBack();
             return response()->json([
-                'success'=>False,
-                "message"=>"Đã có lỗi xảy ra",
-                'hehe'=>$th->getMessage(),
-                'line'=>$th->getLine()
+                'success' => False,
+                "message" => "Đã có lỗi xảy ra",
+                'hehe' => $th->getMessage(),
+                'line' => $th->getLine()
             ], 500);
         }
     }
@@ -324,7 +336,7 @@ class BankController extends Controller
     //                 if ($donate_promotion !== NULL){
     //                     $donate_promotion_id = $donate_promotion->id;
     //                     $donate_promotion_amount = $donate_promotion->amount;
-                        
+
     //                 } else {
     //                     $donate_promotion_id = NULL;
     //                     $donate_promotion_amount = 0;
@@ -390,113 +402,113 @@ class BankController extends Controller
     //             "error"=>$th->getMessage()
     //         ]);
     //     }
-        
+
     // }
 
 
-// public function callback(Request $request)
-// {
-//     try {
-//         $authHeader = $request->header('Authorization');
-//         // var_dump($authHeader);
-//         if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
-//             return response()->json([
-//                 "status"=>false,
-//                 'message'=>"Fail to callback"
-//             ],403);
-//         };
-//         $contents = explode(" ", $request->content);
-//         if ($request->transferType == 'in') { // NHận tiền
-//             foreach ($contents as $donate_code){
-//                 $user = User::where("donate_code",$donate_code)->with('wallet')->first();
-//                 if (!$user){
-//                     // Không tìm thấy thông tin về user theo donate_code
-//                 } else {
-//                     $user_id = $user->id;
-//                     $web_id = $user->web_id;
-//                     $wallet_id = $user->wallet->id;
+    // public function callback(Request $request)
+    // {
+    //     try {
+    //         $authHeader = $request->header('Authorization');
+    //         // var_dump($authHeader);
+    //         if ($request->header('Authorization') !== "Apikey ".env("SEPAY_API_TOKEN")){
+    //             return response()->json([
+    //                 "status"=>false,
+    //                 'message'=>"Fail to callback"
+    //             ],403);
+    //         };
+    //         $contents = explode(" ", $request->content);
+    //         if ($request->transferType == 'in') { // NHận tiền
+    //             foreach ($contents as $donate_code){
+    //                 $user = User::where("donate_code",$donate_code)->with('wallet')->first();
+    //                 if (!$user){
+    //                     // Không tìm thấy thông tin về user theo donate_code
+    //                 } else {
+    //                     $user_id = $user->id;
+    //                     $web_id = $user->web_id;
+    //                     $wallet_id = $user->wallet->id;
 
-//                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", now())->where("end_date", ">", now())->where('status', 1)->orderBy('id', 'desc')->first();
-//                     if ($donate_promotion !== NULL){
-//                         $donate_promotion_id = $donate_promotion->id;
-//                         $donate_promotion_amount = $donate_promotion->amount;
-                        
-//                     } else {
-//                         $donate_promotion_id = NULL;
-//                         $donate_promotion_amount = 0;
-//                     }
+    //                     $donate_promotion = DonatePromotion::where("web_id", $web_id)->where("start_date", "<=", now())->where("end_date", ">", now())->where('status', 1)->orderBy('id', 'desc')->first();
+    //                     if ($donate_promotion !== NULL){
+    //                         $donate_promotion_id = $donate_promotion->id;
+    //                         $donate_promotion_amount = $donate_promotion->amount;
 
-//                     $amount = $request->transferAmount;
-//                     $bonus = $amount * ($donate_promotion_amount / 100);
-//                     $amount += $bonus;
-//                     $wallet_transaction = WalletTransaction::create([
-//                         "wallet_id"=>$wallet_id,
-//                         "type"=>"recharge_bank",
-//                         "amount"=>$amount,
-//                         "related_type"=> "App\Models\RechargeBank"
-//                     ]);
+    //                     } else {
+    //                         $donate_promotion_id = NULL;
+    //                         $donate_promotion_amount = 0;
+    //                     }
 
-//                     $wallet_transaction_id = $wallet_transaction->id;
-//                     $wallet = Wallet::find($wallet_id);
-//                     $wallet->increment('balance', $amount);
-//                     $recharge_bank =  RechargeBank::create([
-//                         'wallet_transaction_id' => $wallet_transaction_id,
-//                         "user_id"=>$user_id,
-//                         "web_id"=>$web_id,
-//                         'amount'=>$amount,
-//                         "transaction_reference"=>$request->referenceCode,
-//                         "status"=>1,
-//                         "donate_promotion_id"=>$donate_promotion_id
-//                     ]);
+    //                     $amount = $request->transferAmount;
+    //                     $bonus = $amount * ($donate_promotion_amount / 100);
+    //                     $amount += $bonus;
+    //                     $wallet_transaction = WalletTransaction::create([
+    //                         "wallet_id"=>$wallet_id,
+    //                         "type"=>"recharge_bank",
+    //                         "amount"=>$amount,
+    //                         "related_type"=> "App\Models\RechargeBank"
+    //                     ]);
 
-//                     WalletTransaction::where("id",$wallet_transaction_id)->update(
-//                         [
-//                             "related_id"=>$recharge_bank->id
-//                         ]
-//                         );
+    //                     $wallet_transaction_id = $wallet_transaction->id;
+    //                     $wallet = Wallet::find($wallet_id);
+    //                     $wallet->increment('balance', $amount);
+    //                     $recharge_bank =  RechargeBank::create([
+    //                         'wallet_transaction_id' => $wallet_transaction_id,
+    //                         "user_id"=>$user_id,
+    //                         "web_id"=>$web_id,
+    //                         'amount'=>$amount,
+    //                         "transaction_reference"=>$request->referenceCode,
+    //                         "status"=>1,
+    //                         "donate_promotion_id"=>$donate_promotion_id
+    //                     ]);
 
-//                     return response()->json([
-//                         "status"=>True,
-//                         "success"=>True,
-//                         "message"=>"Nạp thẻ thành công"
-//                     ]);
-//                 }
-//             }
-//         } else { // Rút tiền
-//             foreach ($contents as $withdraw_code){
-//                 // echo $withdraw_code;
-//                 $withdraw = Withdraw::with('user.wallet')->where("withdraw_code",$withdraw_code)->first();
-//                 // var_dump($withdraw);
-//                 if (!$withdraw){
+    //                     WalletTransaction::where("id",$wallet_transaction_id)->update(
+    //                         [
+    //                             "related_id"=>$recharge_bank->id
+    //                         ]
+    //                         );
 
-//                 } else {
+    //                     return response()->json([
+    //                         "status"=>True,
+    //                         "success"=>True,
+    //                         "message"=>"Nạp thẻ thành công"
+    //                     ]);
+    //                 }
+    //             }
+    //         } else { // Rút tiền
+    //             foreach ($contents as $withdraw_code){
+    //                 // echo $withdraw_code;
+    //                 $withdraw = Withdraw::with('user.wallet')->where("withdraw_code",$withdraw_code)->first();
+    //                 // var_dump($withdraw);
+    //                 if (!$withdraw){
 
-//                     $user_id = $withdraw->user->id;
-//                     $web_id = $withdraw->user->web_id;
-//                     $wallet_id = $withdraw->user->wallet->id;
+    //                 } else {
 
-                    
+    //                     $user_id = $withdraw->user->id;
+    //                     $web_id = $withdraw->user->web_id;
+    //                     $wallet_id = $withdraw->user->wallet->id;
 
-//                     $wallet = Wallet::find($wallet_id);
-//                     if ($wallet->balance >= $request->transferAmount){
 
-//                     } else {
-//                         return response()->json([
-//                             "status"=>False,
-//                             "message"=>"Số dư không đủ",
-//                         ])
-//                     }
-//                     // $wallet->decrement('balance', $request->transferAmount);
 
-//                 }
-//             }
-//         }
-//     } catch (\Throwable $th) {
-//         // return response()->json(['error' => 'Internal Server Error'], 500);
-//         return response()->json([
-//             "error"=>$th->getMessage()
-//         ]);
-//     }
-// }
+    //                     $wallet = Wallet::find($wallet_id);
+    //                     if ($wallet->balance >= $request->transferAmount){
+
+    //                     } else {
+    //                         return response()->json([
+    //                             "status"=>False,
+    //                             "message"=>"Số dư không đủ",
+    //                         ])
+    //                     }
+    //                     // $wallet->decrement('balance', $request->transferAmount);
+
+    //                 }
+    //             }
+    //         }
+    //     } catch (\Throwable $th) {
+    //         // return response()->json(['error' => 'Internal Server Error'], 500);
+    //         return response()->json([
+    //             "error"=>$th->getMessage()
+    //         ]);
+    //     }
+    // }
 
 }

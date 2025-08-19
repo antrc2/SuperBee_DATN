@@ -6,6 +6,11 @@
             "code": "MB"
         },
         {
+            "id": "MBV",
+            "name": "Ng\u00e2n h\u00e0ng TNHH MTV Vi\u1ec7t Nam Hi\u1ec7n \u0110\u1ea1i (MBV)",
+            "code": "MBV"
+        },
+        {
             "id": "VIETINBANK",
             "name": "C\u00f4ng Th\u01b0\u01a1ng Vi\u1ec7t Nam (VIETINBANK)",
             "code": "VIETINBANK"
@@ -41,16 +46,6 @@
             "code": "LPB"
         },
         {
-            "id": "TIMO",
-            "name": "BVBank Timo \u2013 Ng\u00e2n h\u00e0ng s\u1ed1 Timo",
-            "code": "TIMO"
-        },
-        {
-            "id": "VIETTELM",
-            "name": "Viettel Money",
-            "code": "VIETTELM"
-        },
-        {
             "id": "VNPTM",
             "name": "VNPT Money",
             "code": "VNPTM"
@@ -71,6 +66,21 @@
             "code": "CAKEVPB"
         },
         {
+            "id": "EIB",
+            "name": "Xu\u1ea5t nh\u1eadp kh\u1ea9u (EIB)",
+            "code": "EIB"
+        },
+        {
+            "id": "VIETTELM",
+            "name": "Viettel Money",
+            "code": "VIETTELM"
+        },
+        {
+            "id": "TIMO",
+            "name": "BVBank Timo \u2013 Ng\u00e2n h\u00e0ng s\u1ed1 Timo",
+            "code": "TIMO"
+        },
+        {
             "id": "LIOBANK",
             "name": "Ngan hang so Liobank by OCB",
             "code": "LIOBANK"
@@ -84,11 +94,6 @@
             "id": "Vikki by HDBank",
             "name": "Vikki by HDBank",
             "code": "Vikki by HDBank"
-        },
-        {
-            "id": "EIB",
-            "name": "Xu\u1ea5t nh\u1eadp kh\u1ea9u (EIB)",
-            "code": "EIB"
         },
         {
             "id": "MSB",
@@ -116,19 +121,14 @@
             "code": "SHB"
         },
         {
-            "id": "PVC",
-            "name": "\u0110\u1ea1i ch\u00fang Vi\u1ec7t Nam (PVC)",
-            "code": "PVC"
-        },
-        {
             "id": "VAB",
             "name": "Vi\u1ec7t \u00c1 (VAB)",
             "code": "VAB"
         },
         {
-            "id": "MBV",
-            "name": "Ng\u00e2n h\u00e0ng TNHH MTV Vi\u1ec7t Nam Hi\u1ec7n \u0110\u1ea1i (MBV)",
-            "code": "MBV"
+            "id": "PVC",
+            "name": "\u0110\u1ea1i ch\u00fang Vi\u1ec7t Nam (PVC)",
+            "code": "PVC"
         },
         {
             "id": "STB",

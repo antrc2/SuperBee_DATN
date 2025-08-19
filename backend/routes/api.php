@@ -253,14 +253,16 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      * Router name: discountcode, Permission: promotions.*
      */
 
-
-
-    Route::prefix('admin/dashboard')->middleware(['auth:api'])->group(function () {
+    Route::prefix('dashboard')->middleware(['auth:api'])->group(function () {
+        // API Tổng hợp
         Route::get('/', [DashboardController::class, 'getDashboardData']);
         Route::get('/financial-stats', [DashboardController::class, 'getFinancialStats']);
         Route::get('/sales-performance', [DashboardController::class, 'getSalesPerformanceStats']);
         Route::get('/charts', [DashboardController::class, 'getChartData']);
         Route::get('/game-revenue-comparison', [DashboardController::class, 'getGameRevenueComparison']);
+        Route::get('/user-growth-chart', [DashboardController::class, 'getUserGrowthChart']);
+        Route::get('/top-spending-users', [DashboardController::class, 'getTopSpendingUsers']);
+        Route::get('/average-rating', [DashboardController::class, 'getAverageRating']);
     });
 
     Route::prefix('/discountcode')->group(function () {

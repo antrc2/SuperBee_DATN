@@ -18,7 +18,6 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\Admin\AdminWithdrawController;
 use App\Http\Controllers\Admin\AuthorizationDashboardController;
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
@@ -32,7 +31,7 @@ use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Partner\PartnerOrderController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\User\DiscountCodeController;
+use App\Http\Controllers\User\UserDiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
@@ -125,6 +124,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
+        Route::get('/filter/{slug}', [UserProductController::class, 'getProductsWithFilter']);    
     });
     Route::prefix('/banners')->group(function () {
         Route::get("/", [UserBannerController::class, 'index']);
@@ -144,8 +144,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsForUser']);
 
     // Cấu hình web
-    Route::prefix('/settings')->group(function(){
-        Route::get('/',[UserBusinessSettingController::class,'index']);
+    Route::prefix('/settings')->group(function () {
+        Route::get('/', [UserBusinessSettingController::class, 'index']);
     });
     //   đã đăng nhập
     Route::middleware(['jwt'])->group(function () {
@@ -166,8 +166,8 @@ Route::middleware('auth')->group(function () {
         });
         // User xem danh sách mã giảm giá (khuyến mãi sản phẩm)
         Route::prefix('/discountcode')->group(function () {
-            Route::get('/', [DiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
-            Route::get('/{id}', [DiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
+            Route::get('/', [UserDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
+            Route::get('/{id}', [UserDiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
         });
 
         Route::prefix("/donate")->group(function () {
@@ -252,11 +252,6 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      * Quản lý Mã giảm giá (Khuyến mãi sản phẩm)
      * Router name: discountcode, Permission: promotions.*
      */
-
-        Route::prefix('dashboard')->group(function(){
-        Route::get('/',[DashboardController::class, 'getDashboardData']);
-    });
-
     Route::prefix('/discountcode')->group(function () {
         Route::get('/', [AdminDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
         Route::get('/user', [AdminDiscountCodeController::class, 'getUserByWebId'])->middleware('permission:promotions.view');

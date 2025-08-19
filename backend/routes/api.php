@@ -32,7 +32,7 @@ use App\Http\Controllers\Callback\CallbackPartnerController;
 use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Partner\PartnerOrderController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\User\DiscountCodeController;
+use App\Http\Controllers\User\UserDiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
@@ -125,6 +125,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
+        Route::get('/filter/{slug}', [UserProductController::class, 'getProductsWithFilter']);    
     });
     Route::prefix('/banners')->group(function () {
         Route::get("/", [UserBannerController::class, 'index']);
@@ -166,8 +167,8 @@ Route::middleware('auth')->group(function () {
         });
         // User xem danh sách mã giảm giá (khuyến mãi sản phẩm)
         Route::prefix('/discountcode')->group(function () {
-            Route::get('/', [DiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
-            Route::get('/{id}', [DiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
+            Route::get('/', [UserDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
+            Route::get('/{id}', [UserDiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
         });
 
         Route::prefix("/donate")->group(function () {
@@ -435,7 +436,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
     Route::prefix('/business_settings')->group(function () {
         Route::get('/', [AdminBusinessSettingController::class, 'index'])->middleware('permission:business_settings.view');
-        Route::put('/{id}', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
+        Route::put('/', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
 });
 

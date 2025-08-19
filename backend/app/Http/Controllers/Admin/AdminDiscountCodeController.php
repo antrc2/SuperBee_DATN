@@ -342,7 +342,7 @@ class AdminDiscountCodeController extends Controller
             }
 
             $validated = $validator->validated();
-            $target_user_id = $request->target_user_id ?? null;
+            $target_user_id = empty ($request->target_user_id) ? null : $request->target_user_id;
             // $validated['user_id'] = $request->target_user_id;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
@@ -351,9 +351,10 @@ class AdminDiscountCodeController extends Controller
             DB::beginTransaction();
             if ($target_user_id == null) {
                 $validated['promotion_user_id'] = -1;
+                $target_user_id = [];
             } else {
                 $validated['promotion_user_id'] = null;
-                $target_user_id = [];
+                
             }
             $code->update($validated);
             PromotionUser::where('promotion_id',$id)->delete();

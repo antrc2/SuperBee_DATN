@@ -429,7 +429,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
     Route::prefix('/business_settings')->group(function () {
         Route::get('/', [AdminBusinessSettingController::class, 'index'])->middleware('permission:business_settings.view');
-        Route::put('/{id}', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
+        Route::put('/', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
 });
 

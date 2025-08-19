@@ -114,13 +114,12 @@ def withdraw():
         data = response.json()
         status_transaction = data['data']
         if (status_transaction == 0):
-            # print("Auto transaction đang tắt")
+            print("Auto transaction đang tắt")
             pass
         else:
-            # print("Auto transaction đang bật")
+            print("Auto transaction đang bật")
             execute_withdraw()
-        # print(data['data'])
+        print(data['data'])
         time.sleep(sleep)
-        # execute_withdraw()
         pass
         

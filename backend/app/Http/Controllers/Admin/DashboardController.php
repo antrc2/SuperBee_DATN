@@ -33,10 +33,9 @@ class DashboardController extends Controller
                 $statsStartDate = $chartsStartDate = $dates['startDate'];
                 $statsEndDate = $chartsEndDate = $dates['endDate'];
             } else {
-                
-                $statsStartDate = Carbon::today()->startOfDay();         // KPIs của hôm nay
+                $statsStartDate = Carbon::today()->startOfDay();
                 $statsEndDate = Carbon::today()->endOfDay();
-                $chartsStartDate = Carbon::now()->subDays(6)->startOfDay(); // Biểu đồ của 7 ngày
+                $chartsStartDate = Carbon::now()->subDays(6)->startOfDay();
                 $chartsEndDate = Carbon::now()->endOfDay();
             }
 
@@ -46,11 +45,10 @@ class DashboardController extends Controller
             $chartsData = $this->_getChartDataLogic($period, $chartsStartDate, $chartsEndDate);
             $gameRevenueComparison = $this->_getGameRevenueComparisonLogic($chartsStartDate, $chartsEndDate);
 
-            $todayRevenueObject = ['original' => ['success' => true, 'data' => $basicStatsData], 'exception' => null];
+            $todayRevenueObject = ['original' => ['success' => true, 'data' => $basicStatsData]];
 
             return response()->json([
-                'status' => true,
-                'message' => 'lấy ra dữ liệu thành công',
+                'status' => true, 'message' => 'lấy ra dữ liệu thành công',
                 'data' => [
                     'todayRevenue' => $todayRevenueObject,
                     'charts' => $chartsData,
@@ -67,21 +65,18 @@ class DashboardController extends Controller
         }
     }
 
-
     public function getFinancialStats(Request $request)
     {
-        $dates = $this->_validateAndParseDateRange($request, true); // true = cho phép mặc định 7 ngày
+        $dates = $this->_validateAndParseDateRange($request, true);
         $data = $this->_getFinancialStatsLogic($dates['startDate'], $dates['endDate']);
         return response()->json(['status' => true, 'data' => $data]);
     }
-
 
     public function getSalesPerformanceStats()
     {
         $data = $this->_getSalesPerformanceStatsLogic();
         return response()->json(['status' => true, 'data' => $data]);
     }
-
     public function getChartData(Request $request)
     {
         $dates = $this->_validateAndParseDateRange($request, true);
@@ -90,6 +85,7 @@ class DashboardController extends Controller
         $data = $this->_getChartDataLogic($period, $dates['startDate'], $dates['endDate']);
         return response()->json(['status' => true, 'data' => $data]);
     }
+
 
     public function getGameRevenueComparison(Request $request)
     {
@@ -101,25 +97,25 @@ class DashboardController extends Controller
     private function _validateAndParseDateRange(Request $request, bool $defaultTo7Days = false): array
     {
         if (!$request->has('start_date') && !$request->has('end_date') && $defaultTo7Days) {
-            return [
-                'startDate' => Carbon::now()->subDays(6)->startOfDay(),
-                'endDate'   => Carbon::now()->endOfDay(),
-            ];
+            return ['startDate' => Carbon::now()->subDays(6)->startOfDay(), 'endDate' => Carbon::now()->endOfDay()];
         }
 
-        $rules = [ 'start_date' => 'required|date_format:Y-m-d', 'end_date' => 'required|date_format:Y-m-d|after_or_equal:start_date' ];
+        $rules = [
+            'start_date' => 'required|date_format:d-m-Y',
+            'end_date'   => 'required|date_format:d-m-Y|after_or_equal:start_date',
+        ];
         $messages = [
-            'start_date.required'     => 'Bạn chưa nhập ngày bắt đầu.',
-            'start_date.date_format'  => 'Ngày bắt đầu phải có định dạng YYYY-MM-DD.',
-            'end_date.required'       => 'Bạn chưa nhập ngày kết thúc.',
-            'end_date.date_format'    => 'Ngày kết thúc phải có định dạng YYYY-MM-DD.',
+            'start_date.required' => 'Bạn chưa nhập ngày bắt đầu.',
+            'start_date.date_format' => 'Ngày bắt đầu phải có định dạng DD-MM-YYYY.',
+            'end_date.required' => 'Bạn chưa nhập ngày kết thúc.',
+            'end_date.date_format' => 'Ngày kết thúc phải có định dạng DD-MM-YYYY.',
             'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
         ];
         $validatedData = $request->validate($rules, $messages);
 
         return [
-            'startDate' => Carbon::parse($validatedData['start_date'])->startOfDay(),
-            'endDate'   => Carbon::parse($validatedData['end_date'])->endOfDay(),
+            'startDate' => Carbon::createFromFormat('d-m-Y', $validatedData['start_date'])->startOfDay(),
+            'endDate' => Carbon::createFromFormat('d-m-Y', $validatedData['end_date'])->endOfDay(),
         ];
     }
 
@@ -182,14 +178,17 @@ class DashboardController extends Controller
         }
         $revenueOverTime = $revenueOverTimeQuery->get();
         
+        // THAY ĐỔI: Thống kê doanh thu của TẤT CẢ danh mục cha
         $revenueByCategory = Category::select('categories.name as label', DB::raw('SUM(orders.total_amount) as value'))
             ->join('products', 'categories.id', '=', 'products.category_id')
             ->join('order_items', 'products.id', '=', 'order_items.product_id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.status', 1)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->whereIn('categories.name', ['Liên Quân', 'Free Fire'])
+            ->whereNull('categories.parent_id') // Lấy danh mục cha
+            ->where('categories.id', '!=', 1)      // Loại trừ danh mục "Khác"
             ->groupBy('categories.name')
+            ->orderBy('value', 'desc') // Vẫn sắp xếp để FE hiển thị game quan trọng nhất lên đầu
             ->get();
             
         return [
@@ -200,47 +199,66 @@ class DashboardController extends Controller
     
     private function _getGameRevenueComparisonLogic(Carbon $startDate, Carbon $endDate): array
     {
+        // GIỮ NGUYÊN: Vẫn tìm 2 danh mục cha hàng đầu MỌI THỜI ĐẠI để so sánh
+        $top2Categories = DB::table('categories')
+            ->join('products', 'categories.id', '=', 'products.category_id')
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->where('orders.status', 1)
+            ->whereNull('categories.parent_id')
+            ->where('categories.id', '!=', 1)
+            ->select('categories.id', 'categories.name')
+            ->groupBy('categories.id', 'categories.name')
+            ->orderByRaw('SUM(orders.total_amount) DESC')
+            ->limit(2)
+            ->get();
+        
+        if ($top2Categories->count() === 0) {
+            return ['labels' => [], 'datasets' => []];
+        }
+        $top2CategoryIds = $top2Categories->pluck('id');
+
+        // Lấy dữ liệu doanh thu hàng ngày của 2 danh mục top trong khoảng thời gian đã chọn
         $results = DB::table('orders')
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
             ->join('categories', 'products.category_id', '=', 'categories.id')
             ->where('orders.status', 1)
             ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->whereIn('categories.name', ['Liên Quân', 'Free Fire'])
+            ->whereIn('categories.id', $top2CategoryIds)
             ->select(
-                DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m-%d') as full_date"), // Sắp xếp theo ngày đầy đủ
+                DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m-%d') as full_date"),
                 DB::raw("DATE_FORMAT(orders.created_at, '%d/%m') as date_label"),
-                'categories.name as game_name',
+                'categories.name as category_name',
                 DB::raw('SUM(order_items.unit_price) as daily_revenue')
             )
-            ->groupBy('full_date', 'date_label', 'game_name')
+            ->groupBy('full_date', 'date_label', 'category_name')
             ->orderBy('full_date')
             ->get();
 
         $labels = [];
-        $datasets = [
-            ['label' => 'Liên Quân', 'data' => []],
-            ['label' => 'Free Fire', 'data' => []],
-        ];
-
-        $lienQuanData = [];
-        $freeFireData = [];
+        $datasets = [];
+        $dataMap = [];
         $uniqueLabels = [];
+
+        foreach($top2Categories as $category) {
+            $datasets[] = ['label' => $category->name, 'data' => []];
+            $dataMap[$category->name] = [];
+        }
 
         foreach ($results as $row) {
             $uniqueLabels[$row->date_label] = true;
-            if ($row->game_name === 'Liên Quân') {
-                $lienQuanData[$row->date_label] = $row->daily_revenue;
-            } else {
-                $freeFireData[$row->date_label] = $row->daily_revenue;
+            if(isset($dataMap[$row->category_name])) {
+                $dataMap[$row->category_name][$row->date_label] = $row->daily_revenue;
             }
         }
         
         $labels = array_keys($uniqueLabels);
 
-        foreach ($labels as $label) {
-            $datasets[0]['data'][] = (float) ($lienQuanData[$label] ?? 0);
-            $datasets[1]['data'][] = (float) ($freeFireData[$label] ?? 0);
+        foreach ($datasets as &$dataset) {
+            foreach ($labels as $label) {
+                $dataset['data'][] = (float) ($dataMap[$dataset['label']][$label] ?? 0);
+            }
         }
 
         return ['labels' => $labels, 'datasets' => $datasets];

@@ -144,8 +144,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/notifications', [AdminNotificationController::class, 'getNotificationsForUser']);
 
     // Cấu hình web
-    Route::prefix('/settings')->group(function(){
-        Route::get('/',[UserBusinessSettingController::class,'index']);
+    Route::prefix('/settings')->group(function () {
+        Route::get('/', [UserBusinessSettingController::class, 'index']);
     });
     //   đã đăng nhập
     Route::middleware(['jwt'])->group(function () {
@@ -253,8 +253,14 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      * Router name: discountcode, Permission: promotions.*
      */
 
-        Route::prefix('dashboard')->group(function(){
-        Route::get('/',[DashboardController::class, 'getDashboardData']);
+
+
+    Route::prefix('admin/dashboard')->middleware(['auth:api'])->group(function () {
+        Route::get('/', [DashboardController::class, 'getDashboardData']);
+        Route::get('/financial-stats', [DashboardController::class, 'getFinancialStats']);
+        Route::get('/sales-performance', [DashboardController::class, 'getSalesPerformanceStats']);
+        Route::get('/charts', [DashboardController::class, 'getChartData']);
+        Route::get('/game-revenue-comparison', [DashboardController::class, 'getGameRevenueComparison']);
     });
 
     Route::prefix('/discountcode')->group(function () {

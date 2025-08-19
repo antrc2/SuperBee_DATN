@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\Affiliate;
 use App\Models\AffiliateHistory;
+use App\Models\Business_setting;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Order;
@@ -14,7 +15,9 @@ use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -757,12 +760,39 @@ class UserOrderController extends Controller
                     // }
                     $wallet_transaction->related_id = $order->id;
                     $wallet_transaction->save();
+                    $web_info = Business_setting::where('id',1)->first();
+                    $new_order = Order::where('id', $order->id)->with(['items.product.credentials', 'user'])->first();
+                    $pdf = Pdf::loadView('orders.invoice', compact('new_order','web_info'))->output();
+                    $fileName = "invoice_{$order->id}.pdf";
+                    $tempPath = storage_path("app/temp/{$fileName}");
+                    if (!is_dir(dirname($tempPath))) {
+                        mkdir(dirname($tempPath), 0755, true);
+                    }
+                    file_put_contents($tempPath, $pdf);
 
+                    $uploadedFile = new UploadedFile(
+                        $tempPath,
+                        $fileName,
+                        'application/pdf',
+                        null,
+                        true // mark as test
+                    );
+                    // 4. Upload qua API Python
+                    $url = $this->uploadFile($uploadedFile, "invoices");
+
+                    // 5. Xóa file tạm
+                    unlink($tempPath);
+
+                    // 6. Trả kết quả
+                    
+                    $order->bill_url = $url;
+                    $order->save();
                     DB::commit();
                     return response()->json([
                         "status" => True,
                         "message" => "Mua hàng thành công",
-                        "order_id" => $order->id
+                        "order" => $new_order,
+                        'bill'=>$url
                     ], 200);
                 } else {
                     return response()->json([
@@ -782,7 +812,8 @@ class UserOrderController extends Controller
                 "status" => False,
                 "message" => "Đã xảy ra lỗi",
                 "error" => $th->getMessage(),
-                "line" => $th->getLine()
+                "line" => $th->getLine(),
+                'order'=>$new_order
             ], 500);
         }
     }

@@ -44,8 +44,8 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
   if (!item) return null;
 
   const handleFileChange = (e) => {
-    if (e.target.files.length > 3) {
-      setError("Chỉ được tải lên tối đa 3 ảnh.");
+    if (e.target.files.length > 20) {
+      setError("Chỉ được tải lên tối đa 20 ảnh.");
       return;
     }
     const selectedFiles = Array.from(e.target.files);
@@ -463,6 +463,9 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
           </div>
         </div>
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0">
+          <a href={order.bill_url} className="action-button action-button-primary !w-auto p-2">
+            In hóa đơn
+          </a>
           <button
             onClick={onClose}
             className="action-button action-button-secondary !w-auto"

@@ -34,14 +34,7 @@ class UserProfileController extends Controller
                 ], 401);
             }
 
-            return response()->json([
-                'id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar_url,
-                'donate_code' => $user->donate_code,
-            ]);
+            return response()->json($user);
         } catch (Exception $e) {
             return response()->json([
                 'message' => 'An error occurred while fetching user profile.',

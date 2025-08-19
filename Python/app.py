@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import uvicorn
 from threading import Thread
-# from controller.S3Controller import S3Controller
+from controller.S3Controller import S3Controller
 from cronjob import queue_money, event
 from controller.TransactionController import getListBank
 from controller.AssistantController import chat
@@ -19,7 +19,7 @@ load_dotenv()
 username = os.getenv("MBBANK_USERNAME")
 password = os.getenv("MBBANK_PASSWORD")
 app = FastAPI()
-# s3_client = S3Controller()
+s3_client = S3Controller()
 
 
 
@@ -81,55 +81,55 @@ async def getBankList():
 #     }
 
 
-# @app.post("/upload_file")
-# async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
-#     object_name = f"uploads/{folder}/"
+@app.post("/upload_file")
+async def upload(file: UploadFile = File(...), folder: str = Form(...),thread: bool = Form(...)):
+    object_name = f"uploads/{folder}/"
 
-#     # # Đọc nội dung file vào bộ nhớ
-#     # file_content = BytesIO(await file.read())
+    # # Đọc nội dung file vào bộ nhớ
+    # file_content = BytesIO(await file.read())
 
-#     response = await s3_client.add(file,object_name,thread)
+    response = await s3_client.add(file,object_name,thread)
 
-#     return response 
+    return response 
 
-# @app.post("/upload_files")
-# async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
-#     object_name = f"uploads/{folder}/"
-#     # print(files)
-#     # for file in files:
-#     #     print(f"Name: {file.filename}, Type: {file.content_type}")
+@app.post("/upload_files")
+async def uploads(files: List[UploadFile] = File(...),folder: str = Form(...), thread: bool = Form(...)):
+    object_name = f"uploads/{folder}/"
+    # print(files)
+    # for file in files:
+    #     print(f"Name: {file.filename}, Type: {file.content_type}")
     
-#     # file_contents = []
-#     # for file in files:
-#         # print(file.)
-#     #     byte_file = BytesIO(await file.read())
-#     #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
-#     #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
-#     #     file_contents.append({
-#     #         "file": byte_file,
-#     #         "filename": file.filename
-#     #     })
-#         # print(file_contents)
-#         # print(type(BytesIO(await file.read())))
-#     response = await s3_client.uploads(files,object_name,thread)
-#     return response
-#     # return "Xong"
+    # file_contents = []
+    # for file in files:
+        # print(file.)
+    #     byte_file = BytesIO(await file.read())
+    #     if (file.content_type == "image/jpeg" or file.content_type == "image/png" or file.content_type == "image/webp"):
+    #         print(f"{file.filename}: {nsfw.detect(byte_file)}")
+    #     file_contents.append({
+    #         "file": byte_file,
+    #         "filename": file.filename
+    #     })
+        # print(file_contents)
+        # print(type(BytesIO(await file.read())))
+    response = await s3_client.uploads(files,object_name,thread)
+    return response
+    # return "Xong"
 
 
-# @app.post("/delete_file")
-# async def delete(request: Request):
-#     data = await request.json()
+@app.post("/delete_file")
+async def delete(request: Request):
+    data = await request.json()
 
-#     s3_client.delete(data['path'])
+    s3_client.delete(data['path'])
 
-#     return {"status": True}
+    return {"status": True}
 
-# @app.post("/delete_files")
-# async def deletes(request: Request):
-#     data = await request.json()
-#     # print(data)
-#     s3_client.deletes(data['paths'])
-#     return {'status': True}
+@app.post("/delete_files")
+async def deletes(request: Request):
+    data = await request.json()
+    # print(data)
+    s3_client.deletes(data['paths'])
+    return {'status': True}
 
 @app.on_event("startup")
 def start_background_thread():

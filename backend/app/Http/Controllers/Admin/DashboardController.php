@@ -7,118 +7,130 @@ use App\Models\Category;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\User;
+
+use Illuminate\Validation\ValidationException; 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator; 
-use Carbon\Carbon; 
+use Illuminate\Support\Facades\Validator;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class DashboardController extends Controller
 {
-
     public function getDashboardData(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'start_date' => 'required|date_format:Y-m-d',
-            'end_date'   => 'required|date_format:Y-m-d|after_or_equal:start_date',
-            'period'     => 'sometimes|in:week,month,year' 
-        ]);
-
-        // Nếu xác thực thất bại, trả về lỗi 422 (Unprocessable Entity) với thông tin chi tiết.
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dữ liệu đầu vào không hợp lệ.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         try {
-            $period = $request->input('period', 'week');
-            $startDate = Carbon::parse($request->input('start_date'))->startOfDay(); 
-            $endDate = Carbon::parse($request->input('end_date'))->endOfDay();
-            $stats = $this->getDashboardStats($startDate, $endDate);
+            $period = $request->input('period', 'week');        
+            if ($request->has('start_date') || $request->has('end_date')) {
+                $rules = [
+                    'start_date' => 'required|date_format:Y-m-d',
+                    'end_date'   => 'required|date_format:Y-m-d|after_or_equal:start_date',
+                ];
 
-            $charts = $this->getChartData($period, $startDate, $endDate);
+                $messages = [
+                    'start_date.required'     => 'Bạn chưa nhập ngày bắt đầu.',
+                    'start_date.date_format'  => 'Ngày bắt đầu phải có định dạng YYYY-MM-DD.',
+                    'end_date.required'       => 'Bạn chưa nhập ngày kết thúc.',
+                    'end_date.date_format'    => 'Ngày kết thúc phải có định dạng YYYY-MM-DD.',
+                    'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.',
+                ];
 
-           
+                $validatedData = $request->validate($rules, $messages);
+                $customStartDate = Carbon::parse($validatedData['start_date'])->startOfDay();
+                $customEndDate = Carbon::parse($validatedData['end_date'])->endOfDay();
+
+                $statsStartDate = $chartsStartDate = $customStartDate;
+                $statsEndDate = $chartsEndDate = $customEndDate;
+
+            } else {
+                $statsStartDate = Carbon::today()->startOfDay();
+                $statsEndDate = Carbon::today()->endOfDay();
+                $chartsStartDate = Carbon::now()->subDays(6)->startOfDay();
+                $chartsEndDate = Carbon::now()->endOfDay();
+            }
+
+            $statsData = $this->getStatsForDateRange($statsStartDate, $statsEndDate);
+
+            $todayRevenueObject = [
+                'original' => [
+                    'success' => true,
+                    'data' => $statsData
+                ],
+            ];
+
+            $chartsData = $this->getChartData($period, $chartsStartDate, $chartsEndDate);
+
             return response()->json([
-                'success' => true,
-                'message' => 'Lấy dữ liệu tổng quan thành công.',
+                'status' => true,
+                'message' => 'lấy ra dữ liệu thành công',
                 'data' => [
-                    'stats' => $stats,   // Đối tượng chứa các chỉ số thống kê.
-                    'charts' => $charts  // Đối tượng chứa dữ liệu cho các biểu đồ.
+                    'todayRevenue' => $todayRevenueObject,
+                    'charts' => $chartsData
                 ]
             ], 200);
 
-        } catch (\Throwable $e) {
+        } catch (ValidationException $e) {
             return response()->json([
-                'success' => false,
-                'message' => 'Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.',
+                'status' => false,
+                'message' => $e->validator->errors()->first(),
+                // 'errors' => $e->errors()
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Lỗi DashboardController: ' . $e->getMessage());
+            return response()->json([
+                'status' => false,
+                'message' => 'đã xảy ra lỗi',
             ], 500);
         }
     }
-    public function getDashboardStats(Carbon $startDate, Carbon $endDate): array
+
+    public function getStatsForDateRange(Carbon $startDate, Carbon $endDate): array
     {
-        
         $revenue = Order::where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('total_amount');
-
         $orderCount = Order::where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->count();
-
         $newUsersCount = User::whereBetween('created_at', [$startDate, $endDate])
             ->count();
-
-       
         return [
-            'total_revenue'   => (float) $revenue,       //Tổng doanh thu.
-            'total_orders'    => (int) $orderCount,       //Tổng số đơn hàng.
-            'total_new_users' => (int) $newUsersCount,     //Tổng số người dùng mới.
+            'today_revenue'     => (float) $revenue,
+            'today_order_count' => (int) $orderCount,
+            'today_new_users'   => (int) $newUsersCount,
         ];
     }
 
-
-    public function getChartData(string $period, Carbon $startDate, Carbon $endDate): array
+    /**
+     * Hàm private để lấy dữ liệu biểu đồ.
+     */
+    private function getChartData(string $period, Carbon $startDate, Carbon $endDate): array
     {
-
         $revenueOverTimeQuery = Order::where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate]);
-
-       
         switch ($period) {
             case 'year':
                 $revenueOverTimeQuery->select(
-                    DB::raw("DATE_FORMAT(created_at, '%Y-%m') as label"), 
+                    DB::raw("DATE_FORMAT(created_at, '%Y-%m') as label"),
                     DB::raw("SUM(total_amount) as value")
                 )->groupBy('label')->orderBy('label');
                 break;
-
-            case 'month':
-            case 'week':
             default:
-                
                 $revenueOverTimeQuery->select(
-                    DB::raw("DATE_FORMAT(created_at, '%d/%m') as label"), 
+                    DB::raw("DATE_FORMAT(created_at, '%d/%m') as label"),
                     DB::raw("SUM(total_amount) as value")
                 )->groupBy('label')->orderByRaw('MIN(created_at)');
                 break;
         }
-
         $revenueOverTime = $revenueOverTimeQuery->get();
-
-        // === BIỂU ĐỒ DOANH THU THEO DANH MỤC ===
         $revenueByCategory = Category::select('categories.name as label', DB::raw('SUM(orders.total_amount) as value'))
             ->join('products', 'categories.id', '=', 'products.category_id')
-            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('order_items', 'products.id', 'order_items.product_id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->where('orders.status', 1)
-            ->whereBetween('orders.created_at', [$startDate, $endDate]) 
-            ->whereIn('categories.name', ['Liên Quân', 'Free Fire']) 
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->whereIn('categories.name', ['Liên Quân', 'Free Fire'])
             ->groupBy('categories.name')
-            ->orderBy('value', 'desc') 
             ->get();
-
         return [
             'revenue_over_time' => $revenueOverTime,
             'revenue_by_category' => $revenueByCategory

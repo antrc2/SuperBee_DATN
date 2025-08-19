@@ -1,5 +1,201 @@
 [
     {
+        "id": "25081920013460655",
+        "detail": [
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "13000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDVZL9VYXF4TXDIF",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231232849116",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231011626436",
+                "totalAmount": "24000.000000"
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970407",
+                "detailAmount": "11000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDTRL5UUT6QT773R",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231177240975",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231011626436",
+                "totalAmount": "24000.000000"
+            }
+        ]
+    },
+    {
+        "id": "25081919552039773",
+        "detail": [
+            {
+                "detailDestNumber": "5083841182",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970441",
+                "detailAmount": "17000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDR5SJNFYKNA0S04",
+                "status": "DONE",
+                "errorCode": "BP01",
+                "errorMessage": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "errorDetail": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "ft": null,
+                "refundTransactionFT": null,
+                "totalTransactionFT": null,
+                "totalAmount": null
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "13000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDVZL9VYXF4TXDIF",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231166209600",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231317708781",
+                "totalAmount": "28000.000000"
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970407",
+                "detailAmount": "15000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDTRL5UUT6QT773R",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231528241079",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231317708781",
+                "totalAmount": "28000.000000"
+            }
+        ]
+    },
+    {
+        "id": "25081919470045572",
+        "detail": [
+            {
+                "detailDestNumber": "5083841182",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970441",
+                "detailAmount": "17000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDR5SJNFYKNA0S04",
+                "status": "DONE",
+                "errorCode": "BP01",
+                "errorMessage": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "errorDetail": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "ft": null,
+                "refundTransactionFT": null,
+                "totalTransactionFT": null,
+                "totalAmount": null
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "13000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDVZL9VYXF4TXDIF",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231483031550",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231260506171",
+                "totalAmount": "28000.000000"
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970407",
+                "detailAmount": "15000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDTRL5UUT6QT773R",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231057370852",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231260506171",
+                "totalAmount": "28000.000000"
+            }
+        ]
+    },
+    {
+        "id": "25081919406365867",
+        "detail": [
+            {
+                "detailDestNumber": "5083841182",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970441",
+                "detailAmount": "17000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDR5SJNFYKNA0S04",
+                "status": "DONE",
+                "errorCode": "BP01",
+                "errorMessage": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "errorDetail": "LOI TRUY VAN TEN: SO TAI KHOAN KHONG TON TAI HOAC KHONG HOP LE",
+                "ft": null,
+                "refundTransactionFT": null,
+                "totalTransactionFT": null,
+                "totalAmount": null
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "13000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDVZL9VYXF4TXDIF",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231296951770",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231416609059",
+                "totalAmount": "28000.000000"
+            },
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "970407",
+                "detailAmount": "15000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDTRL5UUT6QT773R",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25231312061200",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25231416609059",
+                "totalAmount": "28000.000000"
+            }
+        ]
+    },
+    {
         "id": "25081916534344304",
         "detail": [
             {

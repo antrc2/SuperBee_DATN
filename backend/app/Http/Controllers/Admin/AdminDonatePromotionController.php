@@ -111,7 +111,7 @@ class AdminDonatePromotionController extends Controller
 
             $messages = [
                 'amount.required'         => 'Vui lòng nhập số tiền.',
-                'amount.integer'          => 'Số tiền phải là số nguyên.',
+                'amount.integer'          => 'Dữ liệu không hợp lệ',
 
                 'start_date.required'     => 'Vui lòng chọn ngày bắt đầu.',
                 'start_date.date'         => 'Ngày bắt đầu không đúng định dạng.',

@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\Admin\AdminWithdrawController;
 use App\Http\Controllers\Admin\AuthorizationDashboardController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
@@ -251,6 +252,11 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      * Quản lý Mã giảm giá (Khuyến mãi sản phẩm)
      * Router name: discountcode, Permission: promotions.*
      */
+
+        Route::prefix('dashboard')->group(function(){
+        Route::get('/',[DashboardController::class, 'getDashboardData']);
+    });
+
     Route::prefix('/discountcode')->group(function () {
         Route::get('/', [AdminDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
         Route::get('/user', [AdminDiscountCodeController::class, 'getUserByWebId'])->middleware('permission:promotions.view');

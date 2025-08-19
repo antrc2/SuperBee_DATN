@@ -39,6 +39,10 @@ export default function Profile() {
     email: "",
     phone: "",
     avatar: "",
+    cccd_number: "",
+    cccd_frontend: "",
+    cccd_backend: "",
+    cccd_created_at: "",
   });
   const [editData, setEditData] = useState({});
   const [avatarFile, setAvatarFile] = useState(null);
@@ -46,17 +50,25 @@ export default function Profile() {
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
-      const { username, email, phone, avatar } = response.data;
+      const { username, email, phone, avatar, cccd_number, cccd_frontend_url, cccd_backend_url, cccd_created_at } = response.data;
       setUserData({
         username,
         email: email || "",
         phone: phone || "",
         avatar: avatar || "",
+        cccd_number: cccd_number || "",
+        cccd_frontend: cccd_frontend_url || "",
+        cccd_backend: cccd_backend_url || "",
+        cccd_created_at: cccd_created_at || "",
       });
       setEditData({
         email: email || "",
         phone: phone || "",
         avatar: avatar || "",
+        cccd_number: cccd_number || "",
+        cccd_frontend: cccd_frontend_url || "",
+        cccd_backend: cccd_backend_url || "",
+        cccd_created_at: cccd_created_at || "",
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -69,7 +81,10 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("email", editData.email);
       formData.append("phone", editData.phone);
-
+      formData.append("cccd_frontend", editData.cccd_frontend);
+      formData.append("cccd_backend", editData.cccd_backend);
+      formData.append("cccd_number", editData.cccd_number);
+      formData.append("cccd_created_at", editData.cccd_created_at);
       if (avatarFile) {
         formData.append("avatar", avatarFile);
       } else {
@@ -209,6 +224,48 @@ export default function Profile() {
               setEditData({ ...editData, phone: e.target.value })
             }
             placeholder="0123 456 789"
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Số CCCD"
+            isEditing={isEditing}
+            name="cccd"
+            type="text"
+            value={isEditing ? editData.cccd : userData.cccd}
+            onChange={(e) =>
+              setEditData({ ...editData, cccd: e.target.value })
+            }
+            placeholder=""
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ảnh mặt trước"
+            isEditing={isEditing}
+            name="cccd_frontend"
+            type="file"
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_frontend: e.target.files[0] })
+            }
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ảnh mặt sau"
+            isEditing={isEditing}
+            name="cccd_backend"
+            type="file"
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_backend: e.target.files[0] })
+            }
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ngày cấp"
+            isEditing={isEditing}
+            name="cccd_created_at"
+            type="date"
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_created_at: e.target.value })
+            }
           />
 
           {/* Action Buttons */}

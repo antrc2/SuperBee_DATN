@@ -20,6 +20,10 @@ class User extends Authenticatable
         'donate_code',
         'web_id',
         'status',
+        "cccd_number",
+        "cccd_frontend_url",
+        "cccd_backend_url",
+        "cccd_created_at",
         'email_verified_at', // Thêm vào fillable
         'email_verification_token', // Thêm vào fillable
         'email_verification_expires_at', // Thêm vào fillable

@@ -17,11 +17,14 @@ import {
   CheckCircle,
   XCircle,
   Copy,
+  Star,
 } from "lucide-react";
 import api from "../../../utils/http";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import LoadingCon from "../../../components/Loading/LoadingCon";
 import { useNotification } from "@contexts/NotificationContext";
+import { useAuth } from "@contexts/AuthContext";
+import ReviewModal from "@components/Client/Review/ReviewModal";
 
 // =====================================================================
 // COMPONENT CHO MODAL KHIẾU NẠI (DisputeModal)
@@ -259,9 +262,9 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
   const handleCopyPassword = (password) => {
     if (!password) return;
     navigator.clipboard.writeText(password).then(() => {
-        pop("Đã sao chép mật khẩu!", "success");
+      pop("Đã sao chép mật khẩu!", "success");
     }).catch((err) => {
-        pop("Không thể sao chép mật khẩu!", "error");
+      pop("Không thể sao chép mật khẩu!", "error");
     });
   };
 
@@ -414,13 +417,16 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
                                 onFocus={(e) => e.target.select()}
                               />
                               <button
-                                onClick={() => handleCopyPassword(item.product.credentials[0].password)}
+                                onClick={() =>
+                                  handleCopyPassword(
+                                    item.product.credentials[0].password
+                                  )
+                                }
                                 className="p-1.5 rounded-md bg-accent/10 hover:bg-accent/20 transition-colors"
                                 title="Sao chép mật khẩu"
                               >
                                 <Copy className="h-4 w-4 text-accent" />
                               </button>
-                              
                             </div>
                             <i className="text-xs text-secondary/70">
                               *Click vào ô mật khẩu để xem.
@@ -463,7 +469,10 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
           </div>
         </div>
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0">
-          <a href={order.bill_url} className="action-button action-button-primary !w-auto p-2">
+          <a
+            href={order.bill_url}
+            className="action-button action-button-primary !w-auto p-2"
+          >
             In hóa đơn
           </a>
           <button
@@ -482,6 +491,8 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
 // COMPONENT CHÍNH: LỊCH SỬ ĐƠN HÀNG
 // =====================================================================
 export default function HistoryOrder() {
+  const { pop } = useNotification();
+  const { user } = useAuth();
   const [allOrders, setAllOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [filters, setFilters] = useState({
@@ -494,6 +505,11 @@ export default function HistoryOrder() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [disputingItem, setDisputingItem] = useState(null);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [existingReview, setExistingReview] = useState(null);
+  const [canReview, setCanReview] = useState(false);
+  const [webId, setWebId] = useState(1); // Giả định web_id = 1
+  const [isFetchingReview, setIsFetchingReview] = useState(false);
 
   const fetchAllOrders = async () => {
     setLoading(true);
@@ -513,9 +529,50 @@ export default function HistoryOrder() {
     }
   };
 
+  const fetchUserReview = async () => {
+    if (!user?.id) return;
+    setIsFetchingReview(true);
+    try {
+      const response = await api.get(`/reviews/user/${user.id}`);
+      if (response.data.status && response.data.data) {
+        setExistingReview(response.data.data);
+      } else {
+        setExistingReview(null);
+      }
+    } catch (err) {
+      console.error("Lỗi khi kiểm tra đánh giá:", err);
+      pop("Không thể tải thông tin đánh giá.", "error");
+    } finally {
+      setIsFetchingReview(false);
+    }
+  };
+
+  const checkCanReview = async () => {
+    try {
+      const response = await api.get("/orders");
+      const hasCompletedOrder = response.data.data.some(
+        (order) => order.status === 1
+      );
+      setCanReview(hasCompletedOrder);
+    } catch (err) {
+      console.error("Lỗi khi kiểm tra khả năng đánh giá:", err);
+      setCanReview(false);
+    }
+  };
+
+  const handleOpenReviewModal = async () => {
+    if (existingReview) {
+      // Gọi lại API để đảm bảo dữ liệu mới nhất trước khi mở modal chỉnh sửa
+      await fetchUserReview();
+    }
+    setShowReviewModal(true);
+  };
+
   useEffect(() => {
     fetchAllOrders();
-  }, []);
+    fetchUserReview();
+    checkCanReview();
+  }, [user?.id]);
 
   useEffect(() => {
     let result = allOrders.filter(
@@ -556,6 +613,12 @@ export default function HistoryOrder() {
       await handleViewDetails(selectedOrder);
     }
     await fetchAllOrders();
+  };
+
+  const handleReviewSuccess = async () => {
+    setShowReviewModal(false);
+    await fetchUserReview();
+    await checkCanReview();
   };
 
   const renderStatus = (status) => {
@@ -646,6 +709,64 @@ export default function HistoryOrder() {
           Theo dõi và quản lý tất cả các đơn hàng đã mua của bạn.
         </p>
       </div>
+
+      {/* Khu vực đánh giá */}
+      <div className="border-t border-themed pt-6">
+        <h4 className="font-heading text-lg font-bold text-primary mb-4 flex items-center">
+          <Star size={24} className="mr-3 text-accent" />
+          Đánh giá trang web
+        </h4>
+        {isFetchingReview ? (
+          <div className="bg-background/50 p-4 rounded-lg border border-themed">
+            <Loader2 className="h-5 w-5 animate-spin text-accent" />
+          </div>
+        ) : existingReview ? (
+          <div className="bg-background/50 p-4 rounded-lg border border-themed">
+            <div className="flex items-center gap-2 mb-2">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <Star
+                  key={value}
+                  className={`h-5 w-5 ${
+                    value <= existingReview.star
+                      ? "text-yellow-500"
+                      : "text-secondary/50"
+                  }`}
+                  fill={value <= existingReview.star ? "currentColor" : "none"}
+                />
+              ))}
+            </div>
+            <p className="text-sm text-secondary">
+              {existingReview.comment || "Không có nhận xét."}
+            </p>
+            <button
+              onClick={handleOpenReviewModal}
+              className="mt-3 text-sm text-accent hover:underline"
+            >
+              Chỉnh sửa đánh giá
+            </button>
+          </div>
+        ) : canReview ? (
+          <div className="bg-background/50 p-4 rounded-lg border border-themed">
+            <p className="text-sm text-secondary">
+              Bạn có thể đánh giá trang web! Hãy chia sẻ trải nghiệm của bạn.
+            </p>
+            <button
+              onClick={handleOpenReviewModal}
+              className="mt-3 action-button action-button-primary !w-auto !py-2 !px-4"
+            >
+              <Star className="h-4 w-4 mr-2" />
+              Đánh giá ngay
+            </button>
+          </div>
+        ) : (
+          <div className="bg-background/50 p-4 rounded-lg border border-themed">
+            <p className="text-sm text-secondary">
+              Bạn cần có ít nhất một đơn hàng hoàn thành để đánh giá trang web.
+            </p>
+          </div>
+        )}
+      </div>
+
       <div className="bg-background p-4 rounded-xl border border-themed">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
@@ -722,6 +843,15 @@ export default function HistoryOrder() {
           onDisputeSuccess={handleDisputeSuccess}
         />
       )}
+
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        userId={user.id}
+        webId={webId}
+        existingReview={existingReview}
+        onReviewSuccess={handleReviewSuccess}
+      />
     </section>
   );
 }

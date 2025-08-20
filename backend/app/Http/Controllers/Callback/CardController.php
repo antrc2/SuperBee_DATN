@@ -96,7 +96,8 @@ class CardController extends Controller
                         "type" => "recharge_card",
                         "amount" => 0,
                         "related_id" => $recharge_card->id,
-                        "related_type" => "App\Models\RechargeCard"
+                        "related_type" => "App\Models\RechargeCard",
+                        'status'=>2
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;

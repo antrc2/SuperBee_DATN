@@ -6,7 +6,7 @@ import api from "@utils/http";
 import { toast } from "react-toastify";
 
 // Component con cho các trường input để tránh lặp code
-const ProfileInput = ({ icon, label, isEditing, ...props }) => {
+const ProfileInput = ({ icon, label, isEditing, type = "text", ...props }) => {
   const Icon = icon;
   return (
     <div>
@@ -18,13 +18,16 @@ const ProfileInput = ({ icon, label, isEditing, ...props }) => {
           <Icon size={18} />
         </span>
         <input
-          readOnly={!isEditing}
+          type={type}
+          readOnly={type !== "file" && !isEditing}
+          disabled={type === "file" && !isEditing} // Thêm disabled cho file input
           className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
                         ${
                           isEditing
                             ? "border-hover"
                             : "bg-background cursor-not-allowed"
-                        }`}
+                        }
+                        ${type === "file" && !isEditing ? "opacity-50" : ""}`} // Thêm opacity khi disabled
           {...props}
         />
       </div>
@@ -47,6 +50,7 @@ export default function Profile() {
   const [editData, setEditData] = useState({});
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
+  
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
@@ -133,7 +137,11 @@ export default function Profile() {
     await updateUserData();
   };
 
-  const triggerFileInput = () => fileInputRef.current?.click();
+  const triggerFileInput = () => {
+    if (isEditing) { // Chỉ cho phép khi đang ở chế độ chỉnh sửa
+      fileInputRef.current?.click();
+    }
+  };
 
   return (
     <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
@@ -229,11 +237,11 @@ export default function Profile() {
             icon={Phone}
             label="Số CCCD"
             isEditing={isEditing}
-            name="cccd"
+            name="cccd_number"
             type="text"
-            value={isEditing ? editData.cccd : userData.cccd}
+            value={isEditing ? editData.cccd_number : userData.cccd_number}
             onChange={(e) =>
-              setEditData({ ...editData, cccd: e.target.value })
+              setEditData({ ...editData, cccd_number: e.target.value })
             }
             placeholder=""
           />
@@ -243,6 +251,7 @@ export default function Profile() {
             isEditing={isEditing}
             name="cccd_frontend"
             type="file"
+            accept="image/*"
             onChange={(e) =>
               setEditData({ ...editData, cccd_frontend: e.target.files[0] })
             }
@@ -253,6 +262,7 @@ export default function Profile() {
             isEditing={isEditing}
             name="cccd_backend"
             type="file"
+            accept="image/*"
             onChange={(e) =>
               setEditData({ ...editData, cccd_backend: e.target.files[0] })
             }
@@ -263,6 +273,7 @@ export default function Profile() {
             isEditing={isEditing}
             name="cccd_created_at"
             type="date"
+            value={isEditing ? editData.cccd_created_at : userData.cccd_created_at}
             onChange={(e) =>
               setEditData({ ...editData, cccd_created_at: e.target.value })
             }

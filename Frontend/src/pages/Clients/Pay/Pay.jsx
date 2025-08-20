@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ShoppingCart,
@@ -20,8 +18,9 @@ import { useNotification } from "@contexts/NotificationContext";
 import { Link, useNavigate } from "react-router-dom";
 import LoadingDomain from "@components/Loading/LoadingDomain";
 import api from "@utils/http";
-import { useAuth } from "@contexts/AuthContext";
-import ReviewModal from "@components/Client/Review/ReviewModal";
+import { useAuth } from "../../../contexts/AuthContext";
+
+// Hàm định dạng tiền tệ không thay đổi
 const formatCurrency = (amount) => {
   const numberAmount = Number(amount);
   if (isNaN(numberAmount)) return "0 ₫";
@@ -31,6 +30,7 @@ const formatCurrency = (amount) => {
   }).format(numberAmount);
 };
 
+// --- MODAL MÃ GIẢM GIÁ (Không thay đổi, đã được thiết kế lại ở lần trước) ---
 const DiscountModal = ({
   isOpen,
   onClose,
@@ -139,10 +139,10 @@ const DiscountModal = ({
   );
 };
 
+// Component chính đã được thiết kế lại
 export default function Pay() {
   const { pop, conFim } = useNotification();
   const { fetchCartItems } = useCart();
-  const { fetchUserMoney, user } = useAuth();
   const [cartItemsPay, setCartItemsPay] = useState([]);
   const [userBalance, setUserBalance] = useState(0);
   const [promotionCodes, setPromotionCodes] = useState([]);
@@ -152,9 +152,6 @@ export default function Pay() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(true);
   const [discountErrorMessage, setDiscountErrorMessage] = useState("");
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [existingReview, setExistingReview] = useState(null);
-  const [webId, setWebId] = useState(1);
 
   const [backendRawTotalPrice, setBackendRawTotalPrice] = useState(0);
   const [backendTotalPriceAfterDiscount, setBackendTotalPriceAfterDiscount] =
@@ -164,7 +161,10 @@ export default function Pay() {
   const [backendRoleDiscountAmount, setBackendRoleDiscountAmount] = useState(0);
   const [backendRoleDiscountValue, setBackendRoleDiscountValue] = useState(0);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const navigate = useNavigate();
+  const { fetchUserMoney } = useAuth();
 
   useEffect(() => {
     const fetchCheckoutData = async () => {
@@ -187,6 +187,7 @@ export default function Pay() {
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
 
+          // Set all the detailed price states directly from backend response
           setBackendRawTotalPrice(parseFloat(response.data.total_price) || 0);
           setBackendTotalPriceAfterDiscount(
             parseFloat(response.data.total_price_after_discount) || 0
@@ -215,9 +216,10 @@ export default function Pay() {
             }))
           );
 
+          // Reset applied discount if cart items change or new data comes
           setAppliedDiscount(null);
           setDiscountCodeInput("");
-          setDiscountErrorMessage("");
+          setDiscountErrorMessage(""); // Clear discount error on successful fetch
 
           if (items.length === 0) {
             pop("Giỏ hàng của bạn đang trống.", "info");
@@ -282,8 +284,12 @@ export default function Pay() {
         setBackendTotalPriceAfterDiscount(
           parseFloat(response.data.total_price_after_discount) || 0
         );
-        setBackendTaxAmount(parseFloat(response.data.tax_value) || 10);
-        setBackendTaxValue(parseFloat(response.data.tax_amount) || 0);
+        setBackendTaxAmount(
+          parseFloat(response.data.tax_value)  || 10
+        );
+        setBackendTaxValue(
+          parseFloat(response.data.tax_amount) || 0
+        );
         pop(response.data.message, "success");
         setDiscountCodeInput("");
         setDiscountErrorMessage("");
@@ -339,21 +345,6 @@ export default function Pay() {
     }
   };
 
-  const checkUserReview = async () => {
-    try {
-      const response = await api.get(`/reviews/user/${user.id}`);
-      if (response.data.status && response.data.data) {
-        setExistingReview(response.data.data);
-        return true;
-      }
-      setExistingReview(null);
-      return false;
-    } catch (err) {
-      console.error("Lỗi khi kiểm tra đánh giá:", err);
-      return false;
-    }
-  };
-
   const handlePayment = async () => {
     if (!termsAccepted) {
       pop("Bạn cần đồng ý với điều khoản và dịch vụ.", "warning");
@@ -364,6 +355,10 @@ export default function Pay() {
       pop("Số dư không đủ. Vui lòng nạp thêm tiền.", "error");
       return;
     }
+
+    if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
+
+    setIsProcessing(true);
 
     try {
       const response = await api.post("/orders/purchase", {
@@ -376,14 +371,7 @@ export default function Pay() {
         pop(response.data.message, "success");
         await fetchCartItems();
         await fetchUserMoney();
-
-        // Kiểm tra xem người dùng đã đánh giá chưa
-        const hasReviewed = await checkUserReview();
-        if (!hasReviewed) {
-          setShowReviewModal(true); // Hiển thị modal đánh giá nếu chưa đánh giá
-        } else {
-          navigate("/info/orders"); // Chuyển hướng nếu đã đánh giá
-        }
+        navigate("/info/orders");
       } else {
         pop(response.data.message, "error");
       }
@@ -392,13 +380,9 @@ export default function Pay() {
       const errorMessage =
         error.response?.data?.message || "Lỗi khi xử lý thanh toán.";
       pop(errorMessage, "error");
+    } finally {
+      setIsProcessing(false);
     }
-  };
-
-  const handleReviewSuccess = async () => {
-    setShowReviewModal(false);
-    setExistingReview(null);
-    navigate("/info/orders");
   };
 
   if (loadingCheckout) return <LoadingDomain />;
@@ -406,7 +390,8 @@ export default function Pay() {
   return (
     <div className="min-h-screen">
       <div className="max-w-screen-xl mx-auto">
-        <div className="breadcrumbs-container p-4">
+        {/* Breadcrumbs */}
+        <div className="breadcrumbs-container p-4  ">
           <Link to="/" className="breadcrumb-link">
             Trang chủ
           </Link>
@@ -419,7 +404,9 @@ export default function Pay() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Cột chính (trái) */}
           <div className="lg:col-span-3 space-y-8">
+            {/* Card: Xem lại đơn hàng */}
             <div className="section-bg p-6">
               <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                 <ListOrdered size={24} className="mr-3 text-accent" />
@@ -437,7 +424,9 @@ export default function Pay() {
                       className="w-16 h-16 object-cover rounded-md shadow-sm"
                     />
                     <div className="flex-grow">
-                      <h3 className="font-semibold text-primary">{item.name}</h3>
+                      <h3 className="font-semibold text-primary">
+                        {item.name}
+                      </h3>
                       <p className="text-sm text-secondary">
                         Giá gốc: {formatCurrency(item.old_price)}
                       </p>
@@ -453,8 +442,10 @@ export default function Pay() {
             </div>
           </div>
 
+          {/* Cột phụ (phải) */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 space-y-8">
+              {/* Card: Ví của bạn */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <Wallet size={24} className="mr-3 text-accent" />
@@ -489,6 +480,7 @@ export default function Pay() {
                   </p>
                 )}
               </div>
+              {/* Card: Mã giảm giá */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <TicketPercent size={24} className="mr-3 text-accent" />
@@ -534,12 +526,14 @@ export default function Pay() {
                   )}
                 </div>
               </div>
+              {/* Card: Tổng kết thanh toán */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <FileText size={24} className="mr-3 text-accent" />
                   Tổng kết thanh toán
                 </h2>
                 <div className="space-y-3 text-sm">
+                  {/* Dotted line separator */}
                   <div className="flex items-center justify-between">
                     <span className="text-secondary">Giá gốc sản phẩm</span>
                     <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
@@ -558,6 +552,7 @@ export default function Pay() {
                       </span>
                     </div>
                   )}
+                  
                   {appliedDiscount && (
                     <div className="flex items-center justify-between text-accent">
                       <span className="font-semibold">
@@ -594,6 +589,7 @@ export default function Pay() {
                 </div>
               </div>
 
+              {/* Card: Hành động cuối cùng */}
               <div className="section-bg p-6">
                 <div className="mb-4">
                   <label
@@ -626,12 +622,13 @@ export default function Pay() {
                     loadingCheckout ||
                     finalAmount > userBalance ||
                     !termsAccepted ||
-                    cartItemsPay.length === 0
+                    cartItemsPay.length === 0 ||
+                    isProcessing
                   }
                   className="action-button action-button-primary w-full text-lg !py-4"
                 >
                   <CreditCard className="inline-block mr-3" size={24} />
-                  Xác nhận & Thanh toán
+                  {isProcessing ? "Đang xử lý..." : "Xác nhận & Thanh toán"}
                 </button>
 
                 <div className="mt-4 text-xs text-secondary text-center">
@@ -652,18 +649,6 @@ export default function Pay() {
         discounts={promotionCodes}
         onApplyDiscount={handleApplyDiscountCode}
         appliedPromotionCode={appliedDiscount?.code}
-      />
-
-      <ReviewModal
-        isOpen={showReviewModal}
-        onClose={() => {
-          setShowReviewModal(false);
-          navigate("/info/orders");
-        }}
-        userId={user.id}
-        webId={webId}
-        existingReview={existingReview}
-        onReviewSuccess={handleReviewSuccess}
       />
     </div>
   );

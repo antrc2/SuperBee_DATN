@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\ChatRoom;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\Wallet;
 use App\Models\Category;
 use App\Models\Message;
@@ -299,6 +300,66 @@ class HomeController extends Controller
             // Tuỳ chỉnh: log lỗi, abort 500, hoặc trả về view lỗi riêng
             // \Log::error('[Sitemap] ', ['err' => $th->getMessage()]);
             return response('Server Error', 500);
+        }
+    }
+    public function getWebsiteReviews()
+    {
+        try {
+            // Lấy thống kê tổng quan
+            $totalReviews = Review::count();
+            $averageRating = Review::avg('star');
+            
+            // Phân bố số sao
+            $ratingDistribution = Review::selectRaw('star, COUNT(*) as count')
+                ->groupBy('star')
+                ->orderBy('star', 'desc')
+                ->get()
+                ->keyBy('star');
+            
+            // Đảm bảo có đầy đủ từ 1-5 sao
+            $distribution = [];
+            for ($i = 5; $i >= 1; $i--) {
+                $distribution[] = [
+                    'star' => $i,
+                    'count' => $ratingDistribution->get($i)->count ?? 0,
+                    'percentage' => $totalReviews > 0 ? 
+                        round(($ratingDistribution->get($i)->count ?? 0) / $totalReviews * 100, 1) : 0
+                ];
+            }
+
+            $recentReviews = Review::with(['user'])
+                ->select('id', 'user_id', 'star', 'comment', 'created_at')
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(function ($review) {
+                    return [
+                        'id' => $review->id,
+                        'star' => $review->star,
+                        'comment' => $review->comment,
+                        'created_at' => $review->created_at,
+                        'user' => [
+                            'username' => $review->user->username ?? 'Người dùng ẩn danh',
+                            'avatar_url' => $review->user->avatar_url ?? null,
+                        ]
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_reviews' => $totalReviews,
+                    'average_rating' => round($averageRating, 1),
+                    'rating_distribution' => $distribution,
+                    'recent_reviews' => $recentReviews,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy dữ liệu đánh giá: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

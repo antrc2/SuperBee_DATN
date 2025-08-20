@@ -4,6 +4,7 @@ import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import BannerAndCart from "../../../sections/Home/BannerAndCart";
 import ListProducts from "../../../sections/Home/ListProducts";
 import CategorySlider from "../../../sections/Home/CategorySlider";
+import ReviewWeb from "../../../sections/Home/ReviewWeb";
 
 export default function Home() {
   const { homeData, isLoading } = useHome(); // Sử dụng isLoading từ context
@@ -34,6 +35,9 @@ export default function Home() {
         products={newest_products ?? []}
         viewMoreLink="/search?sortBy=newest" // Link tới trang search với filter mới nhất
       />
+
+      {/* Reviews của Website */}
+      <ReviewWeb />
     </div>
   );
 }

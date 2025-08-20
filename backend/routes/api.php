@@ -100,6 +100,8 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
         Route::get('/products', [HomeController::class, 'products']);
+        Route::get('/website', [HomeController::class, 'getWebsiteReviews']); 
+
     });
     Route::prefix('comment')->group(function () {
         Route::post('/', [UserCommentPostController::class, "create"]);
@@ -125,7 +127,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
-        Route::get('/filter/{slug}', [UserProductController::class, 'getProductsWithFilter']);    
+        Route::get('/filter/{slug}', [UserProductController::class, 'getProductsWithFilter']);
     });
     Route::prefix('/banners')->group(function () {
         Route::get("/", [UserBannerController::class, 'index']);
@@ -218,11 +220,12 @@ Route::middleware('auth')->group(function () {
 
 
         Route::prefix('/reviews')->group(function () {
-            Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
-            Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
-            Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
-            Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
-            Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
+            Route::post('/', [UserReviewController::class, 'store']);
+            Route::delete('/{id}', [UserReviewController::class, 'destroy']);
+            Route::put('/{id}', [UserReviewController::class, 'update']);
+            Route::get('/{id}', [UserReviewController::class, 'show']);
+            Route::get('/', [UserReviewController::class, 'index']);
+            Route::get('/user/{user_id}', [UserReviewController::class, 'getUserReview']);
         });
         Route::prefix('/disputes')->group(function () {
             // Từ chối rồi nhưng lại thành công

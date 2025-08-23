@@ -9,20 +9,22 @@ class ChatRoom extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
         'name',
-        'status', // Thêm 'status' vào fillable
+        'type',
+        'status',
+        'agent_id',
+        'created_by',
+        'dispute_id', // <-- THÊM DÒNG NÀY
     ];
 
     /**
-     * Lấy người dùng đã tạo phòng chat.
-     *
-     *
-     */
-    /**
      * Lấy tất cả tin nhắn trong phòng chat.
-     *
-     *
      */
     public function messages()
     {
@@ -30,21 +32,17 @@ class ChatRoom extends Model
     }
 
     /**
-     * Lấy tất cả người tham gia trong phòng chat.
-     *
-     * 
+     * Lấy tin nhắn mới nhất của phòng chat.
      */
-    public function participants()
+    public function latestMessage()
     {
-        return $this->hasMany(ChatRoomParticipant::class, 'chat_room_id');
+        return $this->hasOne(Message::class, 'chat_room_id')->latestOfMany();
     }
 
     /**
-     * Lấy tất cả người dùng (khách hàng và agent) trong phòng chat thông qua bảng trung gian.
-     *
-     * 
+     * Lấy tất cả người dùng tham gia phòng chat.
      */
-    public function users()
+    public function participants()
     {
         return $this->belongsToMany(User::class, 'chat_room_participants', 'chat_room_id', 'user_id')
                     ->withPivot('role', 'joined_at', 'left_at')
@@ -52,28 +50,27 @@ class ChatRoom extends Model
     }
 
     /**
-     * Lấy các agent trong phòng chat.
-     *
-     * 
+     * Lấy "vị trí/slot" (Agent) được gán cho phòng chat này.
      */
-    public function agents()
+    public function agent()
     {
-        return $this->belongsToMany(User::class, 'chat_room_participants', 'chat_room_id', 'user_id')
-                    ->wherePivot('role', 'agent')
-                    ->withPivot('joined_at', 'left_at')
-                    ->withTimestamps();
+        return $this->belongsTo(Agent::class, 'agent_id');
     }
 
     /**
-     * Lấy khách hàng trong phòng chat 1-1.
-     *
-     * 
+     * Lấy khách hàng trong phòng chat.
      */
     public function customer()
     {
         return $this->belongsToMany(User::class, 'chat_room_participants', 'chat_room_id', 'user_id')
-                    ->wherePivot('role', 'customer')
-                    ->withPivot('joined_at', 'left_at')
-                    ->withTimestamps();
+                    ->wherePivot('role', 'customer');
+    }
+
+    /**
+     * Lấy người dùng đã tạo phòng chat.
+     */
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
 }

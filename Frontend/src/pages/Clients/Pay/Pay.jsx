@@ -12,6 +12,7 @@ import {
   FileText,
   Wallet,
   Landmark,
+  Loader2,
 } from "lucide-react";
 import { useCart } from "@contexts/CartContext";
 import { useNotification } from "@contexts/NotificationContext";
@@ -30,7 +31,7 @@ const formatCurrency = (amount) => {
   }).format(numberAmount);
 };
 
-// --- MODAL MÃ GIẢM GIÁ (Không thay đổi, đã được thiết kế lại ở lần trước) ---
+// --- MODAL MÃ GIẢM GIÁ (Không thay đổi) ---
 const DiscountModal = ({
   isOpen,
   onClose,
@@ -93,9 +94,9 @@ const DiscountModal = ({
                           <span className="font-medium">
                             {discount.expiry === "N/A"
                               ? "Vô thời hạn"
-                              : new Date(discount.expiry).toLocaleDateString(
-                                  "vi-VN"
-                                )}
+                              : new Date(
+                                  discount.expiry
+                                ).toLocaleDateDateString("vi-VN")}
                           </span>
                         </p>
                         {discount.min_discount_amount > 0 && (
@@ -139,12 +140,8 @@ const DiscountModal = ({
   );
 };
 
-// Component chính đã được thiết kế lại
+// Component chính
 export default function Pay() {
-  // Toàn bộ logic (useState, useEffect, useMemo, handlers) được giữ nguyên
-  // ...
-  // Không cần thay đổi bất kỳ logic nào ở đây.
-  // Dán toàn bộ logic của bạn từ file Pay.jsx cũ vào đây.
   const { pop, conFim } = useNotification();
   const { fetchCartItems } = useCart();
   const [cartItemsPay, setCartItemsPay] = useState([]);
@@ -156,6 +153,7 @@ export default function Pay() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [loadingCheckout, setLoadingCheckout] = useState(true);
   const [discountErrorMessage, setDiscountErrorMessage] = useState("");
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const [backendRawTotalPrice, setBackendRawTotalPrice] = useState(0);
   const [backendTotalPriceAfterDiscount, setBackendTotalPriceAfterDiscount] =
@@ -168,6 +166,7 @@ export default function Pay() {
   const navigate = useNavigate();
   const { fetchUserMoney } = useAuth();
 
+  // useEffect và các hàm xử lý khác không thay đổi logic
   useEffect(() => {
     const fetchCheckoutData = async () => {
       setLoadingCheckout(true);
@@ -188,8 +187,6 @@ export default function Pay() {
             }));
           setCartItemsPay(items);
           setUserBalance(parseFloat(response.data.balance) || 0);
-
-          // Set all the detailed price states directly from backend response
           setBackendRawTotalPrice(parseFloat(response.data.total_price) || 0);
           setBackendTotalPriceAfterDiscount(
             parseFloat(response.data.total_price_after_discount) || 0
@@ -202,7 +199,6 @@ export default function Pay() {
           setBackendRoleDiscountValue(
             parseFloat(response.data.discount_value) || 0
           );
-
           setPromotionCodes(
             response.data.promotion_codes.map((promo) => ({
               id: promo.id,
@@ -217,12 +213,9 @@ export default function Pay() {
               usage_limit: parseInt(promo.usage_limit) || -1,
             }))
           );
-
-          // Reset applied discount if cart items change or new data comes
           setAppliedDiscount(null);
           setDiscountCodeInput("");
-          setDiscountErrorMessage(""); // Clear discount error on successful fetch
-
+          setDiscountErrorMessage("");
           if (items.length === 0) {
             pop("Giỏ hàng của bạn đang trống.", "info");
             navigate("/cart");
@@ -247,13 +240,10 @@ export default function Pay() {
 
   const { subtotalBeforeTax, finalAmount } = useMemo(() => {
     const subtotalBeforeTaxAndRoleDiscount = backendRawTotalPrice;
-
     let currentTotal = backendTotalPriceAfterDiscount;
-
     if (appliedDiscount) {
       currentTotal = appliedDiscount.total_price_after_discount;
     }
-
     return {
       subtotalBeforeTax: subtotalBeforeTaxAndRoleDiscount,
       finalAmount: currentTotal,
@@ -268,9 +258,7 @@ export default function Pay() {
     } else {
       setDiscountErrorMessage("");
     }
-
     if (!(await conFim(`Bạn muốn áp dụng mã giảm giá "${code}"?`))) return;
-
     try {
       const response = await api.post("/orders/check", {
         promotion_code: code,
@@ -286,12 +274,8 @@ export default function Pay() {
         setBackendTotalPriceAfterDiscount(
           parseFloat(response.data.total_price_after_discount) || 0
         );
-        setBackendTaxAmount(
-          parseFloat(response.data.tax_value)  || 10
-        );
-        setBackendTaxValue(
-          parseFloat(response.data.tax_amount) || 0
-        );
+        setBackendTaxAmount(parseFloat(response.data.tax_value) || 10);
+        setBackendTaxValue(parseFloat(response.data.tax_amount) || 0);
         pop(response.data.message, "success");
         setDiscountCodeInput("");
         setDiscountErrorMessage("");
@@ -330,7 +314,6 @@ export default function Pay() {
     setAppliedDiscount(null);
     setDiscountCodeInput("");
     setDiscountErrorMessage("");
-
     try {
       const response = await api.get("/orders/checkout");
       if (response.data.status) {
@@ -349,7 +332,10 @@ export default function Pay() {
 
   const handlePayment = async () => {
     if (!termsAccepted) {
-      pop("Bạn cần đồng ý với điều khoản và dịch vụ.", "warning");
+      pop(
+        "Bạn cần đồng ý với điều khoản và dịch vụ trước khi thanh toán.",
+        "warning"
+      );
       return;
     }
 
@@ -358,8 +344,7 @@ export default function Pay() {
       return;
     }
 
-    // if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
-
+    setIsProcessingPayment(true);
     try {
       const response = await api.post("/orders/purchase", {
         promotion_code: appliedDiscount?.code || null,
@@ -380,16 +365,21 @@ export default function Pay() {
       const errorMessage =
         error.response?.data?.message || "Lỗi khi xử lý thanh toán.";
       pop(errorMessage, "error");
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
   if (loadingCheckout) return <LoadingDomain />;
 
   return (
-    <div className="min-h-screen">
+    // 1. Thêm class 'relative' vào container cha
+    <div className="min-h-screen relative">
+      {/* 2. Thêm lớp phủ loading toàn trang */}
+      {isProcessingPayment && <LoadingDomain />}
+
       <div className="max-w-screen-xl mx-auto">
-        {/* Breadcrumbs */}
-        <div className="breadcrumbs-container p-4  ">
+        <div className="breadcrumbs-container p-4">
           <Link to="/" className="breadcrumb-link">
             Trang chủ
           </Link>
@@ -400,11 +390,8 @@ export default function Pay() {
           <ChevronRight size={16} className="breadcrumb-separator" />
           <span className="text-primary font-semibold">Thanh toán</span>
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Cột chính (trái) */}
           <div className="lg:col-span-3 space-y-8">
-            {/* Card: Xem lại đơn hàng */}
             <div className="section-bg p-6">
               <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                 <ListOrdered size={24} className="mr-3 text-accent" />
@@ -439,11 +426,8 @@ export default function Pay() {
               </div>
             </div>
           </div>
-
-          {/* Cột phụ (phải) */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 space-y-8">
-              {/* Card: Ví của bạn */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <Wallet size={24} className="mr-3 text-accent" />
@@ -478,7 +462,6 @@ export default function Pay() {
                   </p>
                 )}
               </div>
-              {/* Card: Mã giảm giá */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <TicketPercent size={24} className="mr-3 text-accent" />
@@ -524,14 +507,12 @@ export default function Pay() {
                   )}
                 </div>
               </div>
-              {/* Card: Tổng kết thanh toán */}
               <div className="section-bg p-6">
                 <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
                   <FileText size={24} className="mr-3 text-accent" />
                   Tổng kết thanh toán
                 </h2>
                 <div className="space-y-3 text-sm">
-                  {/* Dotted line separator */}
                   <div className="flex items-center justify-between">
                     <span className="text-secondary">Giá gốc sản phẩm</span>
                     <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
@@ -550,7 +531,6 @@ export default function Pay() {
                       </span>
                     </div>
                   )}
-                  
                   {appliedDiscount && (
                     <div className="flex items-center justify-between text-accent">
                       <span className="font-semibold">
@@ -574,7 +554,6 @@ export default function Pay() {
                     </div>
                   )}
                 </div>
-
                 <div className="border-t border-themed mt-4 pt-4">
                   <div className="flex justify-between items-baseline">
                     <span className="text-lg font-semibold text-primary">
@@ -587,7 +566,6 @@ export default function Pay() {
                 </div>
               </div>
 
-              {/* Card: Hành động cuối cùng */}
               <div className="section-bg p-6">
                 <div className="mb-4">
                   <label
@@ -614,13 +592,14 @@ export default function Pay() {
                   </label>
                 </div>
 
+                {/* 3. Hoàn nguyên nút bấm về trạng thái gốc, chỉ giữ lại logic disabled */}
                 <button
                   onClick={handlePayment}
                   disabled={
                     loadingCheckout ||
                     finalAmount > userBalance ||
-                    !termsAccepted ||
-                    cartItemsPay.length === 0
+                    cartItemsPay.length === 0 ||
+                    isProcessingPayment
                   }
                   className="action-button action-button-primary w-full text-lg !py-4"
                 >

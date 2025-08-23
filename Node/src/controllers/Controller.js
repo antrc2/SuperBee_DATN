@@ -1,55 +1,85 @@
-// src/controllers/NotificationController.js
+// src/controllers/Controller.js
+import ConnectionManager from "../models/ConnectionManager.js";
 import { sendEmail } from "./EmailControleer.js";
 import { sendNotification } from "./NotificationControler.js";
-// import { sendSocketNotification } from "./NotificationControler.js";
+import { handleChatMessage } from "./MessageController.js";
 
 const handleIncomingNotification = (io) => async (channel, message) => {
+  console.log(
+    `\n--- [Controller.js] Nhận được tin nhắn từ kênh Redis '${channel}' ---`
+  );
   try {
     const payload = JSON.parse(message);
     const { type, data } = payload;
-
-    console.log(`\n--- Nhận tin nhắn Redis ---`);
-    console.log(`  Kênh: ${channel}`);
-    console.log(`  Loại Payload: ${type}`);
-    console.log(`  Dữ liệu Payload:`, data);
+    console.log(`[Controller.js] Đã phân tích tin nhắn: Type = ${type}`);
 
     if (type.startsWith("EMAIL_")) {
-      try {
-        await sendEmail(type, data);
-      } catch (emailError) {
-        console.error(
-          `[Handler] Lỗi khi chuyển tiếp yêu cầu email loại '${type}':`,
-          emailError
-        );
-      }
+      console.log(
+        `[Controller.js] Nhận diện là một yêu cầu gửi email. Chuyển đến EmailController...`
+      );
+      await sendEmail(type, data);
     } else if (type.startsWith("NOTIFICATION_")) {
-      try {
-        sendNotification(io, type, data);
-      } catch (emailError) {
-        console.error(
-          `[Handler] Lỗi khi chuyển tiếp yêu cầu NOTIFICATION_ loại '${type}':`,
-          emailError
-        );
+      console.log(
+        `[Controller.js] Nhận diện là một yêu cầu gửi thông báo real-time. Chuyển đến NotificationController...`
+      );
+      sendNotification(io, type, data);
+    } else if (type.startsWith("message_")) {
+      console.log(
+        `[Controller.js] Nhận diện là một tin nhắn chat từ hệ thống. Chuyển đến MessageController...`
+      );
+      handleChatMessage(io, data);
+    } else if (type === "CHAT_ROOM_CREATED") {
+      const { roomId, customerId, agentId } = data;
+      console.log(
+        `[Controller.js] Nhận diện sự kiện tạo phòng chat mới: RoomID=${roomId}, CustomerID=${customerId}, AgentID=${agentId}`
+      );
+      console.log(
+        `[Controller.js] Bắt đầu quá trình "tham gia thầm lặng" (silent join)...`
+      );
+
+      const customerSocketIds =
+        ConnectionManager.getSocketIdsByUserId(customerId);
+      customerSocketIds.forEach((socketId) => {
+        const customerSocket = io.sockets.sockets.get(socketId);
+        if (customerSocket) {
+          customerSocket.join(roomId.toString());
+          console.log(
+            `[Controller.js]   -> Khách hàng ${customerId} (Socket: ${socketId}) đã được thêm vào phòng ${roomId}`
+          );
+        }
+      });
+
+      if (agentId) {
+        const agentSocketIds = ConnectionManager.getSocketIdsByUserId(agentId);
+        if (agentSocketIds.length > 0) {
+          agentSocketIds.forEach((socketId) => {
+            const agentSocket = io.sockets.sockets.get(socketId);
+            if (agentSocket) {
+              agentSocket.join(roomId.toString());
+              console.log(
+                `[Controller.js]   -> Nhân viên ${agentId} (Socket: ${socketId}) đã được thêm vào phòng ${roomId}`
+              );
+            }
+          });
+        } else {
+          console.log(
+            `[Controller.js]   -> Nhân viên ${agentId} hiện không online.`
+          );
+        }
       }
-      // } else if (type.startsWith("message_")) {
-      //   // Đây là một tin nhắn (ví dụ: chat message, tin nhắn hệ thống qua chat)
-      //   // Ví dụ: 'message_chat', 'message_group_chat', 'message_direct'
-      //   console.log(`[Handler] Đang xử lý tin nhắn loại '${type}'...`);
-      //   // Có thể dùng chung hàm sendSocketNotification nếu logic tương tự,
-      //   // hoặc tạo một hàm riêng cho logic chat phức tạp hơn.
-      //   sendSocketNotification(io, type, data); // Gửi tin nhắn qua Socket.IO, 'data' chứa thông tin chat (sender_id, recipient_id, message_text, ...)
+      console.log(`[Controller.js] Quá trình "tham gia thầm lặng" hoàn tất.`);
     } else {
       console.warn(
-        `[Handler] Loại tin nhắn không được xử lý từ Redis: ${type}. Bỏ qua.`
+        `[Controller.js] Không nhận diện được loại sự kiện: ${type}`
       );
     }
   } catch (e) {
-    // Xử lý lỗi nếu có vấn đề trong quá trình phân tích payload hoặc xử lý
     console.error(
-      `[Lỗi Xử lý Redis] Có lỗi khi xử lý tin nhắn Redis: ${e.message}`,
+      `[Controller.js] Lỗi nghiêm trọng khi xử lý tin nhắn từ Redis: ${e.message}`,
       e.stack
     );
   }
+  console.log(`--- [Controller.js] Kết thúc xử lý tin nhắn từ Redis ---\n`);
 };
 
-export default handleIncomingNotification; // Xuất hàm xử lý thông báo để sử dụng trong server.js
+export default handleIncomingNotification;

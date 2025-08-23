@@ -67,6 +67,12 @@ class User extends Authenticatable
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    } public function orderItems()
+    {
+        return $this->hasManyThrough(
+            OrderItem::class, // Model cuối cùng muốn lấy
+            Order::class      // Model trung gian
+        );
     }
 
     public function productReports()
@@ -226,4 +232,80 @@ class User extends Authenticatable
     {
         return $this->hasMany(RefreshToken::class);
     }
+   
+
+ 
+    public function employee()
+    {
+        return $this->hasOne(Employee::class);
+    }
+
+    /**
+     * Quan hệ với AgentAssignment (1-1)
+     * Một user có thể được phân công cho một vị trí agent
+     */
+    public function agentAssignment()
+    {
+        return $this->hasOne(AgentAssignment::class);
+    }
+
+    /**
+     * Quan hệ với Agent thông qua assignment
+     * Lấy vị trí agent mà user này được phân công
+     */
+    public function assignedAgent()
+    {
+        return $this->hasOneThrough(
+            Agent::class,
+            AgentAssignment::class,
+            'user_id',  // Foreign key on agent_assignments table
+            'id',       // Foreign key on agents table
+            'id',       // Local key on users table
+            'agent_id'  // Local key on agent_assignments table
+        );
+    }
+
+    /**
+     * Quan hệ với chat rooms mà user này đang xử lý
+     */
+ public function handlingChatRooms()
+    {
+        return $this->hasManyThrough(
+            ChatRoom::class,         // Model cuối cùng muốn lấy
+            AgentAssignment::class,  // Model trung gian
+            'user_id',               // Khóa ngoại trên bảng trung gian (agent_assignments) trỏ về User
+            'agent_id',              // Khóa ngoại trên bảng cuối cùng (chat_rooms) trỏ về Agent
+            'id',                    // Khóa chính trên bảng User
+            'agent_id'               // Khóa trên bảng trung gian (agent_assignments) để join với Agent
+        );
+    }
+
+    /**
+     * Kiểm tra xem user có phải là nhân viên hỗ trợ không
+     */
+    public function isSupportAgent()
+    {
+        return $this->hasRole(['nv-ho-tro']);
+    }
+
+    /**
+     * Kiểm tra xem user có được phân công vị trí agent không
+     */
+    public function hasAgentAssignment()
+    {
+        return $this->agentAssignment()->exists();
+    }
+
+    /**
+     * Lấy loại agent (support/complaint) nếu được phân công
+     */
+    public function getAgentType()
+    {
+        $assignment = $this->agentAssignment()->with('agent')->first();
+        return $assignment ? $assignment->agent->type : null;
+    }
+
+   
+
+ 
 }

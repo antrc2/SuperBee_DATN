@@ -1,157 +1,122 @@
 // src/routers/socketEvents.js
-import { verifyToken } from "../utils/jwt.js";
 import connectionManager from "../models/ConnectionManager.js";
+import { saveMessageToDb, updateLastReadMessage } from "../models/Chat.js";
+import { verifyToken } from "../utils/jwt.js";
 import { v4 as uuidv4 } from "uuid";
-import {
-  findOrCreateChatRoomForCustomer,
-  getChatsByAgent,
-  getChatDetails,
-  saveMessageToDb,
-  updateLastReadMessage, // Import hàm mới
-} from "../models/Chat.js";
 
 const ANONYMOUS_USER_ID_PREFIX = "guest_";
 
 const setupSocketEvents = (io) => {
   io.on("connection", (socket) => {
     console.log(
-      `[SocketEvents] Client mới đã kết nối: ${socket.id}, ID người dùng: ${socket.userId}, Đã đăng nhập: ${socket.isLoggedIn}, Vai trò: ${socket.userRole}`
+      `[socketEvents.js] Client mới đã kết nối: Socket ID ${socket.id}, User ID ban đầu: ${socket.userId}`
     );
 
-    // --- SỰ KIỆN "authenticate": KHI CLIENT THAY ĐỔI TRẠNG THÁI XÁC THỰC ---
     socket.on("authenticate", async (token) => {
       console.log(
-        `[SocketEvents] Nhận sự kiện 'authenticate' từ Socket ${socket.id}.`
+        `[socketEvents.js] -> Nhận sự kiện 'authenticate' từ Socket ${socket.id}`
       );
+
       const previousUserId = socket.userId;
-      const previousIsLoggedIn = socket.isLoggedIn;
       let newUserId;
       let newIsLoggedIn = false;
-      let RoomId = null;
-
       let userRole = "guest";
-      let authMessage = "Xác thực lại thất bại: Token không hợp lệ.";
 
       try {
         const decoded = token ? verifyToken(token) : null;
         if (decoded && decoded.user_id) {
           newUserId = decoded.user_id.toString();
-          RoomId = decoded.roomId;
           newIsLoggedIn = true;
-          userRole = decoded.role_ids[0] || "customer";
-          socket.userRole = userRole;
-          authMessage = "Xác thực lại thành công.";
+          userRole = decoded.role_ids?.[0] || "customer";
+          console.log(
+            `[socketEvents.js] Xác thực thành công cho User ID: ${newUserId}`
+          );
         } else {
-          const currentGuestIdFromQuery = socket.handshake.query.guestId;
-          newUserId = `${ANONYMOUS_USER_ID_PREFIX}${
-            currentGuestIdFromQuery || uuidv4()
-          }`;
-          newIsLoggedIn = false;
-          socket.userRole = "guest";
+          const guestId = socket.handshake.query.guestId || uuidv4();
+          newUserId = `${ANONYMOUS_USER_ID_PREFIX}${guestId}`;
+          console.log(
+            `[socketEvents.js] Xác thực thất bại hoặc không có token. Giữ/Tạo Guest ID: ${newUserId}`
+          );
         }
       } catch (error) {
-        // Xử lý lỗi khi verify token
-        const currentGuestIdFromQuery = socket.handshake.query.guestId;
-        newUserId = `${ANONYMOUS_USER_ID_PREFIX}${
-          currentGuestIdFromQuery || uuidv4()
-        }`;
-        newIsLoggedIn = false;
-        socket.userRole = "guest";
+        const guestId = socket.handshake.query.guestId || uuidv4();
+        newUserId = `${ANONYMOUS_USER_ID_PREFIX}${guestId}`;
       }
 
-      // Cập nhật ConnectionManager
-      if (
-        previousUserId !== newUserId ||
-        previousIsLoggedIn !== newIsLoggedIn
-      ) {
+      if (previousUserId !== newUserId) {
+        console.log(
+          `[socketEvents.js] User ID thay đổi từ '${previousUserId}' thành '${newUserId}'. Cập nhật ConnectionManager.`
+        );
         connectionManager.removeConnection(socket.id);
         connectionManager.addConnection(newUserId, socket.id);
         socket.userId = newUserId;
         socket.isLoggedIn = newIsLoggedIn;
-      }
-      if (RoomId && userRole !== "admin") {
-        // Cho socket join vào phòng đã có ngay lập tức
-        socket.join(RoomId.toString());
-        console.log(
-          `[SocketEvents] Customer ${newUserId} đã join lại phòng ${RoomId} từ thông tin client.`
-        );
+        socket.userRole = userRole;
       }
 
-      // Gửi phản hồi xác thực về cho client
+      console.log(
+        `[socketEvents.js] <- Gửi lại sự kiện 'authenticated' cho Socket ${socket.id}`
+      );
       socket.emit("authenticated", {
         success: true,
         userId: socket.userId,
         isLoggedIn: socket.isLoggedIn,
-        message: authMessage,
       });
-      if (newIsLoggedIn && (userRole === "agent" || userRole === "admin")) {
-        console.log(
-          `[SocketEvents] Người dùng ${newUserId} (Vai trò: ${userRole}) đã xác thực. Khôi phục phiên làm việc...`
-        );
-        try {
-          const activeChats = await getChatsByAgent(newUserId);
-          if (activeChats && activeChats.length > 0) {
-            activeChats.forEach((chat) => {
-              if (chat.status !== "closed" && chat.status !== "resolved") {
-                socket.join(chat.roomId.toString());
-                console.log(
-                  `[SocketEvents] Nhân viên ${newUserId} (Socket: ${socket.id}) đã tự động tham gia lại phòng ${chat.roomId}.`
-                );
-              }
-            });
+    });
 
-            // Gửi toàn bộ danh sách chat về cho dashboard của agent để khôi phục UI
-            socket.emit("restore_agent_dashboard", { chats: activeChats });
-            console.log(
-              `[SocketEvents] Đã gửi dữ liệu khôi phục dashboard cho nhân viên ${newUserId}.`
-            );
-          }
-        } catch (error) {
-          console.error(
-            `[SocketEvents] Lỗi khi khôi phục phiên cho nhân viên ${newUserId}:`,
-            error
-          );
-        }
-      } else if (newIsLoggedIn && userRole === "customer") {
-        // Khôi phục phiên chat cho khách hàng
-        try {
-          const chatRoomData = await findOrCreateChatRoomForCustomer(newUserId);
-          if (chatRoomData && chatRoomData.roomId) {
-            socket.join(chatRoomData.roomId.toString());
-            socket.emit("restore_customer_session", chatRoomData);
-            console.log(
-              `[SocketEvents] Đã khôi phục phiên chat cho khách hàng ${newUserId} trong phòng ${chatRoomData.roomId}.`
-            );
-          }
-        } catch (error) {
-          console.error(
-            `[SocketEvents] Lỗi khi khôi phục phiên chat cho khách hàng ${newUserId}:`,
-            error
-          );
-        }
+    socket.on("join_chat_room", (roomId) => {
+      console.log(
+        `[socketEvents.js] -> Nhận sự kiện 'join_chat_room' từ Socket ${socket.id} (User: ${socket.userId}) để tham gia phòng ${roomId}`
+      );
+      if (roomId) {
+        socket.join(roomId.toString());
+        console.log(
+          `[socketEvents.js] Socket ${socket.id} đã tham gia thành công phòng ${roomId}`
+        );
       }
     });
 
     socket.on("send_chat_message", async (payload, callback) => {
       const { roomId, senderId, content } = payload;
+      console.log(
+        `[socketEvents.js] -> Nhận sự kiện 'send_chat_message' từ User ${senderId} tới phòng ${roomId}. Nội dung: "${content}"`
+      );
+
       if (!roomId || !senderId || !content) {
+        console.error(
+          "[socketEvents.js] Lỗi: Dữ liệu gửi lên không hợp lệ.",
+          payload
+        );
         if (callback)
           callback({ status: "error", message: "Dữ liệu không hợp lệ." });
         return;
       }
-
       try {
+        console.log(`[socketEvents.js] Bắt đầu lưu tin nhắn vào DB...`);
         const savedMessage = await saveMessageToDb(roomId, senderId, content);
-        // Phát tin nhắn đến tất cả client trong phòng
+        console.log(
+          `[socketEvents.js] Lưu tin nhắn thành công. Message ID mới: ${savedMessage.id}`
+        );
+
+        console.log(
+          `[socketEvents.js] <- Phát sự kiện 'new_chat_message' tới tất cả client trong phòng ${roomId}`
+        );
         io.to(roomId.toString()).emit("new_chat_message", savedMessage);
 
-        // Cập nhật last_read_message_id cho người gửi ngay lập tức
+        console.log(
+          `[socketEvents.js] Cập nhật trạng thái đã đọc cho người gửi ${senderId}`
+        );
         await updateLastReadMessage(roomId, senderId, savedMessage.id);
 
-        if (callback) callback({ status: "sent", messageId: savedMessage.id });
+        if (callback) {
+          console.log(
+            `[socketEvents.js] Gửi callback thành công về cho client.`
+          );
+          callback({ status: "sent", messageId: savedMessage.id });
+        }
       } catch (error) {
         console.error(
-          `[SocketEvents] Lỗi khi lưu và gửi tin nhắn trong phòng ${roomId}:`,
+          `[socketEvents.js] Lỗi nghiêm trọng khi gửi tin nhắn phòng ${roomId}:`,
           error
         );
         if (callback)
@@ -162,200 +127,42 @@ const setupSocketEvents = (io) => {
       }
     });
 
-    socket.on("disconnect", () => {
-      connectionManager.removeConnection(socket.id); //
-      console.log(
-        `[SocketEvents] Client đã ngắt kết nối: ${socket.id} (ID người dùng: ${socket.userId})` // [LOG MỚI]
-      );
-    });
-
-    // --- SỰ KIỆN "request_agent_chat": YÊU CẦU CHAT VỚI NHÂN VIÊN ---
-    socket.on("request_agent_chat", async (data, callback) => {
-      // 1. Kiểm tra xác thực
-      if (!socket.isLoggedIn) {
-        return callback({
-          success: false,
-          message: "Yêu cầu đăng nhập để chat với nhân viên.",
-        });
-      }
-
-      const customerId = socket.userId;
-      console.log(`User ${customerId} is requesting a chat.`);
-
-      try {
-        // 2. Tìm hoặc tạo phòng chat và gán nhân viên (logic nằm trong Chat.js)
-        const chatRoomData = await findOrCreateChatRoomForCustomer(customerId);
-        const { roomId, assignedAgentUserId } = chatRoomData;
-        socket.join(roomId.toString());
-        console.log(
-          `User ${customerId} (Socket: ${socket.id}) joined room ${roomId}`
-        );
-
-        // Cập nhật last_read_message_id cho khách hàng khi họ tham gia/tạo phòng
-        if (chatRoomData.messages.length > 0) {
-          const lastMessageId =
-            chatRoomData.messages[chatRoomData.messages.length - 1].id;
-          await updateLastReadMessage(roomId, customerId, lastMessageId);
-        }
-
-        // 4. Nếu có nhân viên được gán, thông báo cho họ
-        if (assignedAgentUserId) {
-          const agentSocketIds =
-            connectionManager.getSocketIdsByUserId(assignedAgentUserId);
-          console.log(
-            `Notifying agent ${assignedAgentUserId} on sockets: ${agentSocketIds.join(
-              ", "
-            )}`
-          );
-          if (agentSocketIds.length > 0) {
-            io.to(agentSocketIds).emit("new_chat_assigned", {
-              roomId,
-              customerId: chatRoomData.customerId,
-              customerName: chatRoomData.customerName,
-              customerAvatar: chatRoomData.customerAvatar,
-              lastMessage: "Cuộc trò chuyện mới.", // Có thể lấy tin nhắn đầu tiên nếu có
-              unreadMessageCount: 1, // Mặc định có 1 tin nhắn chưa đọc
-              roomUpdatedAt: new Date().toISOString(),
-            });
-            agentSocketIds.forEach((socketId) => {
-              const agentSocket = io.sockets.sockets.get(socketId);
-              if (agentSocket) {
-                agentSocket.join(roomId.toString());
-              }
-            });
-          }
-        }
-        callback({
-          success: true,
-          ...chatRoomData,
-        });
-      } catch (error) {
-        console.error(
-          `Error processing request_agent_chat for ${customerId}:`,
-          error
-        );
-        callback({
-          success: false,
-          message: "Lỗi hệ thống khi tạo phòng chat.",
-        });
-      }
-    });
-
-    // --- SỰ KIỆN "mark_chat_as_read": CẬP NHẬT TRẠNG THÁI ĐỌC ---
     socket.on("mark_chat_as_read", async ({ roomId, messageId }, callback) => {
+      console.log(
+        `[socketEvents.js] -> Nhận sự kiện 'mark_chat_as_read' từ User ${socket.userId} cho phòng ${roomId}, đến tin nhắn ${messageId}`
+      );
       if (!socket.userId || !roomId || !messageId) {
-        if (callback) {
-          // Kiểm tra callback trước khi gọi
-          callback({ success: false, message: "Dữ liệu không hợp lệ." });
-        }
+        console.error(
+          "[socketEvents.js] Lỗi: Dữ liệu 'mark_chat_as_read' không hợp lệ."
+        );
+        if (callback)
+          return callback({ success: false, message: "Dữ liệu không hợp lệ." });
         return;
       }
       try {
         await updateLastReadMessage(roomId, socket.userId, messageId);
-        if (callback) {
-          // Kiểm tra callback trước khi gọi
-          callback({ success: true });
-        }
+        console.log(
+          `[socketEvents.js] Cập nhật DB thành công cho 'mark_chat_as_read'.`
+        );
+        if (callback) callback({ success: true });
       } catch (error) {
         console.error(
-          `[SocketEvents] Lỗi khi đánh dấu đã đọc cho phòng ${roomId}, người dùng ${socket.userId}:`,
+          `[socketEvents.js] Lỗi khi cập nhật trạng thái đã đọc:`,
           error
         );
-        if (callback) {
-          // Kiểm tra callback trước khi gọi
+        if (callback)
           callback({
             success: false,
             message: "Không thể cập nhật trạng thái đọc.",
           });
-        }
       }
     });
 
-    // ===================================================================
-    // CÁC SỰ KIỆN DÀNH RIÊNG CHO ADMIN
-    // ===================================================================
-
-    /**
-     * Sự kiện cho admin yêu cầu lấy danh sách các cuộc trò chuyện của một agent.
-     */
-    socket.on("admin_get_agent_chats", async ({ agentId }, callback) => {
-      // if (socket.userRole !== "admin") {
-      //   console.warn(
-      //     `[SocketEvents] User ${socket.userId} (vai trò: ${socket.userRole}) đã cố gắng truy cập sự kiện 'admin_get_agent_chats'.`
-      //   );
-      //   return callback({
-      //     dfdfd: socket.userRole,
-      //     success: false,
-      //     message: "Hành động không được phép. Yêu cầu quyền quản trị viên.",
-      //   });
-      // }
-
-      if (!agentId) {
-        return callback({
-          success: false,
-          message: "Cần cung cấp ID của nhân viên.",
-        });
-      }
-
-      try {
-        const chats = await getChatsByAgent(agentId);
-        callback({ success: true, data: chats });
-      } catch (error) {
-        console.error(
-          `[SocketEvents] Lỗi khi lấy danh sách chat cho nhân viên ${agentId}:`,
-          error
-        );
-        callback({
-          success: false,
-          message: "Lỗi máy chủ khi truy vấn danh sách cuộc trò chuyện.",
-        });
-      }
-    });
-
-    /**
-     * Sự kiện cho admin yêu cầu lấy toàn bộ nội dung của một phòng chat cụ thể.
-     */
-    socket.on("admin_get_chat_details", async ({ roomId }, callback) => {
-      if (socket.userRole !== "admin") {
-        console.warn(
-          `[SocketEvents] User ${socket.userId} (vai trò: ${socket.userRole}) đã cố gắng truy cập sự kiện 'admin_get_chat_details'.`
-        );
-        return callback({
-          success: false,
-          message: "Hành động không được phép. Yêu cầu quyền quản trị viên.",
-        });
-      }
-
-      if (!roomId) {
-        return callback({
-          success: false,
-          message: "Cần cung cấp ID của phòng chat.",
-        });
-      }
-
-      try {
-        const chatDetails = await getChatDetails(roomId);
-        if (chatDetails) {
-          // Khi admin xem chi tiết chat, đánh dấu tất cả tin nhắn là đã đọc
-          if (chatDetails.messages.length > 0) {
-            const lastMessageId =
-              chatDetails.messages[chatDetails.messages.length - 1].id;
-            await updateLastReadMessage(roomId, socket.userId, lastMessageId);
-          }
-          callback({ success: true, data: chatDetails });
-        } else {
-          callback({ success: false, message: "Không tìm thấy phòng chat." });
-        }
-      } catch (error) {
-        console.error(
-          `[SocketEvents] Lỗi khi lấy chi tiết phòng chat ${roomId}:`,
-          error
-        );
-        callback({
-          success: false,
-          message: "Lỗi máy chủ khi truy vấn chi tiết cuộc trò chuyện.",
-        });
-      }
+    socket.on("disconnect", () => {
+      console.log(
+        `[socketEvents.js] Client đã ngắt kết nối: Socket ID ${socket.id}, User ID: ${socket.userId}`
+      );
+      connectionManager.removeConnection(socket.id);
     });
   });
 };

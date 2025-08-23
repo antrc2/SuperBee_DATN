@@ -1,4 +1,4 @@
-export const PRODUCT_FILTERS_CONFIG = [
+export const STATIC_PRODUCT_FILTERS = [
   {
     type: "select",
     name: "category_id",

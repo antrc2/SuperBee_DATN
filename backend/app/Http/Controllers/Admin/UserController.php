@@ -39,12 +39,12 @@ class UserController extends Controller
                 'sort_by' => 'sometimes|in:username,email,balance,created_at',
                 'sort_direction' => 'sometimes|in:asc,desc',
                 'status' => 'sometimes|in:0,1,2',
-                'role_id' => 'sometimes|integer|exists:roles,id',
+                // 'role_id' => 'sometimes|integer|exists:roles,id', // Đã được loại bỏ vì không cần thiết
                 'page' => 'sometimes|integer|min:1',
             ]);
 
-            // Start building the query
-            $query = User::query();
+            // Start building the query, immediately scoping to only users with the 'user' role.
+            $query = User::role('user');
 
             // Eager load relationships
             $query->with(['roles', 'wallet']);
@@ -63,12 +63,12 @@ class UserController extends Controller
                 $q->where('status', $request->status);
             });
 
-            // Handle role filtering
-            $query->when($request->filled('role_id'), function ($q) use ($request) {
-                $q->whereHas('roles', function ($subQuery) use ($request) {
-                    $subQuery->where('id', $request->role_id);
-                });
-            });
+            // Handle role filtering -> Đã được loại bỏ vì đã scope ở trên
+            // $query->when($request->filled('role_id'), function ($q) use ($request) {
+            //     $q->whereHas('roles', function ($subQuery) use ($request) {
+            //         $subQuery->where('id', $request->role_id);
+            //     });
+            // });
 
             // Handle sorting
             if ($request->filled('sort_by')) {
@@ -90,7 +90,7 @@ class UserController extends Controller
             // Paginate the results
             $users = $query->paginate(15)->withQueryString();
 
-            // Get all roles for the filter dropdown
+            // Get all roles for the filter dropdown (Bạn có thể giữ lại nếu vẫn cần hiển thị)
             $roles = Role::all(['id', 'name', 'description']);
 
             return response()->json([
@@ -140,7 +140,7 @@ class UserController extends Controller
             } else if ($actingUser->hasRole('admin')) {
                 $query->whereNotIn('name', ['admin-super', 'admin']);
             } else {
-                 $query->whereNotIn('name', ['admin-super', 'admin']);
+                $query->whereNotIn('name', ['admin-super', 'admin']);
             }
             $role = $query->get();
 
@@ -187,8 +187,7 @@ class UserController extends Controller
             }
 
             if ($requester->hasRole('admin-super')) {
-            }
-            elseif ($requester->hasRole('admin')) {
+            } elseif ($requester->hasRole('admin')) {
                 if ($targetUser->hasRole('admin') || $targetUser->hasRole('admin-super')) {
                     return response()->json([
                         "status" => false,
@@ -212,7 +211,6 @@ class UserController extends Controller
                 'status' => true,
                 'message' => 'Khóa tài khoản thành công.'
             ], 200);
-
         } catch (Exception $e) {
             return response()->json([
                 'status' => false,
@@ -251,7 +249,7 @@ class UserController extends Controller
             ], 500);
         }
     }
-     public function updateRoles(Request $request, $id)
+    public function updateRoles(Request $request, $id)
     {
         try {
             $validator = Validator::make($request->all(), [
@@ -287,11 +285,11 @@ class UserController extends Controller
             if ($targetUser->hasRole('admin-super')) {
                 return response()->json(['status' => false, 'message' => 'Không thể chỉnh sửa vai trò của một Quản trị viên tối cao.'], 403);
             }
-            
+
             if ($actingUser->hasRole('admin') && $targetUser->hasRole('admin')) {
                 return response()->json(['status' => false, 'message' => 'Bạn không có quyền chỉnh sửa vai trò của Quản trị viên khác.'], 403);
             }
-            
+
             $roleToSync = $request->input('roles');
 
             if ($actingUser->hasRole('admin') && in_array($roleToSync, ['admin', 'admin-super'])) {
@@ -301,7 +299,6 @@ class UserController extends Controller
             $targetUser->syncRoles([$roleToSync]);
 
             return response()->json(['status' => true, 'message' => 'Cập nhật vai trò thành công.'], 200);
-
         } catch (\Exception $e) {
             return response()->json(['status' => false, 'message' => 'Đã có lỗi máy chủ xảy ra.'], 500);
         }
@@ -335,7 +332,7 @@ class UserController extends Controller
         }
     }
 
-   public function createStaffAccount(Request $request)
+    public function createStaffAccount(Request $request)
     {
         try {
             $validatedData = $request->validate([
@@ -358,7 +355,7 @@ class UserController extends Controller
                 'role_name.exists' => 'Vai trò được chọn không tồn tại.',
                 'permissions.required_if' => 'Vui lòng chọn ít nhất một quyền khi phương thức là "gán theo quyền".',
             ]);
-            
+
             $actingUser = $request->user();
             if ($actingUser->hasRole('admin')) {
                 if ($request->input('assignment_type') === 'role') {

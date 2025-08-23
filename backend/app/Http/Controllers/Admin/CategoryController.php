@@ -19,7 +19,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::with(['creator', 'updater'])->where('id',"!=",1)->get();
+            $categories = Category::with(['creator', 'updater'])->where('id', "!=", 1)->get();
 
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
@@ -117,7 +117,7 @@ class CategoryController extends Controller
                 'updated_by' => $request->user_id ?? null
             ]);
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Danh mục {$request->name} đã được tạo thành công","{$frontend_link}/admin/categories/{$category->id}/edit",null,'products.*');
+            $this->sendNotification(1, "Danh mục {$request->name} đã được tạo thành công", "{$frontend_link}/admin/categories/{$category->id}/edit", null, 'products.*');
             return response()->json([
                 'status' => true,
                 'message' => 'Tạo danh mục thành công',
@@ -188,6 +188,15 @@ class CategoryController extends Controller
                         'status' => false,
                         'message' => 'Không thể đặt danh mục cha là con của danh mục con'
                     ], 400);
+                }
+                if (is_null($category->parent_id)) {
+                    $newParent = Category::find($request->parent_id);
+                    if ($newParent && is_null($newParent->parent_id)) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Danh mục cha không được trở thành danh mục cha của một danh mục cha khác'
+                        ], 400);
+                    }
                 }
             }
 

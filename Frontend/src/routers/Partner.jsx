@@ -12,7 +12,7 @@ import { partnerModules } from "./PartnerModules";
 import { ThemeProvider } from "../contexts/ThemeContext";
 
 // Lazy load Home và NotFound
-const Home = React.lazy(() => import("@pages/Admin/Dashboard/Home")); // Vẫn dùng Home từ Admin dashboard
+const Home = React.lazy(() => import("@pages/Admin/Dashboard/Home"));
 const NotFound = React.lazy(() => import("../pages/NotFound/NotFound"));
 
 const partnerRoutes = [

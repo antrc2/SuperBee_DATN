@@ -6,7 +6,7 @@ import Layout from "@components/Admin/Layout/Layout.jsx";
 import ProductsListPage from "./ProductsListPage";
 import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import api from "../../../utils/http";
-import { PRODUCT_FILTERS_CONFIG } from "./filterConfigs";
+
 import { useNotification } from "../../../contexts/NotificationContext";
 import ProductsBrowse from "./ProductsBrowse";
 // Các key dùng để tìm kiếm ở FE (trên dữ liệu đã tải về của trang hiện tại)

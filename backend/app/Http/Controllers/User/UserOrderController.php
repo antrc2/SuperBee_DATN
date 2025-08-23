@@ -500,7 +500,7 @@ class UserOrderController extends Controller
                     "total_price" => $total_price_clone,
                     "total_price_after_discount" => $total_price,
                     "promotion_codes" => $promotion_codes,
-                    "balance" => $wallet->balance,
+                    "balance" => $wallet->balance + $wallet->promotion_balance,
                     "tax_amount" => $tax_amount,
                     "tax_value" => $tax_value,
                     "discount_amount" => $discount_amount,

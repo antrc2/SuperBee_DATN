@@ -606,7 +606,7 @@ export default function Pay() {
                     <span>
                       Tôi đã đọc và đồng ý với các{" "}
                       <Link
-                        to="/terms"
+                        to="/tin-tuc/huong-dan/dieu-khoan-va-dich-vu"
                         className="text-accent hover:underline font-medium"
                       >
                         điều khoản và dịch vụ

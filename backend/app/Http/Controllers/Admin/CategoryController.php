@@ -19,7 +19,7 @@ class CategoryController extends Controller
     public function index()
     {
         try {
-            $categories = Category::with(['creator', 'updater'])->where('id',"!=",1)->get();
+            $categories = Category::with(['creator', 'updater'])->where('id', "!=", 1)->get();
 
             $buildTree = function ($categories, $parentId = null) use (&$buildTree) {
                 $tree = [];
@@ -68,7 +68,7 @@ class CategoryController extends Controller
             $request->validate([
                 'name' => 'required|string|max:255',
                 'parent_id' => 'nullable|exists:categories,id',
-                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:40000'
+                'image_url' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg,webp|max:40000'
             ]);
 
             // Kiểm tra tên danh mục đã tồn tại chưa
@@ -117,7 +117,7 @@ class CategoryController extends Controller
                 'updated_by' => $request->user_id ?? null
             ]);
             $frontend_link = env("FRONTEND_URL");
-            $this->sendNotification(1,"Danh mục {$request->name} đã được tạo thành công","{$frontend_link}/admin/categories/{$category->id}/edit",null,'products.*');
+            $this->sendNotification(1, "Danh mục {$request->name} đã được tạo thành công", "{$frontend_link}/admin/categories/{$category->id}/edit", null, 'products.*');
             return response()->json([
                 'status' => true,
                 'message' => 'Tạo danh mục thành công',

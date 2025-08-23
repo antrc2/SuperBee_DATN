@@ -467,11 +467,7 @@ Route::prefix('/auto')->group(function () {
     Route::prefix('/post')->group(function () {});
     Route::prefix('/transaction')->group(function () {
         Route::get('/', [AutoTransactionController::class, 'status']);
-<<<<<<< HEAD
-        // Route::post("/", [AutoTransactionController::class, 'turn']);
-=======
         Route::post("/", [AutoTransactionController::class, 'turn']);
->>>>>>> 73b358a19a99f5803582c177da408c2360c95cbb
     });
 });
 // Route::post("/export",[AdminWithdrawController::class,'export']);

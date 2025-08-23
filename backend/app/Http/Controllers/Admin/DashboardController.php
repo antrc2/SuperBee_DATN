@@ -165,7 +165,7 @@ class DashboardController extends Controller
         $top2Categories = DB::table('categories as parent_cat')->join('categories as child_cat', 'parent_cat.id', '=', 'child_cat.parent_id')->join('products', 'child_cat.id', '=', 'products.category_id')->join('order_items', 'products.id', '=', 'order_items.product_id')->join('orders', 'order_items.order_id', '=', 'orders.id')->join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereNull('parent_cat.parent_id')->where('parent_cat.id', '!=', 1)->select('parent_cat.id', 'parent_cat.name')->groupBy('parent_cat.id', 'parent_cat.name')->orderByRaw('SUM(orders.total_amount) DESC')->limit(2)->get();
         return $this->_buildComparisonChartData($top2Categories, $startDate, $endDate);
     }
-    
+
     private function _buildComparisonChartData($topCategories, Carbon $startDate, Carbon $endDate): array
     {
         if ($topCategories->count() === 0) {
@@ -173,14 +173,17 @@ class DashboardController extends Controller
         }
         $topCategoryIds = $topCategories->pluck('id');
         $results = DB::table('orders')->join('users', 'orders.user_id', '=', 'users.id')->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'order_items.product_id', '=', 'products.id')->join('categories as child_cat', 'products.category_id', '=', 'child_cat.id')->join('categories as parent_cat', 'child_cat.parent_id', '=', 'parent_cat.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->whereIn('parent_cat.id', $topCategoryIds)->select(DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m-%d') as full_date"), DB::raw("DATE_FORMAT(orders.created_at, '%d/%m') as date_label"), 'parent_cat.name as category_name', DB::raw('SUM(order_items.unit_price) as daily_revenue'))->groupBy('full_date', 'date_label', 'category_name')->orderBy('full_date')->get();
-        $labels = []; $datasets = []; $dataMap = []; $uniqueLabels = [];
-        foreach($topCategories as $category) {
+        $labels = [];
+        $datasets = [];
+        $dataMap = [];
+        $uniqueLabels = [];
+        foreach ($topCategories as $category) {
             $datasets[] = ['label' => $category->name, 'data' => []];
             $dataMap[$category->name] = [];
         }
         foreach ($results as $row) {
             $uniqueLabels[$row->date_label] = true;
-            if(isset($dataMap[$row->category_name])) {
+            if (isset($dataMap[$row->category_name])) {
                 $dataMap[$row->category_name][$row->date_label] = $row->daily_revenue;
             }
         }

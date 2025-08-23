@@ -16,7 +16,49 @@ use Illuminate\Validation\ValidationException;
 
 class UserReviewController extends Controller
 {
+    /**
+     * Kiểm tra đánh giá của người dùng cho một trang web
+     * GET /reviews/user/{user_id}
+     */
+    public function getUserReview($user_id): JsonResponse
+    {
+        try {
+            
 
+            $review = Review::with(['user:id,username,avatar_url', 'web:id,subdomain'])
+                ->where('user_id', $user_id)
+                ->where('web_id', 1) // Giả định web_id = 1, thay đổi nếu cần
+                ->first();
+
+            return response()->json([
+                'status' => true,
+                'message' => $review ? 'Đã tìm thấy đánh giá.' : 'Chưa có đánh giá.',
+                'data' => $review ? [
+                    'id' => $review->id,
+                    'user_id' => $review->user_id,
+                    'web_id' => $review->web_id,
+                    'star' => $review->star,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at->toISOString(),
+                    'updated_at' => $review->updated_at->toISOString(),
+                    'user' => $review->user,
+                    'web' => $review->web,
+                ] : null
+            ], 200);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Không thể lấy thông tin đánh giá.',
+                'error_code' => 'FETCH_REVIEW_FAILED',
+                'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
+            ], 500);
+        }
+    }
+
+    /**
+     * Lấy danh sách đánh giá
+     * GET /reviews
+     */
     public function index(Request $request): JsonResponse
     {
         try {
@@ -30,17 +72,14 @@ class UserReviewController extends Controller
 
             $query = Review::with(['user:id,username,avatar_url', 'web:id,subdomain']);
 
-            // Filter by web
             if (isset($validated['web_id'])) {
                 $query->where('web_id', $validated['web_id']);
             }
 
-            // Filter by rating
             if (isset($validated['star'])) {
                 $query->where('star', $validated['star']);
             }
 
-            // Sorting
             $sort = $validated['sort'] ?? 'latest';
             switch ($sort) {
                 case 'oldest':
@@ -61,13 +100,13 @@ class UserReviewController extends Controller
             $reviews = $query->paginate($limit);
 
             return response()->json([
-                'success' => true,
+                'status' => true,
                 'data' => $reviews
             ]);
 
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Không thể lấy danh sách đánh giá.',
                 'error_code' => 'FETCH_REVIEWS_FAILED',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -75,7 +114,10 @@ class UserReviewController extends Controller
         }
     }
 
-
+    /**
+     * Lấy thông tin một đánh giá
+     * GET /reviews/{id}
+     */
     public function show($id): JsonResponse
     {
         try {
@@ -84,20 +126,30 @@ class UserReviewController extends Controller
 
             if (!$review) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Không tìm thấy đánh giá.',
                     'error_code' => 'REVIEW_NOT_FOUND'
                 ], 404);
             }
 
             return response()->json([
-                'success' => true,
-                'data' => $review
+                'status' => true,
+                'data' => [
+                    'id' => $review->id,
+                    'user_id' => $review->user_id,
+                    'web_id' => $review->web_id,
+                    'star' => $review->star,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at->toISOString(),
+                    'updated_at' => $review->updated_at->toISOString(),
+                    'user' => $review->user,
+                    'web' => $review->web,
+                ]
             ]);
 
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Không thể lấy thông tin đánh giá.',
                 'error_code' => 'FETCH_REVIEW_FAILED',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -105,7 +157,10 @@ class UserReviewController extends Controller
         }
     }
 
-
+    /**
+     * Tạo đánh giá mới
+     * POST /reviews
+     */
     public function store(Request $request): JsonResponse
     {
         try {
@@ -119,17 +174,18 @@ class UserReviewController extends Controller
 
             if (!$this->canUserReviewWeb($userId, $validated['web_id'])) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Bạn cần mua hàng thành công từ trang web này mới có thể đánh giá!',
                     'error_code' => 'NO_PURCHASE_HISTORY',
                 ], 403);
             }
 
-
-            $existingReview = Review::where('user_id', $userId)->where('web_id', $validated['web_id'])->first();
+            $existingReview = Review::where('user_id', $userId)
+                ->where('web_id', $validated['web_id'])
+                ->first();
             if ($existingReview) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Bạn đã đánh giá trang web này rồi. Vui lòng sử dụng chức năng cập nhật.',
                     'error_code' => 'REVIEW_EXISTS'
                 ], 409);
@@ -145,14 +201,24 @@ class UserReviewController extends Controller
             $review->load(['user:id,username,avatar_url', 'web:id,subdomain']);
 
             return response()->json([
-                'success' => true,
+                'status' => true,
                 'message' => 'Tạo đánh giá thành công!',
-                'data' => $review
+                'data' => [
+                    'id' => $review->id,
+                    'user_id' => $review->user_id,
+                    'web_id' => $review->web_id,
+                    'star' => $review->star,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at->toISOString(),
+                    'updated_at' => $review->updated_at->toISOString(),
+                    'user' => $review->user,
+                    'web' => $review->web,
+                ]
             ], 201);
 
         } catch (ValidationException $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Dữ liệu không hợp lệ.',
                 'error_code' => 'VALIDATION_ERROR',
                 'errors' => $e->errors()
@@ -160,7 +226,7 @@ class UserReviewController extends Controller
 
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Lỗi khi tạo đánh giá.',
                 'error_code' => 'CREATE_REVIEW_FAILED',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -168,7 +234,10 @@ class UserReviewController extends Controller
         }
     }
 
-
+    /**
+     * Cập nhật đánh giá
+     * PUT /reviews/{id}
+     */
     public function update(Request $request, $id): JsonResponse
     {
         try {
@@ -182,7 +251,7 @@ class UserReviewController extends Controller
 
             if (!$review) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Không tìm thấy đánh giá.',
                     'error_code' => 'REVIEW_NOT_FOUND'
                 ], 404);
@@ -190,7 +259,7 @@ class UserReviewController extends Controller
 
             if ($review->user_id !== $userId) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Bạn không có quyền cập nhật đánh giá này.',
                     'error_code' => 'UNAUTHORIZED'
                 ], 403);
@@ -204,14 +273,24 @@ class UserReviewController extends Controller
             $review->load(['user:id,username,avatar_url', 'web:id,subdomain']);
 
             return response()->json([
-                'success' => true,
+                'status' => true,
                 'message' => 'Cập nhật đánh giá thành công!',
-                'data' => $review
+                'data' => [
+                    'id' => $review->id,
+                    'user_id' => $review->user_id,
+                    'web_id' => $review->web_id,
+                    'star' => $review->star,
+                    'comment' => $review->comment,
+                    'created_at' => $review->created_at->toISOString(),
+                    'updated_at' => $review->updated_at->toISOString(),
+                    'user' => $review->user,
+                    'web' => $review->web,
+                ]
             ]);
 
         } catch (ValidationException $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Dữ liệu không hợp lệ.',
                 'error_code' => 'VALIDATION_ERROR',
                 'errors' => $e->errors()
@@ -219,7 +298,7 @@ class UserReviewController extends Controller
 
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Lỗi khi cập nhật đánh giá.',
                 'error_code' => 'UPDATE_REVIEW_FAILED',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -227,7 +306,10 @@ class UserReviewController extends Controller
         }
     }
 
-
+    /**
+     * Xóa đánh giá
+     * DELETE /reviews/{id}
+     */
     public function destroy($id): JsonResponse
     {
         try {
@@ -236,16 +318,15 @@ class UserReviewController extends Controller
 
             if (!$review) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Không tìm thấy đánh giá.',
                     'error_code' => 'REVIEW_NOT_FOUND'
                 ], 404);
             }
 
-            // Check ownership
             if ($review->user_id !== $userId) {
                 return response()->json([
-                    'success' => false,
+                    'status' => false,
                     'message' => 'Bạn không có quyền xóa đánh giá này.',
                     'error_code' => 'UNAUTHORIZED'
                 ], 403);
@@ -254,13 +335,13 @@ class UserReviewController extends Controller
             $review->delete();
 
             return response()->json([
-                'success' => true,
+                'status' => true,
                 'message' => 'Xóa đánh giá thành công!'
             ]);
 
         } catch (Exception $e) {
             return response()->json([
-                'success' => false,
+                'status' => false,
                 'message' => 'Không thể xóa đánh giá.',
                 'error_code' => 'DELETE_REVIEW_FAILED',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error'
@@ -274,7 +355,6 @@ class UserReviewController extends Controller
      */
     private function canUserReviewWeb(int $userId, int $webId): bool
     {
-        // Query chính
         return Order::where('user_id', $userId)
             ->where('status', 1)
             ->whereHas('items.product', function ($query) use ($webId) {

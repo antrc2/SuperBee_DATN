@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\AdminOrderController;
 use App\Http\Controllers\Admin\AdminPostController;
 use App\Http\Controllers\Admin\AdminWithdrawController;
 use App\Http\Controllers\Admin\AuthorizationDashboardController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserPermissionController;
@@ -36,7 +37,7 @@ use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\DisputeChatController;
 use App\Http\Controllers\Partner\PartnerOrderController;
 use App\Http\Controllers\SitemapController;
-use App\Http\Controllers\User\DiscountCodeController;
+use App\Http\Controllers\User\UserDiscountCodeController;
 use App\Http\Controllers\User\UserCartController;
 use App\Http\Controllers\User\UserProductController;
 use App\Http\Controllers\User\HomeController;
@@ -104,6 +105,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
         Route::get('/products', [HomeController::class, 'products']);
+        Route::get('/website', [HomeController::class, 'getWebsiteReviews']);
     });
     Route::prefix('comment')->group(function () {
         Route::post('/', [UserCommentPostController::class, "create"]);
@@ -129,6 +131,7 @@ Route::middleware('auth')->group(function () {
         Route::get("/search", [UserProductController::class, 'search']);
         Route::get("/{slug}", [UserProductController::class, 'index']);
         Route::get("/acc/{id}", [UserProductController::class, 'show']);
+        Route::get('/filter/{slug}', [UserProductController::class, 'getProductsWithFilter']);
     });
     Route::prefix('/banners')->group(function () {
         Route::get("/", [UserBannerController::class, 'index']);
@@ -182,8 +185,8 @@ Route::middleware('auth')->group(function () {
         });
         // User xem danh sách mã giảm giá (khuyến mãi sản phẩm)
         Route::prefix('/discountcode')->group(function () {
-            Route::get('/', [DiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
-            Route::get('/{id}', [DiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
+            Route::get('/', [UserDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
+            Route::get('/{id}', [UserDiscountCodeController::class, 'show'])->middleware('permission:promotions.view');
         });
 
         Route::prefix("/donate")->group(function () {
@@ -233,11 +236,12 @@ Route::middleware('auth')->group(function () {
 
 
         Route::prefix('/reviews')->group(function () {
-            Route::post('/', [UserReviewController::class, 'store'])->middleware('permission:reviews.create');
-            Route::delete('/{id}', [UserReviewController::class, 'destroy'])->middleware('permission:reviews.delete');
-            Route::put('/{id}', [UserReviewController::class, 'update'])->middleware('permission:reviews.edit');
-            Route::get('/{id}', [UserReviewController::class, 'show'])->middleware('permission:reviews.view');
-            Route::get('/', [UserReviewController::class, 'index'])->middleware('permission:reviews.view');
+            Route::post('/', [UserReviewController::class, 'store']);
+            Route::delete('/{id}', [UserReviewController::class, 'destroy']);
+            Route::put('/{id}', [UserReviewController::class, 'update']);
+            Route::get('/{id}', [UserReviewController::class, 'show']);
+            Route::get('/', [UserReviewController::class, 'index']);
+            Route::get('/user/{user_id}', [UserReviewController::class, 'getUserReview']);
         });
         Route::post('/disputes', [DisputeController::class, 'store']);
 
@@ -265,6 +269,13 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      * Quản lý Mã giảm giá (Khuyến mãi sản phẩm)
      * Router name: discountcode, Permission: promotions.*
      */
+
+    Route::prefix('dashboard')->middleware(['auth:api'])->group(function () {
+        Route::get('/statistics', [DashboardController::class, 'getStatistics']);
+        Route::post('/compare', [DashboardController::class, 'compareStatistics']);
+        Route::get('/available-periods', [DashboardController::class, 'getAvailablePeriods']);
+    });
+
     Route::prefix('/discountcode')->group(function () {
         Route::get('/', [AdminDiscountCodeController::class, 'index'])->middleware('permission:promotions.view');
         Route::get('/user', [AdminDiscountCodeController::class, 'getUserByWebId'])->middleware('permission:promotions.view');
@@ -446,7 +457,7 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
     });
     Route::prefix('/business_settings')->group(function () {
         Route::get('/', [AdminBusinessSettingController::class, 'index'])->middleware('permission:business_settings.view');
-        Route::put('/{id}', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
+        Route::put('/', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
     Route::prefix('/employees')->group(function () {
         Route::get('/', [EmployeeController::class, 'index'])->middleware('permission:employees.view');

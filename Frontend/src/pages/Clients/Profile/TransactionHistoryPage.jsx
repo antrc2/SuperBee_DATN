@@ -182,6 +182,10 @@ const renderStatus = (status) => {
       text: "Đang xử lý",
       className: "bg-status-processing-bg text-status-processing-text",
     },
+    2: {
+      text: "Thất bại",
+      className: "bg-status-failed-bg text-status-failed-text",
+    },
   };
   const currentStatus = statusMap[status] || {
     text: "Không xác định",

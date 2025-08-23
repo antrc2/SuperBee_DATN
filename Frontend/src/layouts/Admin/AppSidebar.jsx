@@ -29,11 +29,10 @@ const navItems = [
   },
   {
     icon: <LayoutGrid />,
-    name: "Dashboard",
+    name: "Thống kê",
     requiredPermissions: ["reports.view"],
-    subItems: [
-      { name: "Ecommerce", path: "/admin", requiredPermission: "reports.view" },
-    ],
+    path: "/admin", 
+    requiredPermission: "reports.view"
   },
 
   {
@@ -150,12 +149,7 @@ const navItems = [
     path: "/admin/withdrawals",
     requiredPermission: "withdrawals.view",
   },
-  {
-    icon: <Settings />,
-    name: "Cấu hình Website",
-    path: "/admin/business_settings",
-    requiredPermission: "business_settings.view",
-  },
+  
   {
     icon: <ShoppingCart />,
     name: "Đơn Hàng",
@@ -167,6 +161,12 @@ const navItems = [
     name: "Khiếu Nại",
     path: "/admin/disputes",
     requiredPermission: "product_reports.view",
+  },
+  {
+    icon: <Settings />,
+    name: "Cài đặt",
+    path: "/admin/business_settings",
+    requiredPermission: "business_settings.view",
   },
 ];
 

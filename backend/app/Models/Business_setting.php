@@ -23,6 +23,9 @@ class Business_setting extends Model
         'address',
         'zalo_link',
         'facebook_link',
+        'auto_post',
+        'auto_transaction',
+        'auto_post_interval',
         'template_name',      // Thêm vào đây
         'header_settings',    // Thêm vào đây
         'footer_settings',    // Thêm vào đây

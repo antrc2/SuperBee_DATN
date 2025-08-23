@@ -193,6 +193,7 @@ return new class extends Migration
             // // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
             $table->string('promo_code', 50)->nullable();        // Lưu mã khuyến mãi (nếu có)
             $table->decimal('discount_amount', 15, 0)->nullable(); // Số tiền giảm tương ứng (nếu có)
+            $table->string('bill_url',255)->nullable();
 
             $table->timestamps();
         });

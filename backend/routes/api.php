@@ -100,8 +100,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('/home')->group(function () {
         Route::get("/", [HomeController::class, 'index']);
         Route::get('/products', [HomeController::class, 'products']);
-        Route::get('/website', [HomeController::class, 'getWebsiteReviews']); 
-
+        Route::get('/website', [HomeController::class, 'getWebsiteReviews']);
     });
     Route::prefix('comment')->group(function () {
         Route::post('/', [UserCommentPostController::class, "create"]);
@@ -258,8 +257,9 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
      */
 
     Route::prefix('dashboard')->middleware(['auth:api'])->group(function () {
-        // API Tổng hợp
-        Route::get('/', [DashboardController::class, 'getDashboardData']);
+        Route::get('/statistics', [DashboardController::class, 'getStatistics']);
+        Route::post('/compare', [DashboardController::class, 'compareStatistics']);
+        Route::get('/available-periods', [DashboardController::class, 'getAvailablePeriods']);
     });
 
     Route::prefix('/discountcode')->group(function () {

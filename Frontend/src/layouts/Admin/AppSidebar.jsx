@@ -29,11 +29,10 @@ const navItems = [
   },
   {
     icon: <LayoutGrid />,
-    name: "Dashboard",
+    name: "Thống kê",
     requiredPermissions: ["reports.view"],
-    subItems: [
-      { name: "Ecommerce", path: "/admin", requiredPermission: "reports.view" },
-    ],
+    path: "/admin", 
+    requiredPermission: "reports.view"
   },
   {
     icon: <Calendar />,

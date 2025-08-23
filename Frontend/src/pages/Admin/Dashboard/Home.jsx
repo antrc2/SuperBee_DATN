@@ -1,655 +1,1034 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  ComposedChart,
+} from "recharts";
+import {
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Users,
   ShoppingCart,
-  Tag,
-  X,
+  DollarSign,
+  Package,
+  Filter,
+  Zap,
+  BarChart3,
+  UserPlus,
   CreditCard,
-  ShieldCheck,
-  Gift,
-  TicketPercent,
-  ChevronRight,
-  ListOrdered,
-  FileText,
-  Wallet,
-  Landmark,
+  Target,
+  Activity,
+  TrendingUpIcon,
+  PieChartIcon,
+  HistoryIcon,
+  Coins,
 } from "lucide-react";
-import { useCart } from "@contexts/CartContext";
-import { useNotification } from "@contexts/NotificationContext";
-import { Link, useNavigate } from "react-router-dom";
-import LoadingDomain from "@components/Loading/LoadingDomain";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import api from "@utils/http";
-import { useAuth } from "../../../contexts/AuthContext";
 
-// Hàm định dạng tiền tệ không thay đổi
-const formatCurrency = (amount) => {
-  const numberAmount = Number(amount);
-  if (isNaN(numberAmount)) return "0 ₫";
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(numberAmount);
-};
+const Dashboard = () => {
+  const [activeTab, setActiveTab] = useState("overview");
+  const [statistics, setStatistics] = useState(null);
+  const [comparison, setComparison] = useState(null);
+  const [availablePeriods, setAvailablePeriods] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-// --- MODAL MÃ GIẢM GIÁ (Không thay đổi, đã được thiết kế lại ở lần trước) ---
-const DiscountModal = ({
-  isOpen,
-  onClose,
-  discounts,
-  onApplyDiscount,
-  appliedPromotionCode,
-}) => {
-  if (!isOpen) return null;
+  // Filters
+  const [filters, setFilters] = useState({
+    period: "month",
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    endDate: new Date(),
+  });
 
-  return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <div className="section-bg w-full max-w-lg max-h-[80vh] flex flex-col">
-        <div className="flex justify-between items-center p-4 border-b border-themed">
-          <h3 className="text-xl font-bold font-heading text-primary flex items-center">
-            <Gift size={24} className="mr-2 text-accent" />
-            Mã Giảm Giá Của Bạn
-          </h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full text-secondary hover:text-primary hover:bg-white/10 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-        <div className="p-4 overflow-y-auto custom-scrollbar-notification">
-          {discounts.length === 0 ? (
-            <p className="text-secondary text-center py-8">
-              Bạn không có mã giảm giá nào.
-            </p>
-          ) : (
-            <ul className="space-y-3">
-              {discounts.map((discount) => (
-                <li
-                  key={discount.id}
-                  className={`selection-grid-item text-left p-4 ${
-                    appliedPromotionCode === discount.code
-                      ? "selection-grid-item-selected"
-                      : ""
-                  }`}
-                >
-                  <div className="flex justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center mb-2">
-                        <TicketPercent size={20} className="mr-2 text-accent" />
-                        <span className="font-bold text-lg text-primary">
-                          {discount.code}
-                        </span>
-                        {appliedPromotionCode === discount.code && (
-                          <span className="ml-3 text-xs bg-green-500/20 text-green-500 px-2 py-0.5 rounded-full font-semibold">
-                            Đang áp dụng
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-secondary mb-2">
-                        {discount.description || `Giảm ${discount.value}%`}
-                      </p>
-                      <div className="text-xs text-secondary/80 space-y-1 border-t border-themed pt-2 mt-2">
-                        <p>
-                          HSD:{" "}
-                          <span className="font-medium">
-                            {discount.expiry === "N/A"
-                              ? "Vô thời hạn"
-                              : new Date(discount.expiry).toLocaleDateString(
-                                  "vi-VN"
-                                )}
-                          </span>
-                        </p>
-                        {discount.min_discount_amount > 0 && (
-                          <p>
-                            Đơn tối thiểu:{" "}
-                            <span className="font-medium">
-                              {formatCurrency(discount.min_discount_amount)}
-                            </span>
-                          </p>
-                        )}
-                        {discount.max_discount_amount > 0 && (
-                          <p>
-                            Giảm tối đa:{" "}
-                            <span className="font-medium">
-                              {formatCurrency(discount.max_discount_amount)}
-                            </span>
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => {
-                        onApplyDiscount(discount.code);
-                        onClose();
-                      }}
-                      disabled={appliedPromotionCode === discount.code}
-                      className="action-button action-button-primary text-sm !py-2 !px-4 self-center disabled:!bg-tertiary disabled:!text-primary/80 disabled:cursor-not-allowed disabled:filter-none disabled:transform-none"
-                    >
-                      {appliedPromotionCode === discount.code
-                        ? "Đã chọn"
-                        : "Dùng ngay"}
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
+  // Comparison filters
+  const [compareFilters, setCompareFilters] = useState({
+    periodType: "month",
+    period1: null,
+    period2: null,
+  });
 
-// Component chính đã được thiết kế lại
-export default function Pay() {
-  const { pop, conFim } = useNotification();
-  const { fetchCartItems } = useCart();
-  const [cartItemsPay, setCartItemsPay] = useState([]);
-  const [userBalance, setUserBalance] = useState(0);
-  const [promotionCodes, setPromotionCodes] = useState([]);
-  const [discountCodeInput, setDiscountCodeInput] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState(null);
-  const [showDiscountModal, setShowDiscountModal] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [loadingCheckout, setLoadingCheckout] = useState(true);
-  const [discountErrorMessage, setDiscountErrorMessage] = useState("");
-
-  const [backendRawTotalPrice, setBackendRawTotalPrice] = useState(0);
-  const [backendTotalPriceAfterDiscount, setBackendTotalPriceAfterDiscount] =
-    useState(0);
-  const [backendTaxAmount, setBackendTaxAmount] = useState(0);
-  const [backendTaxValue, setBackendTaxValue] = useState(0);
-  const [backendRoleDiscountAmount, setBackendRoleDiscountAmount] = useState(0);
-  const [backendRoleDiscountValue, setBackendRoleDiscountValue] = useState(0);
-
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const navigate = useNavigate();
-  const { fetchUserMoney } = useAuth();
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#8884D8",
+    "#82CA9D",
+  ];
 
   useEffect(() => {
-    const fetchCheckoutData = async () => {
-      setLoadingCheckout(true);
-      try {
-        const response = await api.get("/orders/checkout");
-        if (response.data?.status) {
-          const items = response.data.carts
-            .filter((item) => item.status === 1)
-            .map((item) => ({
-              id: item.id,
-              product_id: item.product_id,
-              name: item.product?.sku || "Sản phẩm không tên",
-              image:
-                item.product?.images?.[0]?.image_url ||
-                "https://placehold.co/100x100/E2E8F0/4A5568?text=Sản+phẩm",
-              price: parseFloat(item.unit_price) || 0,
-              old_price: parseFloat(item.product?.price) || 0,
-            }));
-          setCartItemsPay(items);
-          setUserBalance(parseFloat(response.data.balance) || 0);
+    fetchStatistics();
+  }, []);
 
-          // Set all the detailed price states directly from backend response
-          setBackendRawTotalPrice(parseFloat(response.data.total_price) || 0);
-          setBackendTotalPriceAfterDiscount(
-            parseFloat(response.data.total_price_after_discount) || 0
-          );
-          setBackendTaxAmount(parseFloat(response.data.tax_amount) || 0);
-          setBackendTaxValue(parseFloat(response.data.tax_value) || 0);
-          setBackendRoleDiscountAmount(
-            parseFloat(response.data.discount_amount) || 0
-          );
-          setBackendRoleDiscountValue(
-            parseFloat(response.data.discount_value) || 0
-          );
-
-          setPromotionCodes(
-            response.data.promotion_codes.map((promo) => ({
-              id: promo.id,
-              code: promo.code,
-              description: promo.description,
-              type: "percentage",
-              value: parseFloat(promo.discount_value) || 0,
-              expiry: promo.end_date || "N/A",
-              min_discount_amount: parseFloat(promo.min_discount_amount) || 0,
-              max_discount_amount: parseFloat(promo.max_discount_amount) || 0,
-              per_user_limit: parseInt(promo.per_user_limit) || -1,
-              usage_limit: parseInt(promo.usage_limit) || -1,
-            }))
-          );
-
-          // Reset applied discount if cart items change or new data comes
-          setAppliedDiscount(null);
-          setDiscountCodeInput("");
-          setDiscountErrorMessage(""); // Clear discount error on successful fetch
-
-          if (items.length === 0) {
-            pop("Giỏ hàng của bạn đang trống.", "info");
-            navigate("/cart");
-          }
-        } else {
-          pop(response.data.message, "error");
-          navigate("/cart");
-        }
-      } catch (error) {
-        console.error("Lỗi khi tải dữ liệu giỏ hàng:", error);
-        const errorMessage =
-          error.response?.data?.message || "Lỗi khi tải dữ liệu giỏ hàng.";
-        pop(errorMessage, "error");
-        navigate("/cart");
-      } finally {
-        setLoadingCheckout(false);
-      }
-    };
-
-    fetchCheckoutData();
-  }, [fetchCartItems, pop, navigate]);
-
-  const { subtotalBeforeTax, finalAmount } = useMemo(() => {
-    const subtotalBeforeTaxAndRoleDiscount = backendRawTotalPrice;
-
-    let currentTotal = backendTotalPriceAfterDiscount;
-
-    if (appliedDiscount) {
-      currentTotal = appliedDiscount.total_price_after_discount;
+  useEffect(() => {
+    if (activeTab === "compare" && compareFilters.periodType) {
+      fetchAvailablePeriods();
     }
+  }, [activeTab, compareFilters.periodType]);
 
-    return {
-      subtotalBeforeTax: subtotalBeforeTaxAndRoleDiscount,
-      finalAmount: currentTotal,
-    };
-  }, [backendRawTotalPrice, backendTotalPriceAfterDiscount, appliedDiscount]);
-
-  const handleApplyDiscountCode = async (codeToApply = discountCodeInput) => {
-    const code = codeToApply.trim().toUpperCase();
-    if (!code) {
-      setDiscountErrorMessage("Vui lòng nhập mã giảm giá.");
-      return;
-    } else {
-      setDiscountErrorMessage("");
-    }
-
-    if (!(await conFim(`Bạn muốn áp dụng mã giảm giá "${code}"?`))) return;
-
+  const fetchStatistics = async () => {
+    setLoading(true);
     try {
-      const response = await api.post("/orders/check", {
-        promotion_code: code,
-      });
-      if (response.data.status) {
-        setAppliedDiscount({
-          code: response.data.promotion_code,
-          discount_amount: parseFloat(response.data.discount_amount) || 0,
-          discount_value: parseFloat(response.data.discount_value) || 0,
-          total_price_after_discount:
-            parseFloat(response.data.total_price_after_discount) || 0,
-        });
-        setBackendTotalPriceAfterDiscount(
-          parseFloat(response.data.total_price_after_discount) || 0
-        );
-        setBackendTaxAmount(
-          parseFloat(response.data.tax_value)  || 10
-        );
-        setBackendTaxValue(
-          parseFloat(response.data.tax_amount) || 0
-        );
-        pop(response.data.message, "success");
-        setDiscountCodeInput("");
-        setDiscountErrorMessage("");
-      } else {
-        setAppliedDiscount(null);
-        setDiscountErrorMessage(response.data.message);
-        const checkoutResponse = await api.get("/orders/checkout");
-        if (checkoutResponse.data?.status) {
-          setBackendTotalPriceAfterDiscount(
-            parseFloat(checkoutResponse.data.total_price_after_discount) || 0
-          );
-        }
-      }
+      const params = {
+        period: filters.period,
+        start_date: filters.startDate.toISOString().split("T")[0],
+        end_date: filters.endDate.toISOString().split("T")[0],
+      };
+
+      const response = await api.get("/admin/dashboard/statistics", { params });
+      setStatistics(response.data.data);
     } catch (error) {
-      console.error("Lỗi khi kiểm tra mã giảm giá:", error);
-      const errorMessage =
-        error.response?.data?.message || "Lỗi khi kiểm tra mã giảm giá.";
-      setDiscountErrorMessage(errorMessage);
-      setAppliedDiscount(null);
-      try {
-        const checkoutResponse = await api.get("/orders/checkout");
-        if (checkoutResponse.data?.status) {
-          setBackendTotalPriceAfterDiscount(
-            parseFloat(checkoutResponse.data.total_price_after_discount) || 0
-          );
-        }
-      } catch (e) {
-        console.error("Error reverting total price:", e);
-      }
-    }
-  };
-
-  const handleRemoveDiscount = async () => {
-    if (!appliedDiscount) return;
-    if (!(await conFim("Bạn có chắc chắn muốn xóa mã giảm giá?"))) return;
-    setAppliedDiscount(null);
-    setDiscountCodeInput("");
-    setDiscountErrorMessage("");
-
-    try {
-      const response = await api.get("/orders/checkout");
-      if (response.data.status) {
-        setBackendTotalPriceAfterDiscount(
-          parseFloat(response.data.total_price_after_discount) || 0
-        );
-        pop("Đã xóa mã giảm giá.", "success");
-      } else {
-        pop("Lỗi khi khôi phục giá gốc.", "error");
-      }
-    } catch (error) {
-      console.error("Lỗi khi xóa mã giảm giá:", error);
-      pop("Lỗi khi xóa mã giảm giá.", "error");
-    }
-  };
-
-  const handlePayment = async () => {
-    if (!termsAccepted) {
-      pop("Bạn cần đồng ý với điều khoản và dịch vụ.", "warning");
-      return;
-    }
-
-    if (finalAmount > userBalance) {
-      pop("Số dư không đủ. Vui lòng nạp thêm tiền.", "error");
-      return;
-    }
-
-    if (!(await conFim("Xác nhận thanh toán đơn hàng này?"))) return;
-
-    setIsProcessing(true);
-
-    try {
-      const response = await api.post("/orders/purchase", {
-        promotion_code: appliedDiscount?.code || null,
-      });
-      if (response.data.status) {
-        setUserBalance((prev) => prev - finalAmount);
-        setCartItemsPay([]);
-        setAppliedDiscount(null);
-        pop(response.data.message, "success");
-        await fetchCartItems();
-        await fetchUserMoney();
-        navigate("/info/orders");
-      } else {
-        pop(response.data.message, "error");
-      }
-    } catch (error) {
-      console.error("Lỗi khi xử lý thanh toán:", error);
-      const errorMessage =
-        error.response?.data?.message || "Lỗi khi xử lý thanh toán.";
-      pop(errorMessage, "error");
+      console.error("Error fetching statistics:", error);
     } finally {
-      setIsProcessing(false);
+      setLoading(false);
     }
   };
 
-  if (loadingCheckout) return <LoadingDomain />;
+  const fetchComparison = async () => {
+    if (!compareFilters.period1 || !compareFilters.period2) return;
 
-  return (
-    <div className="min-h-screen">
-      <div className="max-w-screen-xl mx-auto">
-        {/* Breadcrumbs */}
-        <div className="breadcrumbs-container p-4  ">
-          <Link to="/" className="breadcrumb-link">
-            Trang chủ
-          </Link>
-          <ChevronRight size={16} className="breadcrumb-separator" />
-          <Link to="/cart" className="breadcrumb-link">
-            Giỏ hàng
-          </Link>
-          <ChevronRight size={16} className="breadcrumb-separator" />
-          <span className="text-primary font-semibold">Thanh toán</span>
+    setLoading(true);
+    try {
+      const data = {
+        period_type: compareFilters.periodType,
+        period_1: compareFilters.period1,
+        period_2: compareFilters.period2,
+      };
+
+      const response = await api.post("/admin/dashboard/compare", data);
+      setComparison(response.data.data);
+    } catch (error) {
+      console.error("Error fetching comparison:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailablePeriods = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/available-periods", {
+        params: { period_type: compareFilters.periodType },
+      });
+      setAvailablePeriods(response.data.data);
+    } catch (error) {
+      console.error("Error fetching periods:", error);
+    }
+  };
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev, [key]: value };
+
+      // Auto-adjust date range based on period
+      if (key === "period") {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        switch (value) {
+          case "day":
+            newFilters.startDate = new Date();
+            newFilters.endDate = new Date();
+            break;
+          case "week":
+            const weekStart = new Date(now);
+            weekStart.setDate(now.getDate() - now.getDay());
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekStart.getDate() + 6);
+            newFilters.startDate = weekStart;
+            newFilters.endDate = weekEnd;
+            break;
+          case "month":
+            newFilters.startDate = new Date(year, month, 1);
+            newFilters.endDate = new Date(year, month + 1, 0);
+            break;
+          case "quarter":
+            const quarter = Math.floor((month + 3) / 3);
+            const quarterStart = new Date(year, (quarter - 1) * 3, 1);
+            const quarterEnd = new Date(year, quarter * 3, 0);
+            newFilters.startDate = quarterStart;
+            newFilters.endDate = quarterEnd;
+            break;
+          case "year":
+            newFilters.startDate = new Date(year, 0, 1);
+            newFilters.endDate = new Date(year, 11, 31);
+            break;
+        }
+      }
+
+      return newFilters;
+    });
+  };
+
+  const handleCompareFilterChange = (key, value) => {
+    setCompareFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(value);
+  };
+
+  const formatNumber = (value) => {
+    return new Intl.NumberFormat("vi-VN").format(value);
+  };
+
+  const StatCard = ({
+    title,
+    value,
+    icon: Icon,
+    change,
+    changeType,
+    color = "blue",
+  }) => (
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100 hover:shadow-xl transition-shadow">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-gray-500 text-sm font-medium">{title}</p>
+          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+          {change && (
+            <div className="flex items-center mt-2">
+              {changeType === "increase" ? (
+                <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+              ) : (
+                <TrendingDown className="w-4 h-4 text-red-500 mr-1" />
+              )}
+              <span
+                className={`text-sm ${
+                  changeType === "increase" ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {change}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className={`p-3 rounded-full bg-${color}-50`}>
+          <Icon className={`w-6 h-6 text-${color}-600`} />
+        </div>
+      </div>
+    </div>
+  );
+
+  const ComparisonCard = ({
+    title,
+    period1,
+    period2,
+    difference,
+    icon: Icon,
+  }) => (
+    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+        <Icon className="w-5 h-5 text-gray-500" />
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            {comparison?.period_1.label}
+          </span>
+          <span className="font-semibold">{period1}</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Cột chính (trái) */}
-          <div className="lg:col-span-3 space-y-8">
-            {/* Card: Xem lại đơn hàng */}
-            <div className="section-bg p-6">
-              <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
-                <ListOrdered size={24} className="mr-3 text-accent" />
-                Xem lại đơn hàng ({cartItemsPay.length})
-              </h2>
-              <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar-notification">
-                {cartItemsPay.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-4 bg-input p-3 rounded-lg border border-themed"
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-16 h-16 object-cover rounded-md shadow-sm"
-                    />
-                    <div className="flex-grow">
-                      <h3 className="font-semibold text-primary">
-                        {item.name}
-                      </h3>
-                      <p className="text-sm text-secondary">
-                        Giá gốc: {formatCurrency(item.old_price)}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-primary">
-                        {formatCurrency(item.price)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600">
+            {comparison?.period_2.label}
+          </span>
+          <span className="font-semibold">{period2}</span>
+        </div>
+
+        <div className="border-t pt-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Chênh lệch</span>
+            <div className="text-right">
+              <div
+                className={`font-semibold ${
+                  difference.absolute >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {difference.absolute >= 0 ? "+" : ""}
+                {typeof difference.absolute === "number"
+                  ? formatNumber(difference.absolute)
+                  : difference.absolute}
               </div>
-            </div>
-          </div>
-
-          {/* Cột phụ (phải) */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-24 space-y-8">
-              {/* Card: Ví của bạn */}
-              <div className="section-bg p-6">
-                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
-                  <Wallet size={24} className="mr-3 text-accent" />
-                  Ví của bạn
-                </h2>
-                <div
-                  className={`p-4 rounded-lg flex items-center justify-between gap-5 ${
-                    userBalance >= finalAmount
-                      ? "bg-tertiary/20"
-                      : "bg-red-500/10"
-                  }`}
-                >
-                  <div>
-                    <p className="text-sm text-secondary">Số dư khả dụng</p>
-                    <p className="text-2xl font-bold text-primary">
-                      {formatCurrency(userBalance)}
-                    </p>
-                  </div>
-                  {userBalance < finalAmount && (
-                    <Link
-                      to="/recharge-atm"
-                      className="action-button action-button-primary !py-2 !px-4 text-sm"
-                    >
-                      <Landmark size={16} className="mr-2" />
-                      Nạp tiền
-                    </Link>
-                  )}
-                </div>
-                {userBalance < finalAmount && (
-                  <p className="text-red-500 text-sm mt-2 font-semibold">
-                    Số dư không đủ để thực hiện thanh toán.
-                  </p>
-                )}
-              </div>
-              {/* Card: Mã giảm giá */}
-              <div className="section-bg p-6">
-                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
-                  <TicketPercent size={24} className="mr-3 text-accent" />
-                  Mã giảm giá
-                </h2>
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    type="text"
-                    value={discountCodeInput}
-                    onChange={(e) =>
-                      setDiscountCodeInput(e.target.value.toUpperCase())
-                    }
-                    placeholder="Nhập mã của bạn ở đây"
-                    className="flex-grow w-full bg-input text-input p-3 rounded-md border-hover placeholder-theme"
-                  />
-                  <button
-                    onClick={() => handleApplyDiscountCode()}
-                    className="action-button action-button-secondary !py-3 !px-6"
-                  >
-                    Áp dụng
-                  </button>
-                </div>
-                {discountErrorMessage && (
-                  <p className="text-red-500 text-sm mt-2">
-                    {discountErrorMessage}
-                  </p>
-                )}
-                <div className="mt-3 flex justify-between items-center">
-                  <button
-                    onClick={() => setShowDiscountModal(true)}
-                    className="text-sm text-accent hover:brightness-125 font-medium"
-                  >
-                    Xem danh sách mã giảm giá
-                  </button>
-                  {appliedDiscount && (
-                    <button
-                      onClick={handleRemoveDiscount}
-                      className="text-xs text-red-500 hover:underline flex items-center"
-                    >
-                      <X size={12} className="mr-1" /> Gỡ mã "
-                      {appliedDiscount.code}"
-                    </button>
-                  )}
-                </div>
-              </div>
-              {/* Card: Tổng kết thanh toán */}
-              <div className="section-bg p-6">
-                <h2 className="text-xl font-bold font-heading mb-4 text-primary flex items-center">
-                  <FileText size={24} className="mr-3 text-accent" />
-                  Tổng kết thanh toán
-                </h2>
-                <div className="space-y-3 text-sm">
-                  {/* Dotted line separator */}
-                  <div className="flex items-center justify-between">
-                    <span className="text-secondary">Giá gốc sản phẩm</span>
-                    <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
-                    <span className="font-medium text-primary">
-                      {formatCurrency(subtotalBeforeTax)}
-                    </span>
-                  </div>
-                  {backendRoleDiscountValue > 0 && (
-                    <div className="flex items-center justify-between text-tertiary">
-                      <span className="font-semibold">
-                        Chiết khấu hạng ({backendRoleDiscountValue}%)
-                      </span>
-                      <div className="flex-grow border-b border-dashed border-tertiary/50 mx-2"></div>
-                      <span className="font-semibold">
-                        -{formatCurrency(backendRoleDiscountAmount)}
-                      </span>
-                    </div>
-                  )}
-                  
-                  {appliedDiscount && (
-                    <div className="flex items-center justify-between text-accent">
-                      <span className="font-semibold">
-                        Mã giảm giá "{appliedDiscount.code}"
-                      </span>
-                      <div className="flex-grow border-b border-dashed border-accent/50 mx-2"></div>
-                      <span className="font-semibold">
-                        -{formatCurrency(appliedDiscount.discount_amount)}
-                      </span>
-                    </div>
-                  )}
-                  {backendTaxAmount > 0 && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-secondary">
-                        Thuế ({backendTaxValue}%)
-                      </span>
-                      <div className="flex-grow border-b border-dashed border-themed mx-2"></div>
-                      <span className="font-medium text-primary">
-                        +{formatCurrency(backendTaxAmount)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-themed mt-4 pt-4">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-lg font-semibold text-primary">
-                      Tổng thanh toán
-                    </span>
-                    <span className="font-bold text-red-500 text-3xl">
-                      {formatCurrency(finalAmount)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Card: Hành động cuối cùng */}
-              <div className="section-bg p-6">
-                <div className="mb-4">
-                  <label
-                    htmlFor="terms"
-                    className="flex items-start text-sm text-secondary cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="h-4 w-4 mr-3 mt-0.5 rounded"
-                    />
-                    <span>
-                      Tôi đã đọc và đồng ý với các{" "}
-                      <Link
-                        to="/tin-tuc/huong-dan/dieu-khoan-va-dich-vu"
-                        className="text-accent hover:underline font-medium"
-                      >
-                        điều khoản và dịch vụ
-                      </Link>{" "}
-                      của trang web.
-                    </span>
-                  </label>
-                </div>
-
-                <button
-                  onClick={handlePayment}
-                  disabled={
-                    loadingCheckout ||
-                    finalAmount > userBalance ||
-                    !termsAccepted ||
-                    cartItemsPay.length === 0 ||
-                    isProcessing
-                  }
-                  className="action-button action-button-primary w-full text-lg !py-4"
-                >
-                  <CreditCard className="inline-block mr-3" size={24} />
-                  {isProcessing ? "Đang xử lý..." : "Xác nhận & Thanh toán"}
-                </button>
-
-                <div className="mt-4 text-xs text-secondary text-center">
-                  <p className="flex items-center justify-center">
-                    <ShieldCheck size={14} className="mr-2 text-tertiary" />
-                    Tất cả giao dịch đều được mã hóa và bảo mật.
-                  </p>
-                </div>
+              <div
+                className={`text-sm ${
+                  difference.percentage >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {difference.percentage >= 0 ? "+" : ""}
+                {difference.percentage}%
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      <DiscountModal
-        isOpen={showDiscountModal}
-        onClose={() => setShowDiscountModal(false)}
-        discounts={promotionCodes}
-        onApplyDiscount={handleApplyDiscountCode}
-        appliedPromotionCode={appliedDiscount?.code}
-      />
     </div>
   );
-}
+
+  const tabs = [
+    { id: "overview", name: "Tổng quan", icon: Activity },
+    { id: "charts", name: "Biểu đồ", icon: BarChart3 },
+    { id: "performance", name: "Hiệu suất", icon: TrendingUpIcon },
+    { id: "transactions", name: "Giao dịch nạp", icon: CreditCard },
+    { id: "compare", name: "So sánh", icon: PieChartIcon },
+    { id: "history", name: "Lịch sử", icon: HistoryIcon },
+  ];
+  const renderTransactions = () => {
+    if (!statistics || !statistics.transaction_details) return null;
+
+    return (
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+          Chi tiết giao dịch nạp tiền
+        </h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b-2 border-gray-200">
+                <th className="text-left py-3 px-2 font-semibold">ID</th>
+                <th className="text-left py-3 px-2 font-semibold">
+                  Người dùng
+                </th>
+                <th className="text-left py-3 px-2 font-semibold">Hình thức</th>
+                <th className="text-right py-3 px-2 font-semibold">Số tiền</th>
+                <th className="text-left py-3 px-2 font-semibold">Ngày</th>
+              </tr>
+            </thead>
+            <tbody>
+              {statistics.transaction_details.map((tx, index) => (
+                <tr
+                  key={index}
+                  className="border-b hover:bg-gray-50 transition-colors"
+                >
+                  <td className="py-3 px-2">{tx.id}</td>
+                  <td className="py-3 px-2">{tx.user_name || tx.user_id}</td>
+                  <td className="py-3 px-2">
+                    {tx.type === "recharge_card" ? "Thẻ cào" : "Ngân hàng"}
+                  </td>
+                  <td className="py-3 px-2 text-right text-blue-600">
+                    {formatCurrency(tx.amount)}
+                  </td>
+                  <td className="py-3 px-2">
+                    {new Date(tx.created_at).toLocaleString("vi-VN")}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFilters = () => (
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+      <div className="flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <span className="font-medium text-gray-700">Bộ lọc:</span>
+          </div>
+
+          <select
+            value={filters.period}
+            onChange={(e) => handleFilterChange("period", e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="day">Ngày</option>
+            <option value="week">Tuần</option>
+            <option value="month">Tháng</option>
+            <option value="quarter">Quý</option>
+            <option value="year">Năm</option>
+          </select>
+
+          <div className="flex items-center gap-2">
+            <DatePicker
+              selected={filters.startDate}
+              onChange={(date) => handleFilterChange("startDate", date)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+              dateFormat="yyyy-MM-dd"
+              showPopperArrow={false}
+              calendarClassName="shadow-lg border border-gray-200"
+              placeholderText="Ngày bắt đầu"
+            />
+            <span className="text-gray-500">đến</span>
+            <DatePicker
+              selected={filters.endDate}
+              onChange={(date) => handleFilterChange("endDate", date)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+              dateFormat="yyyy-MM-dd"
+              showPopperArrow={false}
+              calendarClassName="shadow-lg border border-gray-200"
+              placeholderText="Ngày kết thúc"
+            />
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            onClick={fetchStatistics}
+            disabled={loading}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+          >
+            <BarChart3 className="w-4 h-4" />
+            Cập nhật
+          </button>
+        </div>
+      </div>
+
+      {/* Comparison Controls */}
+      {activeTab === "compare" && (
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <div className="flex flex-wrap gap-4 items-center">
+            <span className="font-medium text-gray-700">So sánh theo:</span>
+
+            <select
+              value={compareFilters.periodType}
+              onChange={(e) =>
+                handleCompareFilterChange("periodType", e.target.value)
+              }
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="week">Tuần</option>
+              <option value="month">Tháng</option>
+              <option value="quarter">Quý</option>
+              <option value="year">Năm</option>
+            </select>
+
+            <select
+              value={compareFilters.period1?.value || ""}
+              onChange={(e) => {
+                const period = availablePeriods.find(
+                  (p) => p.value === e.target.value
+                );
+                handleCompareFilterChange(
+                  "period1",
+                  period
+                    ? {
+                        start: period.start,
+                        end: period.end,
+                        value: period.value,
+                      }
+                    : null
+                );
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Chọn kỳ 1</option>
+              {availablePeriods.map((period) => (
+                <option key={period.value} value={period.value}>
+                  {period.label}
+                </option>
+              ))}
+            </select>
+
+            <span className="text-gray-500">so với</span>
+
+            <select
+              value={compareFilters.period2?.value || ""}
+              onChange={(e) => {
+                const period = availablePeriods.find(
+                  (p) => p.value === e.target.value
+                );
+                handleCompareFilterChange(
+                  "period2",
+                  period
+                    ? {
+                        start: period.start,
+                        end: period.end,
+                        value: period.value,
+                      }
+                    : null
+                );
+              }}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Chọn kỳ 2</option>
+              {availablePeriods.map((period) => (
+                <option key={period.value} value={period.value}>
+                  {period.label}
+                </option>
+              ))}
+            </select>
+
+            <button
+              onClick={fetchComparison}
+              disabled={
+                loading || !compareFilters.period1 || !compareFilters.period2
+              }
+              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
+            >
+              <Zap className="w-4 h-4" />
+              So sánh
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderOverview = () => {
+    if (!statistics) return null;
+
+    return (
+      <div className="space-y-8">
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Tổng doanh thu"
+            value={formatCurrency(statistics.summary.total_revenue)}
+            icon={Coins}
+            color="green"
+          />
+          <StatCard
+            title="Tiền vốn"
+            value={formatCurrency(statistics.summary.total_cost)}
+            icon={Package}
+            color="orange"
+          />
+          <StatCard
+            title="Tiền lãi"
+            value={formatCurrency(statistics.summary.total_profit)}
+            icon={Target}
+            color="emerald"
+          />
+          <StatCard
+            title="Tổng đơn hàng"
+            value={formatNumber(statistics.summary.total_orders)}
+            icon={ShoppingCart}
+            color="blue"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatCard
+            title="Khách hàng mới"
+            value={formatNumber(statistics.summary.total_new_customers)}
+            icon={UserPlus}
+            color="purple"
+          />
+          <StatCard
+            title="Giá trị TB/đơn"
+            value={formatCurrency(statistics.summary.avg_order_value)}
+            icon={TrendingUp}
+            color="indigo"
+          />
+          <StatCard
+            title="Giao dịch nạp tiền"
+            value={formatNumber(statistics.summary.total_transaction_count)}
+            icon={CreditCard}
+            color="pink"
+          />
+          <StatCard
+            title="Tổng tiền nạp"
+            value={formatCurrency(statistics.summary.total_transaction_amount)}
+            icon={Users}
+            color="cyan"
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderCharts = () => {
+    if (!statistics) return null;
+
+    return (
+      <div className="space-y-8">
+        {/* Revenue & Profit Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Biểu đồ doanh thu và lãi theo thời gian
+          </h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <ComposedChart data={statistics.revenue_chart}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip
+                formatter={(value, name) => [
+                  formatCurrency(value),
+                  name === "total_revenue"
+                    ? "Doanh thu"
+                    : name === "total_cost"
+                    ? "Vốn"
+                    : "Lãi",
+                ]}
+                labelFormatter={(label) => `Kỳ: ${label}`}
+              />
+              <Legend />
+              <Bar dataKey="total_cost" fill="#EF4444" name="Vốn" />
+              <Bar dataKey="total_profit" fill="#10B981" name="Lãi" />
+              <Line
+                type="monotone"
+                dataKey="total_revenue"
+                stroke="#3B82F6"
+                strokeWidth={3}
+                name="Doanh thu"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Orders & New Customers Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Đơn hàng và khách hàng mới
+          </h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <ComposedChart
+              data={statistics.revenue_chart.map((item, index) => ({
+                ...item,
+                new_customers:
+                  statistics.new_customers_chart[index]?.new_customers || 0,
+              }))}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" />
+              <YAxis />
+              <Tooltip
+                formatter={(value, name) => [
+                  formatNumber(value),
+                  name === "total_orders" ? "Đơn hàng" : "Khách hàng mới",
+                ]}
+                labelFormatter={(label) => `Kỳ: ${label}`}
+              />
+              <Legend />
+              <Bar dataKey="total_orders" fill="#F59E0B" name="Đơn hàng" />
+              <Line
+                type="monotone"
+                dataKey="new_customers"
+                stroke="#8B5CF6"
+                strokeWidth={3}
+                name="Khách hàng mới"
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Transaction Statistics */}
+        {/* <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Thống kê giao dịch nạp tiền
+          </h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart data={statistics.transaction_stats}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="period" />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip
+                formatter={(value, name) => [
+                  name === "total_amount"
+                    ? formatCurrency(value)
+                    : formatNumber(value),
+                  name === "total_amount" ? "Tổng tiền nạp" : "Số giao dịch",
+                ]}
+                labelFormatter={(label) => `Kỳ: ${label}`}
+              />
+              <Legend />
+              <Bar dataKey="total_amount" fill="#06B6D4" name="Tổng tiền nạp" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div> */}
+      </div>
+    );
+  };
+
+  const renderPerformance = () => {
+    if (!statistics) return null;
+
+    return (
+      <div className="space-y-8">
+        {/* Category Details Table */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Chi tiết hiệu suất danh mục
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-3 px-2 font-semibold">
+                    Danh mục
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Doanh thu
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">Vốn</th>
+                  <th className="text-right py-3 px-2 font-semibold">Lãi</th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Sản phẩm đang bán
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Sản phẩm đã bán
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {statistics.category_stats.map((category, index) => (
+                  <tr
+                    key={index}
+                    className="border-b hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="py-3 px-2 font-medium">
+                      {category.category_name}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      {formatCurrency(category.revenue)}
+                    </td>
+                    <td className="py-3 px-2 text-right text-orange-600">
+                      {formatCurrency(category.cost)}
+                    </td>
+                    <td className="py-3 px-2 text-right text-green-600">
+                      {formatCurrency(category.profit)}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      {formatNumber(category.available_products)}
+                    </td>
+                    <td className="py-3 px-2 text-right">
+                      {formatNumber(category.items_sold)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderComparison = () => {
+    if (!comparison) {
+      return (
+        <div className="text-center py-12">
+          <Zap className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Chưa có dữ liệu so sánh
+          </h3>
+          <p className="text-gray-500">
+            Vui lòng chọn các kỳ để so sánh và nhấn "So sánh".
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-8">
+        {/* Comparison Chart */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Biểu đồ so sánh
+          </h3>
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              data={[
+                {
+                  name: comparison.period_2.label,
+                  "Doanh thu": comparison.period_2.stats.total_revenue,
+                  "Tiền lãi": comparison.period_2.stats.total_profit,
+                  "Đơn hàng": comparison.period_2.stats.total_orders * 10000,
+                  "Khách hàng mới":
+                    comparison.period_2.stats.total_new_customers * 100000,
+                },
+                {
+                  name: comparison.period_1.label,
+                  "Doanh thu": comparison.period_1.stats.total_revenue,
+                  "Tiền lãi": comparison.period_1.stats.total_profit,
+                  "Đơn hàng": comparison.period_1.stats.total_orders * 10000,
+                  "Khách hàng mới":
+                    comparison.period_1.stats.total_new_customers * 100000,
+                },
+              ]}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip
+                formatter={(value, name) => {
+                  if (name === "Đơn hàng") return [value / 10000, name];
+                  if (name === "Khách hàng mới") return [value / 100000, name];
+                  return [formatCurrency(value), name];
+                }}
+              />
+              <Legend />
+              <Bar dataKey="Doanh thu" fill="#3B82F6" />
+              <Bar dataKey="Tiền lãi" fill="#10B981" />
+              <Bar dataKey="Đơn hàng" fill="#F59E0B" />
+              <Bar dataKey="Khách hàng mới" fill="#8B5CF6" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Comparison Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <ComparisonCard
+            title="Doanh thu"
+            period1={formatCurrency(comparison.period_1.stats.total_revenue)}
+            period2={formatCurrency(comparison.period_2.stats.total_revenue)}
+            difference={comparison.differences.revenue}
+            icon={DollarSign}
+          />
+          <ComparisonCard
+            title="Đơn hàng"
+            period1={formatNumber(comparison.period_1.stats.total_orders)}
+            period2={formatNumber(comparison.period_2.stats.total_orders)}
+            difference={comparison.differences.orders}
+            icon={ShoppingCart}
+          />
+          <ComparisonCard
+            title="Tiền lãi"
+            period1={formatCurrency(comparison.period_1.stats.total_profit)}
+            period2={formatCurrency(comparison.period_2.stats.total_profit)}
+            difference={comparison.differences.profit}
+            icon={Target}
+          />
+          <ComparisonCard
+            title="Khách hàng mới"
+            period1={formatNumber(
+              comparison.period_1.stats.total_new_customers
+            )}
+            period2={formatNumber(
+              comparison.period_2.stats.total_new_customers
+            )}
+            difference={comparison.differences.new_customers}
+            icon={UserPlus}
+          />
+        </div>
+      </div>
+    );
+  };
+
+  const renderHistory = () => {
+    if (!statistics) return null;
+
+    return (
+      <div className="space-y-8">
+        {/* Revenue Timeline */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Lịch sử doanh thu theo thời gian
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-3 px-2 font-semibold">Kỳ</th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Doanh thu
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">Vốn</th>
+                  <th className="text-right py-3 px-2 font-semibold">Lãi</th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Đơn hàng
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Tỷ suất lãi (%)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {statistics.revenue_chart
+                  .slice()
+                  .reverse()
+                  .map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-b hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-2 font-medium">{item.period}</td>
+                      <td className="py-3 px-2 text-right">
+                        {formatCurrency(item.total_revenue)}
+                      </td>
+                      <td className="py-3 px-2 text-right text-orange-600">
+                        {formatCurrency(item.total_cost)}
+                      </td>
+                      <td className="py-3 px-2 text-right text-green-600">
+                        {formatCurrency(item.total_profit)}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {formatNumber(item.total_orders)}
+                      </td>
+                      <td className="py-3 px-2 text-right font-medium">
+                        {item.total_cost > 0
+                          ? (
+                              (item.total_profit / item.total_cost) *
+                              100
+                            ).toFixed(1)
+                          : 0}
+                        %
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Transaction History */}
+        <div className="bg-white rounded-xl shadow-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Lịch sử giao dịch nạp tiền
+          </h3>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b-2 border-gray-200">
+                  <th className="text-left py-3 px-2 font-semibold">Kỳ</th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Tổng tiền nạp
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Số giao dịch
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Trung bình/giao dịch
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {statistics.transaction_stats
+                  .slice()
+                  .reverse()
+                  .map((item, index) => (
+                    <tr
+                      key={index}
+                      className="border-b hover:bg-gray-50 transition-colors"
+                    >
+                      <td className="py-3 px-2 font-medium">{item.period}</td>
+                      <td className="py-3 px-2 text-right text-blue-600">
+                        {formatCurrency(item.total_amount)}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {formatNumber(item.total_transactions)}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {formatCurrency(
+                          item.total_transactions > 0
+                            ? item.total_amount / item.total_transactions
+                            : 0
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderTabContent = () => {
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      );
+    }
+
+    switch (activeTab) {
+      case "overview":
+        return renderOverview();
+      case "charts":
+        return renderCharts();
+      case "performance":
+        return renderPerformance();
+      case "transactions":
+        return renderTransactions();
+
+      case "compare":
+        return renderComparison();
+      case "history":
+        return renderHistory();
+      default:
+        return renderOverview();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Dashboard Thống Kê
+          </h1>
+          <p className="text-gray-600">
+            Theo dõi hiệu suất kinh doanh SuperBee
+          </p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`${
+                      activeTab === tab.id
+                        ? "border-blue-500 text-blue-600 bg-blue-50"
+                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    } group inline-flex items-center py-2 px-4 border-b-2 font-medium text-sm rounded-t-lg transition-all duration-200`}
+                  >
+                    <Icon
+                      className={`${
+                        activeTab === tab.id
+                          ? "text-blue-500"
+                          : "text-gray-400 group-hover:text-gray-500"
+                      } -ml-0.5 mr-2 h-4 w-4`}
+                    />
+                    {tab.name}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Filters */}
+        {renderFilters()}
+
+        {/* Tab Content */}
+        {renderTabContent()}
+
+        {/* Empty State */}
+        {!loading && !statistics && activeTab !== "compare" && (
+          <div className="text-center py-12">
+            <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Chưa có dữ liệu
+            </h3>
+            <p className="text-gray-500">
+              Vui lòng chọn bộ lọc và nhấn "Cập nhật" để xem thống kê.
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Dashboard;

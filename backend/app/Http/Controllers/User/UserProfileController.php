@@ -304,75 +304,70 @@ class UserProfileController extends Controller
     public function getDisputes(Request $request)
     {
         try {
-            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
-            }
+            // Lấy user ID từ token đã được xác thực qua middleware
+            $userId = auth()->id();
 
-            $disputes = Dispute::where('user_id', $user->id)
-                ->with(['orderItem:id,order_id,product_id', 'orderItem.product:id,sku', 'orderItem.order:id,order_code'])
-                ->select('id', 'order_item_id', 'dispute_type', 'description', 'status', 'created_at')
+            // Lấy danh sách khiếu nại của user đó
+            $disputes = Dispute::where('user_id', $userId)
+                // Tải kèm các thông tin cần thiết để hiển thị ở frontend
+                ->with([
+                    'orderItem:id,order_id,product_id',
+                    'orderItem.product:id,sku,description', // Lấy thêm description cho dễ hiển thị
+                    'orderItem.order:id,order_code'
+                ])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
-                'status' => true,
+                'success' => true,
                 'message' => 'Lấy danh sách khiếu nại thành công.',
                 'data' => $disputes
             ], 200);
-
         } catch (Exception $e) {
+            // Ghi log lỗi để debug
+            // Log::error('Fetch Disputes Failed: ' . $e->getMessage());
             return response()->json([
+                'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy danh sách khiếu nại.',
-                'error' => $e->getMessage(),
-                'errorCode' => 'FETCH_DISPUTES_FAILED'
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Lấy chi tiết một khiếu nại, bao gồm cả phản hồi từ Admin.
+     * Client: Lấy chi tiết một khiếu nại của chính mình.
      *
-     * @param Request $request
      * @param int $id ID của dispute
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getDisputeDetails(Request $request, $id)
     {
         try {
-            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
-            }
+            $userId = auth()->id();
 
-            // Lấy dispute với các thông tin liên quan cần thiết
+            // Tìm khiếu nại theo ID
             $dispute = Dispute::with([
-                'orderItem:id,product_id',
-                'orderItem.product:id,sku'
+                'orderItem.product:id,sku,description'
             ])->find($id);
 
-            // Kiểm tra khiếu nại có tồn tại và thuộc về user này không
-            if (!$dispute || $dispute->user_id !== $user->id) {
+            // Kiểm tra xem khiếu nại có tồn tại và có thuộc về người dùng này không
+            if (!$dispute || $dispute->user_id !== $userId) {
                 return response()->json([
-                    'message' => 'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.',
-                    'errorCode' => 'DISPUTE_NOT_FOUND_OR_FORBIDDEN'
-                ], 404);
+                    'success' => false,
+                    'message' => 'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.'
+                ], 404); // Sử dụng 404 Not Found
             }
-            
-          
-
 
             return response()->json([
-                'status' => true,
+                'success' => true,
                 'message' => 'Lấy chi tiết khiếu nại thành công.',
-                'data' => $dispute // Trả về toàn bộ object dispute, đã bao gồm cả 'resolution'
+                'data' => $dispute // Trả về toàn bộ object dispute, bao gồm cả 'resolution'
             ], 200);
-
         } catch (Exception $e) {
+            // Log::error('Fetch Dispute Detail Failed: ' . $e->getMessage());
             return response()->json([
+                'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy chi tiết khiếu nại.',
-                'error' => $e->getMessage(),
-                'errorCode' => 'FETCH_DISPUTE_DETAIL_FAILED'
+                'error' => $e->getMessage()
             ], 500);
         }
     }

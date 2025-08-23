@@ -687,7 +687,8 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
                 'status' => false,
-                'code' => 'INTERNAL_SERVER_ERROR'
+                'code' => 'INTERNAL_SERVER_ERROR',
+                'ew'=>$e->getMessage()
             ], 500);
         }
     }

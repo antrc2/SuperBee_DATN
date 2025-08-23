@@ -4,20 +4,113 @@
 
 import React, { useState, useEffect } from "react";
 import { Filter, X } from "lucide-react";
-
+function renderCategoryOption(category, prefix = "") {
+  if (category.children && category.children.length > 0) {
+    // Nếu có con, render con (không cho chọn cha)
+    return [
+      <option key={category.id} value={category.id} disabled>
+        {prefix + category.name}
+      </option>,
+      ...category.children.map((child) =>
+        renderCategoryOption(child, prefix + "— ")
+      ),
+    ];
+  }
+  return (
+    <option key={category.id} value={category.id}>
+      {prefix + category.name}
+    </option>
+  );
+}
 function FilterSidebar({ categories, initialFilters, onApplyFilters }) {
   const [localFilters, setLocalFilters] = useState(initialFilters);
+  const [error, setError] = useState("");
+  const [selectedPriceRange, setSelectedPriceRange] = useState("");
 
+  // đồng bộ lại khi load initialFilters từ URL
+  useEffect(() => {
+    if (initialFilters.min_price && initialFilters.max_price) {
+      const min = Number(initialFilters.min_price);
+      const max = Number(initialFilters.max_price);
+
+      if (min === 0 && max === 500000) setSelectedPriceRange("under500k");
+      else if (min === 500000 && max === 1000000)
+        setSelectedPriceRange("500k-1m");
+      else if (min === 1000000 && max === 5000000)
+        setSelectedPriceRange("1m-5m");
+      else if (min === 5000000 && max === 10000000)
+        setSelectedPriceRange("5m+");
+      else if (min === 10000000 && max === 50000000)
+        setSelectedPriceRange("10m+");
+      else if (min === 50000000 && max === 99999999)
+        setSelectedPriceRange("50m+");
+      else setSelectedPriceRange(""); // reset nếu không khớp
+    } else {
+      setSelectedPriceRange("");
+    }
+  }, [initialFilters]);
+
+  // hàm đổi khoảng giá
+  const handlePriceRangeChange = (e) => {
+    const value = e.target.value;
+    setSelectedPriceRange(value);
+
+    let min = "";
+    let max = "";
+
+    if (value === "under500k") {
+      min = 0;
+      max = 500000;
+    } else if (value === "500k-1m") {
+      min = 500000;
+      max = 1000000;
+    } else if (value === "1m-5m") {
+      min = 1000000;
+      max = 5000000;
+    } else if (value === "5m+") {
+      min = 5000000;
+      max = 10000000;
+    } else if (value === "10m+") {
+      min = 10000000;
+      max = 50000000;
+    } else if (value === "50m+") {
+      min = 50000000;
+      max = 99999999;
+    }
+
+    setLocalFilters((prev) => ({
+      ...prev,
+      min_price: min,
+      max_price: max,
+    }));
+  };
   useEffect(() => {
     setLocalFilters(initialFilters);
+    setError("");
   }, [initialFilters]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setLocalFilters((prev) => ({ ...prev, [name]: value }));
+    setError("");
   };
 
   const handleApply = () => {
+    const min = Number(localFilters.min_price);
+    const max = Number(localFilters.max_price);
+    const MAX_LIMIT = 100_000_000; // 100 triệu
+
+    if (localFilters.min_price && localFilters.max_price && min > max) {
+      setError("Giá tối thiểu phải nhỏ hơn giá tối đa.");
+      return;
+    }
+    if (localFilters.max_price && max > MAX_LIMIT) {
+      setError(
+        `Giá tối đa không được vượt quá ${MAX_LIMIT.toLocaleString()}đ.`
+      );
+      return;
+    }
+    setError("");
     onApplyFilters(localFilters);
   };
 
@@ -32,6 +125,7 @@ function FilterSidebar({ categories, initialFilters, onApplyFilters }) {
       page: 1,
     };
     setLocalFilters(defaultFilters);
+    setError("");
     onApplyFilters(defaultFilters);
   };
 
@@ -78,42 +172,50 @@ function FilterSidebar({ categories, initialFilters, onApplyFilters }) {
             className="block w-full px-4 py-2 text-sm rounded-lg border-hover bg-input text-input"
           >
             <option value="">Tất cả danh mục</option>
-            {/* Lặp qua các danh mục cha để tạo nhóm */}
             {categories.map((parentCategory) => (
               <optgroup key={parentCategory.id} label={parentCategory.name}>
-                {/* Lặp qua các danh mục con trong mỗi nhóm */}
-                {parentCategory.children.map((childCategory) => (
-                  <option key={childCategory.id} value={childCategory.id}>
-                    {childCategory.name}
+                {parentCategory.children &&
+                parentCategory.children.length > 0 ? (
+                  parentCategory.children.map((child) =>
+                    renderCategoryOption(child)
+                  )
+                ) : (
+                  // Nếu cha không có con thì disable luôn cha
+                  <option
+                    key={parentCategory.id}
+                    value={parentCategory.id}
+                    disabled
+                  >
+                    {parentCategory.name}
                   </option>
-                ))}
+                )}
               </optgroup>
             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-primary mb-1">
+          <label
+            htmlFor="priceRange"
+            className="block text-sm font-medium text-primary mb-1"
+          >
             Khoảng giá
           </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              name="min_price"
-              value={localFilters.min_price || ""}
-              onChange={handleInputChange}
-              placeholder="Từ"
-              className="block w-full px-4 py-2 text-sm rounded-lg border-hover bg-input text-input"
-            />
-            <input
-              type="number"
-              name="max_price"
-              value={localFilters.max_price || ""}
-              onChange={handleInputChange}
-              placeholder="Đến"
-              className="block w-full px-4 py-2 text-sm rounded-lg border-hover bg-input text-input"
-            />
-          </div>
+          <select
+            id="priceRange"
+            name="priceRange"
+            value={selectedPriceRange}
+            onChange={handlePriceRangeChange}
+            className="block w-full px-4 py-2 text-sm rounded-lg border-hover bg-input text-input"
+          >
+            <option value="">Tất cả giá</option>
+            <option value="under500k">Dưới 500.000đ</option>
+            <option value="500k-1m">500.000đ - 1.000.000đ</option>
+            <option value="1m-5m">1.000.000đ - 5.000.000đ</option>
+            <option value="5m+">5.000.000đ - 10.000.000đ</option>
+            <option value="10m+">10.000.000đ - 50.000.000đ</option>
+            <option value="50m+">Trên 50.000.000đ</option>
+          </select>
         </div>
 
         <div className="flex items-center gap-2 pt-2">
@@ -161,11 +263,25 @@ const useProductSearch = (filters) => {
   });
 };
 
+// Hook lấy danh mục
+const useCategories = () => {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: async () => {
+      const { data } = await api.get("/categories");
+      return data.data.treeCategories; // lấy đúng treeCategories từ API
+    },
+    staleTime: 1000 * 60 * 5, // cache 5 phút
+  });
+};
+
 export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { homeData } = useHome();
 
-  const categoriesTree = homeData?.categories?.treeCategories || [];
+  // Gọi API lấy danh mục
+  const { data: categoriesTree = [], isLoading: loadingCategories } = useCategories();
+
 
   // Lấy tất cả các tham số từ URL và tạo thành một object filters
   const filters = {
@@ -188,13 +304,13 @@ export default function SearchPage() {
   };
 
   // Hàm xử lý sắp xếp
-  const handleSortChange = (e) => {
-    const newSortValue = e.target.value;
-    const currentParams = new URLSearchParams(searchParams);
-    currentParams.set("sortBy", newSortValue);
-    currentParams.set("page", "1"); // Reset trang khi sắp xếp
-    setSearchParams(currentParams);
-  };
+  // const handleSortChange = (e) => {
+  //   const newSortValue = e.target.value;
+  //   const currentParams = new URLSearchParams(searchParams);
+  //   currentParams.set("sortBy", newSortValue);
+  //   currentParams.set("page", "1"); // Reset trang khi sắp xếp
+  //   setSearchParams(currentParams);
+  // };
 
   // --- HÀM PHÂN TRANG ĐÃ ĐƯỢC SỬA LỖI ---
   const handlePageChange = (newPage) => {
@@ -240,7 +356,7 @@ export default function SearchPage() {
               )}
             </div>
 
-            <div className="flex items-center gap-2">
+            {/* <div className="flex items-center gap-2">
               <label
                 htmlFor="sortBy"
                 className="text-sm font-medium text-primary"
@@ -259,7 +375,7 @@ export default function SearchPage() {
                 <option value="price_asc">Giá: Thấp đến Cao</option>
                 <option value="price_desc">Giá: Cao đến Thấp</option>
               </select>
-            </div>
+            </div> */}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">

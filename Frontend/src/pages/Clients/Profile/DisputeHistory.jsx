@@ -22,6 +22,7 @@ import {
 import api from "../../../utils/http";
 import LoadingCon from "@components/Loading/LoadingCon";
 import { useAuth } from "@contexts/AuthContext"; // Giả định bạn có context này
+import { useChat } from "../../../contexts/ChatContext";
 
 // =====================================================================
 // COMPONENT POPUP XEM MEDIA (LIGHTBOX)
@@ -75,6 +76,7 @@ const MediaLightbox = ({ url, onClose }) => {
 // =====================================================================
 const DisputeDetailModal = ({ dispute, onClose }) => {
   const { user: currentUser } = useAuth();
+  const { sendChatMessageDis } = useChat();
   const [chatMessage, setChatMessage] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -96,6 +98,7 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
   const handleChatSubmit = async (e) => {
     e.preventDefault();
     if (!chatMessage.trim() || isSending) return;
+    const roomId = dispute?.chatInfo?.roomInfo?.id ?? null;
 
     setIsSending(true);
     try {
@@ -110,6 +113,10 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
         created_at: new Date().toISOString(),
         sender: currentUser,
       };
+      const trimmedMessage = chatMessage.trim();
+      if (trimmedMessage && roomId) {
+        sendChatMessageDis(trimmedMessage, roomId);
+      }
       setMessages((prev) => [...prev, newMessage]);
       setChatMessage("");
     } catch (error) {
@@ -271,6 +278,7 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
                 {messages.map((msg) => {
                   const isOwnMessage = msg.sender_id === currentUser.id;
                   const sender = isOwnMessage ? currentUser : agent;
+                  console.log("🚀 ~ sender:", sender.avatar);
                   return (
                     <div
                       key={msg.id}
@@ -280,7 +288,7 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
                     >
                       {!isOwnMessage && (
                         <img
-                          src={sender?.avatar_url}
+                          src={sender?.avatar}
                           alt="agent"
                           className="w-8 h-8 rounded-full object-cover"
                         />

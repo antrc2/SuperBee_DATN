@@ -1,13 +1,105 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Camera, Edit3, Save, X, User, Mail, Phone } from "lucide-react";
+import { Camera, Edit3, Save, X, User, Mail, Phone, CreditCard, Calendar } from "lucide-react";
 import api from "@utils/http";
 import { toast } from "react-toastify";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 // Component con cho các trường input để tránh lặp code
-const ProfileInput = ({ icon, label, isEditing, type = "text", ...props }) => {
+const ProfileInput = ({
+  icon,
+  label,
+  isEditing,
+  type = "text",
+  previewImage,
+  onImageChange,
+  value,
+  onChange,
+  ...props
+}) => {
   const Icon = icon;
+
+  if (type === "file") {
+    return (
+      <div>
+        <label className="block text-sm font-semibold text-secondary mb-2">
+          {label}
+        </label>
+        <div className="space-y-3">
+          <div className="relative">
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary z-10">
+              <Icon size={18} />
+            </span>
+            <input
+              type="file"
+              disabled={!isEditing}
+              className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
+                          ${
+                            isEditing
+                              ? "border-hover cursor-pointer"
+                              : "bg-background cursor-not-allowed opacity-50"
+                          }`}
+              onChange={onImageChange}
+              accept="image/*"
+              {...props}
+            />
+          </div>
+          {/* Preview image - chỉ hiển thị khi có ảnh thực sự */}
+          {previewImage && previewImage.trim() !== "" && previewImage !== "undefined" ? (
+            <div className="mt-3">
+              <img
+                src={previewImage}
+                alt={label}
+                className="w-32 h-24 object-cover rounded-lg border-2 border-themed"
+                onError={(e) => {
+                  console.log(`Error loading image: ${previewImage}`);
+                  e.target.style.display = "none";
+                }}
+              />
+            </div>
+          ) : (
+            <div className="mt-3 text-center py-8 border-2 border-dashed border-themed rounded-lg bg-background">
+              <p className="text-secondary text-sm">Chưa có ảnh</p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  if (type === "date") {
+    return (
+      <div>
+        <label className="block text-sm font-semibold text-secondary mb-2">
+          {label}
+        </label>
+        <div className="relative">
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-secondary z-10">
+            <Icon size={18} />
+          </span>
+          <DatePicker
+            selected={value ? new Date(value) : null}
+            onChange={onChange}
+            disabled={!isEditing}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Chọn ngày"
+            className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
+                        ${
+                          isEditing
+                            ? "border-hover cursor-pointer"
+                            : "bg-background cursor-not-allowed opacity-50"
+                        }`}
+            wrapperClassName="w-full"
+            popperClassName="z-50"
+            {...props}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
       <label className="block text-sm font-semibold text-secondary mb-2">
@@ -19,15 +111,15 @@ const ProfileInput = ({ icon, label, isEditing, type = "text", ...props }) => {
         </span>
         <input
           type={type}
-          readOnly={type !== "file" && !isEditing}
-          disabled={type === "file" && !isEditing} // Thêm disabled cho file input
+          readOnly={!isEditing}
+          value={value || ""}
+          onChange={onChange}
           className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
                         ${
                           isEditing
                             ? "border-hover"
                             : "bg-background cursor-not-allowed"
-                        }
-                        ${type === "file" && !isEditing ? "opacity-50" : ""}`} // Thêm opacity khi disabled
+                        }`}
           {...props}
         />
       </div>
@@ -37,43 +129,69 @@ const ProfileInput = ({ icon, label, isEditing, type = "text", ...props }) => {
 
 export default function Profile() {
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState({
     username: "...",
     email: "",
     phone: "",
-    avatar: "",
+    avatar_url: "",
     cccd_number: "",
     cccd_frontend: "",
     cccd_backend: "",
     cccd_created_at: "",
   });
   const [editData, setEditData] = useState({});
-  const [avatarFile, setAvatarFile] = useState(null);
-  const fileInputRef = useRef(null);
   
+  // Files để upload
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [cccdFrontendFile, setCccdFrontendFile] = useState(null);
+  const [cccdBackendFile, setCccdBackendFile] = useState(null);
+  
+  // Preview URLs
+  const [avatarPreview, setAvatarPreview] = useState("");
+  const [cccdFrontendPreview, setCccdFrontendPreview] = useState("");
+  const [cccdBackendPreview, setCccdBackendPreview] = useState("");
+  
+  const fileInputRef = useRef(null);
+
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
-      const { username, email, phone, avatar, cccd_number, cccd_frontend_url, cccd_backend_url, cccd_created_at } = response.data;
-      setUserData({
+      const {
+        username,
+        email,
+        phone,
+        avatar_url,
+        cccd_number,
+        cccd_frontend_url,
+        cccd_backend_url,
+        cccd_created_at,
+      } = response.data;
+      
+      const newUserData = {
         username,
         email: email || "",
         phone: phone || "",
-        avatar: avatar || "",
+        avatar_url: avatar_url || "",
         cccd_number: cccd_number || "",
         cccd_frontend: cccd_frontend_url || "",
         cccd_backend: cccd_backend_url || "",
         cccd_created_at: cccd_created_at || "",
-      });
+      };
+      
+      setUserData(newUserData);
       setEditData({
         email: email || "",
         phone: phone || "",
-        avatar: avatar || "",
         cccd_number: cccd_number || "",
-        cccd_frontend: cccd_frontend_url || "",
-        cccd_backend: cccd_backend_url || "",
         cccd_created_at: cccd_created_at || "",
       });
+
+      // Set preview URLs
+      setAvatarPreview(avatar_url || "");
+      setCccdFrontendPreview(cccd_frontend_url || "");
+      setCccdBackendPreview(cccd_backend_url || "");
+      
     } catch (error) {
       console.error("Error fetching user data:", error);
       toast.error("Không thể tải thông tin người dùng.");
@@ -82,17 +200,34 @@ export default function Profile() {
 
   const updateUserData = async () => {
     try {
+      setIsLoading(true);
       const formData = new FormData();
+      
+      // Append basic data
       formData.append("email", editData.email);
-      formData.append("phone", editData.phone);
-      formData.append("cccd_frontend", editData.cccd_frontend);
-      formData.append("cccd_backend", editData.cccd_backend);
-      formData.append("cccd_number", editData.cccd_number);
-      formData.append("cccd_created_at", editData.cccd_created_at);
+      formData.append("phone", editData.phone || "");
+      formData.append("cccd_number", editData.cccd_number || "");
+      formData.append("cccd_created_at", editData.cccd_created_at || "");
+
+      // Handle avatar
       if (avatarFile) {
         formData.append("avatar", avatarFile);
-      } else {
-        formData.append("avatar_url", editData.avatar);
+      } else if (userData.avatar_url) {
+        formData.append("avatar_url", userData.avatar_url);
+      }
+
+      // Handle CCCD frontend
+      if (cccdFrontendFile) {
+        formData.append("cccd_frontend", cccdFrontendFile);
+      } else if (userData.cccd_frontend) {
+        formData.append("cccd_frontend_url", userData.cccd_frontend);
+      }
+
+      // Handle CCCD backend
+      if (cccdBackendFile) {
+        formData.append("cccd_backend", cccdBackendFile);
+      } else if (userData.cccd_backend) {
+        formData.append("cccd_backend_url", userData.cccd_backend);
       }
 
       await api.post("/user/profile-update", formData, {
@@ -103,7 +238,10 @@ export default function Profile() {
 
       await fetchUserData();
       setIsEditing(false);
-      setAvatarFile(null);
+      
+      // Reset files và previews
+      resetFiles();
+      
       toast.success("Cập nhật thông tin thành công!");
     } catch (error) {
       console.error("Error updating user data:", error);
@@ -115,7 +253,20 @@ export default function Profile() {
       } else {
         toast.error("Cập nhật thông tin thất bại. Vui lòng thử lại.");
       }
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const resetFiles = () => {
+    setAvatarFile(null);
+    setCccdFrontendFile(null);
+    setCccdBackendFile(null);
+    
+    // Reset preview về data gốc
+    setAvatarPreview(userData.avatar_url || "");
+    setCccdFrontendPreview(userData.cccd_frontend || "");
+    setCccdBackendPreview(userData.cccd_backend || "");
   };
 
   useEffect(() => {
@@ -124,13 +275,18 @@ export default function Profile() {
 
   const handleEditClick = () => {
     setIsEditing(true);
-    setEditData({ ...userData });
-    setAvatarFile(null);
+    setEditData({
+      email: userData.email,
+      phone: userData.phone,
+      cccd_number: userData.cccd_number,
+      cccd_created_at: userData.cccd_created_at,
+    });
+    resetFiles();
   };
 
   const handleCancelClick = () => {
     setIsEditing(false);
-    // Không cần reset data ở đây vì khi fetch lại đã có data mới
+    resetFiles();
   };
 
   const handleSaveClick = async () => {
@@ -138,8 +294,33 @@ export default function Profile() {
   };
 
   const triggerFileInput = () => {
-    if (isEditing) { // Chỉ cho phép khi đang ở chế độ chỉnh sửa
+    if (isEditing) {
       fileInputRef.current?.click();
+    }
+  };
+
+  // Handle file changes
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCccdFrontendChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCccdFrontendFile(file);
+      setCccdFrontendPreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleCccdBackendChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCccdBackendFile(file);
+      setCccdBackendPreview(URL.createObjectURL(file));
     }
   };
 
@@ -158,6 +339,7 @@ export default function Profile() {
         {!isEditing && (
           <button
             onClick={handleEditClick}
+            disabled={isLoading}
             className="action-button action-button-primary mt-4 sm:mt-0 !w-auto"
           >
             <Edit3 className="h-4 w-4 mr-2" />
@@ -171,13 +353,12 @@ export default function Profile() {
         <div className="lg:col-span-1 flex flex-col items-center text-center">
           <div className="relative group w-40 h-40">
             <img
-              src={
-                avatarFile
-                  ? URL.createObjectURL(avatarFile)
-                  : userData.avatar || "/default-avatar.png"
-              }
+              src={avatarPreview || "/default-avatar.png"}
               alt="Avatar"
               className="w-full h-full object-cover rounded-full ring-4 ring-offset-4 ring-offset-content-bg ring-accent/70"
+              onError={(e) => {
+                e.target.src = "/default-avatar.png";
+              }}
             />
             {isEditing && (
               <>
@@ -192,7 +373,7 @@ export default function Profile() {
                   ref={fileInputRef}
                   className="hidden"
                   accept="image/*"
-                  onChange={(e) => setAvatarFile(e.target.files[0])}
+                  onChange={handleAvatarChange}
                 />
               </>
             )}
@@ -209,74 +390,77 @@ export default function Profile() {
             value={userData.username}
             placeholder="Tên đăng nhập"
           />
+          
           <ProfileInput
             icon={Mail}
             label="Địa chỉ Email"
             isEditing={isEditing}
             name="email"
             type="email"
-            value={isEditing ? editData.email : userData.email}
+            value={editData.email || ""}
             onChange={(e) =>
               setEditData({ ...editData, email: e.target.value })
             }
             placeholder="example@email.com"
           />
+          
           <ProfileInput
             icon={Phone}
             label="Số điện thoại"
             isEditing={isEditing}
             name="phone"
             type="tel"
-            value={isEditing ? editData.phone : userData.phone}
+            value={editData.phone || ""}
             onChange={(e) =>
               setEditData({ ...editData, phone: e.target.value })
             }
             placeholder="0123 456 789"
           />
+          
           <ProfileInput
-            icon={Phone}
+            icon={CreditCard}
             label="Số CCCD"
             isEditing={isEditing}
             name="cccd_number"
             type="text"
-            value={isEditing ? editData.cccd_number : userData.cccd_number}
+            value={editData.cccd_number || ""}
             onChange={(e) =>
               setEditData({ ...editData, cccd_number: e.target.value })
             }
-            placeholder=""
+            placeholder="Nhập số CCCD"
           />
+          
           <ProfileInput
-            icon={Phone}
-            label="Ảnh mặt trước"
+            icon={Camera}
+            label="Ảnh mặt trước CCCD"
             isEditing={isEditing}
-            name="cccd_frontend"
             type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setEditData({ ...editData, cccd_frontend: e.target.files[0] })
-            }
+            previewImage={cccdFrontendPreview}
+            onImageChange={handleCccdFrontendChange}
           />
+          
           <ProfileInput
-            icon={Phone}
-            label="Ảnh mặt sau"
+            icon={Camera}
+            label="Ảnh mặt sau CCCD"
             isEditing={isEditing}
-            name="cccd_backend"
             type="file"
-            accept="image/*"
-            onChange={(e) =>
-              setEditData({ ...editData, cccd_backend: e.target.files[0] })
-            }
+            previewImage={cccdBackendPreview}
+            onImageChange={handleCccdBackendChange}
           />
+          
           <ProfileInput
-            icon={Phone}
+            icon={Calendar}
             label="Ngày cấp"
             isEditing={isEditing}
-            name="cccd_created_at"
             type="date"
-            value={isEditing ? editData.cccd_created_at : userData.cccd_created_at}
-            onChange={(e) =>
-              setEditData({ ...editData, cccd_created_at: e.target.value })
+            value={editData.cccd_created_at}
+            onChange={(date) =>
+              setEditData({
+                ...editData,
+                cccd_created_at: date ? date.toISOString().split("T")[0] : "",
+              })
             }
+            placeholder="Chọn ngày"
           />
 
           {/* Action Buttons */}
@@ -284,6 +468,7 @@ export default function Profile() {
             <div className="flex justify-end gap-3 pt-4">
               <button
                 onClick={handleCancelClick}
+                disabled={isLoading}
                 className="action-button action-button-secondary !w-auto"
               >
                 <X className="h-4 w-4 mr-2" />
@@ -291,10 +476,11 @@ export default function Profile() {
               </button>
               <button
                 onClick={handleSaveClick}
+                disabled={isLoading}
                 className="action-button action-button-primary !w-auto"
               >
                 <Save className="h-4 w-4 mr-2" />
-                Lưu thay đổi
+                {isLoading ? "Đang lưu..." : "Lưu thay đổi"}
               </button>
             </div>
           )}

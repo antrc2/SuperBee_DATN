@@ -169,6 +169,38 @@ export function ChatProvider({ children }) {
     },
     [agentChatRoom?.roomId, user?.id]
   );
+  const sendChatMessageDis = useCallback(
+    (content, idRoom) => {
+      if (!idRoom || !user?.id) {
+        console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
+        return false;
+      }
+
+      const payload = {
+        roomId: idRoom,
+        senderId: user.id,
+        content: content.trim(),
+      };
+
+      socketRef.current.emit("send_chat_message", payload, (response) => {
+        if (response.status === "sent") {
+          console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
+        } else {
+          console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
+          pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
+        }
+      });
+
+      /**
+       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
+       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
+       */
+      // markChatAsRead();
+
+      return true;
+    },
+    [user.id]
+  );
 
   /**
    * Yêu cầu 4: Đánh dấu đã đọc
@@ -195,11 +227,12 @@ export function ChatProvider({ children }) {
     isLoading,
     error,
     isLoggedIn, // Thêm isLoggedIn để Chat.jsx có thể sử dụng trực tiếp
-    user, // Thêm user để Chat.jsx biết ID người gửi
+    user,
     requestAgentChat,
     sendChatMessage,
     markChatAsRead,
     unreadCount: unreadCountState, // Xuất ra state để UI re-render
+    sendChatMessageDis,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

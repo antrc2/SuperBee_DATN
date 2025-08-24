@@ -107,17 +107,17 @@ export function DisputeChatProvider({ children }) {
       socketRef.current.emit("send_chat_message", payload);
 
       // Optimistic Update: Hiển thị tin nhắn của mình ngay lập tức
-      const tempMessage = {
-        id: `temp-${Date.now()}`,
-        sender_id: user.id,
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        sender: { ...user },
-      };
-      setActiveChat((current) => ({
-        ...current,
-        messages: [...current.messages, tempMessage],
-      }));
+      // const tempMessage = {
+      //   id: `temp-${Date.now()}`,
+      //   sender_id: user.id,
+      //   content: content.trim(),
+      //   created_at: new Date().toISOString(),
+      //   sender: { ...user },
+      // };
+      // setActiveChat((current) => ({
+      //   ...current,
+      //   messages: [...current.messages, tempMessage],
+      // }));
     },
     [activeChat.roomId, user]
   );

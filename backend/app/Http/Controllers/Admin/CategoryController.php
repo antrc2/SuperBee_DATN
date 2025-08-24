@@ -189,6 +189,15 @@ class CategoryController extends Controller
                         'message' => 'Không thể đặt danh mục cha là con của danh mục con'
                     ], 400);
                 }
+                if (is_null($category->parent_id)) {
+                    $newParent = Category::find($request->parent_id);
+                    if ($newParent && is_null($newParent->parent_id)) {
+                        return response()->json([
+                            'status' => false,
+                            'message' => 'Danh mục cha không được trở thành danh mục cha của một danh mục cha khác'
+                        ], 400);
+                    }
+                }
             }
 
             // Kiểm tra tên đã thay đổi và đã tồn tại chưa

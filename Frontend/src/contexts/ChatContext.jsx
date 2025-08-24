@@ -199,7 +199,7 @@ export function ChatProvider({ children }) {
 
       return true;
     },
-    [user.id]
+    [user?.id]
   );
 
   /**

@@ -39,12 +39,12 @@ class UserController extends Controller
                 'sort_by' => 'sometimes|in:username,email,balance,created_at',
                 'sort_direction' => 'sometimes|in:asc,desc',
                 'status' => 'sometimes|in:0,1,2',
-                'role_id' => 'sometimes|integer|exists:roles,id',
+                // 'role_id' => 'sometimes|integer|exists:roles,id', // Đã được loại bỏ vì không cần thiết
                 'page' => 'sometimes|integer|min:1',
             ]);
 
-            // Start building the query
-            $query = User::query();
+            // Start building the query, immediately scoping to only users with the 'user' role.
+            $query = User::role('user');
 
             // Eager load relationships
             $query->with(['roles', 'wallet']);
@@ -63,12 +63,12 @@ class UserController extends Controller
                 $q->where('status', $request->status);
             });
 
-            // Handle role filtering
-            $query->when($request->filled('role_id'), function ($q) use ($request) {
-                $q->whereHas('roles', function ($subQuery) use ($request) {
-                    $subQuery->where('id', $request->role_id);
-                });
-            });
+            // Handle role filtering -> Đã được loại bỏ vì đã scope ở trên
+            // $query->when($request->filled('role_id'), function ($q) use ($request) {
+            //     $q->whereHas('roles', function ($subQuery) use ($request) {
+            //         $subQuery->where('id', $request->role_id);
+            //     });
+            // });
 
             // Handle sorting
             if ($request->filled('sort_by')) {
@@ -90,7 +90,7 @@ class UserController extends Controller
             // Paginate the results
             $users = $query->paginate(15)->withQueryString();
 
-            // Get all roles for the filter dropdown
+            // Get all roles for the filter dropdown (Bạn có thể giữ lại nếu vẫn cần hiển thị)
             $roles = Role::all(['id', 'name', 'description']);
 
             return response()->json([
@@ -114,35 +114,41 @@ class UserController extends Controller
     {
         try {
             $user = User::with([
-                "wallet.transactions", // Lấy ví và tất cả giao dịch của ví
-                // "wallet.transactions.rechargeCard", // Chi tiết nạp thẻ (nếu là giao dịch loại recharge_card)
-                // "wallet.transactions.rechargeBank",  // Chi tiết nạp bank (nếu là giao dịch loại recharge_bank)
-                // "wallet.transactions.withdraw",    // Chi tiết rút tiền (nếu là giao dịch loại withdraw)
-                "wallet.transactions.order",         // Chi tiết đơn hàng (nếu là giao dịch loại purchase)
-                "orders.items",          // Lấy các đơn hàng và chi tiết từng sản phẩm trong đơn hàng
-                "rechargeCards", // Lịch sử nạp thẻ và khuyến mãi áp dụng
-                "rechargeBanks", // Lịch sử nạp bank và khuyến mãi áp dụng
-                "withdraw",           // Lịch sử rút tiền
-                "roles",                 // Vai trò của người dùng (từ Spatie/Permission)
-                "web",                   // Website mà user thuộc về
-                "referredUsers", // Các user mà user này đã giới thiệu (nếu cần xem ai)
+                "wallet.transactions",
+                "wallet.transactions.order",
+                "orders.items",
+                "rechargeCards",
+                "rechargeBanks",
+                "withdraw",
+                "roles",
+                "web",
+                "referredUsers",
             ])->find($id);
-            $role = Role::where('name', '!=', 'admin')->get();
+
             if (!$user) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Không tìm thấy tài khoản người dùng.'
-                ], 404); // Trả về 404 nếu không tìm thấy
+                ], 404);
             }
 
-            // Có thể thêm logic xử lý dữ liệu trước khi gửi về FE tại đây
-            // Ví dụ: tính toán tổng tiền đã nạp/rút
+            $actingUser = auth()->user();
+            $query = Role::query();
+
+            if ($actingUser->hasRole('admin-super')) {
+                $query->where('name', '!=', 'admin-super');
+            } else if ($actingUser->hasRole('admin')) {
+                $query->whereNotIn('name', ['admin-super', 'admin']);
+            } else {
+                $query->whereNotIn('name', ['admin-super', 'admin']);
+            }
+            $role = $query->get();
 
             return response()->json([
                 'status' => true,
                 'message' => 'Lấy dữ liệu tài khoản người dùng thành công.',
                 'data' => [
-                    'user' => $user->toArray(), // Chuyển đổi Eloquent Collection/Model sang array
+                    'user' => $user->toArray(),
                     'role' => $role
                 ]
             ], 200);
@@ -150,60 +156,49 @@ class UserController extends Controller
             return response()->json([
                 'status' => false,
                 'message' => 'Đã xảy ra lỗi khi lấy dữ liệu tài khoản.',
-            ], 500); // Trả về 500 cho lỗi server
+            ], 500);
         }
     }
     public function destroy(Request $request, $id)
     {
         try {
             $requester = User::find($request->user_id);
-            // Lấy tài khoản mục tiêu cần khóa (target user)
             $targetUser = User::find($id);
 
-            // 1. Kiểm tra tài khoản mục tiêu có tồn tại không
             if (!$targetUser) {
                 return response()->json([
                     'status' => false,
                     'message' => 'Không tìm thấy tài khoản cần khóa.'
-                ], 404); // 404 Not Found
+                ], 404);
             }
 
-            // 2. Không ai được tự khóa tài khoản của mình
             if ($requester->id == $targetUser->id) {
                 return response()->json([
                     "status" => false,
                     "message" => "Bạn không thể tự khóa tài khoản của mình."
-                ], 422); // 422 Unprocessable Entity
+                ], 422);
             }
 
-            // 3. Kiểm tra quyền hạn cơ bản: Người thực hiện có quyền "xóa" người dùng không?
-            // Điều này áp dụng cho tất cả các vai trò, kể cả nhân viên.
             if (!$requester->can('users.delete')) {
                 return response()->json([
                     "status" => false,
                     "message" => "Bạn không có quyền thực hiện hành động này."
-                ], 403); // 403 Forbidden
+                ], 403);
             }
 
-
-            // Nếu người thực hiện là 'admin', họ có toàn quyền (trừ tự khóa đã check ở trên)
-            if ($requester->hasRole('admin')) {
-            }
-            //  Nếu người thực hiện là 'admin-super'
-            elseif ($requester->hasRole('admin-super')) {
-                // 'admin-super' không được khóa 'admin' hoặc 'admin-super' khác
+            if ($requester->hasRole('admin-super')) {
+            } elseif ($requester->hasRole('admin')) {
                 if ($targetUser->hasRole('admin') || $targetUser->hasRole('admin-super')) {
                     return response()->json([
                         "status" => false,
                         "message" => "Bạn không có quyền thao tác với tài khoản quản trị"
-                    ], 403); // 403 Forbidden
+                    ], 403);
                 }
             }
 
             $targetUser->status = 2;
             $targetUser->save();
 
-            // Gửi email hoặc thông báo hệ thống
             event(new SystemNotification(
                 "EMAIL_BAN_ACCOUNT",
                 [
@@ -215,14 +210,12 @@ class UserController extends Controller
             return response()->json([
                 'status' => true,
                 'message' => 'Khóa tài khoản thành công.'
-            ], 200); // 200 OK
-
+            ], 200);
         } catch (Exception $e) {
-            // Ghi lại log lỗi để debug
             return response()->json([
                 'status' => false,
                 'message' => 'Đã có lỗi từ máy chủ xảy ra.'
-            ], 500); // 500 Internal Server Error
+            ], 500);
         }
     }
     public function restore(Request $req, $id)
@@ -243,7 +236,6 @@ class UserController extends Controller
                 [
                     "email" => $query->email,
                     "username" => $query->username,
-                    // "amount"=>9000
                 ]
             ));
             return response()->json([
@@ -260,67 +252,51 @@ class UserController extends Controller
     public function updateRoles(Request $request, $id)
     {
         try {
-            // Bước 1: Validate đầu vào (Giữ nguyên, đã rất tốt)
             $validator = Validator::make($request->all(), [
-                'roles' => 'present|array',
-                'roles.*' => 'string|exists:roles,name',
+                'roles' => [
+                    'required',
+                    'string',
+                    'exists:roles,name',
+                    Rule::notIn(['admin-super']),
+                ],
             ]);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'status' => false,
+                    'status'  => false,
                     'message' => 'Dữ liệu không hợp lệ.',
-                    'errors' => $validator->errors()
+                    'errors'  => $validator->errors()
                 ], 422);
             }
 
-            $rolesToSync = $request->input('roles', []);
-
-            // Bước 2: Lấy thông tin các đối tượng
+            $actingUser = $request->user();
             $targetUser = User::find($id);
+
             if (!$targetUser) {
                 return response()->json(['status' => false, 'message' => 'Không tìm thấy tài khoản người dùng.'], 404);
             }
 
-            // Lấy người dùng đang thực hiện hành động từ request đã được xác thực
-            $actingUser = User::find($request->user_id);
-
-            // Kiểm tra quyền hạn cơ bản
             if (!$actingUser->can('roles.edit')) {
                 return response()->json(['status' => false, 'message' => 'Bạn không có quyền thực hiện hành động này.'], 403);
             }
-
-            // ---- Logic cho ADMIN ----
-            if ($actingUser->hasRole('admin')) {
-                // Quy tắc an toàn duy nhất cho admin: không cho phép tự tước quyền admin của chính mình.
-                if ($actingUser->id === $targetUser->id && !in_array('admin', $rolesToSync)) {
-                    return response()->json(['status' => false, 'message' => 'Không thể tự xóa vai trò Quản trị viên tối cao của chính mình.'], 403);
-                }
+            if ($actingUser->id === $targetUser->id) {
+                return response()->json(['status' => false, 'message' => 'Không thể tự thay đổi vai trò của chính mình.'], 403);
             }
-            // ---- Logic cho SUPER-ADMIN ----
-            elseif ($actingUser->hasRole('admin-super')) {
-                // 1. Không được sửa quyền của 'admin'.
-                if ($targetUser->hasRole('admin')) {
-                    return response()->json(['status' => false, 'message' => 'Bạn không có quyền chỉnh sửa vai trò của Quản trị viên tối cao.'], 403);
-                }
-
-                // 2. Không được sửa quyền của 'admin-super' khác.
-                if ($targetUser->hasRole('admin-super') && $targetUser->id !== $actingUser->id) {
-                    return response()->json(['status' => false, 'message' => 'Bạn không có quyền chỉnh sửa vai trò của Quản trị viên cấp cao khác.'], 403);
-                }
-
-                // 3. Không được phép gán vai trò 'admin' hoặc 'admin-super' cho bất kỳ ai.
-                if (in_array('admin', $rolesToSync) || in_array('admin-super', $rolesToSync)) {
-                    return response()->json(['status' => false, 'message' => 'Bạn không có quyền gán các vai trò quản trị cấp cao.'], 403);
-                }
-            } else {
-                // Mặc định, các vai trò khác sẽ bị giới hạn nghiêm ngặt nhất: không được đụng đến admin/admin-super và không được gán quyền admin/admin-super.
-                if ($targetUser->hasRole(['admin', 'admin-super']) || in_array('admin', $rolesToSync) || in_array('admin-super', $rolesToSync)) {
-                    return response()->json(['status' => false, 'message' => 'Quyền của bạn bị giới hạn đối với các vai trò quản trị.'], 403);
-                }
+            if ($targetUser->hasRole('admin-super')) {
+                return response()->json(['status' => false, 'message' => 'Không thể chỉnh sửa vai trò của một Quản trị viên tối cao.'], 403);
             }
-            // Bước 4: Đồng bộ hóa quyền (nếu tất cả các kiểm tra đã qua)
-            $targetUser->syncRoles($rolesToSync);
+
+            if ($actingUser->hasRole('admin') && $targetUser->hasRole('admin')) {
+                return response()->json(['status' => false, 'message' => 'Bạn không có quyền chỉnh sửa vai trò của Quản trị viên khác.'], 403);
+            }
+
+            $roleToSync = $request->input('roles');
+
+            if ($actingUser->hasRole('admin') && in_array($roleToSync, ['admin', 'admin-super'])) {
+                return response()->json(['status' => false, 'message' => 'Bạn không có quyền gán vai trò quản trị.'], 403);
+            }
+
+            $targetUser->syncRoles([$roleToSync]);
 
             return response()->json(['status' => true, 'message' => 'Cập nhật vai trò thành công.'], 200);
         } catch (\Exception $e) {
@@ -338,14 +314,9 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Lấy tất cả các quyền có thể gán, trừ nhóm 'Quản lý Phân quyền'.
-     * @return \Illuminate\Http\JsonResponse
-     */
     public function getAssignablePermissions(Request $request)
     {
         try {
-            // Lấy tất cả quyền trừ các quyền trong nhóm 'Quản lý Phân quyền'
             $permissions = Permission::where('group_name', '!=', 'Quản lý Phân quyền')->where('group_name', '!=', 'Quản lý Web con')
                 ->get()
                 ->groupBy('group_name');
@@ -361,49 +332,41 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Tạo tài khoản nhân viên theo 1 trong 2 cách: gán vai trò hoặc gán quyền trực tiếp.
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-   public function createStaffAccount(Request $request)
+    public function createStaffAccount(Request $request)
     {
         try {
-            // 1. Xác thực dữ liệu
             $validatedData = $request->validate([
                 'username' => 'required|string|unique:users,username',
                 'email' => 'required|email|unique:users,email',
                 'password' => 'required|string|min:8',
                 'assignment_type' => ['required', Rule::in(['role', 'permissions'])],
-                // Xác thực có điều kiện
                 'role_name' => 'required_if:assignment_type,role|string|exists:roles,name',
                 'permissions' => 'required_if:assignment_type,permissions|array',
                 'permissions.*' => 'string|exists:permissions,name',
             ], [
-                // --- Bắt đầu phần thông báo tùy chỉnh bằng tiếng Việt ---
                 'username.required' => 'Vui lòng nhập tên đăng nhập.',
-                'username.string' => 'Tên đăng nhập phải là một chuỗi ký tự.',
                 'username.unique' => 'Tên đăng nhập này đã tồn tại.',
-
                 'email.required' => 'Vui lòng nhập địa chỉ email.',
-                'email.email' => 'Địa chỉ email không hợp lệ.',
                 'email.unique' => 'Địa chỉ email này đã được sử dụng.',
-
                 'password.required' => 'Vui lòng nhập mật khẩu.',
-                'password.string' => 'Mật khẩu phải là một chuỗi ký tự.',
                 'password.min' => 'Mật khẩu phải có ít nhất :min ký tự.',
-
                 'assignment_type.required' => 'Vui lòng chọn phương thức gán quyền.',
-                'assignment_type.in' => 'Phương thức gán quyền không hợp lệ.',
-
                 'role_name.required_if' => 'Vui lòng chọn một vai trò khi phương thức là "gán theo vai trò".',
                 'role_name.exists' => 'Vai trò được chọn không tồn tại.',
-
                 'permissions.required_if' => 'Vui lòng chọn ít nhất một quyền khi phương thức là "gán theo quyền".',
-                'permissions.array' => 'Danh sách quyền phải là một mảng.',
-                'permissions.*.exists' => 'Một hoặc nhiều quyền được chọn không tồn tại.',
-                // --- Kết thúc phần thông báo tùy chỉnh ---
             ]);
+
+            $actingUser = $request->user();
+            if ($actingUser->hasRole('admin')) {
+                if ($request->input('assignment_type') === 'role') {
+                    if (in_array($request->input('role_name'), ['admin', 'admin-super'])) {
+                        return response()->json([
+                            'message' => 'Bạn không có quyền tạo tài khoản với vai trò quản trị.',
+                            'status' => false,
+                        ], 403);
+                    }
+                }
+            }
 
             $donate_code = "";
             do {
@@ -412,7 +375,6 @@ class UserController extends Controller
 
             DB::beginTransaction();
 
-            // 2. Tạo User và Wallet
             $user = User::create([
                 'username' => $validatedData['username'],
                 'email' => $validatedData['email'],
@@ -425,15 +387,15 @@ class UserController extends Controller
 
             Wallet::create(['user_id' => $user->id, "balance" => 0, "currency" => "VND"]);
 
-            // Gán role 'user' để có các quyền cơ bản
-            $user->assignRole('user');
+            // ======================= BẮT ĐẦU THAY ĐỔI =======================
+            // Đã loại bỏ việc gán vai trò 'user' mặc định cho nhân viên.
+            // Tài khoản nhân viên sẽ chỉ có vai trò được chỉ định.
+            // $user->assignRole('user');
+            // ======================= KẾT THÚC THAY ĐỔI =======================
 
-            // 3. Xử lý logic gán quyền dựa trên lựa chọn
             if ($validatedData['assignment_type'] === 'role') {
-                // Cách 1: Gán vai trò đã có
                 $user->assignRole($validatedData['role_name']);
-            } else { // assignment_type === 'permissions'
-                // Cách 2: Gán vai trò 'staff-nhan-vien' và gán quyền trực tiếp
+            } else {
                 $user->assignRole('staff-nhan-vien');
                 $user->givePermissionTo($validatedData['permissions']);
             }

@@ -103,15 +103,15 @@ class AdminDonatePromotionController extends Controller
                 'amount'           => 'required|integer',
                 'start_date'       => 'required|date|before:end_date',
                 'end_date'         => 'required|date|after:start_date',
-                'usage_limit'      => 'nullable|integer',
-                'per_user_limit'   => 'nullable|integer',
+                'usage_limit'      => 'nullable|integer|min:-1',
+                'per_user_limit'   => 'nullable|integer|min:-1',
            
                 'status'           => 'nullable',
             ];
 
             $messages = [
                 'amount.required'         => 'Vui lòng nhập số tiền.',
-                'amount.integer'          => 'Số tiền phải là số nguyên.',
+                'amount.integer'          => 'Dữ liệu không hợp lệ',
 
                 'start_date.required'     => 'Vui lòng chọn ngày bắt đầu.',
                 'start_date.date'         => 'Ngày bắt đầu không đúng định dạng.',
@@ -120,12 +120,13 @@ class AdminDonatePromotionController extends Controller
                 'end_date.required'       => 'Vui lòng chọn ngày kết thúc.',
                 'end_date.date'           => 'Ngày kết thúc không đúng định dạng.',
                 'end_date.after'          => 'Ngày kết thúc phải sau ngày bắt đầu.',
-
+'usage_limit.min'        => 'Giới hạn sử dụng phải ≥ -1.',
+'per_user_limit.min'     => 'Giới hạn mỗi người dùng phải ≥ -1.',
                 'usage_limit.integer'     => 'Giới hạn sử dụng phải là số nguyên.',
-                'usage_limit.min'         => 'Giới hạn sử dụng phải ≥ 0.',
+                // 'usage_limit.min'         => 'Giới hạn sử dụng phải ≥ 0.',
 
                 'per_user_limit.integer'  => 'Giới hạn mỗi người dùng phải là số nguyên.',
-                'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
+                // 'per_user_limit.min'      => 'Giới hạn mỗi người dùng phải ≥ 0.',
 
             ];
 

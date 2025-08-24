@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-class DiscountCodeController extends Controller
+class UserDiscountCodeController extends Controller
 {
     // GET /discount_codes
     public function index(Request $request)

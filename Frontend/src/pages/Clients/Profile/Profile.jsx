@@ -6,7 +6,7 @@ import api from "@utils/http";
 import { toast } from "react-toastify";
 
 // Component con cho các trường input để tránh lặp code
-const ProfileInput = ({ icon, label, isEditing, ...props }) => {
+const ProfileInput = ({ icon, label, isEditing, type = "text", ...props }) => {
   const Icon = icon;
   return (
     <div>
@@ -18,13 +18,16 @@ const ProfileInput = ({ icon, label, isEditing, ...props }) => {
           <Icon size={18} />
         </span>
         <input
-          readOnly={!isEditing}
+          type={type}
+          readOnly={type !== "file" && !isEditing}
+          disabled={type === "file" && !isEditing} // Thêm disabled cho file input
           className={`w-full rounded-lg px-4 py-3 pl-12 bg-input text-input border-themed transition-all duration-200
                         ${
                           isEditing
                             ? "border-hover"
                             : "bg-background cursor-not-allowed"
-                        }`}
+                        }
+                        ${type === "file" && !isEditing ? "opacity-50" : ""}`} // Thêm opacity khi disabled
           {...props}
         />
       </div>
@@ -39,24 +42,37 @@ export default function Profile() {
     email: "",
     phone: "",
     avatar: "",
+    cccd_number: "",
+    cccd_frontend: "",
+    cccd_backend: "",
+    cccd_created_at: "",
   });
   const [editData, setEditData] = useState({});
   const [avatarFile, setAvatarFile] = useState(null);
   const fileInputRef = useRef(null);
+  
   const fetchUserData = async () => {
     try {
       const response = await api.get("/user/profile");
-      const { username, email, phone, avatar } = response.data;
+      const { username, email, phone, avatar, cccd_number, cccd_frontend_url, cccd_backend_url, cccd_created_at } = response.data;
       setUserData({
         username,
         email: email || "",
         phone: phone || "",
         avatar: avatar || "",
+        cccd_number: cccd_number || "",
+        cccd_frontend: cccd_frontend_url || "",
+        cccd_backend: cccd_backend_url || "",
+        cccd_created_at: cccd_created_at || "",
       });
       setEditData({
         email: email || "",
         phone: phone || "",
         avatar: avatar || "",
+        cccd_number: cccd_number || "",
+        cccd_frontend: cccd_frontend_url || "",
+        cccd_backend: cccd_backend_url || "",
+        cccd_created_at: cccd_created_at || "",
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -69,7 +85,10 @@ export default function Profile() {
       const formData = new FormData();
       formData.append("email", editData.email);
       formData.append("phone", editData.phone);
-
+      formData.append("cccd_frontend", editData.cccd_frontend);
+      formData.append("cccd_backend", editData.cccd_backend);
+      formData.append("cccd_number", editData.cccd_number);
+      formData.append("cccd_created_at", editData.cccd_created_at);
       if (avatarFile) {
         formData.append("avatar", avatarFile);
       } else {
@@ -118,7 +137,11 @@ export default function Profile() {
     await updateUserData();
   };
 
-  const triggerFileInput = () => fileInputRef.current?.click();
+  const triggerFileInput = () => {
+    if (isEditing) { // Chỉ cho phép khi đang ở chế độ chỉnh sửa
+      fileInputRef.current?.click();
+    }
+  };
 
   return (
     <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
@@ -209,6 +232,51 @@ export default function Profile() {
               setEditData({ ...editData, phone: e.target.value })
             }
             placeholder="0123 456 789"
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Số CCCD"
+            isEditing={isEditing}
+            name="cccd_number"
+            type="text"
+            value={isEditing ? editData.cccd_number : userData.cccd_number}
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_number: e.target.value })
+            }
+            placeholder=""
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ảnh mặt trước"
+            isEditing={isEditing}
+            name="cccd_frontend"
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_frontend: e.target.files[0] })
+            }
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ảnh mặt sau"
+            isEditing={isEditing}
+            name="cccd_backend"
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_backend: e.target.files[0] })
+            }
+          />
+          <ProfileInput
+            icon={Phone}
+            label="Ngày cấp"
+            isEditing={isEditing}
+            name="cccd_created_at"
+            type="date"
+            value={isEditing ? editData.cccd_created_at : userData.cccd_created_at}
+            onChange={(e) =>
+              setEditData({ ...editData, cccd_created_at: e.target.value })
+            }
           />
 
           {/* Action Buttons */}

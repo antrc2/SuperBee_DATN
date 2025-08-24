@@ -2,7 +2,10 @@ import React from "react";
 import EditCategoryPost from "../pages/Admin/CategoryPost/EditCategoryPostPage";
 import NotFound from "../pages/NotFound/NotFound";
 
-// ================== LAZY LOAD COMPONENTS ==================
+// ================== LAZY LOAD COMPONENTS (Giữ nguyên) ==================
+const BusinessSettingPage = React.lazy(() =>
+  import("@pages/Admin/BusinessSettings/BusinessSettingPage")
+);
 const CategoryPage = React.lazy(() =>
   import("@pages/Admin/Category/CategoryPage")
 );
@@ -18,7 +21,6 @@ const TrangDanhSachCategoryPost = React.lazy(() =>
 const CreateCategoryPostPage = React.lazy(() =>
   import("@pages/Admin/CategoryPost/CreateCategoryPostPage.jsx")
 );
-
 const DiscountCodePage = React.lazy(() =>
   import("@pages/Admin/DiscountCode/DiscountCodePage")
 );
@@ -31,7 +33,6 @@ const EditDiscountCodePage = React.lazy(() =>
 const ShowDiscountCodePage = React.lazy(() =>
   import("@pages/Admin/DiscountCode/ShowDiscountCodePage")
 );
-
 const DonatePromotionDashboard = React.lazy(() =>
   import("@pages/Admin/DonatePromotion/DonatePromotionDashboard")
 );
@@ -44,7 +45,6 @@ const EditDonatePromotionPage = React.lazy(() =>
 const DonatePromotionDetail = React.lazy(() =>
   import("@pages/Admin/DonatePromotion/DonatePromotionDetail")
 );
-
 const AccountListPage = React.lazy(() =>
   import("@pages/Admin/Account/AccountPage")
 );
@@ -54,7 +54,6 @@ const ShowAccountPage = React.lazy(() =>
 const CreateAccountPage = React.lazy(() =>
   import("@pages/Admin/Account/CreateAccountPage")
 );
-
 const BannersListPage = React.lazy(() =>
   import("@pages/Admin/Banners/BannersListPage")
 );
@@ -65,7 +64,6 @@ const EditBanner = React.lazy(() => import("@pages/Admin/Banners/EditBanner"));
 const BannerDetailPage = React.lazy(() =>
   import("@pages/Admin/Banners/BannerDetailPage")
 );
-
 const TrangDanhSachPost = React.lazy(() =>
   import("../pages/Admin/Post/TrangDanhSachPost")
 );
@@ -78,7 +76,6 @@ const EditPostPage = React.lazy(() =>
 const ShowPostPage = React.lazy(() =>
   import("../pages/Admin/Post/ShowPostPage")
 );
-
 const TrangDanhSachAccGame = React.lazy(() =>
   import("@pages/Admin/Products/TrangDanhSachAccGame")
 );
@@ -91,25 +88,21 @@ const EditProducts = React.lazy(() =>
 const ProductDetailPage = React.lazy(() =>
   import("../pages/Admin/Products/ProductDetailPage")
 );
-
 const TrangDanhSachAccGameBrowse = React.lazy(() =>
   import("../pages/Admin/Products/TrangDanhSachAccGameBrowse")
 );
 const UpdateProductBrowse = React.lazy(() =>
   import("../pages/Admin/Products/UpdateProductBrowse")
 );
-
 const ListOrderPage = React.lazy(() =>
   import("../pages/Admin/Orders/ListOrderPage")
 );
 const ShowOrderPage = React.lazy(() =>
   import("../pages/Admin/Orders/ShowOrderPage")
 );
-
 const AgentDashboardPage = React.lazy(() =>
   import("../pages/AgentDashboard/AgentDashboardPage")
 );
-
 const AuthorizationDashboardPage = React.lazy(() =>
   import("../pages/Admin/Authorization/AuthorizationDashboardPage")
 );
@@ -123,51 +116,58 @@ import { UserListPage } from "../pages/Admin/Authorization/UserRolesPage";
 import DisputesPage from "../pages/Admin/DisputesPage/DisputesPage";
 import DisputeDetailPage from "../pages/Admin/DisputesPage/DisputeDetailPage";
 import WithdrawalsPage from "../pages/Admin/Withdrawals/WithdrawalsPage";
+import { EmployeeListPage } from "../pages/Admin/Employees/EmployeeListPage";
+import { EmployeeCreatePage } from "../pages/Admin/Employees/EmployeeCreatePage";
+import { EmployeeEditPage } from "../pages/Admin/Employees/EmployeeEditPage";
 
-// ================== MODULES DEFINITION ==================
+// ================== MODULES DEFINITION (ĐÃ CẬP NHẬT THEO SEEDER) ==================
 export const adminModules = [
   // Phân quyền
   {
     name: "authorization",
     list: AuthorizationDashboardPage,
-    allowedRoles: ["admin"],
+    // Không cần quyền cụ thể cho dashboard chung, chỉ cần đăng nhập
   },
   {
     name: "authorization/roles",
     list: RolesPage,
-    allowedRoles: ["admin"],
+    permissions: { view: "roles.view" },
   },
   {
     name: "authorization/permissions",
     list: PermissionsPage,
-    allowedRoles: ["admin"],
+    permissions: { view: "permissions.view" },
   },
   {
     name: "authorization/users",
     list: UserListPage,
-    allowedRoles: ["admin"],
+    permissions: { view: "users.view" }, // Seeder dùng `users.view` cho danh sách
   },
-
-  // Khuyến mãi sản phẩm
+  // Nhân viên
+  {
+    name: "employees",
+    list: EmployeeListPage,
+    create: EmployeeCreatePage,
+    edit: EmployeeEditPage,
+    show: NotFound, // Không có trang chi tiết cho nhân viên
+    permissions: {
+      view: "employees.view",
+      create: "employees.create",
+      edit: "employees.edit",
+    },
+  },
+  // Mã giảm giá
   {
     name: "discountcode",
     list: DiscountCodePage,
     create: CreateDiscountCodePage,
     edit: EditDiscountCodePage,
     show: ShowDiscountCodePage,
-    // === BỔ SUNG: Thêm 'nv-ho-tro' ===
-    allowedRoles: [
-      "admin",
-      "admin-super",
-      "reseller",
-      "nv-marketing",
-      "nv-ho-tro",
-    ],
     permissions: {
-      create: "promotions.create",
-      edit: "promotions.edit",
       view: "promotions.view",
       show: "promotions.view",
+      create: "promotions.create",
+      edit: "promotions.edit",
     },
   },
   // Khuyến mãi nạp thẻ
@@ -177,19 +177,11 @@ export const adminModules = [
     create: CreateDonatePromotionPage,
     edit: EditDonatePromotionPage,
     show: DonatePromotionDetail,
-    // === BỔ SUNG: Thêm 'nv-ho-tro' ===
-    allowedRoles: [
-      "admin",
-      "admin-super",
-      "reseller",
-      "nv-marketing",
-      "nv-ho-tro",
-    ],
     permissions: {
-      create: "donate_promotions.create",
-      edit: "donate_promotions.edit",
       view: "donate_promotions.view",
       show: "donate_promotions.view",
+      create: "donate_promotions.create",
+      edit: "donate_promotions.edit",
     },
   },
   // Danh mục sản phẩm
@@ -199,11 +191,10 @@ export const adminModules = [
     create: CreateCategoryPage,
     edit: EditCategoryPage,
     show: NotFound,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-kiem-duyet"],
     permissions: {
+      view: "categories.view",
       create: "categories.create",
       edit: "categories.edit",
-      view: "categories.view",
     },
   },
   // Danh mục bài viết
@@ -213,11 +204,10 @@ export const adminModules = [
     create: CreateCategoryPostPage,
     edit: EditCategoryPost,
     show: NotFound,
-    allowedRoles: ["admin", "admin-super", "nv-marketing"],
     permissions: {
+      view: "post_categories.view",
       create: "post_categories.create",
       edit: "post_categories.edit",
-      view: "post_categories.view",
     },
   },
   // Người dùng
@@ -225,18 +215,12 @@ export const adminModules = [
     name: "users",
     list: AccountListPage,
     show: ShowAccountPage,
-    edit: NotFound,
+    edit: NotFound, // Không có trang edit riêng
     create: CreateAccountPage,
-    allowedRoles: [
-      "admin",
-      "admin-super",
-      "reseller",
-      "nv-ho-tro",
-      "nv-kiem-duyet",
-    ],
     permissions: {
       view: "users.view",
-      show: "users.view",
+      show: "users.view", // Xem chi tiết cũng là quyền view
+      create: "users.create",
     },
   },
   // Bài viết
@@ -246,12 +230,11 @@ export const adminModules = [
     show: ShowPostPage,
     create: CreatePostPage,
     edit: EditPostPage,
-    allowedRoles: ["admin", "admin-super", "nv-marketing"],
     permissions: {
-      create: "posts.create",
-      edit: "posts.edit",
       view: "posts.view",
       show: "posts.view",
+      create: "posts.create",
+      edit: "posts.edit",
     },
   },
   // Sản phẩm
@@ -261,12 +244,11 @@ export const adminModules = [
     show: ProductDetailPage,
     create: CreateProducts,
     edit: EditProducts,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-kiem-duyet"],
     permissions: {
-      create: "products.create",
-      edit: "products.edit",
       view: "products.view",
       show: "products.view",
+      create: "products.create",
+      edit: "products.edit",
     },
   },
   // Duyệt sản phẩm
@@ -276,10 +258,9 @@ export const adminModules = [
     show: UpdateProductBrowse,
     edit: NotFound,
     create: NotFound,
-    allowedRoles: ["admin", "admin-super", "nv-kiem-duyet"],
     permissions: {
-      view: "products.view",
-      show: "products.edit",
+      view: "products.view", // Vẫn cần quyền xem sản phẩm để vào danh sách
+      show: "products.approve", // Hành động "show" ở đây thực chất là để duyệt
     },
   },
   // Banner
@@ -289,12 +270,11 @@ export const adminModules = [
     show: BannerDetailPage,
     create: CreateBanners,
     edit: EditBanner,
-    allowedRoles: ["admin", "admin-super", "nv-marketing"],
     permissions: {
-      create: "banners.create",
-      edit: "banners.edit",
       view: "banners.view",
       show: "banners.view",
+      create: "banners.create",
+      edit: "banners.edit",
     },
   },
   // Đơn hàng
@@ -304,34 +284,33 @@ export const adminModules = [
     show: ShowOrderPage,
     create: NotFound,
     edit: NotFound,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-ho-tro"],
     permissions: {
       view: "orders.view",
       show: "orders.view",
     },
   },
+  // Khiếu nại
   {
     name: "disputes",
     list: DisputesPage,
     show: DisputeDetailPage,
     create: NotFound,
-    edit: NotFound,
-    allowedRoles: ["admin", "admin-super", "reseller", "nv-ho-tro"],
+    edit: NotFound, // Hành động edit nằm trong trang show
     permissions: {
       view: "product_reports.view",
-      edit: "product_reports.edit",
+      show: "product_reports.edit", // Xem chi tiết khiếu nại là để xử lý nó
     },
   },
+  // Rút tiền
   {
     name: "withdrawals",
     list: WithdrawalsPage,
-    show: NotFound,
+    show: NotFound, // Hành động duyệt/từ chối nằm ngay trên list
     create: NotFound,
     edit: NotFound,
-    allowedRoles: ["admin", "admin-super", "reseller"],
     permissions: {
       view: "withdrawals.view",
-      edit: "withdrawals.edit",
+      edit: "withdrawals.edit", // Quyền edit để thực hiện duyệt/từ chối
     },
   },
   // Module Agent
@@ -341,9 +320,20 @@ export const adminModules = [
     show: NotFound,
     create: NotFound,
     edit: NotFound,
-    allowedRoles: ["admin", "admin-super", "nv-ho-tro"],
     permissions: {
       view: "chat.view",
+    },
+  },
+  // Cài đặt chung
+  {
+    name: "business_settings",
+    list: BusinessSettingPage,
+    show: NotFound,
+    create: NotFound,
+    edit: NotFound, // Hành động edit nằm trên trang list
+    permissions: {
+      view: "business_settings.view",
+      edit: "business_settings.edit",
     },
   },
 ];

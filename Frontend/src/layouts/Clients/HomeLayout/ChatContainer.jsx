@@ -1,4 +1,4 @@
-// File: src/components/Client/layout/ChatContainer.jsx (Component mới)
+// File: src/components/Client/layout/ChatContainer.jsx (Đã chỉnh sửa)
 import React, { useState, useEffect } from "react";
 import ChatComponent from "../../../pages/Chat/Chat"; // Giả sử đường dẫn đúng
 import ChatWidget from "../../../pages/Clients/Chatbot/ChatWidget"; // Giả sử đường dẫn đúng
@@ -17,13 +17,8 @@ const ChatContainer = ({ showScrollTop, scrollToTop }) => {
     unreadCount,
   } = useChat();
 
-  const toggleStaffChat = async () => {
-    if (!isStaffChatOpen) {
-      if (isLoggedIn && !agentChatRoom) {
-        await requestAgentChat();
-      }
-      markChatAsRead();
-    }
+  // ĐÃ ĐƯỢC ĐƠN GIẢN HÓA
+  const toggleStaffChat = () => {
     setIsStaffChatOpen(!isStaffChatOpen);
   };
 

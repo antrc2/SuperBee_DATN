@@ -59,6 +59,9 @@ export default function CreateFormProducts({
     sale: "",
     username: "",
     password: "",
+    email: "",
+    phone: "",
+    cccd: "",
     description: "",
     attributes: [],
   });
@@ -90,6 +93,9 @@ export default function CreateFormProducts({
         import_price: initialData.import_price || "",
         username: initialData.credentials?.[0]?.username || "",
         password: initialData.credentials?.[0]?.password,
+        email: initialData.credentials?.[0]?.email || "",
+        phone: initialData.credentials?.[0]?.phone || "",
+        cccd: initialData.credentials?.[0]?.cccd || "",
         description: initialData.description || "",
         attributes:
           initialData.game_attributes?.map((attr) => ({
@@ -336,6 +342,48 @@ export default function CreateFormProducts({
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+          </FormField>
+          <FormField
+            label="Email của tài khoản"
+            htmlFor="email"
+            error={formErrors.email}
+          >
+            <input
+              type="text"
+              name="email"
+              id="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={getInputClass("email")}
+            />
+          </FormField>
+          <FormField
+            label="Số điện thoại của tài khoản"
+            htmlFor="phone"
+            error={formErrors.phone}
+          >
+            <input
+              type="text"
+              name="phone"
+              id="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={getInputClass("phone")}
+            />
+          </FormField>
+          <FormField
+            label="Số CCCD của tài khoản"
+            htmlFor="cccd"
+            error={formErrors.cccd}
+          >
+            <input
+              type="text"
+              name="cccd"
+              id="cccd"
+              value={formData.cccd}
+              onChange={handleChange}
+              className={getInputClass("cccd")}
+            />
           </FormField>
         </div>
       </FormCard>

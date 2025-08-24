@@ -17,6 +17,7 @@ class Order extends Model
         'status',
         'promo_code',
         'discount_amount',
+        'bill_url'
     ];
 
     public function user()

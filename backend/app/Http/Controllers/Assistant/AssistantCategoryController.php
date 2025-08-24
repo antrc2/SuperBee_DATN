@@ -15,7 +15,7 @@ class AssistantCategoryController extends Controller
             // $categories = Category::all(['name','slug']);
             $categories = Category::where('id','!=',1)->where('status',1)->where('parent_id','!=',null)->with(['products' => function ($query) {
                 $query->select('sku', 'category_id')->where('status', 1); // Phải có khóa ngoại để Eloquent ánh xạ đúng
-            }])->get(['id', 'name']); // Phải lấy 'id' để match với 'category_id'
+            }])->get(['id','slug']); // Phải lấy 'id' để match với 'category_id'
             return response()->json([
                 "status" => True,
                 'message' => "Lấy danh sách danh mục sản phẩm thành công",
@@ -30,24 +30,24 @@ class AssistantCategoryController extends Controller
             ]);
         }
     }
-    public function show(Request $request,$id){
+    public function show(Request $request,$slug){
         try {
-            $category = Category::where('id',$id)->where('status',1)->where('id','!=',1)->with(['products'=>function ($query) {
+            $category = Category::where('slug',$slug)->where('status',1)->where('id','!=',1)->with(['products'=>function ($query) {
                 $query->where('status',1);
-            }])->with('products.gameAttributes')->with("products.images")->first();
+            }])->with('products.gameAttributes')->with("products.images")->first(['name','id']);
             $frontend_link = env("FRONTEND_URL");
             return response()->json([
                 'status'=>True,
-                'message'=>"Lấy danh sách sản phẩm theo id danh mục {$id} thành công",
+                'message'=>"Lấy danh sách sản phẩm theo slug danh mục {$slug} thành công",
                 'data'=>$category,
-                "link"=>"{$frontend_link}/mua-acc/{$category->slug}"
+                "link"=>"{$frontend_link}/mua-acc/{$slug}"
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status'=>False,
-                'message'=>"Lấy danh sách sản phẩm theo id danh mục {$id} thất bại",
+                'message'=>"Lấy danh sách sản phẩm theo slug danh mục {$slug} thất bại",
                 'data'=>[],
-                // 'hehe'=>$th->getMessage()
+                'hehe'=>$th->getMessage()
             ]);
             //throw $th;
         }

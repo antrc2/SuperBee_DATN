@@ -68,7 +68,7 @@ class ProductSeeder extends Seeder
         }
 
         // Tạo sản phẩm
-        $category_ids = DB::table('categories')->where('id','!=',1)->pluck('id')->toArray();
+        $category_ids = DB::table('categories')->where('id','!=',1)->where('parent_id','!=',null)->pluck('id')->toArray();
         for ($i = 1; $i <= 30; $i++) {
             $product_id = DB::table('products')->insertGetId([
                 'category_id' => $category_ids[array_rand($category_ids)],

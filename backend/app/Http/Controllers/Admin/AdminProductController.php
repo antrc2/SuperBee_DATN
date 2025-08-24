@@ -19,20 +19,21 @@ class AdminProductController extends Controller
     public function index(Request $request)
     {
         try {
-            // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
             $query = Product::query()->where("status", "!=", 2)->with(['category', 'images', 'gameAttributes']);
 
+            // Lọc theo từ khóa tìm kiếm (SKU)
+            if ($request->filled('search')) {
+                $searchTerm = $request->input('search');
+                $query->where('sku', 'like', '%' . $searchTerm . '%');
+            }
 
             // Lọc theo danh mục sản phẩm (category_id)
-            // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
-
-            // if ($request->filled('category_id')) {
-            //     $query->where('category_id', $request->input('category_id'));
-            // }
+            if ($request->filled('category_id')) {
+                $query->where('category_id', $request->input('category_id'));
+            }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
-                // Đảm bảo giá trị là số trước khi query
                 $priceMin = filter_var($request->input('price_min'), FILTER_SANITIZE_NUMBER_INT);
                 $query->where('price', '>=', $priceMin);
             }
@@ -43,19 +44,14 @@ class AdminProductController extends Controller
                 $query->where('price', '<=', $priceMax);
             }
 
-            // Lọc theo trạng thái (ví dụ: 1 = 'còn hàng', 0 = 'đã bán')
-            // Dùng `has` thay vì `filled` nếu status có thể là '0'
+            // Lọc theo trạng thái
             if ($request->has('status') && $request->input('status') !== '') {
                 $query->where('status', $request->input('status'));
             }
 
-            // Lấy số lượng item mỗi trang từ request, mặc định là 10
             $perPage = $request->input('per_page', 10);
-            $products = $query->latest()->paginate($perPage); // Sắp xếp theo mới nhất và phân trang
-            // $products = $query->get();
+            $products = $query->latest()->paginate($perPage);
 
-
-            // $products = Product::where("status","!=",2)->with(['category', 'images', 'gameAttributes'])->latest()->paginate(10);
             return response()->json([
                 "status" => true,
                 "message" => "Lấy danh sách sản phẩm thành công",
@@ -65,11 +61,11 @@ class AdminProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
-                // "error" => $th->getMessage() // Không nên trả về lỗi chi tiết cho client ở môi trường production
                 "data" => []
-            ], 500); // Trả về status code 500
+            ], 500);
         }
     }
+
     public function getProductsBrowse(Request $request)
     {
         // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
@@ -77,14 +73,12 @@ class AdminProductController extends Controller
 
         try {
             // Lọc theo danh mục sản phẩm (category_id)
-            // Request::has() chỉ kiểm tra sự tồn tại, nên dùng filled() để chắc chắn có giá trị và không rỗng
             if ($request->filled('category_id')) {
                 $query->where('category_id', $request->input('category_id'));
             }
 
             // Lọc theo giá tối thiểu (price_min)
             if ($request->filled('price_min')) {
-                // Đảm bảo giá trị là số trước khi query
                 $priceMin = filter_var($request->input('price_min'), FILTER_SANITIZE_NUMBER_INT);
                 $query->where('price', '>=', $priceMin);
             }
@@ -95,15 +89,13 @@ class AdminProductController extends Controller
                 $query->where('price', '<=', $priceMax);
             }
 
-            // Lọc theo trạng thái (ví dụ: 1 = 'còn hàng', 0 = 'đã bán')
-            // Dùng `has` thay vì `filled` nếu status có thể là '0'
+            // Lọc theo trạng thái
             if ($request->has('status') && $request->input('status') !== '') {
                 $query->where('status', $request->input('status'));
             }
 
-            // Lấy số lượng item mỗi trang từ request, mặc định là 10
             $perPage = $request->input('per_page', 10);
-            $products = $query->latest()->paginate($perPage); // Sắp xếp theo mới nhất và phân trang
+            $products = $query->latest()->paginate($perPage);
 
             return response()->json([
                 "status" => true,
@@ -114,11 +106,11 @@ class AdminProductController extends Controller
             return response()->json([
                 "status" => false,
                 "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
-                // "error" => $th->getMessage() // Không nên trả về lỗi chi tiết cho client ở môi trường production
                 "data" => []
-            ], 500); // Trả về status code 500
+            ], 500);
         }
     }
+
     public function show(Request $request, $id)
     {
         try {
@@ -149,43 +141,36 @@ class AdminProductController extends Controller
             ], 500);
         }
     }
+
     public function update(Request $request, $id)
-    // Giá sale đang null ,mặc dù có sửa
     {
         try {
-            // Lấy product kèm quan hệ
             $product = Product::with(['category', 'images', 'gameAttributes', 'credentials', 'creator'])
                 ->find($id);
 
             if (!$product) {
-                return response()->json([
-                    'status'  => false,
-                    'message' => 'Không tìm thấy sản phẩm',
-                ], 404);
+                return response()->json(['status'  => false, 'message' => 'Không tìm thấy sản phẩm'], 404);
             }
             if ($product->status == 4 || $product->status == 2) {
-                return response()->json([
-                    "status" => False,
-                    "message" => "Không thể sửa sản phẩm"
-                ], 400);
+                return response()->json(["status" => False, "message" => "Không thể sửa sản phẩm"], 400);
             }
             $sku = $product->sku;
-            // Nếu attributes là JSON string, decode nó
             $attrs = $request->input('attributes');
             if (is_string($attrs)) {
                 $attrs = json_decode($attrs, true);
                 $request->merge(['attributes' => $attrs]);
             }
 
-            // Validate dữ liệu
             $rules = [
                 'category_id'                 => 'required|integer|exists:categories,id',
-                // 'sku'                      => 'required|string|unique:products,sku',
-                'import_price'                => 'required|numeric|min:0',
-                'price'                       => 'required|numeric|min:0',
-                'sale'                        => 'nullable|numeric|min:0',
+                'import_price'                => 'required|numeric|min:0|max:999999999999999',
+                'price'                       => 'required|numeric|min:0|max:999999999999999',
+                'sale'                        => 'nullable|numeric|min:0|max:999999999999999',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                       => 'nullable|string',
+                'phone'                       => 'nullable|string',
+                'cccd'                        => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -193,59 +178,22 @@ class AdminProductController extends Controller
                 'images.*'                    => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
                 'description'                 => 'nullable|string',
             ];
+
             $messages = [
-                'category_id.required' => 'Vui lòng chọn danh mục.',
-                'category_id.integer'  => 'Danh mục không hợp lệ.',
-                'category_id.exists'   => 'Danh mục đã chọn không tồn tại.',
-
-                // 'sku.required'        => 'Vui lòng nhập SKU.',
-                // 'sku.string'          => 'SKU phải là chuỗi ký tự.',
-                // 'sku.unique'          => 'SKU này đã tồn tại.',
-
-                'import_price.required' => 'Giá nhập bắt buộc.',
-                'import_price.numeric'  => 'Giá nhập phải là số.',
-                'import_price.min'      => 'Giá nhập không được âm.',
-
-                'price.required' => 'Giá bán bắt buộc.',
-                'price.numeric'  => 'Giá bán phải là số.',
-                'price.min'      => 'Giá bán không được âm.',
-
-                'sale.numeric' => 'Giảm giá phải là số.',
-                'sale.min'     => 'Giảm giá không được âm.',
-
-                'username.required' => 'Vui lòng nhập username.',
-                'username.string'   => 'Username phải là chuỗi ký tự.',
-
-                'password.required' => 'Vui lòng nhập mật khẩu.',
-                'password.string'   => 'Mật khẩu phải là chuỗi ký tự.',
-
-                'attributes.required'                 => 'Bạn phải nhập ít nhất một thuộc tính.',
-                'attributes.array'                    => 'Thuộc tính phải ở dạng mảng.',
-                'attributes.*.attribute_key.required' => 'Thiếu tên thuộc tính.',
-                'attributes.*.attribute_key.string'   => 'Tên thuộc tính phải là chuỗi.',
-                'attributes.*.attribute_value.required' => 'Thiếu giá trị thuộc tính.',
-                'attributes.*.attribute_value.string'   => 'Giá trị thuộc tính phải là chuỗi.',
-
-                'images.required' => 'Bạn phải tải lên ít nhất một ảnh.',
-                'images.array'    => 'Danh sách ảnh phải là mảng.',
-                'images.*.image'  => 'Tệp tải lên phải là hình ảnh.',
-                'images.*.mimes'  => 'Ảnh phải có định dạng: jpeg, png, jpg, gif hoặc svg.',
-                'images.*.max'    => 'Ảnh không được lớn hơn 10MB.',
-
-                'description.string' => 'Mô tả phải là chuỗi ký tự.',
+                'import_price.max'      => 'Giá nhập không được vượt quá 15 chữ số.',
+                'price.max'      => 'Giá bán không được vượt quá 15 chữ số.',
+                'sale.max'     => 'Giảm giá không được vượt quá 15 chữ số.',
             ];
+
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                // Trả về JSON (API)
                 return response()->json([
                     'status'  => false,
-                    'message' => $validator->errors()->first(), // message đầu tiên
-                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
             $validated = $validator->validated();
 
-            // Kiểm tra sale < price
             if (
                 isset($validated['sale'], $validated['price']) &&
                 $validated['sale'] >= $validated['price']
@@ -329,18 +277,24 @@ class AdminProductController extends Controller
                 }
             }
             // Cập nhật credentials nếu có
-            if (isset($validated['username'], $validated['password'])) {
+            if (isset($validated['username'], $validated['password'], $validated['email'], $validated['phone'], $validated['cccd'])) {
                 $cred = $product->credentials()->first();  // trả về ProductCredential|null
                 if ($cred) {
                     $cred->update([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 } else {
                     // Nếu chưa có credential, bạn có thể tạo mới:
                     $product->credentials()->create([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 }
             }
@@ -389,38 +343,21 @@ class AdminProductController extends Controller
     public function store(Request $request)
     {
         try {
-            $data = $request->json()->all();
-
-            // Nếu attributes là chuỗi JSON, chuyển nó thành mảng
             $attributes = is_string($request->input('attributes'))
                 ? json_decode($request->input('attributes'), true)
                 : $request->input('attributes');
             $request->merge(['attributes' => $attributes]);
 
-            // Validate dữ liệu gửi lên
-            // $validatedData = $request->validate([
-            //     'category_id' => 'required|integer|exists:categories,id',
-            //     // 'sku' => 'required|string|unique:products,sku',
-            //     'import_price' => "required|numeric|min:0",
-            //     'price' => 'required|numeric|min:0',
-            //     'sale' => 'nullable|numeric|min:0',
-            //     'username' => 'required|string',
-            //     'password' => 'required|string',
-            //     'attributes' => 'required|array',
-            //     'attributes.*.attribute_key' => 'required|string',
-            //     'attributes.*.attribute_value' => 'required|string',
-            //     'images' => 'required|array',
-            //     'images.*' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
-            //     "description" => "nullable|string"
-            // ]);
             $rules = [
                 'category_id'                 => 'required|integer|exists:categories,id',
-                // 'sku'                      => 'required|string|unique:products,sku',
-                'import_price'                => 'required|numeric|min:0',
-                'price'                       => 'required|numeric|min:0',
-                'sale'                        => 'nullable|numeric|min:0',
+                'import_price'                => 'required|numeric|min:0|max:999999999999999',
+                'price'                       => 'required|numeric|min:0|max:999999999999999',
+                'sale'                        => 'nullable|numeric|min:0|max:999999999999999',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                       => 'nullable|string',
+                'phone'                       => 'nullable|string',
+                'cccd'                        => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -428,59 +365,22 @@ class AdminProductController extends Controller
                 'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10000',
                 'description'                 => 'nullable|string',
             ];
+
             $messages = [
-                'category_id.required' => 'Vui lòng chọn danh mục.',
-                'category_id.integer'  => 'Danh mục không hợp lệ.',
-                'category_id.exists'   => 'Danh mục đã chọn không tồn tại.',
-
-                // 'sku.required'        => 'Vui lòng nhập SKU.',
-                // 'sku.string'          => 'SKU phải là chuỗi ký tự.',
-                // 'sku.unique'          => 'SKU này đã tồn tại.',
-
-                'import_price.required' => 'Giá nhập bắt buộc.',
-                'import_price.numeric'  => 'Giá nhập phải là số.',
-                'import_price.min'      => 'Giá nhập không được âm.',
-
-                'price.required' => 'Giá bán bắt buộc.',
-                'price.numeric'  => 'Giá bán phải là số.',
-                'price.min'      => 'Giá bán không được âm.',
-
-                'sale.numeric' => 'Giảm giá phải là số.',
-                'sale.min'     => 'Giảm giá không được âm.',
-
-                'username.required' => 'Vui lòng nhập username.',
-                'username.string'   => 'Username phải là chuỗi ký tự.',
-
-                'password.required' => 'Vui lòng nhập mật khẩu.',
-                'password.string'   => 'Mật khẩu phải là chuỗi ký tự.',
-
-                'attributes.required'                 => 'Bạn phải nhập ít nhất một thuộc tính.',
-                'attributes.array'                    => 'Thuộc tính phải ở dạng mảng.',
-                'attributes.*.attribute_key.required' => 'Thiếu tên thuộc tính.',
-                'attributes.*.attribute_key.string'   => 'Tên thuộc tính phải là chuỗi.',
-                'attributes.*.attribute_value.required' => 'Thiếu giá trị thuộc tính.',
-                'attributes.*.attribute_value.string'   => 'Giá trị thuộc tính phải là chuỗi.',
-
-                'images.required' => 'Bạn phải tải lên ít nhất một ảnh.',
-                'images.array'    => 'Danh sách ảnh phải là mảng.',
-                'images.*.image'  => 'Tệp tải lên phải là hình ảnh.',
-                'images.*.mimes'  => 'Ảnh phải có định dạng: jpeg, png, jpg, gif hoặc svg.',
-                'images.*.max'    => 'Ảnh không được lớn hơn 10MB.',
-
-                'description.string' => 'Mô tả phải là chuỗi ký tự.',
+                'import_price.max'      => 'Giá nhập không được vượt quá 15 chữ số.',
+                'price.max'      => 'Giá bán không được vượt quá 15 chữ số.',
+                'sale.max'     => 'Giảm giá không được vượt quá 15 chữ số.',
             ];
+
             $validator = Validator::make($request->all(), $rules, $messages);
             if ($validator->fails()) {
-                // Trả về JSON (API)
                 return response()->json([
                     'status'  => false,
-                    'message' => $validator->errors()->first(), // message đầu tiên
-                    // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
+                    'message' => $validator->errors()->first(),
                 ], 422);
             }
             $validatedData = $validator->validated();
 
-            // Kiểm tra giá sale so với giá gốc
             if (isset($validatedData['sale']) && $validatedData['sale'] >= $validatedData['price']) {
                 return response()->json([
                     "status" => false,
@@ -564,6 +464,9 @@ class AdminProductController extends Controller
                 'product_id' => $product->id,
                 'username' => $validatedData['username'],
                 'password' => $validatedData['password'],
+                "email"      => $validatedData['email'] ?? null,
+                "phone"      => $validatedData['phone'] ?? null,
+                "cccd"       => $validatedData['cccd'] ?? null
             ]);
 
             // Lưu attributes
@@ -614,26 +517,24 @@ class AdminProductController extends Controller
                     "status" => 3
                 ]);
 
-
                 if ($product) {
                     return response()->json([
                         "status" => true,
                         "message" => "Đã hủy bán sản phẩm",
                     ]);
-                } else {
-                    return response()->json([
-                        "status" => false,
-                        "message" => "Không thể hủy bán sản phẩm",
-                    ], 400);
                 }
-            } else {
+
                 return response()->json([
-                    "status" => False,
-                    "message" => "Sản phẩm không tồn tại",
-                ], 404);
+                    "status" => false,
+                    "message" => "Không thể hủy bán sản phẩm",
+                ], 400);
             }
+
+            return response()->json([
+                "status" => False,
+                "message" => "Sản phẩm không tồn tại",
+            ], 404);
         } catch (\Throwable $th) {
-            //throw $th;
             return response()->json([
                 "status" => False,
                 'message' => "Đã có lỗi xảy ra",

@@ -1,3 +1,157 @@
+# Ghi chú
+1. **18/08/2025**
+## Mã giảm giá
+```json
+"promotion_codes": [
+    {
+        "id": 14,
+        "promotion_user_id": -1,
+        "code": "DEMO8",
+        "description": null,
+        "discount_value": "15",
+        "min_discount_amount": null,
+        "max_discount_amount": null,
+        "start_date": "2025-08-17 11:32:00",
+        "end_date": "2025-08-21 11:32:00",
+        "usage_limit": -1,
+        "per_user_limit": -1,
+        "total_used": 0,
+        "status": 1,
+        "created_by": 1,
+        "updated_by": 1,
+        "created_at": "2025-08-18T07:57:13.000000Z",
+        "updated_at": "2025-08-18T07:57:13.000000Z",
+        "orders_count": 0,
+        "promotion_user": []
+    },
+    {
+        "id": 13,
+        "promotion_user_id": null,
+        "code": "DEMO7",
+        "description": null,
+        "discount_value": "15",
+        "min_discount_amount": null,
+        "max_discount_amount": null,
+        "start_date": "2025-08-17 11:32:00",
+        "end_date": "2025-08-21 11:32:00",
+        "usage_limit": -1,
+        "per_user_limit": -1,
+        "total_used": 0,
+        "status": 1,
+        "created_by": 1,
+        "updated_by": 1,
+        "created_at": "2025-08-18T07:56:32.000000Z",
+        "updated_at": "2025-08-18T07:56:32.000000Z",
+        "orders_count": 0,
+        "promotion_user": [
+            {
+                "id": 11,
+                "user_id": 2,
+                "promotion_id": 13,
+                "user": {
+                    "id": 2,
+                    "username": "adminsuper",
+                    "email": "support@superbee.site",
+                    "email_verified_at": null,
+                    "phone": "0900000001",
+                    "avatar_url": "https:\/\/cdn2.fptshop.com.vn\/unsafe\/800x0\/avatar_anime_nam_cute_18_a74be9502d.jpg",
+                    "donate_code": "JRNMSCK500XVE3J8",
+                    "web_id": 1,
+                    "status": 1,
+                    "created_at": "2025-08-18T04:29:55.000000Z",
+                    "updated_at": "2025-08-18T04:29:55.000000Z"
+                }
+            },
+            {
+                "id": 12,
+                "user_id": 3,
+                "promotion_id": 13,
+                "user": {
+                    "id": 3,
+                    "username": "reseller",
+                    "email": "support@superbee.site",
+                    "email_verified_at": null,
+                    "phone": "0900000002",
+                    "avatar_url": "https:\/\/cdn2.fptshop.com.vn\/unsafe\/800x0\/avatar_anime_nam_cute_18_a74be9502d.jpg",
+                    "donate_code": "RS7WR1RADZBDNQHA",
+                    "web_id": 1,
+                    "status": 1,
+                    "created_at": "2025-08-18T04:29:56.000000Z",
+                    "updated_at": "2025-08-18T04:29:56.000000Z"
+                }
+            },
+            {
+                "id": 13,
+                "user_id": 4,
+                "promotion_id": 13,
+                "user": {
+                    "id": 4,
+                    "username": "partner",
+                    "email": "support@superbee.site",
+                    "email_verified_at": null,
+                    "phone": "0900000003",
+                    "avatar_url": "https:\/\/cdn2.fptshop.com.vn\/unsafe\/800x0\/avatar_anime_nam_cute_18_a74be9502d.jpg",
+                    "donate_code": "IK899J5TS3BYAILS",
+                    "web_id": 1,
+                    "status": 1,
+                    "created_at": "2025-08-18T04:29:56.000000Z",
+                    "updated_at": "2025-08-18T04:29:56.000000Z"
+                }
+            },
+            {
+                "id": 14,
+                "user_id": 5,
+                "promotion_id": 13,
+                "user": {
+                    "id": 5,
+                    "username": "user",
+                    "email": "support@superbee.site",
+                    "email_verified_at": null,
+                    "phone": "0900000004",
+                    "avatar_url": "https:\/\/cdn2.fptshop.com.vn\/unsafe\/800x0\/avatar_anime_nam_cute_18_a74be9502d.jpg",
+                    "donate_code": "KYMK20QK1JG0224Q",
+                    "web_id": 1,
+                    "status": 1,
+                    "created_at": "2025-08-18T04:29:56.000000Z",
+                    "updated_at": "2025-08-18T04:29:56.000000Z"
+                }
+            },
+            {
+                "id": 15,
+                "user_id": 1,
+                "promotion_id": 13,
+                "user": {
+                    "id": 1,
+                    "username": "admin",
+                    "email": "support@superbee.site",
+                    "email_verified_at": null,
+                    "phone": "0900000000",
+                    "avatar_url": "https:\/\/cdn2.fptshop.com.vn\/unsafe\/800x0\/avatar_anime_nam_cute_18_a74be9502d.jpg",
+                    "donate_code": "RZCK4QL3BDBTT3SX",
+                    "web_id": 1,
+                    "status": 1,
+                    "created_at": "2025-08-18T04:29:55.000000Z",
+                    "updated_at": "2025-08-18T04:29:55.000000Z"
+                }
+            }
+        ]
+    }]
+```
+* Ở đây, nếu `promotion_user_id = -1` nghĩa là dành cho tất cả mọi người đều có thể sử dụng. `promotion_user_id = null` nghĩa là dành cho 1 số người cụ thể, có thể xem ở `promotion_user` nếu `promotion_user_id == null`
+# Bug: 
+1. Gửi email kích hoạt tài khoản:
+* CHưa thấy validate email, và không được sử dụng required
+2. QUản lí mã giảm giá
+* Thêm phần  thêm mã giảm giá cho nhiều người
+3. CTV:
+* CTV không còn trang quản trị riêng, không còn được thêm sản phẩm nữa. Chỉ có quyền hơn user ở chỗ là mua hàng thì được giảm giá 20%, vì CTV chỉ là người bán hàng hộ mình
+4. Nhân viên:
+* Nhân viên nào đăng acc lên để bán, thì nhân viên đó phải bảo hành acc cho khách, nếu có gắn thông tin của nhân viên đó, khi nhân viên đó nghỉ việc thì phải bàn giao thông tin đó sang cho nhân viên khác hoặc admin
+5. Bảo hành:
+* Thêm cột ở bảng product_credentials:
+    * Email: Thông tin email của tài khoản (nullable)
+    * Phone: Thông tin sđt của tài khoản (nullable)
+    * CCCD: Thông tin cccd của tài khoản (nullable) (nếu đc thì để ảnh)
 # Deploy:
 ```bash
 redis-server --port 1234 --unixsocket /home/mptvweo/.application/redis.sock --unixsocketperm 777

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\Promotion;
+use App\Models\PromotionUser;
 use App\Models\User;
 use App\Models\Web;
 use Illuminate\Support\Facades\Auth;
@@ -50,7 +51,7 @@ class AdminDiscountCodeController extends Controller
             $query->orderBy($sortBy, $sortDirection);
 
             // Paginate the results
-            $promotions = $query->paginate(15)->withQueryString();
+            $promotions = $query->with('promotion_user.user')->paginate(15)->withQueryString();
 
             return response()->json([
                 'message' => 'Lấy danh sách mã giảm giá thành công',
@@ -72,7 +73,7 @@ class AdminDiscountCodeController extends Controller
 
     {
         try {
-            $code = Promotion::with("user.web")->find($id);
+            $code = Promotion::with("user.web")->with('promotion_user.user')->find($id);
 
             if (!$code) {
                 return response()->json([
@@ -108,7 +109,7 @@ class AdminDiscountCodeController extends Controller
                 'end_date'              => 'required|date|after_or_equal:start_date',
                 'usage_limit'           => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'        => 'nullable|integer|min:-1|not_in:0',
-                'target_user_id'        => 'required|integer',
+                // 'target_user_id'        => 'nullable|array',
                 'status'=>'nullable|integer'
             ];
 
@@ -146,8 +147,8 @@ class AdminDiscountCodeController extends Controller
                 'per_user_limit.min'            => 'Giới hạn mỗi người dùng phải lớn hơn hoặc bằng -1.',
                 'per_user_limit.not_in'         => 'Giới hạn mỗi người dùng không được là 0.',
 
-                'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
-                'target_user_id.integer'        => 'ID người dùng mục tiêu phải là số nguyên.',
+                // 'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
+                // 'target_user_id.array'        => 'ID người dùng mục tiêu phải là số nguyên.',
             ];
 
 
@@ -182,21 +183,41 @@ class AdminDiscountCodeController extends Controller
             $validated['usage_limit'] = $validated['usage_limit'] ?? -1;
             $validated['per_user_limit'] = $validated['per_user_limit'] ?? -1;
             $validated['total_used'] = 0;
-            $validated['user_id'] = $request->target_user_id;
+            // $validated['user_id'] = $request->target_user_id;
             $validated['created_by'] = $request->user_id;
             $validated['updated_by'] = $request->user_id;
             $validated['status'] = $request->status;
             $validated['code'] = strtoupper($request->code);
+            // $validated['target_user_id'] = $request->target_user_id ?? null;
+            $target_user_id = empty ($request->target_user_id) ? null : $request->target_user_id;
 
             // 6. Lưu dữ liệu
             DB::beginTransaction();
+
+            
+            if ($target_user_id == null){
+                $validated['promotion_user_id'] = -1;
+                $target_user_id = [];
+            }  else {
+                $validated['promotion_user_id'] = null;
+            }
             $code = Promotion::create($validated);
-            DB::commit();
-            if ($request->target_user_id == -1) {
+            foreach ($target_user_id as $data){
+                    PromotionUser::create([
+                        "user_id"=>$data,
+                        'promotion_id'=>$code->id
+                    ]);
+                }
+            if ($request->target_user_id == null) {
                 $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}");
             } else {
-                $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $request->target_user_id);
+                foreach ($target_user_id as $data){
+
+                
+                    $this->sendNotification(1, "Khuyến mãi {$request->discount_value}% từ {$request->start_date} đến {$request->end_date} khi sử dụng mã giảm giá {$request->code}", null, $data);
+                }
             }
+            DB::commit();
             return response()->json([
                 'message' => 'Tạo mã giảm giá thành công',
                 'status' => true,
@@ -212,7 +233,9 @@ class AdminDiscountCodeController extends Controller
             DB::rollBack();
             return response()->json([
                 'message' => 'Đã có lỗi xảy ra.',
-                'status' => false
+                'status' => false,
+                "hehe"=>$e->getMessage(),
+                // "tar"=>$target_user_id
             ], 500);
         }
     }
@@ -256,7 +279,7 @@ class AdminDiscountCodeController extends Controller
                 'start_date'           => 'required|date',
                 'end_date'             => 'required|date|after_or_equal:start_date',
                 'status'               => 'required|in:0,1',
-                'target_user_id'       => 'required|integer',
+                'target_user_id'       => 'nullable|array',
             ];
 
             $messages = [
@@ -296,14 +319,14 @@ class AdminDiscountCodeController extends Controller
                 'status.required'               => 'Vui lòng chọn trạng thái.',
                 'status.in'                     => 'Trạng thái không hợp lệ (phải là 0 hoặc 1).',
 
-                'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
-                'target_user_id.integer'        => 'ID người dùng mục tiêu phải là số nguyên.',
+                // 'target_user_id.required'       => 'Vui lòng chọn người dùng mục tiêu.',
+                'target_user_id.array'        => 'Dữ liệu không hợp lệ',
             ];
 
             // Áp dụng validator
             $validator = Validator::make($request->all(), $rules, $messages);
 
-            if ($code->code != $request->code){
+            if ($code->code != strtoupper($request->code)){
                 return response()->json([
                     "status"=>False,
                     "message"=>"Bạn không được sửa tên mã giảm giá"
@@ -319,14 +342,28 @@ class AdminDiscountCodeController extends Controller
             }
 
             $validated = $validator->validated();
-
-            $validated['user_id'] = $request->target_user_id;
+            $target_user_id = empty ($request->target_user_id) ? null : $request->target_user_id;
+            // $validated['user_id'] = $request->target_user_id;
             $validated["created_by"] = $code->created_by;
             $validated['updated_by'] = $request->user_id;
-
+            
 
             DB::beginTransaction();
+            if ($target_user_id == null) {
+                $validated['promotion_user_id'] = -1;
+                $target_user_id = [];
+            } else {
+                $validated['promotion_user_id'] = null;
+                
+            }
             $code->update($validated);
+            PromotionUser::where('promotion_id',$id)->delete();
+            foreach ($target_user_id as $item) {
+                PromotionUser::create([
+                    "user_id"=>$item,
+                    "promotion_id"=>$id
+                ]);
+            }
             DB::commit();
 
             return response()->json([

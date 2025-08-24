@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "@utils/http"; // Giả định đường dẫn đúng
-import { useNotification } from "../../../contexts/NotificationContext"; // Giả định đường dẫn đúng
+import api from "@utils/http";
+import { useNotification } from "../../../contexts/NotificationContext";
+import UserSelectionModal from "./UserSelectionModal";
 
 // --- Icons ---
 const Icon = ({ children, className }) => (
@@ -64,23 +65,6 @@ const UsersIcon = () => (
     />
   </svg>
 );
-const SearchIcon = () => (
-  <svg
-    className="w-4 h-4 text-gray-500 dark:text-gray-400"
-    aria-hidden="true"
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 20 20"
-  >
-    <path
-      stroke="currentColor"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth="2"
-      d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
-    />
-  </svg>
-);
 const BackIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -126,7 +110,6 @@ const FormSection = ({ title, icon, children }) => (
     <div className="p-5 space-y-6">{children}</div>
   </div>
 );
-
 const FormInput = ({ label, id, error, children }) => (
   <div>
     <label
@@ -148,7 +131,6 @@ const EditDiscountCodePage = () => {
   const navigate = useNavigate();
   const { pop } = useNotification();
 
-  // --- State Management ---
   const [form, setForm] = useState(null);
   const [status, setStatus] = useState(1);
   const [errors, setErrors] = useState({});
@@ -156,17 +138,12 @@ const EditDiscountCodePage = () => {
   const [pageLoading, setPageLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(false);
   const [lockReason, setLockReason] = useState("");
-
-  // State for user selection
   const [targetType, setTargetType] = useState("all");
-  const [targetUserId, setTargetUserId] = useState(-1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [targetUserIds, setTargetUserIds] = useState([]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isSearching, setIsSearching] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // --- Data Fetching ---
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -174,25 +151,19 @@ const EditDiscountCodePage = () => {
           api.get(`/admin/discountcode/${id}`),
           api.get(`/admin/discountcode/user`),
         ]);
-
         const promoData = promoRes.data?.data;
-        console.log("🚀 ~ fetchData ~ promoData:", promoData);
         if (!promoData) {
           pop("Không tìm thấy mã khuyến mãi.", "e");
           navigate("/admin/discountcode");
           return;
         }
-
-        const usersData = usersRes.data?.data || [];
-        setAllUsers(usersData);
-
+        setAllUsers(usersRes.data?.data || []);
         const formatDate = (dateString) => {
           if (!dateString) return "";
           const date = new Date(dateString);
           date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
           return date.toISOString().slice(0, 16);
         };
-
         setForm({
           code: promoData.code || "",
           description: promoData.description || "",
@@ -205,31 +176,22 @@ const EditDiscountCodePage = () => {
           end_date: formatDate(promoData.end_date),
         });
         setStatus(promoData.status);
-
-        // --- BUG FIX STARTS HERE ---
-        if (promoData.user_id && promoData.user_id !== -1) {
-          setTargetType("specific");
-
-          setTargetUserId(promoData.user_id);
-          // Ensure comparison is between numbers to avoid type mismatch
-          const foundUser = usersData.find(
-            (u) => Number(u.id) === Number(promoData.user_id)
-          );
-          if (foundUser) {
-            setSelectedUser(foundUser);
-          } else {
-            // Handle case where user ID exists but user is not in the list (e.g., deleted user)
-            console.warn(`User with ID ${promoData.user_id} not found.`);
-          }
-        } else {
+        if (
+          promoData.promotion_user_id === -1 ||
+          !promoData.promotion_user ||
+          promoData.promotion_user.length === 0
+        ) {
           setTargetType("all");
-          setTargetUserId(-1);
+          setSelectedUsers([]);
+          setTargetUserIds([]);
+        } else {
+          setTargetType("specific");
+          const initialUsers = promoData.promotion_user.map((pu) => pu.user);
+          setSelectedUsers(initialUsers);
+          setTargetUserIds(initialUsers.map((u) => u.id));
         }
-        // --- BUG FIX ENDS HERE ---
-
         const isExpired = new Date(promoData.end_date) < new Date();
         const isUsed = promoData.total_used > 0;
-
         if (isUsed || isExpired) {
           setIsLocked(true);
           let reason = "";
@@ -247,52 +209,38 @@ const EditDiscountCodePage = () => {
         setPageLoading(false);
       }
     };
-
     fetchData();
   }, [id, navigate, pop]);
 
-  // --- Handlers ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    const noCaps = [
+      "usage_limit",
+      "per_user_limit",
+      "discount_value",
+      "min_discount_amount",
+      "max_discount_amount",
+      "start_date",
+      "end_date",
+    ];
+    setForm((prev) => ({
+      ...prev,
+      [name]: noCaps.includes(name) ? value : value.toUpperCase(),
+    }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: null }));
   };
 
-  const handleSearch = useCallback(() => {
-    setIsSearching(true);
-    if (!searchTerm.trim()) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-    const filtered = allUsers.filter(
-      (user) =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id.toString().includes(searchTerm)
-    );
-    setSearchResults(filtered);
-    setIsSearching(false);
-  }, [searchTerm, allUsers]);
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => handleSearch(), 300);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, handleSearch]);
-
-  const handleSelectUser = (user) => {
-    setSelectedUser(user);
-    setTargetUserId(user.id);
-    setSearchTerm("");
-    setSearchResults([]);
+  const handleConfirmSelection = (confirmedUsers) => {
+    setSelectedUsers(confirmedUsers);
+    setTargetUserIds(confirmedUsers.map((u) => u.id));
   };
 
   const handleTargetTypeChange = (e) => {
     const newTargetType = e.target.value;
     setTargetType(newTargetType);
     if (newTargetType === "all") {
-      setTargetUserId(-1);
-      setSelectedUser(null);
+      setSelectedUsers([]);
+      setTargetUserIds([]);
     }
   };
 
@@ -301,12 +249,10 @@ const EditDiscountCodePage = () => {
     if (isLocked) return;
     setLoading(true);
     setErrors({});
-
     let submissionData = { ...form };
     if (targetType === "specific") {
       submissionData.usage_limit = submissionData.per_user_limit;
     }
-
     const payload = {
       ...submissionData,
       discount_value: submissionData.discount_value
@@ -328,10 +274,9 @@ const EditDiscountCodePage = () => {
         submissionData.max_discount_amount !== ""
           ? Number(submissionData.max_discount_amount)
           : null,
-      target_user_id: targetUserId,
+      target_user_id: targetUserIds,
       status: Number(status),
     };
-
     try {
       await api.put(`/admin/discountcode/${id}`, payload);
       pop("Cập nhật mã giảm giá thành công!", "s");
@@ -354,15 +299,13 @@ const EditDiscountCodePage = () => {
   const inputClasses =
     "mt-1 block w-full px-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 dark:text-white transition-colors disabled:bg-gray-200 dark:disabled:bg-gray-700 disabled:cursor-not-allowed";
 
-  if (pageLoading) {
+  if (pageLoading)
     return (
       <div className="flex justify-center items-center h-screen bg-slate-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400">
         Đang tải dữ liệu...
       </div>
     );
-  }
 
-  // --- Render ---
   return (
     <div className="font-sans bg-slate-50 dark:bg-gray-900 min-h-screen p-4 sm:p-6 lg:p-8">
       <form onSubmit={handleSubmit} className="max-w-6xl mx-auto space-y-8">
@@ -396,7 +339,6 @@ const EditDiscountCodePage = () => {
             </button>
           </div>
         </div>
-
         {isLocked && (
           <div className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 p-4 rounded-lg flex items-center">
             <LockIcon />
@@ -408,10 +350,8 @@ const EditDiscountCodePage = () => {
             {errors.form}
           </div>
         )}
-
         <fieldset disabled={isLocked} className="contents">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
               <FormSection title="Thông tin cơ bản" icon={<TagIcon />}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -462,7 +402,6 @@ const EditDiscountCodePage = () => {
                   ></textarea>
                 </FormInput>
               </FormSection>
-
               <FormSection title="Điều kiện áp dụng" icon={<UsersIcon />}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {targetType === "all" && (
@@ -530,8 +469,6 @@ const EditDiscountCodePage = () => {
                 </div>
               </FormSection>
             </div>
-
-            {/* Right Column */}
             <div className="lg:col-span-1 space-y-8">
               <FormSection title="Thời gian hiệu lực" icon={<CalendarIcon />}>
                 <FormInput
@@ -563,7 +500,6 @@ const EditDiscountCodePage = () => {
                   />
                 </FormInput>
               </FormSection>
-
               <FormSection title="Cấu hình" icon={<UsersIcon />}>
                 <FormInput
                   label="Trạng thái"
@@ -581,20 +517,19 @@ const EditDiscountCodePage = () => {
                     <option value={0}>Ẩn</option>
                   </select>
                 </FormInput>
-
                 <FormInput
                   label="Đối tượng áp dụng"
                   id="target_type"
-                  error={errors.user_id?.[0]}
+                  error={errors.target_user_id?.[0]}
                 >
                   <div className="mt-2 space-y-2">
                     <label
                       htmlFor="target_all"
                       className={`flex items-center p-3 w-full bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-700 rounded-lg ${
                         !isLocked
-                          ? "cursor-pointer hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-gray-700"
+                          ? "cursor-pointer"
                           : "cursor-not-allowed opacity-70"
-                      } transition-all`}
+                      }`}
                     >
                       <input
                         id="target_all"
@@ -613,9 +548,9 @@ const EditDiscountCodePage = () => {
                       htmlFor="target_specific"
                       className={`flex items-center p-3 w-full bg-gray-50 dark:bg-gray-700/50 border dark:border-gray-700 rounded-lg ${
                         !isLocked
-                          ? "cursor-pointer hover:bg-sky-50 hover:border-sky-300 dark:hover:bg-gray-700"
+                          ? "cursor-pointer"
                           : "cursor-not-allowed opacity-70"
-                      } transition-all`}
+                      }`}
                     >
                       <input
                         id="target_specific"
@@ -632,74 +567,38 @@ const EditDiscountCodePage = () => {
                     </label>
                   </div>
                 </FormInput>
-
                 {targetType === "specific" && (
-                  <div className="relative">
-                    {selectedUser ? (
-                      <div className="flex items-center justify-between p-3 bg-sky-50 dark:bg-sky-900/40 rounded-lg">
-                        <div>
-                          <p className="font-medium text-sky-800 dark:text-sky-200">
-                            {selectedUser.username || "N/A"}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {selectedUser.email}
-                          </p>
-                        </div>
-                        {!isLocked && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedUser(null);
-                              setTargetUserId(null);
-                            }}
-                            className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 font-semibold text-2xl leading-none"
+                  <div className="space-y-3 p-3 border border-dashed dark:border-gray-600 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <p className="font-medium text-sm text-gray-700 dark:text-gray-300">
+                        Người dùng đã chọn ({selectedUsers.length})
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(true)}
+                        className="text-sm font-medium text-sky-600 hover:text-sky-800 dark:text-sky-400 dark:hover:text-sky-200"
+                      >
+                        {selectedUsers.length > 0
+                          ? "Thay đổi danh sách"
+                          : "Chọn người dùng"}
+                      </button>
+                    </div>
+                    {selectedUsers.length > 0 && (
+                      <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                        {selectedUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            className="flex items-center p-2 bg-gray-100 dark:bg-gray-700/50 rounded-md text-xs"
                           >
-                            &times;
-                          </button>
-                        )}
-                      </div>
-                    ) : (
-                      !isLocked && (
-                        <>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <SearchIcon />
-                            </div>
-                            <input
-                              type="text"
-                              value={searchTerm}
-                              onChange={(e) => setSearchTerm(e.target.value)}
-                              className="block w-full pl-10 pr-3 py-2 bg-gray-50 dark:bg-gray-700/50 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-sky-500 focus:border-sky-500 dark:text-white"
-                              placeholder="Tìm theo tên, email, hoặc ID..."
-                            />
+                            <p className="flex-1 font-medium text-gray-800 dark:text-gray-200 truncate">
+                              {user.username}
+                            </p>
+                            <p className="text-gray-500 dark:text-gray-400 truncate ml-2">
+                              {user.email}
+                            </p>
                           </div>
-                          {searchTerm.trim() &&
-                            !isSearching &&
-                            searchResults.length === 0 && (
-                              <div className="text-center py-4 text-sm text-gray-500 dark:text-gray-400">
-                                Không tìm thấy người dùng.
-                              </div>
-                            )}
-                          {searchResults.length > 0 && (
-                            <ul className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 shadow-lg max-h-60 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                              {searchResults.map((user, index) => (
-                                <li
-                                  key={index}
-                                  onClick={() => handleSelectUser(user)}
-                                  className="text-gray-900 dark:text-white cursor-pointer select-none relative py-2 pl-4 pr-4 hover:bg-sky-100 dark:hover:bg-sky-900/50"
-                                >
-                                  <span className="font-normal block truncate">
-                                    {user.username}{" "}
-                                    <span className="text-gray-500 dark:text-gray-400">
-                                      ({user.email})
-                                    </span>
-                                  </span>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </>
-                      )
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
@@ -708,6 +607,13 @@ const EditDiscountCodePage = () => {
           </div>
         </fieldset>
       </form>
+      <UserSelectionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={handleConfirmSelection}
+        allUsers={allUsers}
+        initialSelectedUsers={selectedUsers}
+      />
     </div>
   );
 };

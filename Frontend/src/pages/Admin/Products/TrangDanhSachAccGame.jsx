@@ -106,6 +106,7 @@ const TrangDanhSachAccGame = () => {
           type: "select",
           name: "category_id",
           label: "Danh mục",
+
           options: [{ label: "Tất cả", value: "" }, ...categoryOptions],
         };
 
@@ -370,6 +371,7 @@ const TrangDanhSachAccGame = () => {
                       }
                       className="px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 transition"
                     >
+                    
                       {filter.options.map((option, optIndex) => (
                         <option
                           key={optIndex}
@@ -379,6 +381,7 @@ const TrangDanhSachAccGame = () => {
                           {option.label}
                         </option>
                       ))}
+                      <option value="1">Khác</option>
                     </select>
                   )}
                 </div>

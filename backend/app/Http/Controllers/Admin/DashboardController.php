@@ -3,161 +3,477 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
+use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
-use App\Models\Order;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
-use App\Models\Product;
-use App\Models\Withdraw;
-use App\Models\RechargeBank;
-use App\Models\RechargeCard;
-use App\Models\AffiliateHistory;
-use App\Models\OrderItem;
-use App\Models\Review;
 
 class DashboardController extends Controller
 {
-
-    public function getDashboardData(Request $request)
+    public function getStatistics(Request $request)
     {
-        try {
-            $period = $request->input('period', 'week');
+        $request->validate([
+            'period' => 'required|in:day,week,month,quarter,year',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'web_id' => 'nullable|exists:webs,id'
+        ]);
 
-            if ($request->has('start_date') || $request->has('end_date')) {
-                $dates = $this->_validateAndParseDateRange($request);
-                $statsStartDate = $chartsStartDate = $dates['startDate'];
-                $statsEndDate = $chartsEndDate = $dates['endDate'];
-            } else {
-                $statsStartDate = Carbon::today()->startOfDay();
-                $statsEndDate = Carbon::today()->endOfDay();
-                $chartsStartDate = Carbon::now()->subDays(6)->startOfDay();
-                $chartsEndDate = Carbon::now()->endOfDay();
-            }
+        $period = $request->period;
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        $webId = $request->web_id;
 
-            // Gọi các hàm logic private để lấy toàn bộ dữ liệu
-            $basicStatsData = $this->_getStatsForDateRangeLogic($statsStartDate, $statsEndDate);
-            $financialStats = $this->_getFinancialStatsLogic($statsStartDate, $statsEndDate);
-            $salesPerformanceStats = $this->_getSalesPerformanceStatsLogic();
-            $chartsData = $this->_getChartDataLogic($period, $chartsStartDate, $chartsEndDate);
-            $gameRevenueComparisonAllTime = $this->_getGameRevenueComparisonAllTimeLogic($chartsStartDate, $chartsEndDate);
-            $gameRevenueComparisonInPeriod = $this->_getGameRevenueComparisonInPeriodLogic($chartsStartDate, $chartsEndDate);
-            $userGrowthChart = $this->_getUserGrowthChartLogic($chartsStartDate, $chartsEndDate);
-            $topSpendingUsers = $this->_getTopSpendingUsersLogic($statsStartDate, $statsEndDate);
-            $averageRating = $this->_getAverageRatingLogic($statsStartDate, $statsEndDate);
-            $topRechargers = $this->_getTopRechargersLogic($statsStartDate, $statsEndDate);
+        // Base query cho orders
+        $baseQuery = DB::table('orders')
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->where('orders.status', 1)
+            ->whereBetween('orders.created_at', [$startDate, $endDate]);
 
-            $todayRevenueObject = ['original' => ['success' => true, 'data' => $basicStatsData]];
+        if ($webId) {
+            $baseQuery->where('products.web_id', $webId);
+        }
 
-            return response()->json([
-                'status' => true,
-                'message' => 'lấy ra dữ liệu thành công',
-                'data' => [
-                    'todayRevenue' => $todayRevenueObject,
-                    'charts' => $chartsData,
-                    'detailed_stats' => [
-                        'financial' => $financialStats,
-                        'sales_performance' => $salesPerformanceStats,
-                        'average_rating' => $averageRating
-                    ],
-                    'game_comparison_chart_all_time' => $gameRevenueComparisonAllTime,
-                    'game_comparison_chart_in_period' => $gameRevenueComparisonInPeriod,
-                    'user_growth_chart' => $userGrowthChart,
-                    'top_spending_users' => $topSpendingUsers,
-                    'top_rechargers' => $topRechargers,
+        $periodFormat = $this->getPeriodFormat($period);
+
+        // Revenue chart
+        $revenueStats = (clone $baseQuery)
+            ->select(
+                DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}') as period"),
+                DB::raw('SUM(order_items.unit_price) as total_revenue'),
+                DB::raw('SUM(products.import_price) as total_cost'),
+                DB::raw('SUM(order_items.unit_price - products.import_price) as total_profit'),
+                DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
+                DB::raw('COUNT(order_items.id) as total_items')
+            )
+            ->groupBy(DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}')"))
+            ->orderBy(DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}')"))
+            ->get();
+
+        // Category performance
+        $categoryStats = (clone $baseQuery)
+            ->join('categories', 'products.category_id', '=', 'categories.id')
+            ->select(
+                'categories.name as category_name',
+                DB::raw('SUM(order_items.unit_price) as revenue'),
+                DB::raw('SUM(products.import_price) as cost'),
+                DB::raw('SUM(order_items.unit_price - products.import_price) as profit'),
+                DB::raw('COUNT(order_items.id) as items_sold'),
+                DB::raw('(SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id AND p.status = 1) as available_products')
+            )
+            ->groupBy('categories.id', 'categories.name')
+            ->orderBy('revenue', 'desc')
+            ->get();
+
+
+        // Transaction stats
+        $transactionQuery = DB::table('wallet_transactions')
+            ->whereIn('type', ['recharge_card', 'recharge_bank'])
+            ->where('status', 1)
+            ->whereBetween('created_at', [$startDate, $endDate]);
+
+        if ($webId) {
+            $transactionQuery->where(function ($query) use ($webId) {
+                $query->whereExists(function ($subQuery) use ($webId) {
+                    $subQuery->select(DB::raw(1))
+                        ->from('recharges_card');
+                })->orWhereExists(function ($subQuery) use ($webId) {
+                    $subQuery->select(DB::raw(1))
+                        ->from('recharges_bank');
+                });
+            });
+        }
+
+
+        $transactionStats = $transactionQuery
+            ->select(
+                DB::raw("DATE_FORMAT(created_at, '{$periodFormat}') as period"),
+                'type',
+                DB::raw('SUM(amount) as total_amount'),
+                DB::raw('COUNT(*) as total_transactions')
+            )
+            ->groupBy(DB::raw("DATE_FORMAT(created_at, '{$periodFormat}')"), 'type')
+            ->orderBy(DB::raw("DATE_FORMAT(created_at, '{$periodFormat}')"))
+            ->get();
+
+
+        // Transaction details
+        $transactionDetailsQuery = DB::table('wallet_transactions')
+            ->join('wallets', 'wallets.id', '=', 'wallet_transactions.wallet_id')
+            ->join('users', 'users.id', '=', 'wallets.user_id')
+            ->whereIn('wallet_transactions.type', ['recharge_card', 'recharge_bank'])
+            ->where('wallet_transactions.status', 1)
+            ->whereBetween('wallet_transactions.created_at', [$startDate, $endDate])
+            ->select(
+                'wallet_transactions.id',
+                'wallet_transactions.amount',
+                'wallet_transactions.type',
+                'wallet_transactions.status',
+                'wallet_transactions.created_at',
+                'wallets.user_id',
+                'users.username as user_name'
+            )
+            ->orderBy('wallet_transactions.created_at', 'desc') // Phải đặt ở đây
+            ->limit(100)
+            ->get(); // Lấy dữ liệu cuối cùng
+
+
+
+        $transactionDetails = $transactionDetailsQuery;
+
+        // Summary from orders
+        $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
+        $totalCost = (clone $baseQuery)->sum('products.import_price');
+        $totalProfit = $totalRevenue - $totalCost;
+        $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
+        $totalItems = (clone $baseQuery)->count('order_items.id');
+        $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
+
+        // New customers
+        $newCustomersQuery = DB::table('users')
+            ->select(
+                'users.id',
+                'users.username',
+                'users.email',
+                'users.phone',
+                'users.created_at',
+                DB::raw('MIN(orders.created_at) as first_order_date')
+            )
+            ->join('orders', 'users.id', '=', 'orders.user_id')
+            ->where('orders.status', 1)
+            ->when($webId, function ($query) use ($webId) {
+                $query->join('order_items', 'orders.id', '=', 'order_items.order_id')
+                    ->join('products', 'order_items.product_id', '=', 'products.id')
+                    ->where('products.web_id', $webId);
+            })
+            ->groupBy(
+                'users.id',
+                'users.username',
+                'users.email',
+                'users.phone',
+                'users.created_at'
+            )
+            ->havingBetween('first_order_date', [$startDate, $endDate]);
+
+
+        $totalNewCustomers = $newCustomersQuery->get()->count();;
+        $totalRechargeCount = WalletTransaction::whereIn('type', ['recharge_card', 'recharge_bank'])
+            ->where('status', 1)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->count();
+
+        $totalRechargeAmount = WalletTransaction::whereIn('type', ['recharge_card', 'recharge_bank'])
+            ->where('status', 1)
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('amount');
+        // Transaction totals (fallback if wallet_transactions is empty)
+        $totalTransactionAmount = $totalRechargeAmount;
+        $totalTransactionCount = $totalRechargeCount;
+
+        if ($totalTransactionAmount == 0 && $totalTransactionCount == 0) {
+            // Fallback: use orders
+            $totalTransactionAmount = (clone $baseQuery)->sum('order_items.unit_price');
+            $totalTransactionCount = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'summary' => [
+                    'total_revenue' => $totalRevenue,
+                    'total_cost' => $totalCost,
+                    'total_profit' => $totalProfit,
+                    'total_orders' => $totalOrders,
+                    'total_items' => $totalItems,
+                    'avg_order_value' => round($avgOrderValue, 0),
+                    'total_new_customers' => $totalNewCustomers,
+                    'total_transaction_amount' => $totalTransactionAmount,
+                    'total_transaction_count' => $totalTransactionCount
+                ],
+                'revenue_chart' => $revenueStats,
+                'new_customers_chart' => $this->getNewCustomersChart($periodFormat, $startDate, $endDate, $webId),
+                'category_stats' => $categoryStats,
+                'transaction_stats' => $transactionStats,
+                'transaction_details' => $transactionDetails,
+                'period' => $period,
+                'date_range' => [
+                    'start' => $startDate->format('Y-m-d'),
+                    'end' => $endDate->format('Y-m-d')
                 ]
-            ], 200);
-        } catch (\Throwable $e) {
-            Log::error('Lỗi getDashboardData: ' . $e->getMessage() . ' tại dòng ' . $e->getLine());
-            return response()->json(['status' => false, 'message' => 'đã xảy ra lỗi hệ thống'], 500);
+            ]
+        ]);
+    }
+
+    private function getNewCustomersChart($periodFormat, $startDate, $endDate, $webId)
+    {
+        $query = DB::table('users')
+            ->join(DB::raw('(
+            SELECT user_id, MIN(created_at) as first_order_date
+            FROM orders 
+            WHERE status = 1
+            GROUP BY user_id
+        ) first_orders'), 'users.id', '=', 'first_orders.user_id')
+            ->whereBetween('first_orders.first_order_date', [$startDate, $endDate]);
+
+        if ($webId) {
+            $query->join('orders as first_order', function ($join) {
+                $join->on('users.id', '=', 'first_order.user_id')
+                    ->on('first_orders.first_order_date', '=', 'first_order.created_at');
+            })
+                ->join('order_items as first_item', 'first_order.id', '=', 'first_item.order_id')
+                ->join('products as first_product', 'first_item.product_id', '=', 'first_product.id')
+                ->where('first_product.web_id', $webId);
         }
+
+        return $query->select(
+            DB::raw("DATE_FORMAT(first_orders.first_order_date, '{$periodFormat}') as period"),
+            DB::raw('COUNT(DISTINCT users.id) as new_customers')
+        )
+            ->groupBy(DB::raw("DATE_FORMAT(first_orders.first_order_date, '{$periodFormat}')"))
+            ->orderBy(DB::raw("DATE_FORMAT(first_orders.first_order_date, '{$periodFormat}')"))
+            ->get();
     }
 
-    private function _validateAndParseDateRange(Request $request, bool $defaultTo7Days = false): array
+
+    public function compareStatistics(Request $request)
     {
-        if (!$request->has('start_date') && !$request->has('end_date') && $defaultTo7Days) {
-            return ['startDate' => Carbon::now()->subDays(6)->startOfDay(), 'endDate' => Carbon::now()->endOfDay()];
+        $request->validate([
+            'period_type' => 'required|in:week,month,quarter,year',
+            'period_1' => 'required|array',
+            'period_1.start' => 'required|date',
+            'period_1.end' => 'required|date',
+            'period_2' => 'required|array',
+            'period_2.start' => 'required|date',
+            'period_2.end' => 'required|date',
+            'web_id' => 'nullable|exists:webs,id'
+        ]);
+
+        $periodType = $request->period_type;
+        $period1 = [
+            'start' => Carbon::parse($request->period_1['start']),
+            'end' => Carbon::parse($request->period_1['end'])
+        ];
+        $period2 = [
+            'start' => Carbon::parse($request->period_2['start']),
+            'end' => Carbon::parse($request->period_2['end'])
+        ];
+        $webId = $request->web_id;
+
+        // Get statistics for both periods
+        $stats1 = $this->getPeriodsStats($period1['start'], $period1['end'], $webId);
+        $stats2 = $this->getPeriodsStats($period2['start'], $period2['end'], $webId);
+
+        // Calculate differences
+        $comparison = [
+            'period_1' => [
+                'label' => $this->getPeriodLabel($periodType, $period1['start'], $period1['end']),
+                'stats' => $stats1
+            ],
+            'period_2' => [
+                'label' => $this->getPeriodLabel($periodType, $period2['start'], $period2['end']),
+                'stats' => $stats2
+            ],
+            'differences' => [
+                'revenue' => [
+                    'absolute' => $stats1['total_revenue'] - $stats2['total_revenue'],
+                    'percentage' => $stats2['total_revenue'] > 0 ?
+                        round((($stats1['total_revenue'] - $stats2['total_revenue']) / $stats2['total_revenue']) * 100, 2) : 0
+                ],
+                'orders' => [
+                    'absolute' => $stats1['total_orders'] - $stats2['total_orders'],
+                    'percentage' => $stats2['total_orders'] > 0 ?
+                        round((($stats1['total_orders'] - $stats2['total_orders']) / $stats2['total_orders']) * 100, 2) : 0
+                ],
+                'profit' => [
+                    'absolute' => $stats1['total_profit'] - $stats2['total_profit'],
+                    'percentage' => $stats2['total_profit'] > 0 ?
+                        round((($stats1['total_profit'] - $stats2['total_profit']) / $stats2['total_profit']) * 100, 2) : 0
+                ],
+                'new_customers' => [
+                    'absolute' => $stats1['total_new_customers'] - $stats2['total_new_customers'],
+                    'percentage' => $stats2['total_new_customers'] > 0 ?
+                        round((($stats1['total_new_customers'] - $stats2['total_new_customers']) / $stats2['total_new_customers']) * 100, 2) : 0
+                ]
+            ]
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $comparison
+        ]);
+    }
+
+    private function getPeriodsStats($startDate, $endDate, $webId = null)
+    {
+        // Base query for orders
+        $baseQuery = DB::table('orders')
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->where('orders.status', 1)
+            ->whereBetween('orders.created_at', [$startDate, $endDate]);
+
+        if ($webId) {
+            $baseQuery->where('products.web_id', $webId);
         }
-        $rules = ['start_date' => 'required|date_format:d-m-Y', 'end_date' => 'required|date_format:d-m-Y|after_or_equal:start_date'];
-        $messages = ['start_date.required' => 'Bạn chưa nhập ngày bắt đầu.', 'start_date.date_format' => 'Ngày bắt đầu phải có định dạng DD-MM-YYYY.', 'end_date.required' => 'Bạn chưa nhập ngày kết thúc.', 'end_date.date_format' => 'Ngày kết thúc phải có định dạng DD-MM-YYYY.', 'end_date.after_or_equal' => 'Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.'];
-        $validatedData = $request->validate($rules, $messages);
-        return ['startDate' => Carbon::createFromFormat('d-m-Y', $validatedData['start_date'])->startOfDay(), 'endDate' => Carbon::createFromFormat('d-m-Y', $validatedData['end_date'])->endOfDay()];
+
+        $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
+        $totalCost = (clone $baseQuery)->sum('products.import_price');
+        $totalProfit = $totalRevenue - $totalCost;
+        $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
+        $avgOrderValue = $totalOrders > 0 ? round($totalRevenue / $totalOrders, 0) : 0;
+
+        // New customers in period
+        $newCustomersQuery = DB::table('users')
+            ->join(DB::raw('(
+                SELECT user_id, MIN(created_at) as first_order_date
+                FROM orders 
+                WHERE status = 1
+                GROUP BY user_id
+            ) first_orders'), 'users.id', '=', 'first_orders.user_id')
+            ->whereBetween('first_orders.first_order_date', [$startDate, $endDate]);
+
+        if ($webId) {
+            $newCustomersQuery->join('orders as first_order', function ($join) {
+                $join->on('users.id', '=', 'first_order.user_id')
+                    ->on('first_orders.first_order_date', '=', 'first_order.created_at');
+            })
+                ->join('order_items as first_item', 'first_order.id', '=', 'first_item.order_id')
+                ->join('products as first_product', 'first_item.product_id', '=', 'first_product.id')
+                ->where('first_product.web_id', $webId);
+        }
+
+        $totalNewCustomers = $newCustomersQuery->count('users.id');
+
+        return [
+            'total_revenue' => $totalRevenue,
+            'total_cost' => $totalCost,
+            'total_profit' => $totalProfit,
+            'total_orders' => $totalOrders,
+            'avg_order_value' => $avgOrderValue,
+            'total_new_customers' => $totalNewCustomers
+        ];
     }
 
-    private function _getTopRechargersLogic(Carbon $startDate, Carbon $endDate)
+    private function getPeriodFormat($period)
     {
-        $bankQuery = DB::table('recharges_bank')->where('web_id', 1)->where('status', 1)->whereBetween('created_at', [$startDate, $endDate])->select('user_id', 'amount');
-        $cardQuery = DB::table('recharges_card')->where('web_id', 1)->where('status', 1)->whereBetween('created_at', [$startDate, $endDate])->select('user_id', 'amount')->unionAll($bankQuery);
-        return DB::query()->fromSub($cardQuery, 'recharges')->join('users', 'recharges.user_id', '=', 'users.id')->select('users.username', DB::raw('SUM(recharges.amount) as total_recharged'))->groupBy('users.id', 'users.username')->orderBy('total_recharged', 'desc')->get();
-    }
-
-    private function _getFinancialStatsLogic(Carbon $startDate, Carbon $endDate): array
-    {
-        $totalRevenue = Order::join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->sum('orders.total_amount');
-        $totalProfit = Order::join('users', 'orders.user_id', '=', 'users.id')->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'order_items.product_id', '=', 'products.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->sum(DB::raw('products.price - products.import_price'));
-        $bankDeposits = RechargeBank::where('web_id', 1)->where('status', 1)->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
-        $cardDeposits = RechargeCard::where('web_id', 1)->where('status', 1)->whereBetween('created_at', [$startDate, $endDate])->sum('amount');
-        $pendingWithdrawals = Withdraw::join('users', 'withdraws.user_id', '=', 'users.id')->where('users.web_id', 1)->where('withdraws.status', 0)->whereBetween('withdraws.created_at', [$startDate, $endDate])->sum('withdraws.amount');
-        $totalAffiliatePayouts = AffiliateHistory::join('affiliates', 'affiliate_histories.affiliate_id', '=', 'affiliates.id')->join('users', 'affiliates.user_id', '=', 'users.id')->where('users.web_id', 1)->whereBetween('affiliate_histories.created_at', [$startDate, $endDate])->sum('affiliate_histories.commission_amount');
-        $averageOrderValue = Order::join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->avg('orders.total_amount');
-        return ['total_revenue' => (float) $totalRevenue, 'total_profit' => (float) $totalProfit, 'total_deposits' => (float) ($bankDeposits + $cardDeposits), 'pending_withdrawals' => (float) $pendingWithdrawals, 'total_affiliate_payouts' => (float) $totalAffiliatePayouts, 'average_order_value' => (float) $averageOrderValue,];
-    }
-
-    private function _getSalesPerformanceStatsLogic(): array
-    {
-        $totalProducts = Product::where('web_id', 1)->count();
-        $soldProductIds = OrderItem::join('orders', 'order_items.order_id', '=', 'orders.id')->join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->pluck('order_items.product_id')->unique();
-        $soldProductsCount = $soldProductIds->count();
-        return ['total_products' => (int) $totalProducts, 'sold_products' => (int) $soldProductsCount, 'unsold_products' => (int) ($totalProducts - $soldProductsCount),];
-    }
-
-    private function _getStatsForDateRangeLogic(Carbon $startDate, Carbon $endDate): array
-    {
-        $revenue = Order::join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->sum('orders.total_amount');
-        $orderCount = Order::join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->count();
-        $newUsersCount = User::where('web_id', 1)->whereBetween('created_at', [$startDate, $endDate])->count();
-        return ['today_revenue' => (float) $revenue, 'today_order_count' => (int) $orderCount, 'today_new_users' => (int) $newUsersCount,];
-    }
-
-    private function _getTopSpendingUsersLogic(Carbon $startDate, Carbon $endDate)
-    {
-        return User::join('orders', 'users.id', '=', 'orders.user_id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->select('users.username', DB::raw('SUM(orders.total_amount) as total_spent'))->groupBy('users.id', 'users.username')->orderBy('total_spent', 'desc')->limit(10)->get();
-    }
-
-    private function _getUserGrowthChartLogic(Carbon $startDate, Carbon $endDate): array
-    {
-        $growthData = User::where('web_id', 1)->whereBetween('created_at', [$startDate, $endDate])->select(DB::raw("DATE_FORMAT(created_at, '%d/%m') as date_label"), DB::raw('COUNT(id) as count'))->groupBy('date_label')->orderByRaw('MIN(created_at)')->get();
-        return ['labels' => $growthData->pluck('date_label'), 'datasets' => [['label' => 'Người dùng mới', 'data' => $growthData->pluck('count')]]];
-    }
-
-    private function _getAverageRatingLogic(Carbon $startDate, Carbon $endDate): float
-    {
-        $avgRating = Review::where('web_id', 1)->whereBetween('created_at', [$startDate, $endDate])->avg('star');
-        return (float) number_format($avgRating ?? 0, 2);
-    }
-
-    private function _getChartDataLogic(string $period, Carbon $startDate, Carbon $endDate): array
-    {
-        $revenueOverTimeQuery = Order::join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate]);
         switch ($period) {
+            case 'day':
+                return '%Y-%m-%d';
+            case 'week':
+                return '%Y-%u';
+            case 'month':
+                return '%Y-%m';
+            case 'quarter':
+                return '%Y-Q%q';
             case 'year':
-                $revenueOverTimeQuery->select(DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m') as label"), DB::raw("SUM(orders.total_amount) as value"))->groupBy('label')->orderBy('label');
-                break;
+                return '%Y';
             default:
-                $revenueOverTimeQuery->select(DB::raw("DATE_FORMAT(orders.created_at, '%d/%m') as label"), DB::raw("SUM(orders.total_amount) as value"))->groupBy('label')->orderByRaw('MIN(orders.created_at)');
-                break;
+                return '%Y-%m-%d';
         }
-        $revenueOverTime = $revenueOverTimeQuery->get();
-        $revenueByCategory = DB::table('categories as parent_cat')->select('parent_cat.name as label', DB::raw('SUM(orders.total_amount) as value'))->join('categories as child_cat', 'parent_cat.id', '=', 'child_cat.parent_id')->join('products', 'child_cat.id', '=', 'products.category_id')->join('order_items', 'products.id', '=', 'order_items.product_id')->join('orders', 'order_items.order_id', '=', 'orders.id')->join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->whereNull('parent_cat.parent_id')->where('parent_cat.id', '!=', 1)->groupBy('parent_cat.name')->orderBy('value', 'desc')->get();
-        return ['revenue_over_time' => $revenueOverTime, 'revenue_by_category' => $revenueByCategory];
     }
 
-    private function _getGameRevenueComparisonInPeriodLogic(Carbon $startDate, Carbon $endDate): array
+    private function getPeriodLabel($periodType, $startDate, $endDate)
     {
-        $top2Categories = DB::table('categories as parent_cat')->join('categories as child_cat', 'parent_cat.id', '=', 'child_cat.parent_id')->join('products', 'child_cat.id', '=', 'products.category_id')->join('order_items', 'products.id', '=', 'order_items.product_id')->join('orders', 'order_items.order_id', '=', 'orders.id')->join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereNull('parent_cat.parent_id')->where('parent_cat.id', '!=', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->select('parent_cat.id', 'parent_cat.name')->groupBy('parent_cat.id', 'parent_cat.name')->orderByRaw('SUM(orders.total_amount) DESC')->limit(2)->get();
-        return $this->_buildComparisonChartData($top2Categories, $startDate, $endDate);
+        switch ($periodType) {
+            case 'week':
+                return 'Tuần ' . $startDate->format('W/Y') . ' (' . $startDate->format('d/m') . ' - ' . $endDate->format('d/m/Y') . ')';
+            case 'month':
+                return 'Tháng ' . $startDate->format('m/Y');
+            case 'quarter':
+                $quarter = ceil($startDate->month / 3);
+                return 'Quý ' . $quarter . '/' . $startDate->format('Y');
+            case 'year':
+                return 'Năm ' . $startDate->format('Y');
+            default:
+                return $startDate->format('d/m/Y') . ' - ' . $endDate->format('d/m/Y');
+        }
+    }
+
+    public function getAvailablePeriods(Request $request)
+    {
+        $request->validate([
+            'period_type' => 'required|in:week,month,quarter,year'
+        ]);
+
+        $periodType = $request->period_type;
+
+        // Get the earliest and latest order dates
+        $dateRange = DB::table('orders')
+            ->select(
+                DB::raw('MIN(created_at) as earliest'),
+                DB::raw('MAX(created_at) as latest')
+            )
+            ->first();
+
+        if (!$dateRange->earliest) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        $earliest = Carbon::parse($dateRange->earliest);
+        $latest = Carbon::parse($dateRange->latest);
+        $periods = [];
+
+        switch ($periodType) {
+            case 'week':
+                $current = $earliest->copy()->startOfWeek();
+                while ($current->lte($latest)) {
+                    $weekEnd = $current->copy()->endOfWeek();
+                    $periods[] = [
+                        'label' => 'Tuần ' . $current->format('W/Y') . ' (' . $current->format('d/m') . ' - ' . $weekEnd->format('d/m/Y') . ')',
+                        'start' => $current->format('Y-m-d'),
+                        'end' => $weekEnd->format('Y-m-d'),
+                        'value' => $current->format('Y-W')
+                    ];
+                    $current->addWeek();
+                }
+                break;
+            case 'month':
+                $current = $earliest->copy()->startOfMonth();
+                while ($current->lte($latest)) {
+                    $periods[] = [
+                        'label' => 'Tháng ' . $current->format('m/Y'),
+                        'start' => $current->format('Y-m-d'),
+                        'end' => $current->copy()->endOfMonth()->format('Y-m-d'),
+                        'value' => $current->format('Y-m')
+                    ];
+                    $current->addMonth();
+                }
+                break;
+            case 'quarter':
+                $current = $earliest->copy()->startOfQuarter();
+                while ($current->lte($latest)) {
+                    $quarter = ceil($current->month / 3);
+                    $periods[] = [
+                        'label' => 'Quý ' . $quarter . '/' . $current->format('Y'),
+                        'start' => $current->format('Y-m-d'),
+                        'end' => $current->copy()->endOfQuarter()->format('Y-m-d'),
+                        'value' => $current->format('Y') . '-Q' . $quarter
+                    ];
+                    $current->addQuarter();
+                }
+                break;
+            case 'year':
+                $current = $earliest->copy()->startOfYear();
+                while ($current->lte($latest)) {
+                    $periods[] = [
+                        'label' => 'Năm ' . $current->format('Y'),
+                        'start' => $current->format('Y-m-d'),
+                        'end' => $current->copy()->endOfYear()->format('Y-m-d'),
+                        'value' => $current->format('Y')
+                    ];
+                    $current->addYear();
+                }
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => array_reverse($periods) // Latest first
+        ]);
     }
 
     private function _getGameRevenueComparisonAllTimeLogic(Carbon $startDate, Carbon $endDate): array
@@ -195,4 +511,5 @@ class DashboardController extends Controller
         }
         return ['labels' => $labels, 'datasets' => $datasets];
     }
+
 }

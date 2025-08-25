@@ -36,38 +36,64 @@ function Toast({ toast, onRemove }) {
 
   const toastTypes = {
     s: {
-      className: "alert-success",
+      // Success - Xanh Teal
       Icon: CheckCircle,
-      progressClass: "bg-tertiary",
+      style: {
+        backgroundColor: "#F0FDFA", // Nền
+        color: "#145369", // Chữ & Icon
+        borderLeft: "4px solid #0D9488",
+      },
+      progressStyle: {
+        backgroundColor: "#14B8A6", // Thanh tiến trình
+      },
     },
     e: {
-      className: "alert-danger",
+      // Error - Đỏ
       Icon: XCircle,
-      progressClass: "bg-gradient-danger",
+      style: {
+        backgroundColor: "#FEF2F2", // Nền
+        color: "#991B1B", // Chữ & Icon
+        borderLeft: "4px solid #DC2626",
+      },
+      progressStyle: {
+        backgroundColor: "#EF4444", // Thanh tiến trình
+      },
     },
     i: {
-      className: "alert-info",
+      // Info - Chàm (Indigo)
       Icon: Info,
-      progressClass: "bg-gradient-info",
+      style: {
+        backgroundColor: "#EEF2FF", // Nền
+        color: "#3730A3", // Chữ & Icon
+        borderLeft: "4px solid #4F46E5",
+      },
+      progressStyle: {
+        backgroundColor: "#6366F1", // Thanh tiến trình
+      },
     },
     w: {
-      className: "alert-warning",
+      // Warning - Vàng Hổ Phách (Amber)
       Icon: AlertCircle,
-      progressClass: "bg-gradient-warning",
+      style: {
+        backgroundColor: "#FFFBEB", // Nền
+        color: "#92400E", // Chữ & Icon
+        borderLeft: "4px solid #D97706",
+      },
+      progressStyle: {
+        backgroundColor: "#F59E0B", // Thanh tiến trình
+      },
     },
   };
-
-  const { className, Icon, progressClass } =
-    toastTypes[toast.type] || toastTypes.i;
+  const { Icon, style, progressStyle } = toastTypes[toast.type] || toastTypes.i;
 
   return (
     <div
       className={clsx(
-        "alert min-w-[320px] max-w-sm rounded-lg shadow-themed flex items-start relative overflow-hidden",
+        "min-w-[320px] max-w-sm rounded-lg shadow-themed flex items-start relative overflow-hidden p-4", // Thêm padding p-4
         "toast-enter",
-        isExiting && "toast-exit",
-        className
+        isExiting && "toast-exit"
       )}
+      style={style} // Áp dụng style cho khung Toast
     >
       <span className="mr-3 text-2xl flex-shrink-0 mt-[-2px]">
         <Icon size={22} />
@@ -79,18 +105,19 @@ function Toast({ toast, onRemove }) {
       {/* Nút X để đóng toast */}
       <button
         onClick={handleClose}
-        className="ml-2 p-1 rounded-full  hover:bg-opacity-20 flex-shrink-0"
+        style={{ color: "inherit" }} // Thừa hưởng màu từ thẻ div cha
+        className="ml-2 p-1 rounded-full hover:bg-black hover:bg-opacity-10 flex-shrink-0"
         aria-label="Đóng thông báo"
       >
         <X size={18} />
       </button>
 
       <div
-        className={clsx(
-          "absolute bottom-0 left-0 h-1 progress-bar-animate",
-          progressClass
-        )}
-        style={{ animationDuration: `${toast.duration}ms` }}
+        className="absolute bottom-0 left-0 h-1 progress-bar-animate"
+        style={{
+          ...progressStyle,
+          animationDuration: `${toast.duration}ms`,
+        }}
       />
     </div>
   );

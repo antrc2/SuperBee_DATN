@@ -121,7 +121,7 @@ const WithdrawForm = ({ initialData, onSuccess }) => {
   return (
     <div className="section-bg shadow-themed">
       <div className="mb-4 border-b border-themed pb-4">
-        <h3 className="text-secondary text-sm">Số dư khả dụng</h3>
+        <h3 className="text-secondary text-sm">Số tiền có thể rút</h3>
         <p className="font-heading text-2xl font-bold text-highlight">
           {balance !== null
             ? new Intl.NumberFormat("vi-VN", {

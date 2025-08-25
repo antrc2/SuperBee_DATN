@@ -500,7 +500,7 @@ class UserOrderController extends Controller
                     "total_price" => $total_price_clone,
                     "total_price_after_discount" => $total_price,
                     "promotion_codes" => $promotion_codes,
-                    "balance" => $wallet->balance,
+                    "balance" => $wallet->balance + $wallet->promotion_balance,
                     "tax_amount" => $tax_amount,
                     "tax_value" => $tax_value,
                     "discount_amount" => $discount_amount,
@@ -761,7 +761,7 @@ class UserOrderController extends Controller
                     $wallet_transaction->related_id = $order->id;
                     $wallet_transaction->save();
                     $web_info = Business_setting::where('id',1)->first();
-                    $new_order = Order::where('id', $order->id)->with(['items.product.credentials', 'user'])->first();
+                    $new_order = Order::where('id', $order->id)->with(['items.product', 'user','items.product.credentials'])->first();
                     $pdf = Pdf::loadView('orders.invoice', compact('new_order','web_info'))->output();
                     $fileName = "invoice_{$order->id}.pdf";
                     $tempPath = storage_path("app/temp/{$fileName}");

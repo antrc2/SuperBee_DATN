@@ -6,6 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 const ANONYMOUS_USER_ID_PREFIX = "guest_";
 
 const authSocketMiddleware = (socket, next) => {
+  console.log(
+    `\n--- [auth.js] Middleware được kích hoạt cho kết nối mới, Socket ID: ${socket.id} ---`
+  );
   const token = socket.handshake.query.token;
   const guestId = socket.handshake.query.guestId;
 
@@ -13,58 +16,48 @@ const authSocketMiddleware = (socket, next) => {
   let isLoggedIn = false;
   let userRole = "customer";
 
-  // Phân tích:
-  // Lần đầu kết nối: `token` sẽ là `undefined` hoặc `""`, `guestId` sẽ có giá trị.
-  // --> Sẽ chạy vào `else if (guestId)`
-  // Khi user đăng nhập và `authenticateSocket` được gọi: `token` sẽ được gửi qua event 'authenticate',
-  // không phải qua handshake query này nữa. `authSocketMiddleware` chỉ chạy 1 lần khi kết nối.
-
   if (token) {
     const decoded = verifyToken(token);
     if (decoded && decoded.user_id) {
       userId = decoded.user_id.toString();
       isLoggedIn = true;
-      userRole = decoded.role_ids[0];
+      userRole = decoded.role_ids?.[0] || "customer";
       console.log(
-        `[Middleware] Socket ${socket.id}: Đã xác thực bằng JWT cho người dùng ${userId}`
+        `[auth.js] Kết nối được xác thực bằng JWT. User ID: ${userId}`
       );
     } else {
-      console.warn(
-        `[Middleware] Socket ${socket.id}: Token không hợp lệ hoặc đã hết hạn. Chuyển về trạng thái khách.`
-      );
       userId = `${ANONYMOUS_USER_ID_PREFIX}${guestId || uuidv4()}`;
-      isLoggedIn = false;
+      console.warn(
+        `[auth.js] Token không hợp lệ. Coi như người dùng khách. Guest ID: ${userId}`
+      );
     }
   } else if (guestId) {
-    // Sẽ chạy ở kết nối ban đầu
     userId = `${ANONYMOUS_USER_ID_PREFIX}${guestId}`;
-    isLoggedIn = false;
-    userRole = "customer";
     console.log(
-      `[Middleware] Socket ${socket.id}: Đã kết nối với tư cách khách, ID: ${userId}`
+      `[auth.js] Kết nối với tư cách người dùng khách. Guest ID: ${userId}`
     );
   } else {
     userId = `${ANONYMOUS_USER_ID_PREFIX}${uuidv4()}`;
-    isLoggedIn = false;
-    userRole = "customer";
     console.warn(
-      `[Middleware] Socket ${socket.id}: Không có token hoặc guestId. Đã gán ID khách tạm thời: ${userId}`
+      `[auth.js] Không có token hoặc guestId. Tạo Guest ID tạm thời: ${userId}`
     );
   }
 
   socket.userId = userId;
   socket.isLoggedIn = isLoggedIn;
-  socket.isAuthenticated = true;
   socket.userRole = userRole;
+
   connectionManager.addConnection(socket.userId, socket.id);
-  console.log(
-    `[Middleware] Kết nối Socket ${socket.id} đã khởi tạo: ID Người dùng=${socket.userId}, Đã đăng nhập=${socket.isLoggedIn}`
-  );
 
   socket.join("public_notifications");
   console.log(
-    `[Middleware] Socket ${socket.id} (User: ${socket.userId}) đã tự động tham gia public_notifications.`
+    `[auth.js] Socket ${socket.id} (User: ${socket.userId}) đã tự động tham gia phòng 'public_notifications'.`
   );
+
+  console.log(
+    `[auth.js] Middleware hoàn tất. Trạng thái Socket: UserID=${socket.userId}, IsLoggedIn=${socket.isLoggedIn}, Role=${socket.userRole}`
+  );
+  console.log(`--- Kết thúc middleware cho Socket ID: ${socket.id} ---\n`);
 
   next();
 };

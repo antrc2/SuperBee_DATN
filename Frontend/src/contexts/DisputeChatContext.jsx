@@ -7,7 +7,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { getSocket, authenticateSocket } from "@utils/socket";
+import { getSocket, connectSocket, authenticateSocket } from "@utils/socket";
 import { useAuth } from "./AuthContext";
 import { useNotification } from "./NotificationContext";
 import api from "@utils/http";
@@ -32,9 +32,20 @@ export function DisputeChatProvider({ children }) {
   // Khởi tạo socket và lắng nghe tin nhắn mới
   useEffect(() => {
     if (!token) return;
+
     const socket = getSocket();
     socketRef.current = socket;
-    authenticateSocket(token);
+
+    // Hàm xử lý xác thực, sẽ được gọi mỗi khi kết nối thành công
+    const handleConnectAndAuth = () => {
+      console.log(
+        `[DisputeChatContext] Socket connected/reconnected. Authenticating...`
+      );
+      authenticateSocket(token);
+    };
+
+    // Lắng nghe sự kiện 'connect' cho cả kết nối lần đầu và kết nối lại
+    socket.on("connect", handleConnectAndAuth);
 
     const handleNewMessage = (message) => {
       // Chỉ cập nhật nếu tin nhắn thuộc về phòng chat khiếu nại đang mở
@@ -51,7 +62,14 @@ export function DisputeChatProvider({ children }) {
     };
 
     socket.on("new_chat_message", handleNewMessage);
-    return () => socket.off("new_chat_message", handleNewMessage);
+
+    // Bắt đầu kết nối
+    connectSocket();
+
+    return () => {
+      socket.off("connect", handleConnectAndAuth);
+      socket.off("new_chat_message", handleNewMessage);
+    };
   }, [token, pop, user.id]);
 
   // Hàm để lấy hoặc tạo phòng chat
@@ -78,7 +96,9 @@ export function DisputeChatProvider({ children }) {
             agentDetails: agentDetails,
           });
           // Tham gia phòng chat trên socket
-          socketRef.current.emit("join_chat_room", roomInfo.id);
+          if (socketRef.current) {
+            socketRef.current.emit("join_chat_room", roomInfo.id);
+          }
         }
       } catch (error) {
         pop(
@@ -104,20 +124,9 @@ export function DisputeChatProvider({ children }) {
       };
 
       // Gửi tin nhắn qua socket
-      socketRef.current.emit("send_chat_message", payload);
-
-      // Optimistic Update: Hiển thị tin nhắn của mình ngay lập tức
-      // const tempMessage = {
-      //   id: `temp-${Date.now()}`,
-      //   sender_id: user.id,
-      //   content: content.trim(),
-      //   created_at: new Date().toISOString(),
-      //   sender: { ...user },
-      // };
-      // setActiveChat((current) => ({
-      //   ...current,
-      //   messages: [...current.messages, tempMessage],
-      // }));
+      if (socketRef.current) {
+        socketRef.current.emit("send_chat_message", payload);
+      }
     },
     [activeChat.roomId, user]
   );

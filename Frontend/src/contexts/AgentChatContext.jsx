@@ -7,7 +7,7 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { getSocket, authenticateSocket } from "@utils/socket";
+import { getSocket, connectSocket, authenticateSocket } from "@utils/socket";
 import { useAuth } from "@contexts/AuthContext";
 import { useNotification } from "./NotificationContext";
 import api from "@utils/http";
@@ -27,14 +27,6 @@ export function AgentChatProvider({ children }) {
   const [isListLoading, setIsListLoading] = useState(true);
   const socketRef = useRef(null);
 
-  /**
-   * SỬA LỖI QUAN TRỌNG:
-   * Vấn đề: Hàm handleNewMessage cũ không được cập nhật với state mới nhất (như activeChatId),
-   * dẫn đến việc nó không thể xử lý đúng tin nhắn đến khi không có chat nào đang được chọn.
-   * Giải pháp: Thêm `activeChatId` và `user` vào danh sách dependency của `useCallback`.
-   * Điều này đảm bảo rằng mỗi khi nhân viên chọn một cuộc trò chuyện khác (hoặc không chọn),
-   * hàm handleNewMessage sẽ được "làm mới" với thông tin chính xác.
-   */
   const handleNewMessage = useCallback(
     (message) => {
       // Luồng 1: Cập nhật cửa sổ chat đang mở (nếu có)
@@ -115,31 +107,36 @@ export function AgentChatProvider({ children }) {
 
     const socket = getSocket();
     socketRef.current = socket;
-    authenticateSocket(token);
-    fetchInitialChatList();
 
-    // Đăng ký listener mới đã được sửa lỗi
+    // Hàm xử lý xác thực, sẽ được gọi mỗi khi kết nối thành công
+    const handleConnectAndAuth = () => {
+      console.log(
+        `[AgentChatContext] Socket connected/reconnected. Authenticating...`
+      );
+      authenticateSocket(token);
+    };
+
+    // Lắng nghe sự kiện 'connect' cho cả kết nối lần đầu và kết nối lại
+    socket.on("connect", handleConnectAndAuth);
+
+    // Đăng ký listener cho tin nhắn mới
     socket.on("new_chat_message", handleNewMessage);
 
+    // Bắt đầu kết nối VÀ tải danh sách chat ban đầu
+    connectSocket();
+    fetchInitialChatList();
+
     // Dọn dẹp listener khi component unmount
-    return () => socket.off("new_chat_message", handleNewMessage);
+    return () => {
+      socket.off("connect", handleConnectAndAuth);
+      socket.off("new_chat_message", handleNewMessage);
+    };
   }, [token, user?.id, handleNewMessage, fetchInitialChatList]);
 
   // Hàm gửi tin nhắn (thêm optimistic update để hiển thị ngay)
   const sendMessage = useCallback(
     (content) => {
       if (!activeChatId || !user) return false;
-
-      // Tạo tin nhắn tạm để hiển thị ngay lập tức trên giao diện
-      const tempMessage = {
-        id: `temp-${Date.now()}`,
-        chat_room_id: activeChatId,
-        sender_id: user.id,
-        content: content.trim(),
-        created_at: new Date().toISOString(),
-        sender: { id: user.id, username: user.name, avatar_url: user.avatar },
-      };
-      // setMessages((prev) => [...prev, tempMessage]);
 
       // Gửi tin nhắn thật lên server
       const payload = {

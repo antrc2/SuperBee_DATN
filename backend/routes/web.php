@@ -29,14 +29,14 @@ Route::get('/', function () {
 //             "verificationToken" => "sfdgsgsfgsfgsgr43562"
 //         ],
 //     ));
-event(new SystemNotification(
-    "EMAIL_RESTORE_ACCOUNT",
-    [
-        "email"=>'antrc2gamer@gmail.com',
-        "username"=>"Nguyen Ngoc An",
-        // "amount"=>9000
-    ]
-    ));
+// event(new SystemNotification(
+//     "EMAIL_RESTORE_ACCOUNT",
+//     [
+//         "email"=>'antrc2gamer@gmail.com',
+//         "username"=>"Nguyen Ngoc An",
+//         // "amount"=>9000
+//     ]
+//     ));
     // event(new SystemNotification(
     //     'EMAIL_WELCOME', // Loại thông báo
     //     [
@@ -45,28 +45,28 @@ event(new SystemNotification(
     //         "loginUrl" => "http://localhost:5173/auth/login"
     //     ],
     // ));
-    // event(new SystemNotification(
-    //     'NOTIFICATION_PUBLIC', // Loại thông báo
-    //     [
-    //         "id"=> 3,
-    //         "type"=> 1,
-    //         "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
-    //         "published_at"=> "2025-06-25T15:53:26.000000Z",
-    //         "link"=> null,
-    //         "is_read"=> false,
+    event(new SystemNotification(
+        'NOTIFICATION_PUBLIC', // Loại thông báo
+        [
+            "id"=> 3,
+            "type"=> 1,
+            "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
+            "published_at"=> "2025-06-25T15:53:26.000000Z",
+            "link"=> null,
+            "is_read"=> false,
         
-    //     ]
-    // ));
-    // event(new SystemNotification(
-    //     'NOTIFICATION_PRIVATE', // Loại thông báo
-    //     [
-    //         "id"=> 3,
-    //         "type"=> 1,
-    //         "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
-    //         "published_at"=> "2025-06-25T15:53:26.000000Z",
-    //         "link"=> null,
-    //         "is_read"=> false,
-    //         'user_id'=>1
-    //     ]
-    // ));
+        ]
+    ));
+    event(new SystemNotification(
+        'NOTIFICATION_PRIVATE', // Loại thông báo
+        [
+            "id"=> 3,
+            "type"=> 1,
+            "content"=> "Thông báo chung loại 12 khác. Đừng bỏ lỡ ưu đãi này!",
+            "published_at"=> "2025-06-25T15:53:26.000000Z",
+            "link"=> null,
+            "is_read"=> false,
+            'user_id'=>5
+        ]
+    ));
 });

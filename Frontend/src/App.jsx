@@ -15,6 +15,7 @@ import { useAppStatus } from "@contexts/AppStatusContext";
 import LoadingDomain from "./components/Loading/LoadingDomain";
 import ErrorPage from "./pages/Error/ErrorPage";
 import ActiveDomain from "./pages/Clients/ActiveDomain/ActiveDomain";
+import { NotificationListenerProvider } from "./contexts/Notification.jsx";
 
 function AppRoutes() {
   // Lấy trạng thái khởi tạo ứng dụng và các hàm liên quan từ AppStatusContext
@@ -60,10 +61,12 @@ function AppRoutes() {
         <HomeProvider>
           <ChatProvider>
             <CartProvider>
-              <div>
-                <ScrollToTop />
-                {appRoutes}
-              </div>
+              <NotificationListenerProvider>
+                <div>
+                  <ScrollToTop />
+                  {appRoutes}
+                </div>
+              </NotificationListenerProvider>
             </CartProvider>
           </ChatProvider>
         </HomeProvider>

@@ -529,6 +529,12 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
           </div>
         </div>
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0">
+          <a
+            href={order.bill_url}
+            className="action-button action-button-primary !w-auto p-2"
+          >
+            In hóa đơn
+          </a>
           <button
             onClick={onClose}
             className="action-button action-button-secondary !w-auto"

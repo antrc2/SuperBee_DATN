@@ -154,7 +154,7 @@ class AdminProductController extends Controller
             if ($product->status == 4 || $product->status == 2) {
                 return response()->json(["status" => False, "message" => "Không thể sửa sản phẩm"], 400);
             }
-
+            $sku = $product->sku;
             $attrs = $request->input('attributes');
             if (is_string($attrs)) {
                 $attrs = json_decode($attrs, true);
@@ -364,7 +364,7 @@ class AdminProductController extends Controller
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
                 'images'                      => 'required|array',
-                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:10000',
+                'images.*'                    => 'required|image|mimes:jpeg,png,jpg,gif,svg,webp|max:10000',
                 'description'                 => 'nullable|string',
             ];
 

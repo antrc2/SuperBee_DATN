@@ -37,13 +37,15 @@ class DashboardController extends Controller
 
         $periodFormat = $this->getPeriodFormat($period);
 
-        // Revenue chart
+       
         $revenueStats = (clone $baseQuery)
             ->select(
                 DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}') as period"),
                 DB::raw('SUM(order_items.unit_price) as total_revenue'),
                 DB::raw('SUM(products.import_price) as total_cost'),
-                DB::raw('SUM(order_items.unit_price - products.import_price) as total_profit'),
+                
+                DB::raw('(SUM(order_items.unit_price) / 1.1) - SUM(products.import_price) as total_profit'),
+                
                 DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
                 DB::raw('COUNT(order_items.id) as total_items')
             )
@@ -58,7 +60,9 @@ class DashboardController extends Controller
                 'categories.name as category_name',
                 DB::raw('SUM(order_items.unit_price) as revenue'),
                 DB::raw('SUM(products.import_price) as cost'),
-                DB::raw('SUM(order_items.unit_price - products.import_price) as profit'),
+                
+                DB::raw('(SUM(order_items.unit_price) / 1.1) - SUM(products.import_price) as profit'),
+                
                 DB::raw('COUNT(order_items.id) as items_sold'),
                 DB::raw('(SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id AND p.status = 1) as available_products')
             )
@@ -114,9 +118,9 @@ class DashboardController extends Controller
                 'wallets.user_id',
                 'users.username as user_name'
             )
-            ->orderBy('wallet_transactions.created_at', 'desc') // Phải đặt ở đây
+            ->orderBy('wallet_transactions.created_at', 'desc')
             ->limit(100)
-            ->get(); // Lấy dữ liệu cuối cùng
+            ->get();
 
 
 
@@ -125,7 +129,11 @@ class DashboardController extends Controller
         // Summary from orders
         $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
         $totalCost = (clone $baseQuery)->sum('products.import_price');
-        $totalProfit = $totalRevenue - $totalCost;
+
+        $revenueAfterTax = $totalRevenue / 1.1;
+        $totalProfit = $revenueAfterTax - $totalCost;
+        $tax = $totalRevenue - $revenueAfterTax; 
+
         $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
         $totalItems = (clone $baseQuery)->count('order_items.id');
         $avgOrderValue = $totalOrders > 0 ? $totalRevenue / $totalOrders : 0;
@@ -167,12 +175,11 @@ class DashboardController extends Controller
             ->where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('amount');
-        // Transaction totals (fallback if wallet_transactions is empty)
+
         $totalTransactionAmount = $totalRechargeAmount;
         $totalTransactionCount = $totalRechargeCount;
 
         if ($totalTransactionAmount == 0 && $totalTransactionCount == 0) {
-            // Fallback: use orders
             $totalTransactionAmount = (clone $baseQuery)->sum('order_items.unit_price');
             $totalTransactionCount = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
         }
@@ -183,7 +190,8 @@ class DashboardController extends Controller
                 'summary' => [
                     'total_revenue' => $totalRevenue,
                     'total_cost' => $totalCost,
-                    'total_profit' => $totalProfit,
+                    'total_profit' => round($totalProfit, 0),
+                    'total_tax' => round($tax, 0), // THÊM TRƯỜNG TỔNG THUẾ
                     'total_orders' => $totalOrders,
                     'total_items' => $totalItems,
                     'avg_order_value' => round($avgOrderValue, 0),
@@ -250,63 +258,41 @@ class DashboardController extends Controller
         ]);
 
         $periodType = $request->period_type;
-        $period1 = [
-            'start' => Carbon::parse($request->period_1['start']),
-            'end' => Carbon::parse($request->period_1['end'])
-        ];
-        $period2 = [
-            'start' => Carbon::parse($request->period_2['start']),
-            'end' => Carbon::parse($request->period_2['end'])
-        ];
+        $period1 = ['start' => Carbon::parse($request->period_1['start']), 'end' => Carbon::parse($request->period_1['end'])];
+        $period2 = ['start' => Carbon::parse($request->period_2['start']), 'end' => Carbon::parse($request->period_2['end'])];
         $webId = $request->web_id;
 
-        // Get statistics for both periods
         $stats1 = $this->getPeriodsStats($period1['start'], $period1['end'], $webId);
         $stats2 = $this->getPeriodsStats($period2['start'], $period2['end'], $webId);
 
-        // Calculate differences
         $comparison = [
-            'period_1' => [
-                'label' => $this->getPeriodLabel($periodType, $period1['start'], $period1['end']),
-                'stats' => $stats1
-            ],
-            'period_2' => [
-                'label' => $this->getPeriodLabel($periodType, $period2['start'], $period2['end']),
-                'stats' => $stats2
-            ],
+            'period_1' => ['label' => $this->getPeriodLabel($periodType, $period1['start'], $period1['end']), 'stats' => $stats1],
+            'period_2' => ['label' => $this->getPeriodLabel($periodType, $period2['start'], $period2['end']), 'stats' => $stats2],
             'differences' => [
                 'revenue' => [
                     'absolute' => $stats1['total_revenue'] - $stats2['total_revenue'],
-                    'percentage' => $stats2['total_revenue'] > 0 ?
-                        round((($stats1['total_revenue'] - $stats2['total_revenue']) / $stats2['total_revenue']) * 100, 2) : 0
+                    'percentage' => $stats2['total_revenue'] > 0 ? round((($stats1['total_revenue'] - $stats2['total_revenue']) / $stats2['total_revenue']) * 100, 2) : 0
                 ],
                 'orders' => [
                     'absolute' => $stats1['total_orders'] - $stats2['total_orders'],
-                    'percentage' => $stats2['total_orders'] > 0 ?
-                        round((($stats1['total_orders'] - $stats2['total_orders']) / $stats2['total_orders']) * 100, 2) : 0
+                    'percentage' => $stats2['total_orders'] > 0 ? round((($stats1['total_orders'] - $stats2['total_orders']) / $stats2['total_orders']) * 100, 2) : 0
                 ],
                 'profit' => [
                     'absolute' => $stats1['total_profit'] - $stats2['total_profit'],
-                    'percentage' => $stats2['total_profit'] > 0 ?
-                        round((($stats1['total_profit'] - $stats2['total_profit']) / $stats2['total_profit']) * 100, 2) : 0
+                    'percentage' => $stats2['total_profit'] != 0 ? round((($stats1['total_profit'] - $stats2['total_profit']) / abs($stats2['total_profit'])) * 100, 2) : 0
                 ],
                 'new_customers' => [
                     'absolute' => $stats1['total_new_customers'] - $stats2['total_new_customers'],
-                    'percentage' => $stats2['total_new_customers'] > 0 ?
-                        round((($stats1['total_new_customers'] - $stats2['total_new_customers']) / $stats2['total_new_customers']) * 100, 2) : 0
+                    'percentage' => $stats2['total_new_customers'] > 0 ? round((($stats1['total_new_customers'] - $stats2['total_new_customers']) / $stats2['total_new_customers']) * 100, 2) : 0
                 ]
             ]
         ];
 
-        return response()->json([
-            'success' => true,
-            'data' => $comparison
-        ]);
+        return response()->json(['success' => true, 'data' => $comparison]);
     }
 
     private function getPeriodsStats($startDate, $endDate, $webId = null)
     {
-        // Base query for orders
         $baseQuery = DB::table('orders')
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
@@ -319,36 +305,35 @@ class DashboardController extends Controller
 
         $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
         $totalCost = (clone $baseQuery)->sum('products.import_price');
-        $totalProfit = $totalRevenue - $totalCost;
+
+        // ===== THAY ĐỔI: TÍNH LỢI NHUẬN VÀ THUẾ CHO PHẦN SO SÁNH =====
+        $revenueAfterTax = $totalRevenue / 1.1;
+        $totalProfit = $revenueAfterTax - $totalCost;
+        $tax = $totalRevenue - $revenueAfterTax;
+        // ==============================================================
+
         $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
         $avgOrderValue = $totalOrders > 0 ? round($totalRevenue / $totalOrders, 0) : 0;
 
-        // New customers in period
         $newCustomersQuery = DB::table('users')
-            ->join(DB::raw('(
-                SELECT user_id, MIN(created_at) as first_order_date
-                FROM orders 
-                WHERE status = 1
-                GROUP BY user_id
-            ) first_orders'), 'users.id', '=', 'first_orders.user_id')
+            ->join(DB::raw('(SELECT user_id, MIN(created_at) as first_order_date FROM orders WHERE status = 1 GROUP BY user_id) first_orders'), 'users.id', '=', 'first_orders.user_id')
             ->whereBetween('first_orders.first_order_date', [$startDate, $endDate]);
 
         if ($webId) {
             $newCustomersQuery->join('orders as first_order', function ($join) {
-                $join->on('users.id', '=', 'first_order.user_id')
-                    ->on('first_orders.first_order_date', '=', 'first_order.created_at');
+                $join->on('users.id', '=', 'first_order.user_id')->on('first_orders.first_order_date', '=', 'first_order.created_at');
             })
                 ->join('order_items as first_item', 'first_order.id', '=', 'first_item.order_id')
                 ->join('products as first_product', 'first_item.product_id', '=', 'first_product.id')
                 ->where('first_product.web_id', $webId);
         }
-
         $totalNewCustomers = $newCustomersQuery->count('users.id');
 
         return [
             'total_revenue' => $totalRevenue,
             'total_cost' => $totalCost,
-            'total_profit' => $totalProfit,
+            'total_profit' => round($totalProfit, 0),
+            'total_tax' => round($tax, 0),
             'total_orders' => $totalOrders,
             'avg_order_value' => $avgOrderValue,
             'total_new_customers' => $totalNewCustomers
@@ -392,25 +377,12 @@ class DashboardController extends Controller
 
     public function getAvailablePeriods(Request $request)
     {
-        $request->validate([
-            'period_type' => 'required|in:week,month,quarter,year'
-        ]);
-
+        $request->validate(['period_type' => 'required|in:week,month,quarter,year']);
         $periodType = $request->period_type;
-
-        // Get the earliest and latest order dates
-        $dateRange = DB::table('orders')
-            ->select(
-                DB::raw('MIN(created_at) as earliest'),
-                DB::raw('MAX(created_at) as latest')
-            )
-            ->first();
+        $dateRange = DB::table('orders')->select(DB::raw('MIN(created_at) as earliest'), DB::raw('MAX(created_at) as latest'))->first();
 
         if (!$dateRange->earliest) {
-            return response()->json([
-                'success' => true,
-                'data' => []
-            ]);
+            return response()->json(['success' => true, 'data' => []]);
         }
 
         $earliest = Carbon::parse($dateRange->earliest);
@@ -422,24 +394,14 @@ class DashboardController extends Controller
                 $current = $earliest->copy()->startOfWeek();
                 while ($current->lte($latest)) {
                     $weekEnd = $current->copy()->endOfWeek();
-                    $periods[] = [
-                        'label' => 'Tuần ' . $current->format('W/Y') . ' (' . $current->format('d/m') . ' - ' . $weekEnd->format('d/m/Y') . ')',
-                        'start' => $current->format('Y-m-d'),
-                        'end' => $weekEnd->format('Y-m-d'),
-                        'value' => $current->format('Y-W')
-                    ];
+                    $periods[] = ['label' => 'Tuần ' . $current->format('W/Y') . ' (' . $current->format('d/m') . ' - ' . $weekEnd->format('d/m/Y') . ')', 'start' => $current->format('Y-m-d'), 'end' => $weekEnd->format('Y-m-d'), 'value' => $current->format('Y-W')];
                     $current->addWeek();
                 }
                 break;
             case 'month':
                 $current = $earliest->copy()->startOfMonth();
                 while ($current->lte($latest)) {
-                    $periods[] = [
-                        'label' => 'Tháng ' . $current->format('m/Y'),
-                        'start' => $current->format('Y-m-d'),
-                        'end' => $current->copy()->endOfMonth()->format('Y-m-d'),
-                        'value' => $current->format('Y-m')
-                    ];
+                    $periods[] = ['label' => 'Tháng ' . $current->format('m/Y'), 'start' => $current->format('Y-m-d'), 'end' => $current->copy()->endOfMonth()->format('Y-m-d'), 'value' => $current->format('Y-m')];
                     $current->addMonth();
                 }
                 break;
@@ -447,33 +409,20 @@ class DashboardController extends Controller
                 $current = $earliest->copy()->startOfQuarter();
                 while ($current->lte($latest)) {
                     $quarter = ceil($current->month / 3);
-                    $periods[] = [
-                        'label' => 'Quý ' . $quarter . '/' . $current->format('Y'),
-                        'start' => $current->format('Y-m-d'),
-                        'end' => $current->copy()->endOfQuarter()->format('Y-m-d'),
-                        'value' => $current->format('Y') . '-Q' . $quarter
-                    ];
+                    $periods[] = ['label' => 'Quý ' . $quarter . '/' . $current->format('Y'), 'start' => $current->format('Y-m-d'), 'end' => $current->copy()->endOfQuarter()->format('Y-m-d'), 'value' => $current->format('Y') . '-Q' . $quarter];
                     $current->addQuarter();
                 }
                 break;
             case 'year':
                 $current = $earliest->copy()->startOfYear();
                 while ($current->lte($latest)) {
-                    $periods[] = [
-                        'label' => 'Năm ' . $current->format('Y'),
-                        'start' => $current->format('Y-m-d'),
-                        'end' => $current->copy()->endOfYear()->format('Y-m-d'),
-                        'value' => $current->format('Y')
-                    ];
+                    $periods[] = ['label' => 'Năm ' . $current->format('Y'), 'start' => $current->format('Y-m-d'), 'end' => $current->copy()->endOfYear()->format('Y-m-d'), 'value' => $current->format('Y')];
                     $current->addYear();
                 }
                 break;
         }
 
-        return response()->json([
-            'success' => true,
-            'data' => array_reverse($periods) // Latest first
-        ]);
+        return response()->json(['success' => true, 'data' => array_reverse($periods)]);
     }
 
     private function _getGameRevenueComparisonAllTimeLogic(Carbon $startDate, Carbon $endDate): array
@@ -511,5 +460,4 @@ class DashboardController extends Controller
         }
         return ['labels' => $labels, 'datasets' => $datasets];
     }
-
 }

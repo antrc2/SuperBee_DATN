@@ -154,13 +154,13 @@ class UserProfileController extends Controller
                     Rule::unique('users')->ignore($userId),
                 ],
                 'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\+\(\)\s\-]+$/'],
-                'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
+                'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:2048'],
                 'avatar_url' => ['nullable', 'string', 'max:255'],
 
                 'cccd_number' => ['nullable', 'string', 'max:20', 'regex:/^[0-9]+$/'],
                 'cccd_created_at' => ['nullable', 'date'],
-                'cccd_frontend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5120'],
-                'cccd_backend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5120'],
+                'cccd_frontend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
+                'cccd_backend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg,webp', 'max:5120'],
                 'cccd_frontend_url' => ['nullable', 'string'],
                 'cccd_backend_url' => ['nullable', 'string'],
             ]);
@@ -177,7 +177,7 @@ class UserProfileController extends Controller
                 if ($user->avatar_url && !str_contains($user->avatar_url, 'placeholder') && !str_contains($user->avatar_url, 'default-avatar')) {
                     $this->deleteFile($user->avatar_url);
                 }
-                
+
                 $url = $this->uploadFile($request->file('avatar'), "avatars");
                 if ($url) {
                     $user->avatar_url = $url;
@@ -192,7 +192,7 @@ class UserProfileController extends Controller
                 if ($user->cccd_frontend_url && !str_contains($user->cccd_frontend_url, 'placeholder')) {
                     $this->deleteFile($user->cccd_frontend_url);
                 }
-                
+
                 $url = $this->uploadFile($request->file('cccd_frontend'), "cccd");
                 if ($url) {
                     $user->cccd_frontend_url = $url;
@@ -207,7 +207,7 @@ class UserProfileController extends Controller
                 if ($user->cccd_backend_url && !str_contains($user->cccd_backend_url, 'placeholder')) {
                     $this->deleteFile($user->cccd_backend_url);
                 }
-                
+
                 $url = $this->uploadFile($request->file('cccd_backend'), "cccd");
                 if ($url) {
                     $user->cccd_backend_url = $url;
@@ -223,7 +223,6 @@ class UserProfileController extends Controller
                 'message' => 'Cập nhật thông tin profile thành công!',
                 'data' => $user
             ], 200);
-            
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Dữ liệu không hợp lệ.',
@@ -289,7 +288,7 @@ class UserProfileController extends Controller
             ], 500);
         }
     }
-    
+
     public function getAllAffHistory(Request $request)
     {
         $user = User::where('id', '=', $request->user_id)
@@ -304,7 +303,7 @@ class UserProfileController extends Controller
         }
 
         $affiliate = Affiliate::where('affiliated_by', $user->id)->first();
-        
+
         // Nếu user chưa có affiliate thì trả về data rỗng
         if (!$affiliate) {
             return response()->json([

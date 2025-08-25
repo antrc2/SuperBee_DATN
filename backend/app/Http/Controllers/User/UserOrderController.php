@@ -85,7 +85,7 @@ class UserOrderController extends Controller
                 ];
             } else {
                 $total_price = 0;
-                $cart_items = CartItem::where("cart_id", $cart->id)->with('product')->where('status', 1)->get();
+                $cart_items = CartItem::where("cart_id", $cart->id)->with('product.images')->where('status', 1)->get();
                 foreach ($cart_items as $cart_item) {
                     if ($cart_item->product->status == 1) {
                         $price = $cart_item->product->sale ?? $cart_item->product->price;
@@ -760,9 +760,9 @@ class UserOrderController extends Controller
                     // }
                     $wallet_transaction->related_id = $order->id;
                     $wallet_transaction->save();
-                    $web_info = Business_setting::where('id',1)->first();
-                    $new_order = Order::where('id', $order->id)->with(['items.product', 'user','items.product.credentials'])->first();
-                    $pdf = Pdf::loadView('orders.invoice', compact('new_order','web_info'))->output();
+                    $web_info = Business_setting::where('id', 1)->first();
+                    $new_order = Order::where('id', $order->id)->with(['items.product', 'user', 'items.product.credentials'])->first();
+                    $pdf = Pdf::loadView('orders.invoice', compact('new_order', 'web_info'))->output();
                     $fileName = "invoice_{$order->id}.pdf";
                     $tempPath = storage_path("app/temp/{$fileName}");
                     if (!is_dir(dirname($tempPath))) {
@@ -784,7 +784,7 @@ class UserOrderController extends Controller
                     unlink($tempPath);
 
                     // 6. Trả kết quả
-                    
+
                     $order->bill_url = $url;
                     $order->save();
                     DB::commit();
@@ -792,7 +792,7 @@ class UserOrderController extends Controller
                         "status" => True,
                         "message" => "Mua hàng thành công",
                         "order" => $new_order,
-                        'bill'=>$url
+                        'bill' => $url
                     ], 200);
                 } else {
                     return response()->json([
@@ -813,7 +813,7 @@ class UserOrderController extends Controller
                 "message" => "Đã xảy ra lỗi",
                 "error" => $th->getMessage(),
                 "line" => $th->getLine(),
-                'order'=>$new_order
+                'order' => $new_order
             ], 500);
         }
     }

@@ -160,7 +160,8 @@ class AdminProductController extends Controller
                 $attrs = json_decode($attrs, true);
                 $request->merge(['attributes' => $attrs]);
             }
-$sku = $product->sku;
+
+            $sku = $product->sku;
 
             $rules = [
                 'category_id'                 => 'required|integer|exists:categories,id',

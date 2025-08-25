@@ -163,7 +163,8 @@ Route::middleware('auth')->group(function () {
 
 
         // Route để khách hàng yêu cầu một phòng chat mới (thay thế cho socket event cũ)
-        Route::post('/chat/request', [ChatController::class, 'requestChat'])->middleware('permission:chat.create');
+        // Route::post('/chat/request', [ChatController::class, 'requestChat'])->middleware('permission:chat.create');
+        Route::post('/chat/request', [ChatController::class, 'requestChat']);
 
         // Route để lấy thông tin phòng chat và tin nhắn (có thể dùng lại route cũ hoặc tạo mới)
         Route::get('/chat/session', [ChatController::class, 'getSession'])->middleware('permission:chat.view');

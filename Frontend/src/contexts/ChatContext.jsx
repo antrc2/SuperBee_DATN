@@ -16,6 +16,7 @@ export function useChat() {
 }
 
 export function ChatProvider({ children }) {
+
     const { token, isLoggedIn, user } = useAuth();
     const { pop } = useNotification();
 

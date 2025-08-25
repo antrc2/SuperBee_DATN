@@ -278,7 +278,6 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
                 {messages.map((msg) => {
                   const isOwnMessage = msg.sender_id === currentUser.id;
                   const sender = isOwnMessage ? currentUser : agent;
-                  console.log("🚀 ~ sender:", sender.avatar);
                   return (
                     <div
                       key={msg.id}

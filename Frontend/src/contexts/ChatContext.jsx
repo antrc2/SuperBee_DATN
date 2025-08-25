@@ -42,16 +42,24 @@ export function ChatProvider({ children }) {
 
   // Effect để khởi tạo và quản lý kết nối Socket.IO
   useEffect(() => {
-    // 1. Khởi tạo socket và kết nối
     const socket = getSocket();
     socketRef.current = socket;
-    connectSocket();
 
-    // 2. Xác thực socket với token khi token thay đổi (đăng nhập/đăng xuất)
-    authenticateSocket(token);
+    // Hàm xử lý việc xác thực, sẽ được gọi mỗi khi kết nối thành công
+    const handleConnectAndAuth = () => {
+      console.log(
+        "[ChatContext] Socket connected/reconnected. Authenticating..."
+      );
+      // Gửi token (nếu có) để xác thực hoặc báo cho server biết đây là guest
+      authenticateSocket(token);
+    };
 
-    // 3. Lắng nghe sự kiện có tin nhắn mới từ server
+    // Lắng nghe sự kiện 'connect' cho cả kết nối lần đầu và kết nối lại
+    socket.on("connect", handleConnectAndAuth);
+
+    // Lắng nghe sự kiện có tin nhắn mới từ server
     const handleNewChatMessage = (message) => {
+      console.log("🚀 ~ handleNewChatMessage ~ message:", message);
       // Chỉ tăng bộ đếm nếu người gửi không phải là mình
       if (user?.id !== message.sender_id) {
         setUnread(unreadCount.current + 1);
@@ -80,8 +88,12 @@ export function ChatProvider({ children }) {
 
     socket.on("new_chat_message", handleNewChatMessage);
 
-    // 4. Dọn dẹp listener khi component unmount
+    // Bắt đầu kết nối nếu chưa kết nối
+    connectSocket();
+
+    // Dọn dẹp listener khi component unmount
     return () => {
+      socket.off("connect", handleConnectAndAuth);
       socket.off("new_chat_message", handleNewChatMessage);
     };
   }, [token, user?.id, pop]);
@@ -175,8 +187,9 @@ export function ChatProvider({ children }) {
 
       return true;
     },
-    [agentChatRoom?.roomId, user?.id]
+    [agentChatRoom?.roomId, user?.id, pop]
   );
+
   const sendChatMessageDis = useCallback(
     (content, idRoom) => {
       if (!idRoom || !user?.id) {
@@ -199,15 +212,9 @@ export function ChatProvider({ children }) {
         }
       });
 
-      /**
-       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
-       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
-       */
-      // markChatAsRead();
-
       return true;
     },
-    [user?.id]
+    [user?.id, pop]
   );
 
   /**

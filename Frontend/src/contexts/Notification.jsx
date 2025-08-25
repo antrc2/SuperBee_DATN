@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef } from "react";
 import { getSocket } from "../utils/socket"; //  utils/socket.js
 import { useAuth } from "./AuthContext";
-import { useNotification as useUINotification } from "./UINotificationContext"; // Đổi tên để tránh xung đột, đây là context cung cấp hàm `pop`
+import { useNotification } from "./NotificationContext";
+import { useHome } from "./HomeContext";
 
 // Context này không cần cung cấp giá trị ra ngoài, nó chỉ là một trình lắng nghe chạy ngầm.
 const NotificationListenerContext = createContext();
@@ -13,8 +14,9 @@ const NotificationListenerContext = createContext();
 export function NotificationListenerProvider({ children }) {
   const { isLoggedIn } = useAuth();
   // Lấy hàm `pop` từ một context khác chuyên về hiển thị UI
-  const { pop } = useUINotification();
+  const { pop } = useNotification();
   const socketRef = useRef(null);
+  const { setNotifications } = useHome();
 
   useEffect(() => {
     // Nếu chưa đăng nhập, không làm gì cả
@@ -24,9 +26,43 @@ export function NotificationListenerProvider({ children }) {
 
     const socket = getSocket();
     socketRef.current = socket;
+    const public_notifications = (data) => {
+      const message = data.data.content ?? "không xác định";
+      pop(message, "s");
+      setNotifications((prevNotifications) => {
+        const newNotificationsToAdd = data.data;
+        const updatedNotificationsArray = [
+          newNotificationsToAdd,
+          ...prevNotifications.notifications,
+        ];
 
+        const updatedCount = prevNotifications.count + 1;
+        return {
+          count: updatedCount,
+          notifications: updatedNotificationsArray,
+        };
+      });
+    };
+    const private_notifications = (data) => {
+      const message = data.data.content ?? "không xác định";
+      pop(message, "s");
+      setNotifications((prevNotifications) => {
+        const newNotificationsToAdd = data.data;
+        const updatedNotificationsArray = [
+          newNotificationsToAdd,
+          ...prevNotifications.notifications,
+        ];
+        const updatedCount = prevNotifications.count + 1;
+        return {
+          count: updatedCount,
+          notifications: updatedNotificationsArray,
+        };
+      });
+    };
     // Hàm xử lý khi có thông báo mới
     const handleNewNotification = (payload) => {
+      console.log("🚀 ~ handleNewNotification ~ payload:", payload);
+
       const newNotification = payload.data;
       if (!newNotification || !newNotification.content) return;
 
@@ -61,8 +97,8 @@ export function NotificationListenerProvider({ children }) {
     };
 
     // Lắng nghe sự kiện từ server Node.js
-    socket.on("private_notifications", handleNewNotification);
-    socket.on("public_notifications", handleNewNotification);
+    socket.on("private_notifications", private_notifications);
+    socket.on("public_notifications", public_notifications);
 
     // Tham gia phòng chung để nhận tin công khai
     socket.emit("join_room", "public_notifications");
@@ -74,7 +110,12 @@ export function NotificationListenerProvider({ children }) {
       socket.emit("leave_room", "public_notifications");
     };
   }, [isLoggedIn, pop]); // Effect chạy lại khi trạng thái đăng nhập hoặc hàm `pop` thay đổi
+  const value = {};
 
   // Vì Provider này chỉ lắng nghe, nó không cần cung cấp giá trị nào, chỉ cần render children
-  return <>{children}</>;
+  return (
+    <NotificationListenerContext.Provider value={value}>
+      {children}
+    </NotificationListenerContext.Provider>
+  );
 }

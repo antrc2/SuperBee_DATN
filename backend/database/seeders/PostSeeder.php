@@ -86,6 +86,19 @@ class PostSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
+            [
+                'id' => 3,
+                'title' => 'Điều khoản và dịch vụ',
+                'slug' => 'dieu-khoan-va-dich-vu',
+                'content' => 'Điều khoản và dịch vụ.',
+                'description' => 'Điều khoản và dịch vụ.',
+                'category_id' => 1,
+                'author_id' => 1,
+                'status' => 1,
+                'image_thumbnail_url' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($posts as $postData) {

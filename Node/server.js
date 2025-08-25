@@ -5,58 +5,63 @@ import { Server } from "socket.io";
 import Redis from "ioredis";
 import dotenv from "dotenv";
 dotenv.config();
-import config from "./config/index.js"; // Note the .js extension for local modules
-import setupSocketEvents from "./src/routers/socketEvents.js"; // Note the .js extension
-import handleIncomingNotification from "./src/controllers/Controller.js"; // Note the .js extension
-import authMiddleware from "./src/middleware/auth.js"; // Note the .js extension
+import config from "./config/index.js";
+import setupSocketEvents from "./src/routers/socketEvents.js";
+import handleIncomingNotification from "./src/controllers/Controller.js";
+import authMiddleware from "./src/middleware/auth.js";
 
-// import "./db.js";
 const app = express();
 const server = http.createServer(app);
 
-// Khởi tạo Socket.IO server
+console.log("[server.js] Đang khởi tạo Socket.IO server...");
 const io = new Server(server, {
   path: "/socket.io",
   cors: {
-    origin: "*", // Địa chỉ ReactJS FE của bạn
+    origin: "*",
     methods: ["GET", "POST"],
   },
 });
 
-// Sử dụng middleware nếu cần (ví dụ: xác thực ban đầu)
+console.log("[server.js] Đang áp dụng middleware xác thực cho Socket.IO...");
 io.use(authMiddleware);
 
-// Cấu hình Socket.IO events
+console.log("[server.js] Đang cài đặt các sự kiện cho Socket.IO...");
 setupSocketEvents(io);
 
-// Khởi tạo Redis client để subscribe
+console.log(
+  "[server.js] Đang khởi tạo Redis client để lắng nghe (subscriber)..."
+);
 const redisSubscriber = new Redis(config.redis);
 
 redisSubscriber.on("connect", () => {
-  console.log("Redis subscriber connected.");
+  console.log("[server.js] Redis subscriber đã kết nối thành công.");
+  console.log(
+    `[server.js] Đang lắng nghe kênh Redis: ${config.notificationChannel}`
+  );
   redisSubscriber.subscribe(config.notificationChannel, (err, count) => {
     if (err) {
       console.error(
-        `Failed to subscribe to ${config.notificationChannel}: ${err.message}`
+        `[server.js] Lỗi khi lắng nghe kênh ${config.notificationChannel}: ${err.message}`
       );
     } else {
-      console.log(`Subscribed to ${count} Redis channel(s).`);
+      console.log(`[server.js] Đã lắng nghe thành công ${count} kênh Redis.`);
     }
   });
 });
 
-redisSubscriber.on("message", handleIncomingNotification(io)); // Pass io instance to controller
+console.log("[server.js] Đang cài đặt bộ xử lý cho tin nhắn từ Redis...");
+redisSubscriber.on("message", handleIncomingNotification(io));
 
 redisSubscriber.on("error", (err) => {
-  console.error("Redis subscriber error:", err);
+  console.error("[server.js] Lỗi Redis subscriber:", err);
 });
 
-// Route cơ bản để kiểm tra server
 app.get("/", (req, res) => {
   res.send("Node.js Notification Server is running!");
 });
 
-// Bắt đầu lắng nghe
 server.listen(config.port, () => {
-  console.log(`Node.js server listening on port ${config.port}`);
+  console.log(
+    `[server.js] Server Node.js đang lắng nghe tại cổng ${config.port}`
+  );
 });

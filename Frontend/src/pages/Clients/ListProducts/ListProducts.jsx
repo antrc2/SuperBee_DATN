@@ -94,17 +94,17 @@ export default function ListProducts() {
   };
 
   // Handle sort change
-  const handleSortChange = (e) => {
-    const newSortValue = e.target.value;
-    const currentParams = new URLSearchParams(searchParams);
-    if (newSortValue !== "newest") {
-      currentParams.set("sortBy", newSortValue);
-    } else {
-      currentParams.delete("sortBy");
-    }
-    currentParams.set("page", "1");
-    setSearchParams(currentParams, { replace: true });
-  };
+  // const handleSortChange = (e) => {
+  //   const newSortValue = e.target.value;
+  //   const currentParams = new URLSearchParams(searchParams);
+  //   if (newSortValue !== "newest") {
+  //     currentParams.set("sortBy", newSortValue);
+  //   } else {
+  //     currentParams.delete("sortBy");
+  //   }
+  //   currentParams.set("page", "1");
+  //   setSearchParams(currentParams, { replace: true });
+  // };
 
   if (isLoadingProducts) return <LoadingDomain />;
   if (isErrorProducts) {
@@ -144,7 +144,7 @@ export default function ListProducts() {
                 <span> sản phẩm</span>
               </div>
 
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 <label htmlFor="sortBy" className="text-sm font-medium text-primary">
                   Sắp xếp:
                 </label>
@@ -159,7 +159,7 @@ export default function ListProducts() {
                   <option value="price_asc">Giá: Thấp đến Cao</option>
                   <option value="price_desc">Giá: Cao đến Thấp</option>
                 </select>
-              </div>
+              </div> */}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">

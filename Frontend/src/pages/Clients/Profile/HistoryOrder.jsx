@@ -17,17 +17,16 @@ import {
   CheckCircle,
   XCircle,
   Copy,
-  Star,
+  Trash2,
+  Film,
+  Image,
 } from "lucide-react";
 import api from "../../../utils/http";
-import LoadingDomain from "../../../components/Loading/LoadingDomain";
 import LoadingCon from "../../../components/Loading/LoadingCon";
 import { useNotification } from "@contexts/NotificationContext";
-import { useAuth } from "@contexts/AuthContext";
-import ReviewModal from "@components/Client/Review/ReviewModal";
 
 // =====================================================================
-// COMPONENT CHO MODAL KHIẾU NẠI (DisputeModal)
+// COMPONENT CHO MODAL KHIẾU NẠI (DisputeModal) - ĐÃ CẬP NHẬT
 // =====================================================================
 const DISPUTE_TYPES = {
   incorrect_login: "Sai thông tin đăng nhập",
@@ -46,20 +45,51 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
 
   if (!item) return null;
 
+  // --- VALIDATION FRONTEND ---
   const handleFileChange = (e) => {
-    if (e.target.files.length > 20) {
-      setError("Chỉ được tải lên tối đa 20 ảnh.");
+    const newFiles = Array.from(e.target.files);
+
+    // 1. Kiểm tra tổng số lượng tệp
+    if (attachments.length + newFiles.length > 10) {
+      setError("Chỉ được tải lên tối đa 10 tệp (ảnh và video).");
       return;
     }
-    const selectedFiles = Array.from(e.target.files);
-    setAttachments(selectedFiles);
+
+    const validatedFiles = [];
+    for (const file of newFiles) {
+      // 2. Kiểm tra kích thước tệp (VD: 50MB)
+      if (file.size > 50 * 1024 * 1024) {
+        setError(`Tệp "${file.name}" quá lớn. Kích thước tối đa là 50MB.`);
+        // Reset input để người dùng có thể chọn lại
+        e.target.value = null;
+        return;
+      }
+      validatedFiles.push(file);
+    }
+
+    setAttachments((prev) => [...prev, ...validatedFiles]);
     setError(null);
+    // Reset input để có thể chọn thêm file trùng tên
+    e.target.value = null;
+  };
+
+  const removeAttachment = (indexToRemove) => {
+    setAttachments((prev) =>
+      prev.filter((_, index) => index !== indexToRemove)
+    );
+    if (attachments.length - 1 <= 10) {
+      setError(null);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!description.trim()) {
       setError("Vui lòng mô tả chi tiết sự cố.");
+      return;
+    }
+    if (attachments.length > 10) {
+      setError("Chỉ được tải lên tối đa 10 tệp. Vui lòng xóa bớt.");
       return;
     }
     setLoading(true);
@@ -87,6 +117,14 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -148,7 +186,7 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
           </div>
           <div>
             <label className="block text-sm font-semibold text-secondary mb-2">
-              Ảnh bằng chứng (Tối đa 3 ảnh)
+              Ảnh/Video bằng chứng ({attachments.length}/10 tệp)
             </label>
             <div className="mt-2 flex justify-center rounded-lg border border-dashed border-themed px-6 py-10 bg-input">
               <div className="text-center">
@@ -165,14 +203,14 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
                       type="file"
                       className="sr-only"
                       multiple
-                      accept="image/png, image/jpeg, image/jpg"
+                      accept="image/png, image/jpeg, image/jpg, video/mp4, video/quicktime, video/webm"
                       onChange={handleFileChange}
                     />
                   </label>
                   <p className="pl-1">hoặc kéo và thả</p>
                 </div>
                 <p className="text-xs leading-5 text-secondary/70">
-                  PNG, JPG, JPEG tối đa 2MB mỗi tệp
+                  PNG, JPG, MP4, MOV, WEBM. Tối đa 50MB mỗi tệp.
                 </p>
               </div>
             </div>
@@ -181,20 +219,43 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
                 <h4 className="text-sm font-medium text-primary">
                   Tệp đã chọn:
                 </h4>
-                <ul className="space-y-1">
+                <ul className="space-y-2 max-h-48 overflow-y-auto pr-2">
                   {attachments.map((file, index) => (
                     <li
                       key={index}
-                      className="flex items-center text-sm text-secondary gap-2"
+                      className="flex items-center justify-between text-sm text-secondary gap-2 bg-background/50 p-2 rounded-md"
                     >
-                      <Paperclip className="h-4 w-4" /> {file.name}
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        {file.type.startsWith("image/") ? (
+                          <Image className="h-5 w-5 text-accent flex-shrink-0" />
+                        ) : (
+                          <Film className="h-5 w-5 text-accent flex-shrink-0" />
+                        )}
+                        <span className="truncate" title={file.name}>
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-secondary/70 flex-shrink-0">
+                          ({getFileSize(file.size)})
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(index)}
+                        className="p-1 text-red-500 hover:text-red-400 flex-shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
           </div>
-          {error && <div className="alert alert-danger">{error}</div>}
+          {error && (
+            <div className="p-3 bg-red-500/10 text-red-500 text-sm rounded-lg">
+              {error}
+            </div>
+          )}
         </form>
 
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0 flex justify-end gap-3">
@@ -210,7 +271,7 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
             type="submit"
             onClick={handleSubmit}
             className="action-button action-button-primary !w-auto bg-gradient-danger hover:brightness-110"
-            disabled={loading}
+            disabled={loading || attachments.length > 10 || !description.trim()}
           >
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin" />
@@ -225,7 +286,7 @@ const DisputeModal = ({ item, order, onClose, onDisputeSuccess }) => {
 };
 
 // =====================================================================
-// TIỆN ÍCH
+// PHẦN CÒN LẠI CỦA FILE (GIỮ NGUYÊN)
 // =====================================================================
 const formatDate = (dateString) => {
   if (!dateString) return "N/A";
@@ -244,9 +305,6 @@ const formatCurrency = (amount) => {
   }).format(amount);
 };
 
-// =====================================================================
-// COMPONENT CON: MODAL CHI TIẾT ĐƠN HÀNG
-// =====================================================================
 const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
   if (!order) return null;
   const { pop } = useNotification();
@@ -261,11 +319,14 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
 
   const handleCopyPassword = (password) => {
     if (!password) return;
-    navigator.clipboard.writeText(password).then(() => {
-      pop("Đã sao chép mật khẩu!", "success");
-    }).catch((err) => {
-      pop("Không thể sao chép mật khẩu!", "error");
-    });
+    navigator.clipboard
+      .writeText(password)
+      .then(() => {
+        pop("Đã sao chép mật khẩu!", "success");
+      })
+      .catch((err) => {
+        pop("Không thể sao chép mật khẩu!", "error");
+      });
   };
 
   const renderDisputeStatus = (dispute) => {
@@ -383,8 +444,7 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
                           onClick={() => onStartDispute(item)}
                           className="flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors"
                         >
-                          <AlertCircle className="h-3.5 w-3.5" />
-                          Báo cáo sự cố
+                          <AlertCircle className="h-3.5 w-3.5" /> Báo cáo sự cố
                         </button>
                       )}
                     </div>
@@ -469,12 +529,6 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
           </div>
         </div>
         <div className="p-4 border-t border-themed bg-background/50 text-right flex-shrink-0">
-          <a
-            href={order.bill_url}
-            className="action-button action-button-primary !w-auto p-2"
-          >
-            In hóa đơn
-          </a>
           <button
             onClick={onClose}
             className="action-button action-button-secondary !w-auto"
@@ -487,12 +541,7 @@ const OrderDetailModal = ({ order, onClose, onStartDispute }) => {
   );
 };
 
-// =====================================================================
-// COMPONENT CHÍNH: LỊCH SỬ ĐƠN HÀNG
-// =====================================================================
 export default function HistoryOrder() {
-  const { pop } = useNotification();
-  const { user } = useAuth();
   const [allOrders, setAllOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [filters, setFilters] = useState({
@@ -505,11 +554,6 @@ export default function HistoryOrder() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [disputingItem, setDisputingItem] = useState(null);
-  const [showReviewModal, setShowReviewModal] = useState(false);
-  const [existingReview, setExistingReview] = useState(null);
-  const [canReview, setCanReview] = useState(false);
-  const [webId, setWebId] = useState(1); // Giả định web_id = 1
-  const [isFetchingReview, setIsFetchingReview] = useState(false);
 
   const fetchAllOrders = async () => {
     setLoading(true);
@@ -529,50 +573,9 @@ export default function HistoryOrder() {
     }
   };
 
-  const fetchUserReview = async () => {
-    if (!user?.id) return;
-    setIsFetchingReview(true);
-    try {
-      const response = await api.get(`/reviews/user/${user.id}`);
-      if (response.data.status && response.data.data) {
-        setExistingReview(response.data.data);
-      } else {
-        setExistingReview(null);
-      }
-    } catch (err) {
-      console.error("Lỗi khi kiểm tra đánh giá:", err);
-      pop("Không thể tải thông tin đánh giá.", "error");
-    } finally {
-      setIsFetchingReview(false);
-    }
-  };
-
-  const checkCanReview = async () => {
-    try {
-      const response = await api.get("/orders");
-      const hasCompletedOrder = response.data.data.some(
-        (order) => order.status === 1
-      );
-      setCanReview(hasCompletedOrder);
-    } catch (err) {
-      console.error("Lỗi khi kiểm tra khả năng đánh giá:", err);
-      setCanReview(false);
-    }
-  };
-
-  const handleOpenReviewModal = async () => {
-    if (existingReview) {
-      // Gọi lại API để đảm bảo dữ liệu mới nhất trước khi mở modal chỉnh sửa
-      await fetchUserReview();
-    }
-    setShowReviewModal(true);
-  };
-
   useEffect(() => {
     fetchAllOrders();
-    fetchUserReview();
-    checkCanReview();
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
     let result = allOrders.filter(
@@ -613,12 +616,6 @@ export default function HistoryOrder() {
       await handleViewDetails(selectedOrder);
     }
     await fetchAllOrders();
-  };
-
-  const handleReviewSuccess = async () => {
-    setShowReviewModal(false);
-    await fetchUserReview();
-    await checkCanReview();
   };
 
   const renderStatus = (status) => {
@@ -689,8 +686,7 @@ export default function HistoryOrder() {
                 onClick={() => handleViewDetails(order)}
                 className="flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent/80 transition-colors"
               >
-                <Eye className="h-4 w-4" />
-                Xem chi tiết
+                <Eye className="h-4 w-4" /> Xem chi tiết
               </button>
             </div>
           </div>
@@ -709,64 +705,6 @@ export default function HistoryOrder() {
           Theo dõi và quản lý tất cả các đơn hàng đã mua của bạn.
         </p>
       </div>
-
-      {/* Khu vực đánh giá */}
-      <div className="border-t border-themed pt-6">
-        <h4 className="font-heading text-lg font-bold text-primary mb-4 flex items-center">
-          <Star size={24} className="mr-3 text-accent" />
-          Đánh giá trang web
-        </h4>
-        {isFetchingReview ? (
-          <div className="bg-background/50 p-4 rounded-lg border border-themed">
-            <Loader2 className="h-5 w-5 animate-spin text-accent" />
-          </div>
-        ) : existingReview ? (
-          <div className="bg-background/50 p-4 rounded-lg border border-themed">
-            <div className="flex items-center gap-2 mb-2">
-              {[1, 2, 3, 4, 5].map((value) => (
-                <Star
-                  key={value}
-                  className={`h-5 w-5 ${
-                    value <= existingReview.star
-                      ? "text-yellow-500"
-                      : "text-secondary/50"
-                  }`}
-                  fill={value <= existingReview.star ? "currentColor" : "none"}
-                />
-              ))}
-            </div>
-            <p className="text-sm text-secondary">
-              {existingReview.comment || "Không có nhận xét."}
-            </p>
-            <button
-              onClick={handleOpenReviewModal}
-              className="mt-3 text-sm text-accent hover:underline"
-            >
-              Chỉnh sửa đánh giá
-            </button>
-          </div>
-        ) : canReview ? (
-          <div className="bg-background/50 p-4 rounded-lg border border-themed">
-            <p className="text-sm text-secondary">
-              Bạn có thể đánh giá trang web! Hãy chia sẻ trải nghiệm của bạn.
-            </p>
-            <button
-              onClick={handleOpenReviewModal}
-              className="mt-3 action-button action-button-primary !w-auto !py-2 !px-4"
-            >
-              <Star className="h-4 w-4 mr-2" />
-              Đánh giá ngay
-            </button>
-          </div>
-        ) : (
-          <div className="bg-background/50 p-4 rounded-lg border border-themed">
-            <p className="text-sm text-secondary">
-              Bạn cần có ít nhất một đơn hàng hoàn thành để đánh giá trang web.
-            </p>
-          </div>
-        )}
-      </div>
-
       <div className="bg-background p-4 rounded-xl border border-themed">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
           <div>
@@ -834,7 +772,6 @@ export default function HistoryOrder() {
           onStartDispute={(item) => setDisputingItem(item)}
         />
       )}
-
       {disputingItem && (
         <DisputeModal
           item={disputingItem}
@@ -843,15 +780,6 @@ export default function HistoryOrder() {
           onDisputeSuccess={handleDisputeSuccess}
         />
       )}
-
-      <ReviewModal
-        isOpen={showReviewModal}
-        onClose={() => setShowReviewModal(false)}
-        userId={user.id}
-        webId={webId}
-        existingReview={existingReview}
-        onReviewSuccess={handleReviewSuccess}
-      />
     </section>
   );
 }

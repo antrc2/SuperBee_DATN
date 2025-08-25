@@ -132,7 +132,9 @@ class UserProfileController extends Controller
     public function update(Request $request)
     {
         try {
-            $user = User::where('id', '=', $request->user_id)->where('web_id', '=', $request->web_id)->first();
+            $user = User::where('id', $request->user_id)
+                ->where('web_id', $request->web_id)
+                ->first();
 
             if (!$user) {
                 return response()->json([
@@ -153,51 +155,75 @@ class UserProfileController extends Controller
                 ],
                 'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9\+\(\)\s\-]+$/'],
                 'avatar' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:2048'],
-                'avatar_url' => ['nullable', 'url', 'max:255'],
-            ], [
-                'email.required' => 'Email không được để trống.',
-                'email.email' => 'Email không đúng định dạng.',
-                'email.unique' => 'Email này đã được sử dụng bởi tài khoản khác.',
-                'phone.regex' => 'Số điện thoại không đúng định dạng.',
-                'avatar.image' => 'Ảnh đại diện phải là một tệp hình ảnh.',
-                'avatar.max' => 'Ảnh đại diện không được vượt quá 2MB.',
-                'avatar_url.url' => 'URL ảnh đại diện không hợp lệ.',
+                'avatar_url' => ['nullable', 'string', 'max:255'],
+
+                'cccd_number' => ['nullable', 'string', 'max:20', 'regex:/^[0-9]+$/'],
+                'cccd_created_at' => ['nullable', 'date'],
+                'cccd_frontend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5120'],
+                'cccd_backend' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,svg', 'max:5120'],
+                'cccd_frontend_url' => ['nullable', 'string'],
+                'cccd_backend_url' => ['nullable', 'string'],
             ]);
 
+            // Update basic fields
             $user->email = $data['email'];
             $user->phone = $data['phone'] ?? null;
+            $user->cccd_number = $data['cccd_number'] ?? null;
+            $user->cccd_created_at = $data['cccd_created_at'] ?? null;
 
+            // ==== Avatar ====
             if ($request->hasFile('avatar')) {
-                $destinationPath = 'public/avatars';
-
-                if (!Storage::exists($destinationPath)) {
-                    Storage::makeDirectory($destinationPath);
+                // Xóa ảnh cũ nếu có và không phải ảnh mặc định
+                if ($user->avatar_url && !str_contains($user->avatar_url, 'placeholder') && !str_contains($user->avatar_url, 'default-avatar')) {
+                    $this->deleteFile($user->avatar_url);
                 }
-
-                if ($user->avatar_url && !str_contains($user->avatar_url, 'via.placeholder.com') && !str_contains($user->avatar_url, 'default.jpg')) {
-                    $oldAvatarPath = str_replace(asset('storage/'), 'public/', $user->avatar_url);
-                    if (Storage::exists($oldAvatarPath)) {
-                        Storage::delete($oldAvatarPath);
-                    }
+                
+                $url = $this->uploadFile($request->file('avatar'), "avatars");
+                if ($url) {
+                    $user->avatar_url = $url;
                 }
-
-                $avatarPath = $request->file('avatar')->store($destinationPath);
-                $user->avatar_url = Storage::url($avatarPath);
-            } elseif (isset($data['avatar_url']) && $data['avatar_url']) {
+            } elseif (isset($data['avatar_url']) && !empty($data['avatar_url'])) {
                 $user->avatar_url = $data['avatar_url'];
+            }
+
+            // ==== CCCD Frontend ====
+            if ($request->hasFile('cccd_frontend')) {
+                // Xóa ảnh cũ nếu có
+                if ($user->cccd_frontend_url && !str_contains($user->cccd_frontend_url, 'placeholder')) {
+                    $this->deleteFile($user->cccd_frontend_url);
+                }
+                
+                $url = $this->uploadFile($request->file('cccd_frontend'), "cccd");
+                if ($url) {
+                    $user->cccd_frontend_url = $url;
+                }
+            } elseif (isset($data['cccd_frontend_url']) && !empty($data['cccd_frontend_url'])) {
+                $user->cccd_frontend_url = $data['cccd_frontend_url'];
+            }
+
+            // ==== CCCD Backend ====
+            if ($request->hasFile('cccd_backend')) {
+                // Xóa ảnh cũ nếu có
+                if ($user->cccd_backend_url && !str_contains($user->cccd_backend_url, 'placeholder')) {
+                    $this->deleteFile($user->cccd_backend_url);
+                }
+                
+                $url = $this->uploadFile($request->file('cccd_backend'), "cccd");
+                if ($url) {
+                    $user->cccd_backend_url = $url;
+                }
+            } elseif (isset($data['cccd_backend_url']) && !empty($data['cccd_backend_url'])) {
+                $user->cccd_backend_url = $data['cccd_backend_url'];
             }
 
             $user->save();
 
             return response()->json([
+                'status' => true,
                 'message' => 'Cập nhật thông tin profile thành công!',
-                'user' => [
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'phone' => $user->phone,
-                    'avatar' => $user->avatar_url,
-                ]
+                'data' => $user
             ], 200);
+            
         } catch (ValidationException $e) {
             return response()->json([
                 'message' => 'Dữ liệu không hợp lệ.',
@@ -263,6 +289,7 @@ class UserProfileController extends Controller
             ], 500);
         }
     }
+    
     public function getAllAffHistory(Request $request)
     {
         $user = User::where('id', '=', $request->user_id)
@@ -277,10 +304,7 @@ class UserProfileController extends Controller
         }
 
         $affiliate = Affiliate::where('affiliated_by', $user->id)->first();
-        //  return response()->json([
-        //     'message' => 'Get affiliate history successfully.',
-        //     'data' => $affiliate
-        // ], 200);
+        
         // Nếu user chưa có affiliate thì trả về data rỗng
         if (!$affiliate) {
             return response()->json([
@@ -300,79 +324,73 @@ class UserProfileController extends Controller
         ], 200);
     }
 
-
     public function getDisputes(Request $request)
     {
         try {
-            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
-            }
+            // Lấy user ID từ token đã được xác thực qua middleware
+            $userId = auth()->id();
 
-            $disputes = Dispute::where('user_id', $user->id)
-                ->with(['orderItem:id,order_id,product_id', 'orderItem.product:id,sku', 'orderItem.order:id,order_code'])
-                ->select('id', 'order_item_id', 'dispute_type', 'description', 'status', 'created_at')
+            // Lấy danh sách khiếu nại của user đó
+            $disputes = Dispute::where('user_id', $userId)
+                // Tải kèm các thông tin cần thiết để hiển thị ở frontend
+                ->with([
+                    'orderItem:id,order_id,product_id',
+                    'orderItem.product:id,sku,description', // Lấy thêm description cho dễ hiển thị
+                    'orderItem.order:id,order_code'
+                ])
                 ->orderBy('created_at', 'desc')
                 ->get();
 
             return response()->json([
-                'status' => true,
+                'success' => true,
                 'message' => 'Lấy danh sách khiếu nại thành công.',
                 'data' => $disputes
             ], 200);
-
         } catch (Exception $e) {
+            // Ghi log lỗi để debug
+            // Log::error('Fetch Disputes Failed: ' . $e->getMessage());
             return response()->json([
+                'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy danh sách khiếu nại.',
-                'error' => $e->getMessage(),
-                'errorCode' => 'FETCH_DISPUTES_FAILED'
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * Lấy chi tiết một khiếu nại, bao gồm cả phản hồi từ Admin.
+     * Client: Lấy chi tiết một khiếu nại của chính mình.
      *
-     * @param Request $request
      * @param int $id ID của dispute
-     * @return \Illuminate\Http\JsonResponse
      */
     public function getDisputeDetails(Request $request, $id)
     {
         try {
-            $user = User::where('id', $request->user_id)->where('web_id', $request->web_id)->first();
-            if (!$user) {
-                return response()->json(['message' => 'Unauthorized or User not found.', 'errorCode' => 'UNAUTHORIZED_OR_USER_MISSING'], 401);
-            }
+            $userId = auth()->id();
 
-            // Lấy dispute với các thông tin liên quan cần thiết
+            // Tìm khiếu nại theo ID
             $dispute = Dispute::with([
-                'orderItem:id,product_id',
-                'orderItem.product:id,sku'
+                'orderItem.product:id,sku,description'
             ])->find($id);
 
-            // Kiểm tra khiếu nại có tồn tại và thuộc về user này không
-            if (!$dispute || $dispute->user_id !== $user->id) {
+            // Kiểm tra xem khiếu nại có tồn tại và có thuộc về người dùng này không
+            if (!$dispute || $dispute->user_id !== $userId) {
                 return response()->json([
-                    'message' => 'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.',
-                    'errorCode' => 'DISPUTE_NOT_FOUND_OR_FORBIDDEN'
-                ], 404);
+                    'success' => false,
+                    'message' => 'Không tìm thấy khiếu nại hoặc bạn không có quyền truy cập.'
+                ], 404); // Sử dụng 404 Not Found
             }
-            
-          
-
 
             return response()->json([
-                'status' => true,
+                'success' => true,
                 'message' => 'Lấy chi tiết khiếu nại thành công.',
-                'data' => $dispute // Trả về toàn bộ object dispute, đã bao gồm cả 'resolution'
+                'data' => $dispute // Trả về toàn bộ object dispute, bao gồm cả 'resolution'
             ], 200);
-
         } catch (Exception $e) {
+            // Log::error('Fetch Dispute Detail Failed: ' . $e->getMessage());
             return response()->json([
+                'success' => false,
                 'message' => 'Có lỗi xảy ra khi lấy chi tiết khiếu nại.',
-                'error' => $e->getMessage(),
-                'errorCode' => 'FETCH_DISPUTE_DETAIL_FAILED'
+                'error' => $e->getMessage()
             ], 500);
         }
     }

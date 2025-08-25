@@ -1,42 +1,35 @@
-import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom"; // Giữ nguyên import này
+import React, { useState, useEffect, useCallback } from "react";
+import { Link } from "react-router-dom";
 import api from "@utils/http";
+import {
+  Loader2,
+  Eye,
+  AlertCircle,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react"; // Thêm các icon cần thiết
 
-const DISPUTE_STATUS_MAP = {
-  0: {
-    text: "Chờ xử lý",
-    className:
-      "bg-yellow-500/10 text-yellow-400 dark:bg-yellow-900/50 dark:text-yellow-400",
-  },
-  1: {
-    text: "Đang xử lý",
-    className:
-      "bg-blue-500/10 text-blue-400 dark:bg-blue-900/50 dark:text-blue-400",
-  },
-  2: {
-    text: "Đã giải quyết",
-    className:
-      "bg-green-500/10 text-green-500 dark:bg-green-900/50 dark:text-green-400",
-  },
-  3: {
-    text: "Đã từ chối",
-    className:
-      "bg-red-500/10 text-red-500 dark:bg-red-900/50 dark:text-red-400",
-  },
+// Component con để render trạng thái, giúp code gọn hơn
+const DisputeStatus = ({ status }) => {
+  const statusMap = {
+    0: { text: "Chờ xử lý", className: "bg-yellow-100 text-yellow-800" },
+    1: { text: "Đã xử lý", className: "bg-green-100 text-green-800" },
+  };
+  const current = statusMap[status] || {
+    text: "Không rõ",
+    className: "bg-gray-100 text-gray-800",
+  };
+  return (
+    <span
+      className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${current.className}`}
+    >
+      {current.text}
+    </span>
+  );
 };
 
-const formatDate = (dateString) => {
-  if (!dateString) return "N/A";
-  const date = new Date(dateString);
-  return date.toLocaleString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
+// Component chính của trang
 export default function DisputesPage() {
   const [disputes, setDisputes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,8 +38,6 @@ export default function DisputesPage() {
   const [filters, setFilters] = useState({
     search: "",
     status: "all",
-    start_date: "",
-    end_date: "",
     page: 1,
   });
 
@@ -56,8 +47,26 @@ export default function DisputesPage() {
     try {
       const params = new URLSearchParams(filters).toString();
       const response = await api.get(`/admin/disputes?${params}`);
-      setDisputes(response.data.data);
-      setPagination(response.data);
+
+      // =================================================================
+      // SỬA LỖI QUAN TRỌNG TẠI ĐÂY
+      // =================================================================
+      const responseData = response.data; // Dữ liệu từ Axios
+
+      if (
+        responseData &&
+        responseData.data &&
+        Array.isArray(responseData.data.data)
+      ) {
+        // Lấy đúng mảng dữ liệu nằm trong: response.data.data.data
+        setDisputes(responseData.data.data);
+
+        // Lấy object phân trang nằm trong: response.data.data
+        setPagination(responseData.data);
+      } else {
+        setDisputes([]);
+        setPagination(null);
+      }
     } catch (err) {
       setError("Không thể tải danh sách khiếu nại. Vui lòng thử lại.");
       console.error(err);
@@ -84,239 +93,178 @@ export default function DisputesPage() {
     }
   };
 
-  const renderStatus = (status) => {
-    const currentStatus = DISPUTE_STATUS_MAP[status] || {
-      text: "Không rõ",
-      className: "bg-gray-500/20 text-gray-400",
-    };
-    return (
-      <span
-        className={`px-2.5 py-1 text-xs font-semibold rounded-full ${currentStatus.className}`}
-      >
-        {currentStatus.text}
-      </span>
-    );
-  };
-
   const renderContent = () => {
-    if (loading)
+    if (loading) {
       return (
-        <div className="text-center p-10 text-gray-500 dark:text-gray-400">
-          Đang tải dữ liệu...
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
         </div>
       );
-    if (error)
-      return <div className="text-center p-10 text-red-500">{error}</div>;
-    if (disputes.length === 0)
+    }
+    if (error) {
       return (
-        <div className="text-center p-10 text-gray-500 dark:text-gray-400">
+        <div className="flex justify-center items-center h-60 text-red-600 bg-red-50 p-4 rounded-lg">
+          <AlertCircle className="h-6 w-6 mr-2" /> {error}
+        </div>
+      );
+    }
+    if (disputes.length === 0) {
+      return (
+        <div className="text-center p-10 text-gray-500">
           Không tìm thấy khiếu nại nào phù hợp.
         </div>
       );
+    }
 
     return (
-      <>
-        {/* Mobile View: Cards */}
-        <div className="md:hidden space-y-4">
-          {disputes.map((dispute) => (
-            <div
-              key={dispute.id}
-              className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow border border-gray-200 dark:border-gray-700"
-            >
-              <div className="flex justify-between items-start">
-                <div className="font-mono text-sm text-blue-600 dark:text-blue-400">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                ID
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Người dùng
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Sản phẩm (SKU)
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Trạng thái
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                Ngày tạo
+              </th>
+              <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                Hành động
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {disputes.map((dispute) => (
+              <tr key={dispute.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 font-medium text-gray-900">
                   #{dispute.id}
-                </div>
-                {renderStatus(dispute.status)}
-              </div>
-              <div className="mt-3 space-y-2 text-sm">
-                <p>
-                  <span className="font-semibold text-gray-600 dark:text-gray-400">
-                    Mã đơn:
-                  </span>{" "}
-                  <span className="text-gray-800 dark:text-gray-200">
-                    {dispute.order_item?.order?.order_code || "N/A"}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-600 dark:text-gray-400">
-                    Người dùng:
-                  </span>{" "}
-                  <span className="text-gray-800 dark:text-gray-200">
-                    {dispute.user?.username || "N/A"}
-                  </span>
-                </p>
-                <p>
-                  <span className="font-semibold text-gray-600 dark:text-gray-400">
-                    Ngày tạo:
-                  </span>{" "}
-                  <span className="text-gray-800 dark:text-gray-200">
-                    {formatDate(dispute.created_at)}
-                  </span>
-                </p>
-              </div>
-              <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                {/* THAY ĐỔI: href -> to */}
-                <Link
-                  to={`/admin/disputes/${dispute.id}`}
-                  className="block w-full text-center text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 py-2 px-4 rounded-lg transition-colors"
-                >
-                  Xem & Xử lý
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Desktop View: Table */}
-        <div className="hidden md:block overflow-x-auto bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <table className="w-full text-sm text-left text-gray-600 dark:text-gray-300">
-            <thead className="text-xs text-gray-700 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-700">
-              <tr>
-                <th scope="col" className="px-6 py-3">
-                  ID
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Mã Đơn Hàng
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Sản phẩm (SKU)
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Người dùng
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Ngày tạo
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Trạng thái
-                </th>
-                <th scope="col" className="px-6 py-3 text-center">
-                  Hành động
-                </th>
+                </td>
+                <td className="px-6 py-4 text-gray-600">
+                  {dispute.user?.username}
+                </td>
+                <td className="px-6 py-4 text-gray-600">
+                  {dispute.order_item?.product?.sku || "N/A"}
+                </td>
+                <td className="px-6 py-4">
+                  <DisputeStatus status={dispute.status} />
+                </td>
+                <td className="px-6 py-4 text-gray-600">
+                  {new Date(dispute.created_at).toLocaleDateString("vi-VN")}
+                </td>
+                <td className="px-6 py-4 text-center">
+                  {/* CẢI TIẾN GIAO DIỆN: Thêm icon vào nút hành động */}
+                  <Link
+                    to={`/admin/disputes/${dispute.id}`}
+                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold"
+                  >
+                    <Eye size={18} />
+                    <span>Xem</span>
+                  </Link>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {disputes.map((dispute) => (
-                <tr
-                  key={dispute.id}
-                  className="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600/20"
-                >
-                  <td className="px-6 py-4 font-mono text-gray-900 dark:text-white">
-                    #{dispute.id}
-                  </td>
-                  <td className="px-6 py-4">
-                    {dispute.order_item?.order?.order_code || "N/A"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {dispute.order_item?.product?.sku || "N/A"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {dispute.user?.username || "N/A"}
-                  </td>
-                  <td className="px-6 py-4">
-                    {formatDate(dispute.created_at)}
-                  </td>
-                  <td className="px-6 py-4">{renderStatus(dispute.status)}</td>
-                  <td className="px-6 py-4 text-center">
-                    {/* THAY ĐỔI: href -> to */}
-                    <Link
-                      to={`/admin/disputes/${dispute.id}`}
-                      className="font-medium text-blue-600 dark:text-blue-500 hover:underline"
-                    >
-                      Xem & Xử lý
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </>
+            ))}
+          </tbody>
+        </table>
+      </div>
     );
   };
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 min-h-screen">
-      <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
-            Quản lý Khiếu nại
-          </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Xem, lọc và xử lý các báo cáo sự cố từ người dùng.
-          </p>
-        </div>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">
+        Quản lý Khiếu nại
+      </h1>
 
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <input
-              type="text"
-              name="search"
-              value={filters.search}
-              onChange={handleFilterChange}
-              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
-              placeholder="Tìm mã đơn, SKU, email..."
-            />
+      {/* Thanh công cụ lọc */}
+      <div className="mb-6 p-4 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <label
+              htmlFor="search"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Tìm kiếm
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              {/* CẢI TIẾN GIAO DIỆN: Thêm padding cho input */}
+              <input
+                type="text"
+                name="search"
+                id="search"
+                value={filters.search}
+                onChange={handleFilterChange}
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="ID, Tên người dùng..."
+              />
+            </div>
+          </div>
+          <div>
+            <label
+              htmlFor="status"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              Trạng thái
+            </label>
+            {/* CẢI TIẾN GIAO DIỆN: Thêm padding cho select */}
             <select
+              id="status"
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
+              className="block w-full pl-3 pr-10 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="all">Tất cả trạng thái</option>
+              <option value="all">Tất cả</option>
               <option value="0">Chờ xử lý</option>
-              <option value="1">Đang xử lý</option>
-              <option value="2">Đã giải quyết</option>
-              <option value="3">Đã từ chối</option>
+              <option value="1">Đã xử lý</option>
             </select>
-            <input
-              type="date"
-              name="start_date"
-              value={filters.start_date}
-              onChange={handleFilterChange}
-              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
-            />
-            <input
-              type="date"
-              name="end_date"
-              value={filters.end_date}
-              onChange={handleFilterChange}
-              className="block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 dark:text-white"
-            />
           </div>
         </div>
+      </div>
 
-        <div>{renderContent()}</div>
+      <div className="bg-white shadow-sm rounded-lg border border-gray-200">
+        {renderContent()}
+      </div>
 
-        {pagination && pagination.total > 0 && (
-          <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500 dark:text-gray-400 gap-4">
-            <p>
-              Hiển thị {pagination.from} đến {pagination.to} của{" "}
-              {pagination.total} kết quả
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(filters.page - 1)}
-                disabled={filters.page === 1}
-                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>Trước</span>
-              </button>
-              <span className="px-2">
-                Trang {filters.page}/{pagination.last_page}
-              </span>
-              <button
-                onClick={() => handlePageChange(filters.page + 1)}
-                disabled={filters.page === pagination.last_page}
-                className="p-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span>Sau</span>
-              </button>
-            </div>
+      {/* Thanh phân trang */}
+      {pagination && pagination.total > 0 && (
+        <div className="mt-6 flex justify-between items-center text-sm text-gray-700">
+          <p>
+            Hiển thị từ <strong>{pagination.from}</strong> đến{" "}
+            <strong>{pagination.to}</strong> trong tổng số{" "}
+            <strong>{pagination.total}</strong> kết quả
+          </p>
+          <div className="flex items-center gap-2">
+            {/* CẢI TIẾN GIAO DIỆN: Thêm icon vào nút phân trang */}
+            <button
+              onClick={() => handlePageChange(pagination.current_page - 1)}
+              disabled={pagination.current_page === 1}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            >
+              <ChevronLeft size={16} />
+              <span>Trước</span>
+            </button>
+            <button
+              onClick={() => handlePageChange(pagination.current_page + 1)}
+              disabled={pagination.current_page === pagination.last_page}
+              className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
+            >
+              <span>Sau</span>
+              <ChevronRight size={16} />
+            </button>
           </div>
-        )}
-      </main>
+        </div>
+      )}
     </div>
   );
 }

@@ -34,6 +34,13 @@ const navItems = [
     path: "/admin", 
     requiredPermission: "reports.view"
   },
+
+  {
+    icon: <Calendar />,
+    name: "Nhân Viên",
+    path: "/admin/employees",
+    requiredPermission: "banners.view",
+  },
   {
     icon: <Calendar />,
     name: "Ảnh Banners",

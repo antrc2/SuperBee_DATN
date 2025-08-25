@@ -79,16 +79,14 @@ const Dashboard = () => {
     }
   }, [activeTab, compareFilters.periodType]);
 
-
-
-    const fetchStatistics = async () => {
+  const fetchStatistics = async () => {
     setLoading(true);
     try {
       const formatDate = (date) => {
         if (!date) return null;
         const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
 
@@ -388,7 +386,6 @@ const Dashboard = () => {
               placeholderText="Ngày kết thúc"
             />
           </div>
-
         </div>
 
         <div className="flex gap-2">
@@ -666,8 +663,6 @@ const Dashboard = () => {
 
     return (
       <div className="space-y-8">
-
-
         {/* Category Details Table */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
@@ -685,7 +680,9 @@ const Dashboard = () => {
                   </th>
                   <th className="text-right py-3 px-2 font-semibold">Vốn</th>
                   <th className="text-right py-3 px-2 font-semibold">Lãi</th>
-                  <th className="text-right py-3 px-2 font-semibold">Sản phẩm đang bán</th>
+                  <th className="text-right py-3 px-2 font-semibold">
+                    Sản phẩm đang bán
+                  </th>
                   <th className="text-right py-3 px-2 font-semibold">
                     Sản phẩm đã bán
                   </th>
@@ -982,7 +979,9 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Dashboard Thống Kê
           </h1>
-          <p className="text-gray-600">Theo dõi hiệu suất kinh doanh SuperBee</p>
+          <p className="text-gray-600">
+            Theo dõi hiệu suất kinh doanh SuperBee
+          </p>
         </div>
 
         {/* Tab Navigation */}

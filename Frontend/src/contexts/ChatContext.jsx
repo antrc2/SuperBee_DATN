@@ -7,332 +7,233 @@ import React, {
   useCallback,
   useRef,
 } from "react";
-import { getSocket, connectSocket, authenticateSocket } from "@utils/socket";
-import { useAuth } from "@contexts/AuthContext";
-import { decodeData } from "../utils/hook";
-import { useNotification } from "./NotificationContext";
-import { useHome } from "./HomeContext";
-import api from "../utils/http";
+import { getSocket, connectSocket, authenticateSocket } from "../utils/socket"; // Giả định bạn có file utils/socket.js
+import { useAuth } from "./AuthContext";
+import api from "../utils/http"; // File cấu hình axios
+import { useNotification } from "./NotificationContext"; // Context thông báo
 
 const ChatContext = createContext();
 
-export function ChatProvider({ children }) {
-  const { token, isLoggedIn } = useAuth();
-  const refToken = useRef(null);
-  const { pop } = useNotification();
-  const { setNotifications, notifications } = useHome();
-  const [agentChatRoom, setAgentChatRoom] = useState(null); // Lưu trữ thông tin phòng chat với nhân viên
-  const socketRef = useRef(null);
-  const unreadCount = useRef(0);
-  // Khởi tạo và quản lý listeners
-  useEffect(() => {
-    // Di chuyển việc gán refToken vào trong effect để nó luôn được cập nhật khi token thay đổi
-    if (token) {
-      refToken.current = decodeData(token);
-    } else {
-      refToken.current = null; // Xóa refToken khi logout
-    }
+export function useChat() {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error("useChat phải được sử dụng bên trong một ChatProvider");
+  }
+  return context;
+}
 
+export function ChatProvider({ children }) {
+  const { token, isLoggedIn, user } = useAuth();
+  const { pop } = useNotification();
+
+  const [agentChatRoom, setAgentChatRoom] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const unreadCount = useRef(0);
+  const [unreadCountState, setUnreadCountState] = useState(0);
+  const socketRef = useRef(null);
+
+  // Hàm cập nhật số tin nhắn chưa đọc
+  const setUnread = (count) => {
+    unreadCount.current = count;
+    setUnreadCountState(count);
+  };
+
+  // Effect để khởi tạo và quản lý kết nối Socket.IO
+  useEffect(() => {
+    // 1. Khởi tạo socket và kết nối
     const socket = getSocket();
     socketRef.current = socket;
-
     connectSocket();
 
-    const handleChatRoomJoined = (data) => {
-      console.log("Successfully joined chat room:", data);
-      setAgentChatRoom({
-        roomId: data.roomId,
-        messages: data.messages || [],
-        participants: data.participants || [],
-        info: data.roomInfo || {},
-        agentDetails: data.agentDetails, // Thêm thông tin agent
-        customerName: data.customerName, // Thêm thông tin customer
-        customerAvatar: data.customerAvatar, // Thêm thông tin customer
-      });
-    };
+    // 2. Xác thực socket với token khi token thay đổi (đăng nhập/đăng xuất)
+    authenticateSocket(token);
 
+    // 3. Lắng nghe sự kiện có tin nhắn mới từ server
     const handleNewChatMessage = (message) => {
-      setAgentChatRoom((prev) => {
-        // Chỉ xử lý nếu tin nhắn thuộc phòng chat hiện tại
-        if (prev && prev.roomId === message.chat_room_id) {
-          const isOwnMessage = refToken.current?.user_id === message.sender_id;
+      // Chỉ tăng bộ đếm nếu người gửi không phải là mình
+      if (user?.id !== message.sender_id) {
+        setUnread(unreadCount.current + 1);
+        pop(`Bạn có tin nhắn mới từ ${message.sender_name}`, "i");
+      }
 
-          // Chỉ tăng số tin chưa đọc nếu tin nhắn này KHÔNG PHẢI của mình
-          const newUnreadCount = isOwnMessage
-            ? prev.unreadCount // Giữ nguyên nếu là tin của mình
-            : (unreadCount.current += 1);
-          +1; // Tăng lên nếu là tin của người khác
-
-          // Nếu là tin nhắn của chính mình gửi, vẫn đánh dấu là đã đọc trên server
-          if (isOwnMessage) {
-            socketRef.current.emit("mark_chat_as_read", {
-              roomId: message.chat_room_id,
-              messageId: message.id,
-            });
+      setAgentChatRoom((prevRoom) => {
+        // Đảm bảo chỉ thêm tin nhắn vào đúng phòng chat
+        if (prevRoom && prevRoom.roomId === message.chat_room_id) {
+          // Tránh thêm tin nhắn trùng lặp
+          if (prevRoom.messages.some((m) => m.id === message.id)) {
+            return prevRoom;
           }
-
-          return {
-            ...prev,
-            messages: [...prev.messages, message],
-            unreadCount: newUnreadCount, // Cập nhật state với số đếm đúng
-          };
+          return { ...prevRoom, messages: [...prevRoom.messages, message] };
         }
+        return prevRoom;
+      });
+    };
 
-        // Nếu không khớp phòng chat, không làm gì cả
-        return prev;
-      });
-    };
-    const handleNewChatAssigned = (data) => {
-      const roles = refToken.current?.role_ids || [];
-      if (roles.includes("agent") || roles.includes("admin")) {
-        console.log("A new chat has been assigned to you:", data);
-      }
-    };
-    const handleRestoreSession = (chatDetails) => {
-      console.log("Restoring customer chat session from server:", chatDetails);
-      if (chatDetails && chatDetails.roomInfo) {
-        setAgentChatRoom({
-          roomId: chatDetails.roomInfo.id,
-          messages: chatDetails.messages || [],
-          participants: chatDetails.participants || [],
-          info: chatDetails.roomInfo || {},
-          agentDetails: chatDetails.agentDetails, // Thêm thông tin agent
-          customerName: chatDetails.customerName, // Thêm thông tin customer
-          customerAvatar: chatDetails.customerAvatar, // Thêm thông tin customer
-          unreadCount: chatDetails.unreadCount || 0,
-        });
-        // Khi khôi phục phiên, đánh dấu tất cả tin nhắn là đã đọc
-        if (
-          chatDetails.messages.length > 0 &&
-          socketRef.current &&
-          refToken.current?.user_id
-        ) {
-          const lastMessageId =
-            chatDetails.messages[chatDetails.messages.length - 1].id;
-          socketRef.current.emit("mark_chat_as_read", {
-            roomId: chatDetails.roomInfo.id,
-            messageId: lastMessageId,
-          });
-        }
-      }
-    };
-    const public_notifications = (data) => {
-      pop("Bạn có thông báo mới chung", "s");
-      setNotifications((prevNotifications) => {
-        const newNotificationsToAdd = data.data;
-        const updatedNotificationsArray = [
-          newNotificationsToAdd,
-          ...prevNotifications.notifications,
-        ];
-
-        const updatedCount = prevNotifications.count + 1;
-        return {
-          count: updatedCount,
-          notifications: updatedNotificationsArray,
-        };
-      });
-    };
-    const private_notifications = (data) => {
-      pop("Bạn có thông báo mới riêng", "s");
-      setNotifications((prevNotifications) => {
-        const newNotificationsToAdd = data.data;
-        const updatedNotificationsArray = [
-          newNotificationsToAdd,
-          ...prevNotifications.notifications,
-        ];
-        const updatedCount = prevNotifications.count + 1;
-        return {
-          count: updatedCount,
-          notifications: updatedNotificationsArray,
-        };
-      });
-    };
-    socket.on("restore_customer_session", handleRestoreSession);
-    socket.on("chat_room_joined", handleChatRoomJoined);
     socket.on("new_chat_message", handleNewChatMessage);
-    socket.on("new_chat_assigned", handleNewChatAssigned);
-    socket.on("public_notifications", public_notifications);
-    socket.on("private_notifications", private_notifications);
 
+    // 4. Dọn dẹp listener khi component unmount
     return () => {
-      socket.off("restore_customer_session", handleRestoreSession);
-      socket.off("chat_room_joined", handleChatRoomJoined);
       socket.off("new_chat_message", handleNewChatMessage);
-      socket.off("new_chat_assigned", handleNewChatAssigned);
-      socket.off("public_notifications", public_notifications);
-      socket.off("private_notifications", private_notifications);
     };
-  }, [token]); // Thay đổi dependency thành [token]
+  }, [token, user?.id, pop]);
 
-  // Gửi lại token mỗi khi nó thay đổi (login/logout)
-  useEffect(() => {
-    if (socketRef.current) {
-      console.log(
-        `ChatContext: Token changed, calling authenticateSocket with token: ${
-          token ? token.substring(0, 10) + "..." : "null"
-        }`
-      ); // [LOG MỚI]
-      authenticateSocket(token);
-      handleGetChat();
-    }
-  }, [token]);
-
-  const handleGetChat = async () => {
-    if (isLoggedIn) {
-      try {
-        const res = await api.get("/messages");
-        const status = res?.data?.status;
-        const chatData = res?.data?.data;
-        // Nếu status là false hoặc không có chatData thì dừng lại
-        if (!status || !chatData) {
-          // Cân nhắc đặt agentChatRoom thành null ở đây nếu muốn reset state khi không có phòng chat
-          // setAgentChatRoom(null);
-          return;
-        }
-
-        // Cập nhật state với dữ liệu từ chatData
-        setAgentChatRoom({
-          roomId: chatData.roomInfo?.id,
-          messages: chatData.messages || [],
-          participants: chatData.roomInfo?.participants || [],
-          info: chatData.roomInfo || {},
-          agentDetails: chatData.agentDetails,
-          // Lấy thông tin customer từ object customerDetails
-          customerName: chatData.customerDetails?.username,
-          customerAvatar: chatData.customerDetails?.avatar_url,
-          unreadCount: chatData.unreadCount || 0, // Đảm bảo backend trả về trường này
-        });
-        unreadCount.current = chatData.unreadCount || 0;
-      } catch (error) {
-        console.log("Failed to get chat:", error);
-        // Khi có lỗi, cũng nên reset state
-        setAgentChatRoom(null);
+  /**
+   * Yêu cầu 2: Bắt đầu cuộc trò chuyện
+   * Gửi yêu cầu API đến backend để tìm nhân viên và tạo phòng.
+   */
+  const requestAgentChat = useCallback(
+    async (chatType = "support") => {
+      if (!isLoggedIn) {
+        pop("Bạn cần đăng nhập để bắt đầu chat.", "warning");
+        return;
       }
-    } else {
-      // Reset state khi người dùng logout
-      setAgentChatRoom(null);
-    }
-  };
-  // Hàm để khách hàng yêu cầu chat
-  const requestAgentChat = useCallback(() => {
-    if (!isLoggedIn) {
-      return Promise.reject(new Error("User is not logged in."));
-    }
 
-    return new Promise((resolve, reject) => {
-      socketRef.current.emit("request_agent_chat", {}, (response) => {
-        if (response.success) {
-          console.log("Chat request successful:", response);
-          // Cập nhật trạng thái phòng chat từ phản hồi
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const response = await api.post("/chat/request", { type: chatType });
+
+        if (response.data?.success) {
+          const chatData = response.data.data;
+          const roomId = chatData.roomInfo.id;
+
+          // Sau khi tạo phòng thành công, tham gia phòng đó trên socket
+          socketRef.current.emit("join_chat_room", roomId);
+
+          // Cập nhật state với toàn bộ thông tin trả về từ API
           setAgentChatRoom({
-            roomId: response.roomId,
-            messages: response.messages || [],
-            info: { message: response.message },
-            agentDetails: response.agentDetails, // Thêm thông tin agent
-            customerName: response.customerName, // Thêm thông tin customer
-            customerAvatar: response.customerAvatar, // Thêm thông tin customer
-            unreadCount: response.unreadCount || 0,
+            roomId: roomId,
+            messages: chatData.messages || [],
+            participants: chatData.participants || [],
+            info: chatData.roomInfo || {},
+            agentDetails: chatData.agentDetails,
           });
-          // Khi yêu cầu chat thành công, đánh dấu tất cả tin nhắn là đã đọc
-          if (
-            response.messages.length > 0 &&
-            socketRef.current &&
-            refToken.current?.user_id
-          ) {
-            const lastMessageId =
-              response.messages[response.messages.length - 1].id;
-            socketRef.current.emit("mark_chat_as_read", {
-              roomId: response.roomId,
-              messageId: lastMessageId,
-            });
-          }
-          unreadCount.current = response.unreadCount || 0;
-          resolve(response);
-        } else {
-          console.error("Chat request failed:", response.message);
-          reject(new Error(response.message));
-        }
-      });
-    });
-  }, [isLoggedIn]);
 
-  // Hàm gửi tin nhắn
+          // Cập nhật số tin nhắn chưa đọc
+          const unreadMessages = chatData.messages.filter(
+            (m) => !m.is_read && m.sender_id !== user.id
+          ).length;
+          setUnread(unreadMessages);
+        } else {
+          throw new Error(
+            response.data.message || "Không thể bắt đầu cuộc trò chuyện."
+          );
+        }
+      } catch (err) {
+        const errorMessage =
+          err.response?.data?.message || err.message || "Đã có lỗi xảy ra.";
+        setError(errorMessage);
+        pop(errorMessage, "error");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoggedIn, pop, user?.id]
+  );
+
+  /**
+   * Yêu cầu 3: Gửi tin nhắn
+   * Gửi sự kiện qua socket đến server Node.js.
+   */
   const sendChatMessage = useCallback(
     (content) => {
-      if (!agentChatRoom?.roomId) return false;
-      if (!refToken.current) return false;
+      if (!agentChatRoom?.roomId || !user?.id) {
+        console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
+        return false;
+      }
+
       const payload = {
         roomId: agentChatRoom.roomId,
-        content,
-        senderId: refToken.current?.user_id,
+        senderId: user.id,
+        content: content.trim(),
       };
-      socketRef.current.emit("send_chat_message", payload);
+
+      socketRef.current.emit("send_chat_message", payload, (response) => {
+        if (response.status === "sent") {
+          console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
+        } else {
+          console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
+          pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
+        }
+      });
+
+      /**
+       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
+       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
+       */
+      markChatAsRead();
+
       return true;
     },
-    [agentChatRoom?.roomId]
+    [agentChatRoom?.roomId, user?.id]
   );
-  // hàm đánh dấu đã đọc tin nhắn
-  const markChatAsRead = useCallback(() => {
-    setAgentChatRoom((prev) => {
-      if (!prev || !prev.roomId || prev.unreadCount === 0) return prev;
+  const sendChatMessageDis = useCallback(
+    (content, idRoom) => {
+      if (!idRoom || !user?.id) {
+        console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
+        return false;
+      }
 
-      const lastMessage = prev.messages[prev.messages.length - 1];
-      if (lastMessage) {
+      const payload = {
+        roomId: idRoom,
+        senderId: user.id,
+        content: content.trim(),
+      };
+
+      socketRef.current.emit("send_chat_message", payload, (response) => {
+        if (response.status === "sent") {
+          console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
+        } else {
+          console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
+          pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
+        }
+      });
+
+      /**
+       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
+       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
+       */
+      // markChatAsRead();
+
+      return true;
+    },
+    [user?.id]
+  );
+
+  /**
+   * Yêu cầu 4: Đánh dấu đã đọc
+   * Gửi sự kiện lên server để cập nhật DB.
+   */
+  const markChatAsRead = useCallback(() => {
+    if (unreadCount.current > 0 || true) {
+      // Luôn gửi để server cập nhật
+      setUnread(0);
+      const lastMessage =
+        agentChatRoom?.messages?.[agentChatRoom.messages.length - 1];
+
+      if (socketRef.current && agentChatRoom?.roomId && lastMessage) {
         socketRef.current.emit("mark_chat_as_read", {
-          roomId: prev.roomId,
+          roomId: agentChatRoom.roomId,
           messageId: lastMessage.id,
         });
       }
-      // Reset số tin chưa đọc ở FE ngay lập tức
-      return { ...prev, unreadCount: 0 };
-    });
-  }, []);
-  // hàm lấy danh sách chat dành cho admin
-  const getAllChat = useCallback(() => {
-    if (!isLoggedIn) {
-      return Promise.reject(new Error("User is not logged in."));
     }
-    if (!socketRef.current) {
-      console.warn(
-        "Socket not initialized or connected when calling getAllChat."
-      );
-      return;
-    }
-    return new Promise((resolve, reject) => {
-      socketRef.current.emit(
-        "admin_get_agent_chats",
-        { agentId: refToken.current?.user_id },
-        (response) => {
-          if (response.success) {
-            console.log("Chat request successful:", response);
-            resolve(response);
-          } else {
-            console.error("Chat request failed:", response);
-            reject(new Error(response.message));
-          }
-        }
-      );
-    });
-  }, [isLoggedIn]);
+  }, [agentChatRoom]);
 
   const value = {
-    getAllChat,
-    isLoggedIn,
     agentChatRoom,
+    isLoading,
+    error,
+    isLoggedIn, // Thêm isLoggedIn để Chat.jsx có thể sử dụng trực tiếp
+    user,
     requestAgentChat,
     sendChatMessage,
-    refToken,
     markChatAsRead,
-    notifications,
-    unreadCount,
+    unreadCount: unreadCountState, // Xuất ra state để UI re-render
+    sendChatMessageDis,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
-}
-export function useChat() {
-  const context = useContext(ChatContext);
-  if (context === undefined) {
-    throw new Error("useChat must be used within a ChatProvider");
-  }
-  return context;
 }

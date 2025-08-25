@@ -42,7 +42,7 @@ export function DisputeChatProvider({ children }) {
         if (current.roomId && current.roomId === message.chat_room_id) {
           // Thêm thông báo pop-up nếu tin nhắn không phải của mình
           if (message.sender_id !== user.id) {
-            pop(`Tin nhắn mới: ${message.content.substring(0, 30)}...`);
+            // pop(`Tin nhắn mới: ${message.content.substring(0, 30)}...`);
           }
           return { ...current, messages: [...current.messages, message] };
         }

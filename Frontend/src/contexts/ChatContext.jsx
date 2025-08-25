@@ -32,6 +32,7 @@ export function ChatProvider({ children }) {
   const unreadCount = useRef(0);
   const [unreadCountState, setUnreadCountState] = useState(0);
   const socketRef = useRef(null);
+  const [messages, setMessages] = useState([]);
 
   // Hàm cập nhật số tin nhắn chưa đọc
   const setUnread = (count) => {
@@ -68,6 +69,13 @@ export function ChatProvider({ children }) {
         }
         return prevRoom;
       });
+      const newMessage = {
+        id: Date.now(),
+        content: message?.content ?? null,
+        sender_id: message.sender_id,
+        created_at: new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, newMessage]);
     };
 
     socket.on("new_chat_message", handleNewChatMessage);
@@ -199,7 +207,7 @@ export function ChatProvider({ children }) {
 
       return true;
     },
-    [user.id]
+    [user?.id]
   );
 
   /**
@@ -233,6 +241,8 @@ export function ChatProvider({ children }) {
     markChatAsRead,
     unreadCount: unreadCountState, // Xuất ra state để UI re-render
     sendChatMessageDis,
+    messages,
+    setMessages,
   };
 
   return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;

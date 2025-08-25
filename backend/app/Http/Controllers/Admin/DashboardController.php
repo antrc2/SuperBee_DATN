@@ -37,16 +37,15 @@ class DashboardController extends Controller
 
         $periodFormat = $this->getPeriodFormat($period);
 
-        // Revenue chart
+       
         $revenueStats = (clone $baseQuery)
             ->select(
                 DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}') as period"),
                 DB::raw('SUM(order_items.unit_price) as total_revenue'),
                 DB::raw('SUM(products.import_price) as total_cost'),
-                // ===== THAY ĐỔI: TÍNH LỢI NHUẬN THEO CÔNG THỨC MỚI NHẤT =====
-                // Lợi nhuận = (Doanh thu / 1.1) - Vốn
+                
                 DB::raw('(SUM(order_items.unit_price) / 1.1) - SUM(products.import_price) as total_profit'),
-                // =============================================================
+                
                 DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
                 DB::raw('COUNT(order_items.id) as total_items')
             )
@@ -61,9 +60,9 @@ class DashboardController extends Controller
                 'categories.name as category_name',
                 DB::raw('SUM(order_items.unit_price) as revenue'),
                 DB::raw('SUM(products.import_price) as cost'),
-                // ===== THAY ĐỔI: TÍNH LỢI NHUẬN THEO CÔNG THỨC MỚI NHẤT =====
+                
                 DB::raw('(SUM(order_items.unit_price) / 1.1) - SUM(products.import_price) as profit'),
-                // =============================================================
+                
                 DB::raw('COUNT(order_items.id) as items_sold'),
                 DB::raw('(SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id AND p.status = 1) as available_products')
             )
@@ -131,11 +130,9 @@ class DashboardController extends Controller
         $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
         $totalCost = (clone $baseQuery)->sum('products.import_price');
 
-        // ===== THAY ĐỔI: TÍNH TOÁN THEO ĐÚNG CÔNG THỨC YÊU CẦU =====
         $revenueAfterTax = $totalRevenue / 1.1;
         $totalProfit = $revenueAfterTax - $totalCost;
-        $tax = $totalRevenue - $revenueAfterTax; // Thuế là phần chênh lệch
-        // ==============================================================
+        $tax = $totalRevenue - $revenueAfterTax; 
 
         $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
         $totalItems = (clone $baseQuery)->count('order_items.id');

@@ -76,10 +76,10 @@ const MediaLightbox = ({ url, onClose }) => {
 // =====================================================================
 const DisputeDetailModal = ({ dispute, onClose }) => {
   const { user: currentUser } = useAuth();
-  const { sendChatMessageDis } = useChat();
+  const { sendChatMessageDis, setMessages, messages } = useChat();
   const [chatMessage, setChatMessage] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState(null);
-  const [messages, setMessages] = useState([]);
+
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
 

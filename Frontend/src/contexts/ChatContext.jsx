@@ -222,166 +222,156 @@ export function ChatProvider({ children }) {
         sendChatMessageDis,
     };
 
-<<<<<<< HEAD
+    /**
+     * Yêu cầu 2: Bắt đầu cuộc trò chuyện
+     * Gửi yêu cầu API đến backend để tìm nhân viên và tạo phòng.
+     */
+    const requestAgentChat = useCallback(
+        async (chatType = "support") => {
+            if (!isLoggedIn) {
+                pop("Bạn cần đăng nhập để bắt đầu chat.", "warning");
+                return;
+            }
+
+            setIsLoading(true);
+            setError(null);
+
+            try {
+                const response = await api.post("/chat/request", { type: chatType });
+
+                if (response.data?.success) {
+                    const chatData = response.data.data;
+                    const roomId = chatData.roomInfo.id;
+
+                    // Sau khi tạo phòng thành công, tham gia phòng đó trên socket
+                    socketRef.current.emit("join_chat_room", roomId);
+
+                    // Cập nhật state với toàn bộ thông tin trả về từ API
+                    setAgentChatRoom({
+                        roomId: roomId,
+                        messages: chatData.messages || [],
+                        participants: chatData.participants || [],
+                        info: chatData.roomInfo || {},
+                        agentDetails: chatData.agentDetails,
+                    });
+
+                    // Cập nhật số tin nhắn chưa đọc
+                    const unreadMessages = chatData.messages.filter((m) => !m.is_read && m.sender_id !== user.id).length;
+                    setUnread(unreadMessages);
+                } else {
+                    throw new Error(response.data.message || "Không thể bắt đầu cuộc trò chuyện.");
+                }
+            } catch (err) {
+                const errorMessage = err.response?.data?.message || err.message || "Đã có lỗi xảy ra.";
+                setError(errorMessage);
+                pop(errorMessage, "error");
+            } finally {
+                setIsLoading(false);
+            }
+        },
+        [isLoggedIn, pop, user?.id]
+    );
+
+    /**
+     * Yêu cầu 3: Gửi tin nhắn
+     * Gửi sự kiện qua socket đến server Node.js.
+     */
+    const sendChatMessage = useCallback(
+        (content) => {
+            if (!agentChatRoom?.roomId || !user?.id) {
+                console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
+                return false;
+            }
+
+            const payload = {
+                roomId: agentChatRoom.roomId,
+                senderId: user.id,
+                content: content.trim(),
+            };
+
+            socketRef.current.emit("send_chat_message", payload, (response) => {
+                if (response.status === "sent") {
+                    console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
+                } else {
+                    console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
+                    pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
+                }
+            });
+
+            /**
+             * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
+             * Khi gửi tin nhắn, reset bộ đếm và báo cho server
+             */
+            markChatAsRead();
+
+            return true;
+        },
+        [agentChatRoom?.roomId, user?.id]
+    );
+    const sendChatMessageDis = useCallback(
+        (content, idRoom) => {
+            if (!idRoom || !user?.id) {
+                console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
+                return false;
+            }
+
+            const payload = {
+                roomId: idRoom,
+                senderId: user.id,
+                content: content.trim(),
+            };
+
+            socketRef.current.emit("send_chat_message", payload, (response) => {
+                if (response.status === "sent") {
+                    console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
+                } else {
+                    console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
+                    pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
+                }
+            });
+
+            /**
+             * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
+             * Khi gửi tin nhắn, reset bộ đếm và báo cho server
+             */
+            // markChatAsRead();
+
+            return true;
+        },
+        [user?.id]
+    );
+
+    /**
+     * Yêu cầu 4: Đánh dấu đã đọc
+     * Gửi sự kiện lên server để cập nhật DB.
+     */
+    const markChatAsRead = useCallback(() => {
+        if (unreadCount.current > 0 || true) {
+            // Luôn gửi để server cập nhật
+            setUnread(0);
+            const lastMessage = agentChatRoom?.messages?.[agentChatRoom.messages.length - 1];
+
+            if (socketRef.current && agentChatRoom?.roomId && lastMessage) {
+                socketRef.current.emit("mark_chat_as_read", {
+                    roomId: agentChatRoom.roomId,
+                    messageId: lastMessage.id,
+                });
+            }
+        }
+    }, [agentChatRoom]);
+
+    const value = {
+        agentChatRoom,
+        isLoading,
+        error,
+        isLoggedIn, // Thêm isLoggedIn để Chat.jsx có thể sử dụng trực tiếp
+        user,
+        requestAgentChat,
+        sendChatMessage,
+        markChatAsRead,
+        unreadCount: unreadCountState, // Xuất ra state để UI re-render
+        sendChatMessageDis,
+    };
+
     return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
-=======
-  /**
-   * Yêu cầu 2: Bắt đầu cuộc trò chuyện
-   * Gửi yêu cầu API đến backend để tìm nhân viên và tạo phòng.
-   */
-  const requestAgentChat = useCallback(
-    async (chatType = "support") => {
-      if (!isLoggedIn) {
-        pop("Bạn cần đăng nhập để bắt đầu chat.", "warning");
-        return;
-      }
-
-      setIsLoading(true);
-      setError(null);
-
-      try {
-        const response = await api.post("/chat/request", { type: chatType });
-
-        if (response.data?.success) {
-          const chatData = response.data.data;
-          const roomId = chatData.roomInfo.id;
-
-          // Sau khi tạo phòng thành công, tham gia phòng đó trên socket
-          socketRef.current.emit("join_chat_room", roomId);
-
-          // Cập nhật state với toàn bộ thông tin trả về từ API
-          setAgentChatRoom({
-            roomId: roomId,
-            messages: chatData.messages || [],
-            participants: chatData.participants || [],
-            info: chatData.roomInfo || {},
-            agentDetails: chatData.agentDetails,
-          });
-
-          // Cập nhật số tin nhắn chưa đọc
-          const unreadMessages = chatData.messages.filter(
-            (m) => !m.is_read && m.sender_id !== user.id
-          ).length;
-          setUnread(unreadMessages);
-        } else {
-          throw new Error(
-            response.data.message || "Không thể bắt đầu cuộc trò chuyện."
-          );
-        }
-      } catch (err) {
-        const errorMessage =
-          err.response?.data?.message || err.message || "Đã có lỗi xảy ra.";
-        setError(errorMessage);
-        pop(errorMessage, "error");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [isLoggedIn, pop, user?.id]
-  );
-
-  /**
-   * Yêu cầu 3: Gửi tin nhắn
-   * Gửi sự kiện qua socket đến server Node.js.
-   */
-  const sendChatMessage = useCallback(
-    (content) => {
-      if (!agentChatRoom?.roomId || !user?.id) {
-        console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
-        return false;
-      }
-
-      const payload = {
-        roomId: agentChatRoom.roomId,
-        senderId: user.id,
-        content: content.trim(),
-      };
-
-      socketRef.current.emit("send_chat_message", payload, (response) => {
-        if (response.status === "sent") {
-          console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
-        } else {
-          console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
-          pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
-        }
-      });
-
-      /**
-       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
-       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
-       */
-      markChatAsRead();
-
-      return true;
-    },
-    [agentChatRoom?.roomId, user?.id]
-  );
-  const sendChatMessageDis = useCallback(
-    (content, idRoom) => {
-      if (!idRoom || !user?.id) {
-        console.error("Không thể gửi tin nhắn: thiếu roomId hoặc userId.");
-        return false;
-      }
-
-      const payload = {
-        roomId: idRoom,
-        senderId: user.id,
-        content: content.trim(),
-      };
-
-      socketRef.current.emit("send_chat_message", payload, (response) => {
-        if (response.status === "sent") {
-          console.log("Server xác nhận đã nhận tin nhắn:", response.messageId);
-        } else {
-          console.error("Server báo lỗi khi gửi tin nhắn:", response.message);
-          pop("Gửi tin nhắn thất bại, vui lòng thử lại.", "error");
-        }
-      });
-
-      /**
-       * Yêu cầu 4: Cập nhật đã đọc khi gửi tin nhắn
-       * Khi gửi tin nhắn, reset bộ đếm và báo cho server
-       */
-      // markChatAsRead();
-
-      return true;
-    },
-    [user?.id]
-  );
-
-  /**
-   * Yêu cầu 4: Đánh dấu đã đọc
-   * Gửi sự kiện lên server để cập nhật DB.
-   */
-  const markChatAsRead = useCallback(() => {
-    if (unreadCount.current > 0 || true) {
-      // Luôn gửi để server cập nhật
-      setUnread(0);
-      const lastMessage =
-        agentChatRoom?.messages?.[agentChatRoom.messages.length - 1];
-
-      if (socketRef.current && agentChatRoom?.roomId && lastMessage) {
-        socketRef.current.emit("mark_chat_as_read", {
-          roomId: agentChatRoom.roomId,
-          messageId: lastMessage.id,
-        });
-      }
-    }
-  }, [agentChatRoom]);
-
-  const value = {
-    agentChatRoom,
-    isLoading,
-    error,
-    isLoggedIn, // Thêm isLoggedIn để Chat.jsx có thể sử dụng trực tiếp
-    user,
-    requestAgentChat,
-    sendChatMessage,
-    markChatAsRead,
-    unreadCount: unreadCountState, // Xuất ra state để UI re-render
-    sendChatMessageDis,
-  };
-
-  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>;
->>>>>>> 06d03d5fcdee5140bb130b210f72872f72a6641d
 }

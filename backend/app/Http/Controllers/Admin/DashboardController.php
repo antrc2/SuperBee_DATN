@@ -21,7 +21,7 @@ class DashboardController extends Controller
 
         $period = $request->period;
         $startDate = Carbon::parse($request->start_date);
-        $endDate = Carbon::parse($request->end_date);
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
         $webId = $request->web_id;
 
         // Base query cho orders

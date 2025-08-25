@@ -82,16 +82,23 @@ const Dashboard = () => {
   const fetchStatistics = async () => {
     setLoading(true);
     try {
-      const params = {
-        period: filters.period,
-        start_date: filters.startDate.toISOString().split("T")[0],
-        end_date: filters.endDate.toISOString().split("T")[0],
+      const formatDate = (date) => {
+        if (!date) return null;
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
       };
 
+      const params = {
+        period: filters.period,
+        start_date: formatDate(filters.startDate),
+        end_date: formatDate(filters.endDate),
+      };
       const response = await api.get("/admin/dashboard/statistics", { params });
       setStatistics(response.data.data);
     } catch (error) {
-      console.error("Error fetching statistics:", error);
+      console.error("Lỗi khi lấy dữ liệu thống kê:", error);
     } finally {
       setLoading(false);
     }

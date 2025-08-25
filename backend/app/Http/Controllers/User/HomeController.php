@@ -2,20 +2,49 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Http\Controllers\Callback\BankController;
+use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\ChatRoom;
 use App\Models\Product;
+use App\Models\Review;
 use App\Models\Wallet;
 use App\Models\Category;
 use App\Models\Message;
 use App\Models\Post;
+use App\Models\RechargeBank;
+use App\Models\RechargeCard;
 use App\Models\WalletTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
+    public function donate_history(Request $request){
+        try {
+            $cards = RechargeCard::where("status",1)->with(['walletTransaction.wallet.user'])->limit(5)->get();
+            $banks = RechargeBank::where("status",1)->with(['walletTransaction.wallet.user'])->limit(5)->get();
+            return response()->json([
+                'status'=>True,
+                'message'=>"Lấy lịch sử nạp thẻ thành công",
+                'data'=> [
+                    "cards"=>$cards,
+                    "banks"=>$banks
+                ]
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status'=>False,
+                'message'=>"Lấy lịch sử nạp thẻ thất bại",
+                'data'=> [
+                    "cards"=>[],
+                    "banks"=>[]
+                ]
+            ],500);
+            //throw $th;
+        }
+    }
     /**
      * Lấy dữ liệu chính cho trang chủ.
      * Dữ liệu sản phẩm ở đây đã được giới hạn sẵn (limit 8).
@@ -271,6 +300,66 @@ class HomeController extends Controller
             // Tuỳ chỉnh: log lỗi, abort 500, hoặc trả về view lỗi riêng
             // \Log::error('[Sitemap] ', ['err' => $th->getMessage()]);
             return response('Server Error', 500);
+        }
+    }
+    public function getWebsiteReviews()
+    {
+        try {
+            // Lấy thống kê tổng quan
+            $totalReviews = Review::count();
+            $averageRating = Review::avg('star');
+            
+            // Phân bố số sao
+            $ratingDistribution = Review::selectRaw('star, COUNT(*) as count')
+                ->groupBy('star')
+                ->orderBy('star', 'desc')
+                ->get()
+                ->keyBy('star');
+            
+            // Đảm bảo có đầy đủ từ 1-5 sao
+            $distribution = [];
+            for ($i = 5; $i >= 1; $i--) {
+                $distribution[] = [
+                    'star' => $i,
+                    'count' => $ratingDistribution->get($i)->count ?? 0,
+                    'percentage' => $totalReviews > 0 ? 
+                        round(($ratingDistribution->get($i)->count ?? 0) / $totalReviews * 100, 1) : 0
+                ];
+            }
+
+            $recentReviews = Review::with(['user'])
+                ->select('id', 'user_id', 'star', 'comment', 'created_at')
+                ->latest()
+                ->limit(10)
+                ->get()
+                ->map(function ($review) {
+                    return [
+                        'id' => $review->id,
+                        'star' => $review->star,
+                        'comment' => $review->comment,
+                        'created_at' => $review->created_at,
+                        'user' => [
+                            'username' => $review->user->username ?? 'Người dùng ẩn danh',
+                            'avatar_url' => $review->user->avatar_url ?? null,
+                        ]
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'total_reviews' => $totalReviews,
+                    'average_rating' => round($averageRating, 1),
+                    'rating_distribution' => $distribution,
+                    'recent_reviews' => $recentReviews,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi lấy dữ liệu đánh giá: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

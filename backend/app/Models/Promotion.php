@@ -11,7 +11,7 @@ class Promotion extends Model
 
 
     protected $fillable = [
-        'user_id',
+        "promotion_user_id",
         'code',
         'description',
         // 'discount_type', // This was commented out
@@ -44,5 +44,8 @@ class Promotion extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+    public function promotion_user(){
+        return $this->hasMany(PromotionUser::class);
     }
 }

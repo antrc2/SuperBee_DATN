@@ -20,6 +20,14 @@ class Product extends Model
         'web_id',
         'created_by',
         'updated_by',
+        'refusal_reason'
+    ];
+
+    protected $casts = [
+        'import_price' => 'integer',
+        'price' => 'integer',
+        'sale' => 'integer',
+        'status' => 'integer',
     ];
 
     public function category()

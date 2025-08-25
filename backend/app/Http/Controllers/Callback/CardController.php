@@ -17,6 +17,23 @@ use Illuminate\Support\Facades\Validator;
 
 class CardController extends Controller
 {
+    public function history(Request $request){
+        try {
+            $cards = RechargeCard::where("status",1)->with('user')->limit(5)->get();
+            return response()->json([
+                'status'=>True,
+                'message'=>"Lấy danh sách lịch sử nạp card thành công",
+                'data'=>$cards
+            ]);
+        } catch (\Throwable $th) {
+            //throw $th;
+            return response()->json([
+                "status"=>False,
+                'message'=>"Lấy danh sách lịch sử nạp card thất bại",
+                'data'=>[]
+            ],500);
+        }
+    }
     public function callback(Request $request)
     {
         try {
@@ -79,7 +96,8 @@ class CardController extends Controller
                         "type" => "recharge_card",
                         "amount" => 0,
                         "related_id" => $recharge_card->id,
-                        "related_type" => "App\Models\RechargeCard"
+                        "related_type" => "App\Models\RechargeCard",
+                        'status'=>2
                     ]
                 );
                 $wallet_transaction_id = $wallet_transaction->id;

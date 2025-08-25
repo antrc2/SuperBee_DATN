@@ -19,6 +19,10 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('email_verification_token')->nullable();
             $table->timestamp('email_verification_expires_at')->nullable();
+            $table->string('cccd_number')->nullable(); // Số cccd
+            $table->string('cccd_frontend_url')->nullable(); // Ảnh mặt trước
+            $table->string('cccd_backend_url')->nullable(); // Ảnh mặt sau
+            $table->string("cccd_created_at")->nullable(); // Ngày cấp
             // Nhưng với JWT token, việc lưu token reset vào bảng users tiện hơn để liên kết trực tiếp.
             $table->string('password_reset_token')->nullable();
             $table->string('phone', 20)->nullable(); // Có thể null
@@ -73,7 +77,7 @@ return new class extends Migration
             $table->text('image_url')->nullable();
             $table->integer('status')->default(1); // Mặc định hoạt động
             $table->integer('count')->default(0); // Mặc định hoạt động
-            $table->string('description', 255)->nullable();
+            $table->text('description')->nullable();
             $table->unsignedBigInteger('created_by'); // Có thể null nếu hệ thống tự tạo
             $table->unsignedBigInteger('updated_by'); // Có thể null
             $table->timestamps();
@@ -91,7 +95,7 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('category_id');    // Sản phẩm phải thuộc một danh mục
             $table->string('sku', 50)->unique();           // SKU duy nhất
-            $table->string('description', 255)->nullable();           // SKU duy nhất
+            $table->text('description')->nullable();           // SKU duy nhất
             $table->integer('import_price');             // giá nhập
             $table->integer('price');
             $table->integer('sale')->nullable();
@@ -99,6 +103,7 @@ return new class extends Migration
             $table->unsignedBigInteger('web_id');          // Sản phẩm thuộc web con nào
             $table->unsignedBigInteger('created_by'); // Người tạo (có thể null)
             $table->unsignedBigInteger('updated_by'); // Người cập nhật (có thể null)
+            $table->text("refusal_reason")->nullable();
             $table->timestamps();
         });
 
@@ -120,6 +125,9 @@ return new class extends Migration
             $table->unsignedBigInteger('product_id')->unique(); // Mỗi sản phẩm chỉ có 1 bộ credentials duy nhất
             $table->string('username', 255);       // Email đăng nhập
             $table->string('password', 255);    // Mật khẩu (hãy mã hóa ở tầng ứng dụng)
+            $table->string("email",255)->nullable();
+            $table->string("phone",255)->nullable();
+            $table->string('cccd',255)->nullable();
             // $table->string('login_method', 50); // Ví dụ: 'email', 'facebook', 'garenan', 'google', ...
             // $table->timestamps();
         });
@@ -185,6 +193,7 @@ return new class extends Migration
             // // Thông tin mã khuyến mãi (nếu khách dùng coupon/code)
             $table->string('promo_code', 50)->nullable();        // Lưu mã khuyến mãi (nếu có)
             $table->decimal('discount_amount', 15, 0)->nullable(); // Số tiền giảm tương ứng (nếu có)
+            $table->string('bill_url',255)->nullable();
 
             $table->timestamps();
         });
@@ -292,7 +301,7 @@ return new class extends Migration
         // Bảng promotions (Mã khuyến mãi cho sản phẩm)
         Schema::create('promotions', function (Blueprint $table) {
             $table->id();
-            $table->integer("user_id")->default(-1);
+            $table->integer("promotion_user_id")->nullable();
             $table->string('code', 50)->unique(); // Mã khuyến mãi duy nhất
             $table->text('description')->nullable(); // Mô tả khuyến mãi
             // $table->enum('discount_type', ['percentage', 'fixed_amount']); // Loại giảm giá
@@ -308,6 +317,11 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by'); // Ai tạo
             $table->unsignedBigInteger('updated_by'); // Ai cập nhật
             $table->timestamps();
+        });
+        Schema::create('promotion_users', function (Blueprint $table){
+            $table->id();
+            $table->unsignedBigInteger("user_id");
+            $table->unsignedBigInteger('promotion_id');
         });
 
         // Bảng domate_promotions (Mã khuyến mãi cho nạp thẻ/ngân hàng)

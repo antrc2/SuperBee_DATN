@@ -17,7 +17,7 @@ class PartnerProductController extends Controller
     public function index(Request $request)
     {
         // Bắt đầu với một query cơ bản và eager loading các quan hệ để tránh lỗi N+1
-        $query = Product::query()->where("created_by", $request->user_id)->with(['category', 'images', 'gameAttributes','credentials']);
+        $query = Product::query()->where("created_by", $request->user_id)->with(['category', 'images', 'gameAttributes', 'credentials']);
 
         try {
             // Lọc theo danh mục sản phẩm (category_id)
@@ -89,8 +89,8 @@ class PartnerProductController extends Controller
                 "status" => false,
                 "message" => "Lấy danh sách sản phẩm thất bại. Có lỗi xảy ra.",
                 "data" => [],
-                "error"=>$th->getMessage(),
-                "line"=>$th->getLine()
+                "error" => $th->getMessage(),
+                "line" => $th->getLine()
             ], 500); // Trả về status code 500
         }
     }
@@ -143,7 +143,7 @@ class PartnerProductController extends Controller
                     'message' => 'Không tìm thấy sản phẩm',
                 ], 404);
             }
-
+            $sku = $product->skuy;
             // Nếu attributes là JSON string, decode nó
             $attrs = $request->input('attributes');
             if (is_string($attrs)) {
@@ -160,6 +160,9 @@ class PartnerProductController extends Controller
                 // 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                    => 'nullable|string',
+                'phone'                    => 'nullable|string',
+                'cccd'                    => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -222,18 +225,18 @@ class PartnerProductController extends Controller
             //     $validated['sale'] = null;
             // }
 
-            if ($product->status === 1 ) {
+            if ($product->status === 1) {
                 if ($request->import_price !== $product->import_price) {
                     return response()->json([
-                        "status"=>False,
-                        "message"=>"Bạn không thể sửa giá bán"
-                    ],422);
+                        "status" => False,
+                        "message" => "Bạn không thể sửa giá bán"
+                    ], 422);
                 }
             } elseif ($product->status === 4) {
                 return response()->json([
-                    "status"=>False,
-                    "message"=>"Sản phẩm đã được bán"
-                ],422);
+                    "status" => False,
+                    "message" => "Sản phẩm đã được bán"
+                ], 422);
             }
 
             // if (isset($validated['import_price']) && $product->status !== 1 && $product->status !== 4) {
@@ -264,7 +267,7 @@ class PartnerProductController extends Controller
             $product->update([
                 'category_id' => $validated['category_id'] ?? $product->category_id,
                 "import_price" => $validated['import_price'],
-                 "description"=>$validated['description'] ?? null,
+                "description" => $validated['description'] ?? null,
                 // 'price' => $validated['price'] ?? $product->price,
                 // 'sale' => $validated['sale'] ?? $product->sale,
                 'updated_by' => $request->user_id,
@@ -315,16 +318,16 @@ class PartnerProductController extends Controller
                     //     ]);
                     // }
                     $images = $request->file('images');
-                    $response = $this->uploadFiles($images,"product_images/".$product->sku);
-                    foreach ($response as $image){
-                        if (is_null($image['url'])){
+                    $response = $this->uploadFiles($images, "product_images/" . $product->sku);
+                    foreach ($response as $image) {
+                        if (is_null($image['url'])) {
                             DB::rollBack();
-                            return response()->json(['message' => $image['messsage'],'status'=>False], 500);
+                            return response()->json(['message' => $image['messsage'], 'status' => False], 500);
                         }
                         ProductImage::create([
-                            "product_id"=>$product->id,
-                            "alt_text"=>$image['filename'],
-                            "image_url"=>$image['url']
+                            "product_id" => $product->id,
+                            "alt_text" => $image['filename'],
+                            "image_url" => $image['url']
                         ]);
                     }
                 }
@@ -336,12 +339,18 @@ class PartnerProductController extends Controller
                     $cred->update([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 } else {
                     // Nếu chưa có credential, bạn có thể tạo mới:
                     $product->credentials()->create([
                         'username' => $validated['username'],
                         'password' => $validated['password'],
+                        "email"      => $validated['email'] ?? null,
+                        "phone"      => $validated['phone'] ?? null,
+                        "cccd"       => $validated['cccd'] ?? null
                     ]);
                 }
             }
@@ -360,6 +369,8 @@ class PartnerProductController extends Controller
                     ]);
                 }
             }
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1, "Sản phẩm {$sku} đang chờ duyệt", "{$frontend_link}/admin/pendingProducts/{$product->id}", null, 'products.view');
 
             DB::commit();
 
@@ -429,6 +440,9 @@ class PartnerProductController extends Controller
                 // 'sale'                        => 'nullable|numeric|min:0',
                 'username'                    => 'required|string',
                 'password'                    => 'required|string',
+                'email'                    => 'nullable|string',
+                'phone'                    => 'nullable|string',
+                'cccd'                    => 'nullable|string',
                 'attributes'                  => 'required|array',
                 'attributes.*.attribute_key'  => 'required|string',
                 'attributes.*.attribute_value' => 'required|string',
@@ -486,7 +500,7 @@ class PartnerProductController extends Controller
                     // 'errors'  => $validator->errors(),          // toàn bộ lỗi theo field
                 ], 422);
             }
-            $validatedData = $validator->validated();     
+            $validatedData = $validator->validated();
             // Bắt đầu transaction
             DB::beginTransaction();
             function generate_sku($length = 20)
@@ -508,9 +522,9 @@ class PartnerProductController extends Controller
             $product = Product::create([
                 "category_id" => $validatedData['category_id'],
                 "sku" => $sku,
-                "description"=>$validatedData['description']??null,
-                "price"=>0,
-                "import_price" => $validatedData['import_price'], 
+                "description" => $validatedData['description'] ?? null,
+                "price" => 0,
+                "import_price" => $validatedData['import_price'],
                 "web_id" => $request->web_id,
                 'status' => 2,
                 "created_by" => $request->user_id,
@@ -532,24 +546,23 @@ class PartnerProductController extends Controller
             //     // Lưu thông tin hình ảnh vào bảng ProductImage
             //     ProductImage::create([
             //         'product_id' => $product->id,
-//         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
+            //         'alt_text' => $image->getClientOriginalName(), // Tên file gốc làm alt_text
             //         'image_url' => $imageUrl, // Đường dẫn đã upload
             //     ]);
             // }
-            $response = $this->uploadFiles($images,'product_images/'.$sku);
-            foreach ($response as $image){
-                
-                if (is_null($image['url'])){
+            $response = $this->uploadFiles($images, 'product_images/' . $sku);
+            foreach ($response as $image) {
+
+                if (is_null($image['url'])) {
                     DB::rollBack();
                     return response()->json(['message' => 'Failed to upload product image.'], 500);
                 }
 
                 ProductImage::create([
-                    'product_id'=>$product->id,
-                    "alt_text"=>$image['filename'],
-                    "image_url"=>$image['url']
+                    'product_id' => $product->id,
+                    "alt_text" => $image['filename'],
+                    "image_url" => $image['url']
                 ]);
-                
             }
 
             // Lưu thông tin đăng nhập
@@ -557,6 +570,9 @@ class PartnerProductController extends Controller
                 'product_id' => $product->id,
                 'username' => $validatedData['username'],
                 'password' => $validatedData['password'],
+                "email"      => $validatedData['email'] ?? null,
+                "phone"      => $validatedData['phone'] ?? null,
+                "cccd"       => $validatedData['cccd'] ?? null
             ]);
 
             // Lưu attributes
@@ -569,6 +585,8 @@ class PartnerProductController extends Controller
             }
 
             // Commit transaction
+            $frontend_link = env("FRONTEND_URL");
+            $this->sendNotification(1, "Sản phẩm {$sku} đang chờ duyệt", "{$frontend_link}/admin/pendingProducts/{$product->id}", null, 'products.view');
             DB::commit();
 
             return response()->json([
@@ -785,5 +803,4 @@ class PartnerProductController extends Controller
             ], 500);
         }
     }
-    
 }

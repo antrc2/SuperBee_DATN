@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
-class DiscountCodeController extends Controller
+class UserDiscountCodeController extends Controller
 {
     // GET /discount_codes
     public function index(Request $request)
@@ -39,7 +39,7 @@ class DiscountCodeController extends Controller
             return response()->json([
                 'message' => 'Đã có lỗi xảy ra',
                 'status' => false,
-                'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
+                // 'error' => $e->getMessage(),  // Thêm dòng này để xem lỗi thật
             ], 500);
         }
     }

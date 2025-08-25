@@ -1,0 +1,6 @@
+*/env
+*/.env
+*/__pycache__
+venv
+.env
+gemini_key_index.txt

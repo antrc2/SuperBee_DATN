@@ -71,6 +71,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
               </td>
               <td className="py-4 px-6">
                 <div className="flex justify-center items-center gap-4">
+                  {/* Icon xem chi tiết - Luôn hoạt động */}
                   <Link
                     to={`/admin/products/${product.id}`}
                     title="Xem chi tiết"
@@ -80,10 +81,29 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                       size={20}
                     />
                   </Link>
-                  {product.status === 4 || product.status == 0 ? (
-                    <span className="px-7"></span> // Nếu status là 4, không hiển thị gì cả
+
+                  {/* =================== CHANGED SECTION START =================== */}
+                  {product.status === 4 ? (
+                    // --- Trạng thái 4: Bán thành công -> Hiển thị icon bị vô hiệu hóa ---
+                    <>
+                      <span title="Sản phẩm đã bán, không thể sửa">
+                        <FilePenLine
+                          className="text-gray-400 opacity-50 cursor-not-allowed"
+                          size={20}
+                        />
+                      </span>
+                      <button disabled title="Sản phẩm đã bán, không thể khóa">
+                        <Lock
+                          className="text-gray-400 opacity-50 cursor-not-allowed"
+                          size={20}
+                        />
+                      </button>
+                    </>
+                  ) : product.status === 0 ? (
+                    // --- Trạng thái 0: Bị từ chối -> Ẩn theo logic cũ để giữ layout ---
+                    <span className="w-[56px] h-[20px]"></span> // Placeholder to keep alignment
                   ) : (
-                    // Nếu status khác 4, hiển thị các nút hành động
+                    // --- Các trạng thái khác -> Hiển thị icon hoạt động ---
                     <>
                       <Link
                         to={`/admin/products/${product.id}/edit`}
@@ -118,6 +138,7 @@ export default function ProductsListPage({ products, handleKey, handleLock }) {
                       )}
                     </>
                   )}
+                  {/* =================== CHANGED SECTION END =================== */}
                 </div>
               </td>
             </tr>

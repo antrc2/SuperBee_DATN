@@ -352,7 +352,7 @@ class AuthController extends Controller
             Notification::create([
                 'user_id' => $user->id,
                 'type' => 1,
-                'content' => "Chào mừng bạn đã đến với tôi hi hi hi hi hi",
+                'content' => "Chào mừng bạn đã đến với SuperBee",
                 'link' => null,
                 "published_at" => now(),
                 'is_read' => false,
@@ -484,6 +484,15 @@ class AuthController extends Controller
                     "changedFields" => ['password']
                 ],
             ));
+                Notification::create([
+                'user_id' => $user->id,
+                'type' => 'fogotPass',
+                'content' => "Mật khẩu đã đc đặt lại thành công",
+                'link' => null,
+                "published_at" => now(),
+                'is_read' => false,
+                "expires_at" => now()->addDays(3),
+            ]);
 
             // 5. Trả về thành công (logic không đổi)
             return response()->json(['message' => 'Mật khẩu của bạn đã được đặt lại thành công.'], 200);

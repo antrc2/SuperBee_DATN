@@ -8,6 +8,7 @@ import {
   Filter,
 } from "lucide-react";
 import api from "../../../utils/http";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 export default function News() {
   // === LOGIC KHÔNG THAY ĐỔI ===
@@ -136,7 +137,9 @@ export default function News() {
         <div className="flex-1 min-w-0">
           {error && <div className="alert alert-danger">{error}</div>}
           {loading ? (
-            <div className="text-center py-10 text-secondary">Đang tải...</div>
+            <div className="text-center py-10 text-secondary">
+              <LoadingDomain />
+            </div>
           ) : posts.length > 0 ? (
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">

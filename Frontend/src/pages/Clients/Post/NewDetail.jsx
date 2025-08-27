@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import api from "../../../utils/http";
 import { Clock, Calendar, MessageSquare, Send } from "lucide-react";
 import { marked } from "marked";
+import LoadingDomain from "../../../components/Loading/LoadingDomain";
 
 const defaultAvatar = "https://via.placeholder.com/40";
 
@@ -206,7 +207,9 @@ export default function NewDetail() {
 
   if (loadingNews)
     return (
-      <p className="text-center text-secondary py-8">Đang tải bài viết...</p>
+      <p className="text-center text-secondary py-8">
+        <LoadingDomain />
+      </p>
     );
   if (errorNews)
     return <p className="alert alert-danger mx-auto max-w-7xl">{errorNews}</p>;
@@ -222,7 +225,7 @@ export default function NewDetail() {
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Nội dung bài viết */}
         <div className="flex-1 bg-input p-6 sm:p-8 rounded-xl shadow-themed min-w-0">
-          <h1 className="font-heading text-3xl md:text-4xl font-black text-primary mb-2">
+          <h1 className=" text-3xl md:text-4xl font-black text-primary mb-2">
             {news.title}
           </h1>
           <div className="flex items-center gap-4 mb-6 text-sm text-secondary">

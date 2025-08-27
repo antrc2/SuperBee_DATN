@@ -31,8 +31,8 @@ const navItems = [
     icon: <LayoutGrid />,
     name: "Thống kê",
     requiredPermissions: ["reports.view"],
-    path: "/admin", 
-    requiredPermission: "reports.view"
+    path: "/admin",
+    requiredPermission: "reports.view",
   },
 
   {
@@ -112,18 +112,6 @@ const navItems = [
   //   view: ["admin", "admin_super", "reseller", "nv_ho_tro"],
   // },
 
-  {
-    icon: <CircleDollarSign />,
-    name: "Tài chính",
-    path: "/admin/financials",
-    // Sửa từ requiredPermission thành requiredPermissions
-    // Giờ đây, chỉ cần người dùng có 1 trong 3 quyền này là sẽ thấy mục "Tài chính"
-    requiredPermissions: [
-      "transactions.view",
-      "recharges.view",
-      "withdrawals.view",
-    ],
-  },
   // ================================================================
   {
     icon: <Calendar />,
@@ -149,7 +137,7 @@ const navItems = [
     path: "/admin/withdrawals",
     requiredPermission: "withdrawals.view",
   },
-  
+
   {
     icon: <ShoppingCart />,
     name: "Đơn Hàng",

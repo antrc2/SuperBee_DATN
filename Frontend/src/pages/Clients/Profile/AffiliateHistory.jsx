@@ -3,6 +3,7 @@ import api from "@utils/http";
 import { useNotification } from "@contexts/NotificationContext";
 import { useAuth } from "@contexts/AuthContext";
 import { Copy, X } from "lucide-react";
+import LoadingDomain from "@components/Loading/LoadingDomain";
 
 export default function AffiliateHistory() {
   const [data, setData] = useState([]);
@@ -45,7 +46,9 @@ export default function AffiliateHistory() {
 
   return (
     <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
-      <h1 className="font-heading text-2xl font-bold mb-6 text-primary">Lịch sử tiếp thị liên kết</h1>
+      <h1 className="font-heading text-2xl font-bold mb-6 text-primary">
+        Lịch sử tiếp thị liên kết
+      </h1>
       <button
         className="mb-4 px-4 py-2 bg-accent text-primary rounded hover:bg-accent/80 text-sm font-semibold flex items-center gap-2"
         onClick={() => setShowAffiliate(true)}
@@ -62,7 +65,9 @@ export default function AffiliateHistory() {
             >
               <X className="h-5 w-5" />
             </button>
-            <h3 className="font-bold text-lg mb-4 text-primary">Link tiếp thị liên kết của bạn</h3>
+            <h3 className="font-bold text-lg mb-4 text-primary">
+              Link tiếp thị liên kết của bạn
+            </h3>
             <div className="flex items-center gap-2 border rounded-lg p-2">
               <input
                 type="text"
@@ -77,16 +82,18 @@ export default function AffiliateHistory() {
                 Copy
               </button>
             </div>
-            <p className="text-xs text-secondary mt-2">Gửi link này cho bạn bè, khi họ đăng ký bạn sẽ nhận được hoa hồng!</p>
+            <p className="text-xs text-secondary mt-2">
+              Gửi link này cho bạn bè, khi họ đăng ký bạn sẽ nhận được hoa hồng!
+            </p>
           </div>
         </div>
       )}
       {loading ? (
-        <div>Đang tải...</div>
+        <LoadingDomain />
       ) : error ? (
         <div className="text-red-500">{error}</div>
       ) : data.length === 0 ? (
-        <div>Chưa có lịch sử tiếp thị nào.</div>
+        <div className="text-center">Chưa có lịch sử tiếp thị nào.</div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full border text-sm">
@@ -103,8 +110,14 @@ export default function AffiliateHistory() {
                 <tr key={item.order_id + idx} className="text-center">
                   <td className="px-4 py-2 border">{idx + 1}</td>
                   <td className="px-4 py-2 border">{item.order_id}</td>
-                  <td className="px-4 py-2 border font-semibold text-primary">{item.commission_amount.toLocaleString("vi-VN")} đ</td>
-                  <td className="px-4 py-2 border">{new Date(item.created_at).toLocaleString("vi-VN", { hour12: false })}</td>
+                  <td className="px-4 py-2 border font-semibold text-primary">
+                    {item.commission_amount.toLocaleString("vi-VN")} đ
+                  </td>
+                  <td className="px-4 py-2 border">
+                    {new Date(item.created_at).toLocaleString("vi-VN", {
+                      hour12: false,
+                    })}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -113,4 +126,4 @@ export default function AffiliateHistory() {
       )}
     </section>
   );
-} 
+}

@@ -45,28 +45,28 @@ Route::get('/', function () {
     //         "loginUrl" => "http://localhost:5173/auth/login"
     //     ],
     // ));
-    event(new SystemNotification(
-        'NOTIFICATION_PUBLIC', // Loại thông báo
-        [
-            "id"=> 3,
-            "type"=> 1,
-            "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
-            "published_at"=> "2025-06-25T15:53:26.000000Z",
-            "link"=> null,
-            "is_read"=> false,
+    // event(new SystemNotification(
+    //     'NOTIFICATION_PUBLIC', // Loại thông báo
+    //     [
+    //         "id"=> 3,
+    //         "type"=> 1,
+    //         "content"=> "Thông báo chung loại 1 khác. Đừng bỏ lỡ ưu đãi này!",
+    //         "published_at"=> "2025-06-25T15:53:26.000000Z",
+    //         "link"=> null,
+    //         "is_read"=> false,
         
-        ]
-    ));
-    event(new SystemNotification(
-        'NOTIFICATION_PRIVATE', // Loại thông báo
-        [
-            "id"=> 3,
-            "type"=> 1,
-            "content"=> "Thông báo chung loại 12 khác. Đừng bỏ lỡ ưu đãi này!",
-            "published_at"=> "2025-06-25T15:53:26.000000Z",
-            "link"=> null,
-            "is_read"=> false,
-            'user_id'=>5
-        ]
-    ));
+    //     ]
+    // ));
+    // event(new SystemNotification(
+    //     'NOTIFICATION_PRIVATE', // Loại thông báo
+    //     [
+    //         "id"=> 3,
+    //         "type"=> 1,
+    //         "content"=> "Thông báo chung loại 12 khác. Đừng bỏ lỡ ưu đãi này!",
+    //         "published_at"=> "2025-06-25T15:53:26.000000Z",
+    //         "link"=> null,
+    //         "is_read"=> false,
+    //         'user_id'=>5
+    //     ]
+    // ));
 });

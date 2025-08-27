@@ -228,7 +228,7 @@ const AccountListPage = () => {
 
       {/* Filter and Action Bar */}
       <div className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow-sm mb-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {/* Search Input */}
           <div className="relative sm:col-span-2 md:col-span-1">
             <Search
@@ -244,7 +244,7 @@ const AccountListPage = () => {
             />
           </div>
           {/* Filter by Role */}
-          {/* <select
+          <select
             name="role_id"
             value={filters.role_id}
             onChange={handleFilterChange}
@@ -256,7 +256,7 @@ const AccountListPage = () => {
                 {role.description || role.name}
               </option>
             ))}
-          </select> */}
+          </select>
           {/* Filter by Status */}
           <select
             name="status"

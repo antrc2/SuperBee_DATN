@@ -59,17 +59,17 @@ dayjs.extend(relativeTime);
 dayjs.locale("vi");
 // Render ứng dụng React
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <BrowserRouter>
-      <QueryClientProvider client={queryClient}>
-        <NotificationProvider>
-          <AppStatusProvider>
-            <AuthProvider>
-              <App />
-            </AuthProvider>
-          </AppStatusProvider>
-        </NotificationProvider>
-      </QueryClientProvider>
-    </BrowserRouter>
-  </StrictMode>
+  // <StrictMode>
+  <BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <NotificationProvider>
+        <AppStatusProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </AppStatusProvider>
+      </NotificationProvider>
+    </QueryClientProvider>
+  </BrowserRouter>
+  // </StrictMode>
 );

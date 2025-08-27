@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { LoaderCircle, ArrowLeft, Edit } from "lucide-react";
+import {
+  LoaderCircle,
+  ArrowLeft,
+  Edit,
+  Mail,
+  Phone,
+  UserSquare,
+} from "lucide-react";
 import api from "../../../utils/http";
 
 // --- Helper Components for Clean UI ---
@@ -22,13 +29,14 @@ const InfoCard = ({ title, children }) => (
 );
 
 // Component to display a single detail item (label and value)
-const DetailItem = ({ label, children }) => (
+const DetailItem = ({ label, children, icon: Icon }) => (
   <div className="py-3 sm:py-4 grid grid-cols-1 sm:grid-cols-3 sm:gap-4">
-    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-      {label}
+    <dt className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+      {Icon && <Icon size={14} className="text-gray-400" />}
+      <span>{label}</span>
     </dt>
     <dd className="mt-1 text-sm text-gray-900 dark:text-gray-100 sm:col-span-2 sm:mt-0">
-      {children}
+      {children || <span className="text-gray-400 italic">Chưa có</span>}
     </dd>
   </div>
 );
@@ -108,6 +116,13 @@ export default function ProductDetailPage() {
     fetchProductDetails();
   }, [id]);
 
+  // Calculate profit
+  const calculateProfit = (p) => {
+    const finalPrice = p.sale || p.price;
+    const profit = finalPrice - p.import_price;
+    return profit;
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-96">
@@ -157,13 +172,16 @@ export default function ProductDetailPage() {
             <ArrowLeft size={16} />
             <span>Quay lại</span>
           </Link>
-          <Link
-            to={`/admin/products/${product.id}/edit`}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
-          >
-            <Edit size={16} />
-            <span>Chỉnh sửa</span>
-          </Link>
+          {/* --- Conditionally render Edit button --- */}
+          {product.status !== 4 && (
+            <Link
+              to={`/admin/products/${product.id}/edit`}
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors shadow-sm"
+            >
+              <Edit size={16} />
+              <span>Chỉnh sửa</span>
+            </Link>
+          )}
         </div>
       </header>
 
@@ -180,18 +198,33 @@ export default function ProductDetailPage() {
             <DetailItem label="Giá sale">
               {product.sale ? `${product.sale.toLocaleString()}đ` : "Không có"}
             </DetailItem>
+            <DetailItem label="Mô tả">
+              {product.description || "Không có mô tả"}
+            </DetailItem>
+          </InfoCard>
+
+          <InfoCard title="Phân Tích & Trạng Thái">
             <DetailItem label="Trạng thái">
               <StatusBadge status={product.status} />
             </DetailItem>
-            <DetailItem label="Mô tả">
-              {product.description || "Không có mô tả"}
+            {product.status === 0 && ( // Assuming 0 is the 'rejected' status
+              <DetailItem label="Lý do từ chối">
+                <span className="text-red-600 dark:text-red-400 font-medium">
+                  {product.refusal_reason}
+                </span>
+              </DetailItem>
+            )}
+            <DetailItem label="Lợi nhuận">
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                {`${calculateProfit(product).toLocaleString()}đ`}
+              </span>
             </DetailItem>
           </InfoCard>
 
           {product.game_attributes && product.game_attributes.length > 0 && (
             <InfoCard title="Thuộc tính riêng">
               {product.game_attributes.map((attr) => (
-                <DetailItem key={attr.id} label={attr.attribute_key}>
+                <DetailItem key={attr.id} label={attr.attribute_key.trim()}>
                   {attr.attribute_value}
                 </DetailItem>
               ))}
@@ -199,11 +232,20 @@ export default function ProductDetailPage() {
           )}
 
           {product.credentials && product.credentials.length > 0 && (
-            <InfoCard title="Thông tin đăng nhập">
+            <InfoCard title="Thông tin xác thực tài khoản (Nhạy cảm)">
               {product.credentials.map((cred) => (
                 <React.Fragment key={cred.id}>
-                  <DetailItem label="Tài khoản">{cred.username}</DetailItem>
+                  <DetailItem label="Tài khoản" icon={UserSquare}>
+                    {cred.username}
+                  </DetailItem>
                   <DetailItem label="Mật khẩu">{cred.password}</DetailItem>
+                  <DetailItem label="Email" icon={Mail}>
+                    {cred.email}
+                  </DetailItem>
+                  <DetailItem label="Số điện thoại" icon={Phone}>
+                    {cred.phone}
+                  </DetailItem>
+                  <DetailItem label="CCCD">{cred.cccd}</DetailItem>
                 </React.Fragment>
               ))}
             </InfoCard>
@@ -231,18 +273,30 @@ export default function ProductDetailPage() {
             </InfoCard>
           )}
 
-          <InfoCard title="Thông tin bổ sung">
+          <InfoCard title="Thông tin quản lý">
             <DetailItem label="Ngày tạo">
               {new Date(product.created_at).toLocaleString("vi-VN")}
             </DetailItem>
-            <DetailItem label="Cập nhật lần cuối">
+            <DetailItem label="Cập nhật cuối">
               {new Date(product.updated_at).toLocaleString("vi-VN")}
             </DetailItem>
             <DetailItem label="Người tạo">
-              {product.creator?.username || "Không rõ"}
+              <div>{product.creator?.username}</div>
+              <div className="text-xs text-gray-500">
+                {product.creator?.email}
+              </div>
+              <div className="text-xs text-gray-500">
+                {product.creator?.phone}
+              </div>
             </DetailItem>
             <DetailItem label="Người sửa">
-              {product.updater?.username || "Chưa có"}
+              <div>{product.updater?.username}</div>
+              <div className="text-xs text-gray-500">
+                {product.updater?.email}
+              </div>
+              <div className="text-xs text-gray-500">
+                {product.updater?.phone}
+              </div>
             </DetailItem>
           </InfoCard>
         </div>

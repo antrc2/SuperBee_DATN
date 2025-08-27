@@ -18,7 +18,7 @@ export default function ShopAccount() {
       <div className="px-4">
         <ListCategoryCon
           items={homeData?.data?.categories?.onlyChildren}
-          count={9}
+          count={1000}
         />
       </div>
     </div>

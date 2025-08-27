@@ -47,6 +47,8 @@ export default function Header() {
   const { homeData } = useHome();
   const categories = homeData?.data?.categories ?? [];
   const isLogin = user != null;
+  const khuyenmainapthe = homeData?.data?.napthe?.amount ?? null;
+  console.log("🚀 ~ Header ~ khuyenmainapthe:", khuyenmainapthe);
 
   // Refs
   const mobileMenuRef = useRef(null);
@@ -170,13 +172,23 @@ export default function Header() {
             <SearchBar />
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              to="/recharge-atm"
-              className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-warning px-4 py-2.5 lg:px-5 lg:py-3 text-sm font-bold text-accent-contrast shadow-lg hover:shadow-orange-400/25 transition-all duration-300 transform hover:scale-105 border-hover"
-            >
-              <CreditCard size={18} />
-              <span className="hidden lg:inline"> Nạp Tiền</span>
-            </Link>
+            <div className="relative inline-block">
+              <Link
+                to="/recharge-atm"
+                className="hidden sm:flex items-center gap-2 rounded-full bg-gradient-warning px-4 py-2.5 lg:px-5 lg:py-3 text-sm font-bold text-accent-contrast shadow-lg hover:shadow-orange-400/25 transition-all duration-300 transform hover:scale-105 border-hover"
+              >
+                <CreditCard size={18} />
+                <span className="hidden lg:inline"> Nạp Tiền</span>
+                {/* Nếu có khuyến mãi, chúng ta hiển thị nó trong badge thay vì ở trong nút */}
+              </Link>
+
+              {/* Đây là phần Badge khuyến mãi, chỉ hiện khi có giá trị */}
+              {khuyenmainapthe && (
+                <span className=" hidden sm:flex absolute -top-0 -right-3 z-10  h-6 w-auto min-w-[2.5rem] items-center justify-center rounded-full bg-red-500 px-2 py-1 text-xs font-bold text-white shadow-md animate-bounce">
+                  {khuyenmainapthe}%
+                </span>
+              )}
+            </div>
 
             <div ref={notificationMenuRef} className="relative">
               <button

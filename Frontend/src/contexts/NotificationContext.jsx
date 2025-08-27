@@ -11,138 +11,166 @@ import { Info, CheckCircle, XCircle, AlertCircle, X } from "lucide-react";
 
 const NotificationContext = createContext();
 
+// =================================================================================
+// CÁC TÙY CHỌN GIAO DIỆN (THEMES) - CHỌN 1 TRONG 3 BỘ DƯỚI ĐÂY
+// =================================================================================
+
+// -------- OPTION 1: Giao diện "Modern & Clean" (Hiện đại & Sạch sẽ) --------
+const toastTypes_Modern = {
+  s: {
+    // Success
+    Icon: CheckCircle,
+    style: "bg-emerald-50 text-emerald-800 border-l-4 border-emerald-500",
+    progressStyle: "bg-emerald-500",
+  },
+  e: {
+    // Error
+    Icon: XCircle,
+    style: "bg-rose-50 text-rose-800 border-l-4 border-rose-500",
+    progressStyle: "bg-rose-500",
+  },
+  i: {
+    // Info
+    Icon: Info,
+    style: "bg-sky-50 text-sky-800 border-l-4 border-sky-500",
+    progressStyle: "bg-sky-500",
+  },
+  w: {
+    // Warning
+    Icon: AlertCircle,
+    style: "bg-amber-50 text-amber-800 border-l-4 border-amber-500",
+    progressStyle: "bg-amber-500",
+  },
+};
+
+// -------- OPTION 2: Giao diện "Soft & Subtle" (Mềm mại & Tinh tế) --------
+const toastTypes_Soft = {
+  s: {
+    Icon: CheckCircle,
+    style: "bg-white text-slate-700 border border-slate-200 shadow-md",
+    iconColor: "text-green-500",
+    progressStyle: "bg-green-400",
+  },
+  e: {
+    Icon: XCircle,
+    style: "bg-white text-slate-700 border border-slate-200 shadow-md",
+    iconColor: "text-red-500",
+    progressStyle: "bg-red-400",
+  },
+  i: {
+    Icon: Info,
+    style: "bg-white text-slate-700 border border-slate-200 shadow-md",
+    iconColor: "text-blue-500",
+    progressStyle: "bg-blue-400",
+  },
+  w: {
+    Icon: AlertCircle,
+    style: "bg-white text-slate-700 border border-slate-200 shadow-md",
+    iconColor: "text-yellow-500",
+    progressStyle: "bg-yellow-400",
+  },
+};
+
+// -------- OPTION 3: Giao diện "Gradient & Bold" (Gradient & Táo bạo) --------
+const toastTypes_Gradient = {
+  s: {
+    Icon: CheckCircle,
+    style: "bg-gray-800 text-white border-l-4 border-green-400",
+    progressStyle: "bg-gradient-to-r from-green-400 to-teal-500",
+  },
+  e: {
+    Icon: XCircle,
+    style: "bg-gray-800 text-white border-l-4 border-red-500",
+    progressStyle: "bg-gradient-to-r from-red-500 to-pink-500",
+  },
+  i: {
+    Icon: Info,
+    style: "bg-gray-800 text-white border-l-4 border-blue-400",
+    progressStyle: "bg-gradient-to-r from-blue-400 to-indigo-500",
+  },
+  w: {
+    Icon: AlertCircle,
+    style: "bg-gray-800 text-white border-l-4 border-yellow-400",
+    progressStyle: "bg-gradient-to-r from-yellow-400 to-orange-500",
+  },
+};
+
 // Component Toast đơn lẻ để quản lý state và timer của riêng nó
 function Toast({ toast, onRemove }) {
   const [isExiting, setIsExiting] = useState(false);
 
-  // Hàm xử lý đóng toast (khi click nút X hoặc hết giờ)
   const handleClose = useCallback(() => {
-    setIsExiting(true); // Bắt đầu hiệu ứng thoát
-    // Sau khi hiệu ứng thoát hoàn thành (500ms), thực sự xóa toast khỏi DOM
-    const removeTimer = setTimeout(() => onRemove(toast.id), 500);
-    // Cleanup timer này nếu component bị unmount sớm
+    setIsExiting(true);
+    const removeTimer = setTimeout(() => onRemove(toast.id), 500); // Duration phải khớp với animation `toast-exit`
     return () => clearTimeout(removeTimer);
   }, [onRemove, toast.id]);
 
-  // useEffect giờ sẽ gọi handleClose
   useEffect(() => {
-    // Bắt đầu timer để tự động ẩn
     const timer = setTimeout(handleClose, toast.duration);
+    return () => clearTimeout(timer);
+  }, [toast.duration, handleClose]);
 
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [toast.duration, handleClose]); // Thêm handleClose vào dependency array
+  // *** CHỌN GIAO DIỆN BẠN MUỐN SỬ DỤNG TẠI ĐÂY ***
+  const toastTypes = toastTypes_Modern; // Thay đổi thành toastTypes_Soft hoặc toastTypes_Gradient nếu muốn
 
-  const toastTypes = {
-    s: {
-      // Success - Xanh Teal
-      Icon: CheckCircle,
-      style: {
-        backgroundColor: "#F0FDFA", // Nền
-        color: "#145369", // Chữ & Icon
-        borderLeft: "4px solid #0D9488",
-      },
-      progressStyle: {
-        backgroundColor: "#14B8A6", // Thanh tiến trình
-      },
-    },
-    e: {
-      // Error - Đỏ
-      Icon: XCircle,
-      style: {
-        backgroundColor: "#FEF2F2", // Nền
-        color: "#991B1B", // Chữ & Icon
-        borderLeft: "4px solid #DC2626",
-      },
-      progressStyle: {
-        backgroundColor: "#EF4444", // Thanh tiến trình
-      },
-    },
-    i: {
-      // Info - Chàm (Indigo)
-      Icon: Info,
-      style: {
-        backgroundColor: "#EEF2FF", // Nền
-        color: "#3730A3", // Chữ & Icon
-        borderLeft: "4px solid #4F46E5",
-      },
-      progressStyle: {
-        backgroundColor: "#6366F1", // Thanh tiến trình
-      },
-    },
-    w: {
-      // Warning - Vàng Hổ Phách (Amber)
-      Icon: AlertCircle,
-      style: {
-        backgroundColor: "#FFFBEB", // Nền
-        color: "#92400E", // Chữ & Icon
-        borderLeft: "4px solid #D97706",
-      },
-      progressStyle: {
-        backgroundColor: "#F59E0B", // Thanh tiến trình
-      },
-    },
-  };
-  const { Icon, style, progressStyle } = toastTypes[toast.type] || toastTypes.i;
+  const { Icon, style, progressStyle, iconColor } =
+    toastTypes[toast.type] || toastTypes.i;
 
   return (
     <div
       className={clsx(
-        "min-w-[320px] max-w-sm rounded-lg shadow-themed flex items-start relative overflow-hidden p-4", // Thêm padding p-4
+        "min-w-[320px] max-w-sm rounded-lg shadow-lg flex items-start relative overflow-hidden p-4",
         "toast-enter",
-        isExiting && "toast-exit"
+        isExiting && "toast-exit",
+        style // Áp dụng class style từ theme đã chọn
       )}
-      style={style} // Áp dụng style cho khung Toast
     >
-      <span className="mr-3 text-2xl flex-shrink-0 mt-[-2px]">
-        <Icon size={22} />
+      <span className={clsx("mr-3 text-2xl flex-shrink-0 mt-0.5", iconColor)}>
+        <Icon size={24} />
       </span>
-      <span className="flex-1 whitespace-pre-wrap font-semibold">
-        {toast.message}
-      </span>
+      <div className="flex-1">
+        <p className="font-semibold line-clamp-3">
+          {" "}
+          {/* Giới hạn 3 dòng */}
+          {toast.message}
+        </p>
+      </div>
 
-      {/* Nút X để đóng toast */}
       <button
         onClick={handleClose}
-        style={{ color: "inherit" }} // Thừa hưởng màu từ thẻ div cha
-        className="ml-2 p-1 rounded-full hover:bg-black hover:bg-opacity-10 flex-shrink-0"
+        className="ml-2 p-1 rounded-full hover:bg-black/10 flex-shrink-0 -mt-1 -mr-1"
         aria-label="Đóng thông báo"
       >
         <X size={18} />
       </button>
 
       <div
-        className="absolute bottom-0 left-0 h-1 progress-bar-animate"
-        style={{
-          ...progressStyle,
-          animationDuration: `${toast.duration}ms`,
-        }}
+        className={clsx(
+          "absolute bottom-0 left-0 h-1 progress-bar-animate",
+          progressStyle
+        )}
+        style={{ animationDuration: `${toast.duration}ms` }}
       />
     </div>
   );
 }
 
 export function NotificationProvider({ children }) {
-  // notificationQueue chứa TOÀN BỘ hàng đợi thông báo
   const [notificationQueue, setNotificationQueue] = useState([]);
   const [confirmState, setConfirmState] = useState(null);
   const [alertState, setAlertState] = useState(null);
   const idRef = useRef(0);
 
-  // Hàm `remove` để xóa một thông báo khỏi hàng đợi
   const remove = useCallback((id) => {
     setNotificationQueue((prevQueue) => prevQueue.filter((n) => n.id !== id));
   }, []);
 
-  // Hàm `pop` giờ chỉ có nhiệm vụ THÊM thông báo vào đầu hàng đợi
   const pop = useCallback((message, type = "i", duration = 4000) => {
     idRef.current += 1;
     const newToast = { id: idRef.current, message, type, duration };
-    setNotificationQueue((prevQueue) => [newToast, ...prevQueue]); // Thêm vào ĐẦU hàng đợi
+    setNotificationQueue((prevQueue) => [newToast, ...prevQueue]);
   }, []);
 
-  // Các hàm cho Modal (Confirm, Alert)
   const conFim = useCallback((message) => {
     return new Promise((resolve) => setConfirmState({ message, resolve }));
   }, []);
@@ -165,23 +193,23 @@ export function NotificationProvider({ children }) {
     }
   };
 
-  // Chỉ lấy tối đa 10 thông báo từ ĐẦU hàng đợi để hiển thị
-  const visibleToasts = notificationQueue.slice(0, 10);
+  // *** THAY ĐỔI: Chỉ lấy tối đa 5 thông báo để hiển thị ***
+  const visibleToasts = notificationQueue.slice(0, 5);
 
   return (
     <NotificationContext.Provider value={{ pop, conFim, showAlert }}>
       {children}
 
       {/* Container cho các thông báo Toast */}
-      <div className="fixed top-20 right-4 z-[9999] flex flex-col items-end space-y-3">
+      <div className="fixed top-28 right-5 z-[9999] flex flex-col items-end space-y-3">
         {visibleToasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onRemove={remove} />
         ))}
       </div>
 
-      {/* Hộp thoại xác nhận (Confirm Modal) */}
+      {/* Hộp thoại xác nhận (Confirm Modal) - Giao diện mới */}
       {confirmState && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 modal-enter">
           <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">
             <p className="mb-6 text-lg text-primary">{confirmState.message}</p>
             <div className="flex justify-center space-x-4">
@@ -204,7 +232,7 @@ export function NotificationProvider({ children }) {
 
       {/* Hộp thoại thông báo (Alert Modal) */}
       {alertState && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[9999]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 modal-enter">
           <div className="bg-input p-6 rounded-lg shadow-themed max-w-sm w-full text-center m-4">
             <p className="mb-6 text-lg text-primary">{alertState.message}</p>
             <button
@@ -220,7 +248,6 @@ export function NotificationProvider({ children }) {
   );
 }
 
-// Hook tùy chỉnh để sử dụng các hàm thông báo
 export function useNotification() {
   const context = useContext(NotificationContext);
   if (!context) {

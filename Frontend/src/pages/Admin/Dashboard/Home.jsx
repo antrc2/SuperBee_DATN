@@ -34,6 +34,7 @@ import {
   PieChartIcon,
   HistoryIcon,
   Coins,
+  Percent,
 } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -44,12 +45,14 @@ const Dashboard = () => {
   const [statistics, setStatistics] = useState(null);
   const [comparison, setComparison] = useState(null);
   const [availablePeriods, setAvailablePeriods] = useState([]);
+  const [availableFilterPeriods, setAvailableFilterPeriods] = useState([]);
+  const [selectedFilterPeriod, setSelectedFilterPeriod] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Filters
+  // Filters - Khởi tạo với ngày hiện tại
   const [filters, setFilters] = useState({
-    period: "month",
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+    period: "day",
+    startDate: new Date(),
     endDate: new Date(),
   });
 
@@ -69,7 +72,17 @@ const Dashboard = () => {
     "#82CA9D",
   ];
 
+  // Nhãn tiếng Việt cho các tùy chọn kỳ
+  const periodLabels = {
+    day: "Ngày",
+    week: "Tuần",
+    month: "Tháng",
+    quarter: "Quý",
+    year: "Năm",
+  };
+
   useEffect(() => {
+    // Gọi fetchStatistics ngay khi component mount với ngày hiện tại
     fetchStatistics();
   }, []);
 
@@ -79,7 +92,29 @@ const Dashboard = () => {
     }
   }, [activeTab, compareFilters.periodType]);
 
+  useEffect(() => {
+    if (filters.period !== "day") {
+      fetchFilterPeriods();
+    } else {
+      setAvailableFilterPeriods([]);
+      setSelectedFilterPeriod(null);
+    }
+  }, [filters.period]);
+
+  const fetchFilterPeriods = async () => {
+    try {
+      const response = await api.get("/admin/dashboard/available-periods", {
+        params: { period_type: filters.period },
+      });
+      setAvailableFilterPeriods(response.data.data);
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách kỳ:", error);
+    }
+  };
+
   const fetchStatistics = async () => {
+    if (!filters.startDate || !filters.endDate) return;
+
     setLoading(true);
     try {
       const formatDate = (date) => {
@@ -118,7 +153,7 @@ const Dashboard = () => {
       const response = await api.post("/admin/dashboard/compare", data);
       setComparison(response.data.data);
     } catch (error) {
-      console.error("Error fetching comparison:", error);
+      console.error("Lỗi khi lấy dữ liệu so sánh:", error);
     } finally {
       setLoading(false);
     }
@@ -131,7 +166,7 @@ const Dashboard = () => {
       });
       setAvailablePeriods(response.data.data);
     } catch (error) {
-      console.error("Error fetching periods:", error);
+      console.error("Lỗi khi lấy danh sách kỳ:", error);
     }
   };
 
@@ -139,45 +174,50 @@ const Dashboard = () => {
     setFilters((prev) => {
       const newFilters = { ...prev, [key]: value };
 
-      // Auto-adjust date range based on period
       if (key === "period") {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-
-        switch (value) {
-          case "day":
-            newFilters.startDate = new Date();
-            newFilters.endDate = new Date();
-            break;
-          case "week":
-            const weekStart = new Date(now);
-            weekStart.setDate(now.getDate() - now.getDay());
-            const weekEnd = new Date(weekStart);
-            weekEnd.setDate(weekStart.getDate() + 6);
-            newFilters.startDate = weekStart;
-            newFilters.endDate = weekEnd;
-            break;
-          case "month":
-            newFilters.startDate = new Date(year, month, 1);
-            newFilters.endDate = new Date(year, month + 1, 0);
-            break;
-          case "quarter":
-            const quarter = Math.floor((month + 3) / 3);
-            const quarterStart = new Date(year, (quarter - 1) * 3, 1);
-            const quarterEnd = new Date(year, quarter * 3, 0);
-            newFilters.startDate = quarterStart;
-            newFilters.endDate = quarterEnd;
-            break;
-          case "year":
-            newFilters.startDate = new Date(year, 0, 1);
-            newFilters.endDate = new Date(year, 11, 31);
-            break;
+        if (value === "day") {
+          const today = new Date();
+          newFilters.startDate = today;
+          newFilters.endDate = today;
+          setSelectedFilterPeriod(null);
+          // Tự động gọi lại API khi chuyển sang ngày
+          fetchStatistics();
+        } else {
+          newFilters.startDate = null;
+          newFilters.endDate = null;
+          setSelectedFilterPeriod(null);
         }
       }
 
       return newFilters;
     });
+  };
+
+  const handlePeriodSelection = (e) => {
+    const period = availableFilterPeriods.find(
+      (p) => p.value === e.target.value
+    );
+    if (period) {
+      setSelectedFilterPeriod({
+        start: new Date(period.start),
+        end: new Date(period.end),
+        value: period.value,
+      });
+      setFilters((prev) => ({
+        ...prev,
+        startDate: new Date(period.start),
+        endDate: new Date(period.end),
+      }));
+      // Tự động gọi lại API khi chọn kỳ
+      fetchStatistics();
+    } else {
+      setSelectedFilterPeriod(null);
+      setFilters((prev) => ({
+        ...prev,
+        startDate: null,
+        endDate: null,
+      }));
+    }
   };
 
   const handleCompareFilterChange = (key, value) => {
@@ -271,7 +311,7 @@ const Dashboard = () => {
               >
                 {difference.absolute >= 0 ? "+" : ""}
                 {typeof difference.absolute === "number"
-                  ? formatNumber(difference.absolute)
+                  ? formatCurrency(difference.absolute)
                   : difference.absolute}
               </div>
               <div
@@ -295,8 +335,8 @@ const Dashboard = () => {
     { id: "performance", name: "Hiệu suất", icon: TrendingUpIcon },
     { id: "transactions", name: "Giao dịch nạp", icon: CreditCard },
     { id: "compare", name: "So sánh", icon: PieChartIcon },
-    { id: "history", name: "Lịch sử", icon: HistoryIcon },
   ];
+
   const renderTransactions = () => {
     if (!statistics || !statistics.transaction_details) return null;
 
@@ -358,40 +398,55 @@ const Dashboard = () => {
             onChange={(e) => handleFilterChange("period", e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="day">Ngày</option>
-            <option value="week">Tuần</option>
-            <option value="month">Tháng</option>
-            <option value="quarter">Quý</option>
-            <option value="year">Năm</option>
+            {Object.entries(periodLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
 
-          <div className="flex items-center gap-2">
-            <DatePicker
-              selected={filters.startDate}
-              onChange={(date) => handleFilterChange("startDate", date)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
-              dateFormat="yyyy-MM-dd"
-              showPopperArrow={false}
-              calendarClassName="shadow-lg border border-gray-200"
-              placeholderText="Ngày bắt đầu"
-            />
-            <span className="text-gray-500">đến</span>
-            <DatePicker
-              selected={filters.endDate}
-              onChange={(date) => handleFilterChange("endDate", date)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
-              dateFormat="yyyy-MM-dd"
-              showPopperArrow={false}
-              calendarClassName="shadow-lg border border-gray-200"
-              placeholderText="Ngày kết thúc"
-            />
-          </div>
+          {filters.period === "day" ? (
+            <div className="flex items-center gap-2">
+              <DatePicker
+                selected={filters.startDate}
+                onChange={(date) => handleFilterChange("startDate", date)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                dateFormat="yyyy-MM-dd"
+                showPopperArrow={false}
+                calendarClassName="shadow-lg border border-gray-200"
+                placeholderText="Ngày bắt đầu"
+              />
+              <span className="text-gray-500">đến</span>
+              <DatePicker
+                selected={filters.endDate}
+                onChange={(date) => handleFilterChange("endDate", date)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-32"
+                dateFormat="yyyy-MM-dd"
+                showPopperArrow={false}
+                calendarClassName="shadow-lg border border-gray-200"
+                placeholderText="Ngày kết thúc"
+              />
+            </div>
+          ) : (
+            <select
+              value={selectedFilterPeriod?.value || ""}
+              onChange={handlePeriodSelection}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Chọn {periodLabels[filters.period]}</option>
+              {availableFilterPeriods.map((period) => (
+                <option key={period.value} value={period.value}>
+                  {period.label}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={fetchStatistics}
-            disabled={loading}
+            disabled={loading || !filters.startDate || !filters.endDate}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 transition-colors"
           >
             <BarChart3 className="w-4 h-4" />
@@ -413,10 +468,13 @@ const Dashboard = () => {
               }
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
-              <option value="week">Tuần</option>
-              <option value="month">Tháng</option>
-              <option value="quarter">Quý</option>
-              <option value="year">Năm</option>
+              {Object.entries(periodLabels)
+                .filter(([value]) => value !== "day")
+                .map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
             </select>
 
             <select
@@ -499,10 +557,16 @@ const Dashboard = () => {
         {/* Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
-            title="Tổng doanh thu"
+            title="Tổng doanh thu (đã tính thuế)"
             value={formatCurrency(statistics.summary.total_revenue)}
             icon={Coins}
             color="green"
+          />
+          <StatCard
+            title="Tổng thuế"
+            value={formatCurrency(statistics.summary.total_tax)}
+            icon={Percent}
+            color="red"
           />
           <StatCard
             title="Tiền vốn"
@@ -516,15 +580,15 @@ const Dashboard = () => {
             icon={Target}
             color="emerald"
           />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Tổng đơn hàng"
             value={formatNumber(statistics.summary.total_orders)}
             icon={ShoppingCart}
             color="blue"
           />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Khách hàng mới"
             value={formatNumber(statistics.summary.total_new_customers)}
@@ -538,15 +602,9 @@ const Dashboard = () => {
             color="indigo"
           />
           <StatCard
-            title="Giao dịch nạp tiền"
-            value={formatNumber(statistics.summary.total_transaction_count)}
-            icon={CreditCard}
-            color="pink"
-          />
-          <StatCard
             title="Tổng tiền nạp"
             value={formatCurrency(statistics.summary.total_transaction_amount)}
-            icon={Users}
+            icon={CreditCard}
             color="cyan"
           />
         </div>
@@ -559,10 +617,10 @@ const Dashboard = () => {
 
     return (
       <div className="space-y-8">
-        {/* Revenue & Profit Chart */}
+        {/* Revenue, Tax & Profit Chart */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Biểu đồ doanh thu và lãi theo thời gian
+            Biểu đồ doanh thu, thuế và lãi theo thời gian
           </h3>
           <ResponsiveContainer width="100%" height={400}>
             <ComposedChart data={statistics.revenue_chart}>
@@ -570,18 +628,22 @@ const Dashboard = () => {
               <XAxis dataKey="period" />
               <YAxis tickFormatter={(value) => formatCurrency(value)} />
               <Tooltip
-                formatter={(value, name) => [
-                  formatCurrency(value),
-                  name === "total_revenue"
-                    ? "Doanh thu"
-                    : name === "total_cost"
-                    ? "Vốn"
-                    : "Lãi",
-                ]}
+                formatter={(value, name) => {
+                  const nameMap = {
+                    total_revenue: "Doanh thu (chưa thuế)",
+                    total_tax: "Thuế",
+                    total_cost: "Vốn",
+                    total_profit: "Lãi",
+                  };
+
+                  return [formatCurrency(value), nameMap[name] || name];
+                }}
                 labelFormatter={(label) => `Kỳ: ${label}`}
               />
+
               <Legend />
               <Bar dataKey="total_cost" fill="#EF4444" name="Vốn" />
+              <Bar dataKey="total_tax" fill="#F87171" name="Thuế" />
               <Bar dataKey="total_profit" fill="#10B981" name="Lãi" />
               <Line
                 type="monotone"
@@ -611,12 +673,17 @@ const Dashboard = () => {
               <XAxis dataKey="period" />
               <YAxis />
               <Tooltip
-                formatter={(value, name) => [
-                  formatNumber(value),
-                  name === "total_orders" ? "Đơn hàng" : "Khách hàng mới",
-                ]}
+                formatter={(value, name) => {
+                  const nameMap = {
+                    total_orders: "Đơn hàng",
+                    new_customers: "Khách hàng mới",
+                  };
+
+                  return [formatNumber(value), nameMap[name] || name];
+                }}
                 labelFormatter={(label) => `Kỳ: ${label}`}
               />
+
               <Legend />
               <Bar dataKey="total_orders" fill="#F59E0B" name="Đơn hàng" />
               <Line
@@ -629,31 +696,6 @@ const Dashboard = () => {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
-
-        {/* Transaction Statistics */}
-        {/* <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Thống kê giao dịch nạp tiền
-          </h3>
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart data={statistics.transaction_stats}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="period" />
-              <YAxis tickFormatter={(value) => formatCurrency(value)} />
-              <Tooltip
-                formatter={(value, name) => [
-                  name === "total_amount"
-                    ? formatCurrency(value)
-                    : formatNumber(value),
-                  name === "total_amount" ? "Tổng tiền nạp" : "Số giao dịch",
-                ]}
-                labelFormatter={(label) => `Kỳ: ${label}`}
-              />
-              <Legend />
-              <Bar dataKey="total_amount" fill="#06B6D4" name="Tổng tiền nạp" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div> */}
       </div>
     );
   };
@@ -676,8 +718,9 @@ const Dashboard = () => {
                     Danh mục
                   </th>
                   <th className="text-right py-3 px-2 font-semibold">
-                    Doanh thu
+                    Doanh thu (chưa thuế)
                   </th>
+                  <th className="text-right py-3 px-2 font-semibold">Thuế</th>
                   <th className="text-right py-3 px-2 font-semibold">Vốn</th>
                   <th className="text-right py-3 px-2 font-semibold">Lãi</th>
                   <th className="text-right py-3 px-2 font-semibold">
@@ -699,6 +742,9 @@ const Dashboard = () => {
                     </td>
                     <td className="py-3 px-2 text-right">
                       {formatCurrency(category.revenue)}
+                    </td>
+                    <td className="py-3 px-2 text-right text-red-600">
+                      {formatCurrency(category.tax)}
                     </td>
                     <td className="py-3 px-2 text-right text-orange-600">
                       {formatCurrency(category.cost)}
@@ -749,7 +795,9 @@ const Dashboard = () => {
               data={[
                 {
                   name: comparison.period_2.label,
-                  "Doanh thu": comparison.period_2.stats.total_revenue,
+                  "Doanh thu (chưa thuế)":
+                    comparison.period_2.stats.total_revenue,
+                  Thuế: comparison.period_2.stats.total_tax,
                   "Tiền lãi": comparison.period_2.stats.total_profit,
                   "Đơn hàng": comparison.period_2.stats.total_orders * 10000,
                   "Khách hàng mới":
@@ -757,7 +805,9 @@ const Dashboard = () => {
                 },
                 {
                   name: comparison.period_1.label,
-                  "Doanh thu": comparison.period_1.stats.total_revenue,
+                  "Doanh thu (chưa thuế)":
+                    comparison.period_1.stats.total_revenue,
+                  Thuế: comparison.period_1.stats.total_tax,
                   "Tiền lãi": comparison.period_1.stats.total_profit,
                   "Đơn hàng": comparison.period_1.stats.total_orders * 10000,
                   "Khách hàng mới":
@@ -776,7 +826,8 @@ const Dashboard = () => {
                 }}
               />
               <Legend />
-              <Bar dataKey="Doanh thu" fill="#3B82F6" />
+              <Bar dataKey="Doanh thu (chưa thuế)" fill="#3B82F6" />
+              <Bar dataKey="Thuế" fill="#F87171" />
               <Bar dataKey="Tiền lãi" fill="#10B981" />
               <Bar dataKey="Đơn hàng" fill="#F59E0B" />
               <Bar dataKey="Khách hàng mới" fill="#8B5CF6" />
@@ -787,11 +838,18 @@ const Dashboard = () => {
         {/* Comparison Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <ComparisonCard
-            title="Doanh thu"
+            title="Doanh thu (chưa thuế)"
             period1={formatCurrency(comparison.period_1.stats.total_revenue)}
             period2={formatCurrency(comparison.period_2.stats.total_revenue)}
             difference={comparison.differences.revenue}
             icon={DollarSign}
+          />
+          <ComparisonCard
+            title="Thuế"
+            period1={formatCurrency(comparison.period_1.stats.total_tax)}
+            period2={formatCurrency(comparison.period_2.stats.total_tax)}
+            difference={comparison.differences.tax}
+            icon={Percent}
           />
           <ComparisonCard
             title="Đơn hàng"
@@ -823,126 +881,6 @@ const Dashboard = () => {
     );
   };
 
-  const renderHistory = () => {
-    if (!statistics) return null;
-
-    return (
-      <div className="space-y-8">
-        {/* Revenue Timeline */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Lịch sử doanh thu theo thời gian
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-2 font-semibold">Kỳ</th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Doanh thu
-                  </th>
-                  <th className="text-right py-3 px-2 font-semibold">Vốn</th>
-                  <th className="text-right py-3 px-2 font-semibold">Lãi</th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Đơn hàng
-                  </th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Tỷ suất lãi (%)
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {statistics.revenue_chart
-                  .slice()
-                  .reverse()
-                  .map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-2 font-medium">{item.period}</td>
-                      <td className="py-3 px-2 text-right">
-                        {formatCurrency(item.total_revenue)}
-                      </td>
-                      <td className="py-3 px-2 text-right text-orange-600">
-                        {formatCurrency(item.total_cost)}
-                      </td>
-                      <td className="py-3 px-2 text-right text-green-600">
-                        {formatCurrency(item.total_profit)}
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        {formatNumber(item.total_orders)}
-                      </td>
-                      <td className="py-3 px-2 text-right font-medium">
-                        {item.total_cost > 0
-                          ? (
-                              (item.total_profit / item.total_cost) *
-                              100
-                            ).toFixed(1)
-                          : 0}
-                        %
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        {/* Transaction History */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Lịch sử giao dịch nạp tiền
-          </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b-2 border-gray-200">
-                  <th className="text-left py-3 px-2 font-semibold">Kỳ</th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Tổng tiền nạp
-                  </th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Số giao dịch
-                  </th>
-                  <th className="text-right py-3 px-2 font-semibold">
-                    Trung bình/giao dịch
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {statistics.transaction_stats
-                  .slice()
-                  .reverse()
-                  .map((item, index) => (
-                    <tr
-                      key={index}
-                      className="border-b hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="py-3 px-2 font-medium">{item.period}</td>
-                      <td className="py-3 px-2 text-right text-blue-600">
-                        {formatCurrency(item.total_amount)}
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        {formatNumber(item.total_transactions)}
-                      </td>
-                      <td className="py-3 px-2 text-right">
-                        {formatCurrency(
-                          item.total_transactions > 0
-                            ? item.total_amount / item.total_transactions
-                            : 0
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderTabContent = () => {
     if (loading) {
       return (
@@ -961,11 +899,8 @@ const Dashboard = () => {
         return renderPerformance();
       case "transactions":
         return renderTransactions();
-
       case "compare":
         return renderComparison();
-      case "history":
-        return renderHistory();
       default:
         return renderOverview();
     }

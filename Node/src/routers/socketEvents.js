@@ -76,6 +76,9 @@ const setupSocketEvents = (io) => {
       }
     });
 
+    // src/routers/socketEvents.js
+
+    // ...
     socket.on("send_chat_message", async (payload, callback) => {
       const { roomId, senderId, content } = payload;
       console.log(
@@ -97,6 +100,16 @@ const setupSocketEvents = (io) => {
         console.log(
           `[socketEvents.js] Lưu tin nhắn thành công. Message ID mới: ${savedMessage.id}`
         );
+
+        // =====================================================================
+        // === THÊM ĐOẠN LOG NÀY ĐỂ DEBUG ===
+        // =====================================================================
+        const clientsInRoom = io.sockets.adapter.rooms.get(roomId.toString());
+        console.log(
+          `[DEBUG] Các socket ID trong phòng ${roomId}:`,
+          clientsInRoom
+        );
+        // =====================================================================
 
         console.log(
           `[socketEvents.js] <- Phát sự kiện 'new_chat_message' tới tất cả client trong phòng ${roomId}`
@@ -126,6 +139,7 @@ const setupSocketEvents = (io) => {
           });
       }
     });
+    // ...
 
     socket.on("mark_chat_as_read", async ({ roomId, messageId }, callback) => {
       console.log(

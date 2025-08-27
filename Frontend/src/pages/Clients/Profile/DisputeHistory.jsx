@@ -21,8 +21,9 @@ import {
 } from "lucide-react";
 import api from "../../../utils/http";
 import LoadingCon from "@components/Loading/LoadingCon";
-import { useAuth } from "@contexts/AuthContext"; // Giả định bạn có context này
+import { useAuth } from "@contexts/AuthContext";
 import { useChat } from "../../../contexts/ChatContext";
+import { getSocket } from "../../../utils/socket"; // <-- ĐÃ THÊM IMPORT NÀY
 
 // =====================================================================
 // COMPONENT POPUP XEM MEDIA (LIGHTBOX)
@@ -72,22 +73,36 @@ const MediaLightbox = ({ url, onClose }) => {
 };
 
 // =====================================================================
-// COMPONENT POPUP CHI TIẾT KHIẾU NẠI (MODAL) - ĐÃ VIẾT LẠI HOÀN TOÀN
+// COMPONENT POPUP CHI TIẾT KHIẾU NẠI (MODAL) - ĐÃ CẬP NHẬT
 // =====================================================================
 const DisputeDetailModal = ({ dispute, onClose }) => {
   const { user: currentUser } = useAuth();
   const { sendChatMessageDis, setMessages, messages } = useChat();
   const [chatMessage, setChatMessage] = useState("");
   const [lightboxUrl, setLightboxUrl] = useState(null);
-
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef(null);
 
+  // === THAY ĐỔI CHÍNH NẰM Ở ĐÂY ===
   useEffect(() => {
+    // Cập nhật tin nhắn từ props vào state của context
     if (dispute?.chatInfo?.messages) {
       setMessages(dispute.chatInfo.messages);
     }
-  }, [dispute]);
+
+    // === GIẢI PHÁP: THAM GIA PHÒNG CHAT KHI MODAL MỞ ===
+    const roomId = dispute?.chatInfo?.roomInfo?.id;
+    if (roomId) {
+      const socket = getSocket(); // Lấy instance socket đã được khởi tạo
+      if (socket) {
+        console.log(
+          `[DisputeDetailModal] Người dùng đang tham gia phòng chat: ${roomId}`
+        );
+        socket.emit("join_chat_room", roomId); // Gửi sự kiện tham gia phòng
+      }
+    }
+    // =================================================
+  }, [dispute, setMessages]); // Thêm `setMessages` vào dependency array
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -102,12 +117,8 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
 
     setIsSending(true);
     try {
-      // THAY THẾ BẰNG API GỬI TIN NHẮN THỰC TẾ
-      // const response = await api.post(`/chat/disputes/${dispute.id}/messages`, { content: chatMessage });
-      // setMessages(prev => [...prev, response.data.data]);
-
       const newMessage = {
-        id: Date.now(),
+        id: Date.now(), // ID tạm thời để render UI ngay lập tức
         content: chatMessage,
         sender_id: currentUser.id,
         created_at: new Date().toISOString(),
@@ -115,8 +126,10 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
       };
       const trimmedMessage = chatMessage.trim();
       if (trimmedMessage && roomId) {
+        // Gửi tin nhắn qua socket
         sendChatMessageDis(trimmedMessage, roomId);
       }
+      // Cập nhật UI ngay lập tức
       setMessages((prev) => [...prev, newMessage]);
       setChatMessage("");
     } catch (error) {
@@ -287,7 +300,7 @@ const DisputeDetailModal = ({ dispute, onClose }) => {
                     >
                       {!isOwnMessage && (
                         <img
-                          src={sender?.avatar}
+                          src={sender?.avatar_url}
                           alt="agent"
                           className="w-8 h-8 rounded-full object-cover"
                         />

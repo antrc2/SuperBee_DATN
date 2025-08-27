@@ -24,9 +24,9 @@ class EmployeeController extends Controller
     public function index(Request $request)
     {
         
-        if ($request->user()->cannot('employees.view')) {
-            abort(403, 'Bạn không có quyền xem danh sách nhân viên.');
-        }
+        // if ($request->user()->cannot('employees.view')) {
+        //     abort(403, 'Bạn không có quyền xem danh sách nhân viên.');
+        // }
 
         $query = Employee::query()->with(['user.roles', 'agentAssignment.agent']);
 
@@ -54,9 +54,9 @@ class EmployeeController extends Controller
      */
     public function show(Request $request, $id)
     {
-        if ($request->user()->cannot('employees.view')) {
-            abort(403, 'Bạn không có quyền xem thông tin nhân viên.');
-        }
+        // if ($request->user()->cannot('employees.view')) {
+        //     abort(403, 'Bạn không có quyền xem thông tin nhân viên.');
+        // }
 
         $employee = Employee::findOrFail($id);
         $employee->load(['user.roles', 'agentAssignment.agent']);
@@ -83,9 +83,9 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        if ($request->user()->cannot('employees.create')) {
-            abort(403, 'Bạn không có quyền tạo nhân viên mới.');
-        }
+        // if ($request->user()->cannot('employees.create')) {
+        //     abort(403, 'Bạn không có quyền tạo nhân viên mới.');
+        // }
 
         $validatedData = $request->validate([
             'username' => 'required|string|max:255|unique:users,username',
@@ -165,9 +165,9 @@ class EmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        if ($request->user()->cannot('employees.edit')) {
-            abort(403, 'Bạn không có quyền chỉnh sửa nhân viên.');
-        }
+        // if ($request->user()->cannot('employees.edit')) {
+        //     abort(403, 'Bạn không có quyền chỉnh sửa nhân viên.');
+        // }
 
         $employee = Employee::findOrFail($id);
         $user = $employee->user;
@@ -271,9 +271,9 @@ class EmployeeController extends Controller
      */
     public function updateStatus(Request $request, $id)
     {
-        if ($request->user()->cannot('employees.edit')) {
-            abort(403, 'Bạn không có quyền chỉnh sửa nhân viên.');
-        }
+        // if ($request->user()->cannot('employees.edit')) {
+        //     abort(403, 'Bạn không có quyền chỉnh sửa nhân viên.');
+        // }
 
         $validatedData = $request->validate([
             'reassign_to_employee_id' => 'nullable|integer|exists:employees,id',
@@ -345,9 +345,9 @@ class EmployeeController extends Controller
      */
     public function destroy(Request $request, $id)
     {
-        if ($request->user()->cannot('employees.delete')) {
-            abort(403, 'Bạn không có quyền vô hiệu hóa nhân viên.');
-        }
+        // if ($request->user()->cannot('employees.delete')) {
+        //     abort(403, 'Bạn không có quyền vô hiệu hóa nhân viên.');
+        // }
 
         $employee = Employee::findOrFail($id);
         $user = $employee->user;
@@ -425,9 +425,9 @@ class EmployeeController extends Controller
      */
     public function createAgentSlot(Request $request)
     {
-        if ($request->user()->cannot('employees.create')) {
-            abort(403, 'Bạn không có quyền tạo vị trí mới.');
-        }
+        // if ($request->user()->cannot('employees.create')) {
+        //     abort(403, 'Bạn không có quyền tạo vị trí mới.');
+        // }
 
         $validatedData = $request->validate([
             'display_name' => 'required|string|max:255',

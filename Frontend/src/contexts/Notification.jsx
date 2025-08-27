@@ -27,6 +27,7 @@ export function NotificationListenerProvider({ children }) {
     const socket = getSocket();
     socketRef.current = socket;
     const public_notifications = (data) => {
+      handleNewNotification(data?.data?.type ?? null);
       const message = data.data.content ?? "không xác định";
       pop(message, "s");
       setNotifications((prevNotifications) => {
@@ -44,6 +45,7 @@ export function NotificationListenerProvider({ children }) {
       });
     };
     const private_notifications = (data) => {
+      handleNewNotification(data?.data?.type ?? null);
       const message = data.data.content ?? "không xác định";
       pop(message, "s");
       setNotifications((prevNotifications) => {
@@ -60,20 +62,12 @@ export function NotificationListenerProvider({ children }) {
       });
     };
     // Hàm xử lý khi có thông báo mới
-    const handleNewNotification = (payload) => {
-      console.log("🚀 ~ handleNewNotification ~ payload:", payload);
-
-      const newNotification = payload.data;
-      if (!newNotification || !newNotification.content) return;
-
-      console.log("Nhận được Alert:", newNotification);
-
-      // SỬ DỤNG SWITCH-CASE ĐỂ QUYẾT ĐỊNH LOẠI ALERT
-      // Dựa vào `newNotification.type` từ Laravel
-      let alertType = "info"; // Mặc định là 'info'
-      switch (newNotification.type) {
+    const handleNewNotification = (type) => {
+      let alertType = "info";
+      switch (type) {
         case 1: // Khuyến mãi - Giảm giá
           alertType = "success";
+
           break;
         case 2: // Bảo trì hệ thống
           alertType = "warning";
@@ -91,9 +85,6 @@ export function NotificationListenerProvider({ children }) {
           alertType = "info";
           break;
       }
-
-      // Gọi hàm `pop` để hiển thị alert với nội dung và loại tương ứng
-      pop(newNotification.content, alertType);
     };
 
     // Lắng nghe sự kiện từ server Node.js

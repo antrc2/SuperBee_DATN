@@ -96,7 +96,7 @@ export function CartProvider({ children }) {
         setCartItems((prevItems) =>
           prevItems.filter((item) => item.id !== itemId)
         );
-        pop("Xóa sản phẩm thành công", "s");
+        // pop("Xóa sản phẩm thành công", "s");
       } catch (error) {
         console.error(`Lỗi khi xóa sản phẩm ${itemId}:`, error);
         pop("Xóa sản phẩm thất bại, vui lòng thử lại.", "e");

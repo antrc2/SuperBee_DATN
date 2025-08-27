@@ -23,8 +23,9 @@ class DashboardController extends Controller
         $startDate = Carbon::parse($request->start_date);
         $endDate = Carbon::parse($request->end_date)->endOfDay();
         $webId = $request->web_id;
+        $taxStartDate = Carbon::create(2025, 7, 1); // Tax applies from July 1, 2025
 
-        // Base query cho orders
+        // Base query for orders
         $baseQuery = DB::table('orders')
             ->join('order_items', 'orders.id', '=', 'order_items.order_id')
             ->join('products', 'order_items.product_id', '=', 'products.id')
@@ -37,13 +38,29 @@ class DashboardController extends Controller
 
         $periodFormat = $this->getPeriodFormat($period);
 
-        // Revenue chart
+        // Revenue chart with tax adjustment
         $revenueStats = (clone $baseQuery)
             ->select(
                 DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}') as period"),
-                DB::raw('SUM(order_items.unit_price) as total_revenue'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                        ELSE order_items.unit_price
+                    END
+                ) as total_revenue'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) * 0.1
+                        ELSE 0
+                    END
+                ) as total_tax'),
                 DB::raw('SUM(products.import_price) as total_cost'),
-                DB::raw('SUM(order_items.unit_price - products.import_price) as total_profit'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) - products.import_price
+                        ELSE order_items.unit_price - products.import_price
+                    END
+                ) as total_profit'),
                 DB::raw('COUNT(DISTINCT orders.id) as total_orders'),
                 DB::raw('COUNT(order_items.id) as total_items')
             )
@@ -51,21 +68,36 @@ class DashboardController extends Controller
             ->orderBy(DB::raw("DATE_FORMAT(orders.created_at, '{$periodFormat}')"))
             ->get();
 
-        // Category performance
+        // Category performance with tax adjustment
         $categoryStats = (clone $baseQuery)
             ->join('categories', 'products.category_id', '=', 'categories.id')
             ->select(
                 'categories.name as category_name',
-                DB::raw('SUM(order_items.unit_price) as revenue'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                        ELSE order_items.unit_price
+                    END
+                ) as revenue'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) * 0.1
+                        ELSE 0
+                    END
+                ) as tax'),
                 DB::raw('SUM(products.import_price) as cost'),
-                DB::raw('SUM(order_items.unit_price - products.import_price) as profit'),
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) - products.import_price
+                        ELSE order_items.unit_price - products.import_price
+                    END
+                ) as profit'),
                 DB::raw('COUNT(order_items.id) as items_sold'),
                 DB::raw('(SELECT COUNT(*) FROM products p WHERE p.category_id = categories.id AND p.status = 1) as available_products')
             )
             ->groupBy('categories.id', 'categories.name')
             ->orderBy('revenue', 'desc')
             ->get();
-
 
         // Transaction stats
         $transactionQuery = DB::table('wallet_transactions')
@@ -85,7 +117,6 @@ class DashboardController extends Controller
             });
         }
 
-
         $transactionStats = $transactionQuery
             ->select(
                 DB::raw("DATE_FORMAT(created_at, '{$periodFormat}') as period"),
@@ -96,7 +127,6 @@ class DashboardController extends Controller
             ->groupBy(DB::raw("DATE_FORMAT(created_at, '{$periodFormat}')"), 'type')
             ->orderBy(DB::raw("DATE_FORMAT(created_at, '{$periodFormat}')"))
             ->get();
-
 
         // Transaction details
         $transactionDetailsQuery = DB::table('wallet_transactions')
@@ -114,16 +144,25 @@ class DashboardController extends Controller
                 'wallets.user_id',
                 'users.username as user_name'
             )
-            ->orderBy('wallet_transactions.created_at', 'desc') // Phải đặt ở đây
+            ->orderBy('wallet_transactions.created_at', 'desc')
             ->limit(100)
-            ->get(); // Lấy dữ liệu cuối cùng
-
-
+            ->get();
 
         $transactionDetails = $transactionDetailsQuery;
 
-        // Summary from orders
-        $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
+        // Summary from orders with tax adjustment
+        $totalRevenue = (clone $baseQuery)->sum(DB::raw(
+            'CASE
+                WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                ELSE order_items.unit_price
+            END'
+        ));
+        $totalTax = (clone $baseQuery)->sum(DB::raw(
+            'CASE
+                WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) * 0.1
+                ELSE 0
+            END'
+        ));
         $totalCost = (clone $baseQuery)->sum('products.import_price');
         $totalProfit = $totalRevenue - $totalCost;
         $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
@@ -156,8 +195,7 @@ class DashboardController extends Controller
             )
             ->havingBetween('first_order_date', [$startDate, $endDate]);
 
-
-        $totalNewCustomers = $newCustomersQuery->get()->count();;
+        $totalNewCustomers = $newCustomersQuery->get()->count();
         $totalRechargeCount = WalletTransaction::whereIn('type', ['recharge_card', 'recharge_bank'])
             ->where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate])
@@ -167,21 +205,16 @@ class DashboardController extends Controller
             ->where('status', 1)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->sum('amount');
-        // Transaction totals (fallback if wallet_transactions is empty)
+
         $totalTransactionAmount = $totalRechargeAmount;
         $totalTransactionCount = $totalRechargeCount;
-
-        if ($totalTransactionAmount == 0 && $totalTransactionCount == 0) {
-            // Fallback: use orders
-            $totalTransactionAmount = (clone $baseQuery)->sum('order_items.unit_price');
-            $totalTransactionCount = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
-        }
 
         return response()->json([
             'success' => true,
             'data' => [
                 'summary' => [
                     'total_revenue' => $totalRevenue,
+                    'total_tax' => $totalTax,
                     'total_cost' => $totalCost,
                     'total_profit' => $totalProfit,
                     'total_orders' => $totalOrders,
@@ -235,7 +268,6 @@ class DashboardController extends Controller
             ->get();
     }
 
-
     public function compareStatistics(Request $request)
     {
         $request->validate([
@@ -280,6 +312,11 @@ class DashboardController extends Controller
                     'percentage' => $stats2['total_revenue'] > 0 ?
                         round((($stats1['total_revenue'] - $stats2['total_revenue']) / $stats2['total_revenue']) * 100, 2) : 0
                 ],
+                'tax' => [
+                    'absolute' => $stats1['total_tax'] - $stats2['total_tax'],
+                    'percentage' => $stats2['total_tax'] > 0 ?
+                        round((($stats1['total_tax'] - $stats2['total_tax']) / $stats2['total_tax']) * 100, 2) : 0
+                ],
                 'orders' => [
                     'absolute' => $stats1['total_orders'] - $stats2['total_orders'],
                     'percentage' => $stats2['total_orders'] > 0 ?
@@ -317,7 +354,18 @@ class DashboardController extends Controller
             $baseQuery->where('products.web_id', $webId);
         }
 
-        $totalRevenue = (clone $baseQuery)->sum('order_items.unit_price');
+        $totalRevenue = (clone $baseQuery)->sum(DB::raw(
+            'CASE
+                WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                ELSE order_items.unit_price
+            END'
+        ));
+        $totalTax = (clone $baseQuery)->sum(DB::raw(
+            'CASE
+                WHEN orders.created_at >= "2025-07-01" THEN (order_items.unit_price / 1.1) * 0.1
+                ELSE 0
+            END'
+        ));
         $totalCost = (clone $baseQuery)->sum('products.import_price');
         $totalProfit = $totalRevenue - $totalCost;
         $totalOrders = (clone $baseQuery)->distinct('orders.id')->count('orders.id');
@@ -347,6 +395,7 @@ class DashboardController extends Controller
 
         return [
             'total_revenue' => $totalRevenue,
+            'total_tax' => $totalTax,
             'total_cost' => $totalCost,
             'total_profit' => $totalProfit,
             'total_orders' => $totalOrders,
@@ -478,7 +527,26 @@ class DashboardController extends Controller
 
     private function _getGameRevenueComparisonAllTimeLogic(Carbon $startDate, Carbon $endDate): array
     {
-        $top2Categories = DB::table('categories as parent_cat')->join('categories as child_cat', 'parent_cat.id', '=', 'child_cat.parent_id')->join('products', 'child_cat.id', '=', 'products.category_id')->join('order_items', 'products.id', '=', 'order_items.product_id')->join('orders', 'order_items.order_id', '=', 'orders.id')->join('users', 'orders.user_id', '=', 'users.id')->where('users.web_id', 1)->where('orders.status', 1)->whereNull('parent_cat.parent_id')->where('parent_cat.id', '!=', 1)->select('parent_cat.id', 'parent_cat.name')->groupBy('parent_cat.id', 'parent_cat.name')->orderByRaw('SUM(orders.total_amount) DESC')->limit(2)->get();
+        $top2Categories = DB::table('categories as parent_cat')
+            ->join('categories as child_cat', 'parent_cat.id', '=', 'child_cat.parent_id')
+            ->join('products', 'child_cat.id', '=', 'products.category_id')
+            ->join('order_items', 'products.id', '=', 'order_items.product_id')
+            ->join('orders', 'order_items.order_id', '=', 'orders.id')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->where('users.web_id', 1)
+            ->where('orders.status', 1)
+            ->whereNull('parent_cat.parent_id')
+            ->where('parent_cat.id', '!=', 1)
+            ->select('parent_cat.id', 'parent_cat.name')
+            ->groupBy('parent_cat.id', 'parent_cat.name')
+            ->orderByRaw('SUM(
+                CASE
+                    WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                    ELSE order_items.unit_price
+                END
+            ) DESC')
+            ->limit(2)
+            ->get();
         return $this->_buildComparisonChartData($top2Categories, $startDate, $endDate);
     }
 
@@ -488,7 +556,30 @@ class DashboardController extends Controller
             return ['labels' => [], 'datasets' => []];
         }
         $topCategoryIds = $topCategories->pluck('id');
-        $results = DB::table('orders')->join('users', 'orders.user_id', '=', 'users.id')->join('order_items', 'orders.id', '=', 'order_items.order_id')->join('products', 'order_items.product_id', '=', 'products.id')->join('categories as child_cat', 'products.category_id', '=', 'child_cat.id')->join('categories as parent_cat', 'child_cat.parent_id', '=', 'parent_cat.id')->where('users.web_id', 1)->where('orders.status', 1)->whereBetween('orders.created_at', [$startDate, $endDate])->whereIn('parent_cat.id', $topCategoryIds)->select(DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m-%d') as full_date"), DB::raw("DATE_FORMAT(orders.created_at, '%d/%m') as date_label"), 'parent_cat.name as category_name', DB::raw('SUM(order_items.unit_price) as daily_revenue'))->groupBy('full_date', 'date_label', 'category_name')->orderBy('full_date')->get();
+        $results = DB::table('orders')
+            ->join('users', 'orders.user_id', '=', 'users.id')
+            ->join('order_items', 'orders.id', '=', 'order_items.order_id')
+            ->join('products', 'order_items.product_id', '=', 'products.id')
+            ->join('categories as child_cat', 'products.category_id', '=', 'child_cat.id')
+            ->join('categories as parent_cat', 'child_cat.parent_id', '=', 'parent_cat.id')
+            ->where('users.web_id', 1)
+            ->where('orders.status', 1)
+            ->whereBetween('orders.created_at', [$startDate, $endDate])
+            ->whereIn('parent_cat.id', $topCategoryIds)
+            ->select(
+                DB::raw("DATE_FORMAT(orders.created_at, '%Y-%m-%d') as full_date"),
+                DB::raw("DATE_FORMAT(orders.created_at, '%d/%m') as date_label"),
+                'parent_cat.name as category_name',
+                DB::raw('SUM(
+                    CASE
+                        WHEN orders.created_at >= "2025-07-01" THEN order_items.unit_price / 1.1
+                        ELSE order_items.unit_price
+                    END
+                ) as daily_revenue')
+            )
+            ->groupBy('full_date', 'date_label', 'category_name')
+            ->orderBy('full_date')
+            ->get();
         $labels = [];
         $datasets = [];
         $dataMap = [];
@@ -511,5 +602,4 @@ class DashboardController extends Controller
         }
         return ['labels' => $labels, 'datasets' => $datasets];
     }
-
 }

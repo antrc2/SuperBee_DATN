@@ -559,6 +559,18 @@
     padding: 0.75rem 1.5rem; /* py-3 px-6 */
     width: 100%;
   }
+  .action-buttons {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 600; /* semibold */
+    transition: all 0.3s ease;
+    padding: 0.75rem 1.5rem; /* py-3 px-6 */
+  }
   .action-button-primary {
     background: var(--gradient-button);
     color: var(--color-accent-text);

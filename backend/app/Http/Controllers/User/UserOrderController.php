@@ -491,8 +491,7 @@ class UserOrderController extends Controller
 
 
                 $total_price = $total_price - $discount_amount;
-
-
+             
                 return response()->json([
                     "status" => True,
                     "message" => "Thành công",
@@ -662,8 +661,8 @@ class UserOrderController extends Controller
                     // }
 
                     $affiliate = Affiliate::where('user_id', $user_id)->first();
-                    // $tax = env("TAX");
-                    // $total_price = $total_price + $total_price * $tax / 100;
+                    $tax = env("TAX");
+                    $total_price = $total_price + $total_price * $tax / 100;
                     DB::beginTransaction();
 
                     if ($wallet->promotion_balance >= $total_price) {
@@ -713,7 +712,7 @@ class UserOrderController extends Controller
 
                     OrderQueue::create([
                         "order_id" => $order->id,
-                        "recieved_at" => now()->addMinutes(3),
+                        "recieved_at" => now()->addMinutes(1),
                         "status" => 0,
                     ]);
 
@@ -788,6 +787,9 @@ class UserOrderController extends Controller
                     $order->bill_url = $url;
                     $order->save();
                     DB::commit();
+                       $link =  env("FRONTEND_URL") . "/info/orders";
+                $this->sendNotification(1, "Mua hàng thành công", $link, $request->user_id,);
+
                     return response()->json([
                         "status" => True,
                         "message" => "Mua hàng thành công",

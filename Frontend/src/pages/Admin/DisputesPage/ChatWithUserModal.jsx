@@ -12,6 +12,7 @@ export default function IntegratedChat({ disputeId, customer }) {
     sendDisputeMessage,
     currentUser,
   } = useDisputeChat();
+
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef(null);
 

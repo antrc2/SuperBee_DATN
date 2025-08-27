@@ -6,7 +6,7 @@ import api from "@utils/http";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
-// Component con cho input mật khẩu
+// Component con cho input mật khẩu (Không thay đổi)
 const PasswordInput = ({
   value,
   onChange,
@@ -38,6 +38,7 @@ const PasswordInput = ({
         {show ? <EyeOff size={18} /> : <Eye size={18} />}
       </button>
     </div>
+    {/* Component này mong muốn `error` là một mảng */}
     {error && <p className="mt-1.5 text-sm text-red-500">{error[0]}</p>}
   </div>
 );
@@ -51,12 +52,14 @@ export default function ChangePassword() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [showPasswords, setShowPasswords] = useState({});
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
+    // Xóa lỗi khi người dùng bắt đầu nhập lại
     setErrors((prevErrors) => ({
       ...prevErrors,
       [name]: undefined,
@@ -66,7 +69,7 @@ export default function ChangePassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setErrors({});
+    setErrors({}); // Xóa lỗi cũ trước mỗi lần submit
 
     try {
       const response = await api.post("/user/change-password", formData);
@@ -80,26 +83,36 @@ export default function ChangePassword() {
         });
       }
     } catch (error) {
-      console.error("Error changing password:", error);
-      if (error.response) {
-        const backendErrors = error.response.data.errors;
-        const generalMessage =
-          error.response.data.message || "Đã có lỗi xảy ra.";
+      // Ghi log để debug trong console của trình duyệt (F12)
+      console.error("API Error Response:", error.response);
 
+      if (error.response && error.response.data) {
+        const { data } = error.response;
+        const generalMessage = data.message || "Đã có lỗi xảy ra.";
+
+        // Luôn hiển thị thông báo chung
         toast.error(generalMessage);
 
-        if (backendErrors) {
-          setErrors(backendErrors);
-          for (const key in backendErrors) {
-            if (Array.isArray(backendErrors[key])) {
-              backendErrors[key].forEach((msg) => toast.error(msg));
-            } else {
-              toast.error(backendErrors[key]);
-            }
+        // **====== LOGIC XỬ LÝ LỖI ĐÃ ĐƯỢC SỬA ======**
+
+        // Trường hợp 1: Lỗi validation (ví dụ: mật khẩu mới quá ngắn)
+        if (data.errors) {
+          setErrors(data.errors);
+        }
+        // Trường hợp 2: Lỗi nghiệp vụ (sai mật khẩu hiện tại)
+        else {
+          // Kiểm tra mã lỗi cụ thể từ backend
+          if (data.errorCode === "CURRENT_PASSWORD_MISMATCH") {
+            // Tự tạo một object lỗi đúng cấu trúc mà component PasswordInput mong đợi
+            setErrors({
+              current_password: [data.message], // `data.message` là "Mật khẩu hiện tại không đúng."
+            });
           }
         }
       } else {
-        toast.error("Không thể kết nối đến máy chủ.");
+        toast.error(
+          "Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại mạng."
+        );
       }
     } finally {
       setLoading(false);
@@ -112,7 +125,6 @@ export default function ChangePassword() {
 
   return (
     <section className="section-bg p-6 md:p-8 rounded-2xl shadow-lg">
-      {/* Header Section */}
       <div className="pb-6 border-b border-themed">
         <h1 className="font-heading text-2xl md:text-3xl font-bold text-primary">
           Đổi mật khẩu
@@ -123,7 +135,6 @@ export default function ChangePassword() {
         </p>
       </div>
 
-      {/* Form Section */}
       <form onSubmit={handleSubmit} className="mt-8 max-w-lg mx-auto space-y-6">
         <div>
           <label className="block text-sm font-semibold text-secondary mb-2">
@@ -176,7 +187,7 @@ export default function ChangePassword() {
             <Save className="h-5 w-5 mr-2" />
             {loading ? "Đang cập nhật..." : "Cập nhật mật khẩu"}
           </button>
-        </div>{" "}
+        </div>
         <p className="text-sm font-normal">
           <Link
             to="/forgot-password"

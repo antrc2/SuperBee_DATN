@@ -7,7 +7,10 @@ import { useParams, useSearchParams } from "react-router-dom";
 import NoProduct from "../../../components/Loading/NoProduct";
 import { useQuery } from "@tanstack/react-query";
 import ServerErrorDisplay from "../../../components/Loading/ServerErrorDisplay";
-import { getProductsWithFilter, getProductsBySlug } from "../../../services/productService.js";
+import {
+  getProductsWithFilter,
+  getProductsBySlug,
+} from "../../../services/productService.js";
 import CategoryCha from "../../../components/Client/Category/CategoryCha.jsx";
 import ProductFilter from "../../../components/Client/Filter/ProductFilter.jsx";
 
@@ -66,11 +69,14 @@ export default function ListProducts() {
     const params = new URLSearchParams();
     if (newFilters.key) params.append("key", newFilters.key);
     if (newFilters.sku) params.append("sku", newFilters.sku);
-    if (newFilters.categoryId) params.append("categoryId", newFilters.categoryId);
+    if (newFilters.categoryId)
+      params.append("categoryId", newFilters.categoryId);
     if (newFilters.min_price) params.append("min_price", newFilters.min_price);
     if (newFilters.max_price) params.append("max_price", newFilters.max_price);
-    if (newFilters.attribute_key) params.append("attribute_key", newFilters.attribute_key);
-    if (newFilters.attribute_value) params.append("attribute_value", newFilters.attribute_value);
+    if (newFilters.attribute_key)
+      params.append("attribute_key", newFilters.attribute_key);
+    if (newFilters.attribute_value)
+      params.append("attribute_value", newFilters.attribute_value);
     if (newFilters.sortBy && newFilters.sortBy !== "newest") {
       params.append("sortBy", newFilters.sortBy);
     }
@@ -108,7 +114,9 @@ export default function ListProducts() {
 
   if (isLoadingProducts) return <LoadingDomain />;
   if (isErrorProducts) {
-    return <ServerErrorDisplay statusCode={errorProducts.response?.status || 500} />;
+    return (
+      <ServerErrorDisplay statusCode={errorProducts.response?.status || 500} />
+    );
   }
   if (!ListProducts?.data) return <NoProduct />;
 
@@ -120,7 +128,8 @@ export default function ListProducts() {
 
   const isProductList = ListProducts?.data?.type === 1;
   const hasProducts = isProductList && ListProducts?.data?.products?.length > 0;
-  const hasCategories = !isProductList && ListProducts?.data?.categories?.length > 0;
+  const hasCategories =
+    !isProductList && ListProducts?.data?.categories?.length > 0;
 
   return (
     <div className="max-w-screen-xl mx-auto min-h-screen">
@@ -130,7 +139,11 @@ export default function ListProducts() {
 
       {isProductList ? (
         <div className="flex flex-col lg:flex-row gap-8 mt-6">
-          <ProductFilter slug={slug} initialFilters={filters} onApplyFilters={handleApplyFilters} />
+          <ProductFilter
+            slug={slug}
+            initialFilters={filters}
+            onApplyFilters={handleApplyFilters}
+          />
 
           <main className="w-full lg:w-3/4 px-4">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 bg-content p-3 rounded-xl border-themed">
@@ -168,28 +181,33 @@ export default function ListProducts() {
               ))}
             </div>
 
-            {ListProducts?.data?.pagination && ListProducts.data.pagination.last_page > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
-                {ListProducts.data.pagination.links?.map((link, index) => {
-                  const pageNumber = link.url
-                    ? new URL(link.url).searchParams.get("page")
-                    : null;
-                  return (
-                    <button
-                      key={index}
-                      onClick={() => handlePageChange(pageNumber)}
-                      disabled={!link.url || isLoadingProducts}
-                      dangerouslySetInnerHTML={{ __html: link.label }}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        link.active
-                          ? "bg-primary text-white shadow-md"
-                          : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700"
-                      } ${!link.url ? "text-gray-400 cursor-not-allowed opacity-50" : ""}`}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            {/* {ListProducts?.data?.pagination &&
+              ListProducts?.data?.pagination?.last_page > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-8">
+                  {ListProducts?.data?.pagination?.links?.map((link, index) => {
+                    const pageNumber = link.url
+                      ? new URL(link.url).searchParams.get("page")
+                      : null;
+                    return (
+                      <button
+                        key={index}
+                        onClick={() => handlePageChange(pageNumber)}
+                        disabled={!link.url || isLoadingProducts}
+                        dangerouslySetInnerHTML={{ __html: link.label }}
+                        className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                          link.active
+                            ? "bg-primary text-white shadow-md"
+                            : "bg-card hover:bg-gray-200 dark:hover:bg-gray-700"
+                        } ${
+                          !link.url
+                            ? "text-gray-400 cursor-not-allowed opacity-50"
+                            : ""
+                        }`}
+                      />
+                    );
+                  })}
+                </div>
+              )} */}
 
             {!hasProducts && <NoProduct />}
           </main>

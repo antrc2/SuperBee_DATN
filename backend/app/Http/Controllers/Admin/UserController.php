@@ -30,8 +30,8 @@ class UserController extends Controller
         }
         return $code;
     }
-    //
-    public function index(Request $request)
+
+       public function index(Request $request)
     {
         try {
             // Validate request parameters for sorting
@@ -39,12 +39,12 @@ class UserController extends Controller
                 'sort_by' => 'sometimes|in:username,email,balance,created_at',
                 'sort_direction' => 'sometimes|in:asc,desc',
                 'status' => 'sometimes|in:0,1,2',
-                // 'role_id' => 'sometimes|integer|exists:roles,id', // Đã được loại bỏ vì không cần thiết
+                'role_id' => 'sometimes|integer|exists:roles,id',
                 'page' => 'sometimes|integer|min:1',
             ]);
 
-            // Start building the query, immediately scoping to only users with the 'user' role.
-            $query = User::role('user');
+            // Start building the query
+            $query = User::query();
 
             // Eager load relationships
             $query->with(['roles', 'wallet']);
@@ -63,12 +63,12 @@ class UserController extends Controller
                 $q->where('status', $request->status);
             });
 
-            // Handle role filtering -> Đã được loại bỏ vì đã scope ở trên
-            // $query->when($request->filled('role_id'), function ($q) use ($request) {
-            //     $q->whereHas('roles', function ($subQuery) use ($request) {
-            //         $subQuery->where('id', $request->role_id);
-            //     });
-            // });
+            // Handle role filtering
+            $query->when($request->filled('role_id'), function ($q) use ($request) {
+                $q->whereHas('roles', function ($subQuery) use ($request) {
+                    $subQuery->where('id', $request->role_id);
+                });
+            });
 
             // Handle sorting
             if ($request->filled('sort_by')) {
@@ -90,7 +90,7 @@ class UserController extends Controller
             // Paginate the results
             $users = $query->paginate(15)->withQueryString();
 
-            // Get all roles for the filter dropdown (Bạn có thể giữ lại nếu vẫn cần hiển thị)
+            // Get all roles for the filter dropdown
             $roles = Role::all(['id', 'name', 'description']);
 
             return response()->json([
@@ -110,6 +110,9 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+
+    // Các method khác giữ nguyên...
     public function show($id)
     {
         try {
@@ -159,6 +162,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     public function destroy(Request $request, $id)
     {
         try {
@@ -187,6 +191,7 @@ class UserController extends Controller
             }
 
             if ($requester->hasRole('admin-super')) {
+                // Admin super có thể khóa tất cả trừ chính mình
             } elseif ($requester->hasRole('admin')) {
                 if ($targetUser->hasRole('admin') || $targetUser->hasRole('admin-super')) {
                     return response()->json([
@@ -218,6 +223,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     public function restore(Request $req, $id)
     {
         try {
@@ -249,6 +255,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     public function updateRoles(Request $request, $id)
     {
         try {
@@ -303,6 +310,7 @@ class UserController extends Controller
             return response()->json(['status' => false, 'message' => 'Đã có lỗi máy chủ xảy ra.'], 500);
         }
     }
+
     public function getStaffRoles(Request $request)
     {
         try {
@@ -386,12 +394,6 @@ class UserController extends Controller
             ]);
 
             Wallet::create(['user_id' => $user->id, "balance" => 0, "currency" => "VND"]);
-
-            // ======================= BẮT ĐẦU THAY ĐỔI =======================
-            // Đã loại bỏ việc gán vai trò 'user' mặc định cho nhân viên.
-            // Tài khoản nhân viên sẽ chỉ có vai trò được chỉ định.
-            // $user->assignRole('user');
-            // ======================= KẾT THÚC THAY ĐỔI =======================
 
             if ($validatedData['assignment_type'] === 'role') {
                 $user->assignRole($validatedData['role_name']);

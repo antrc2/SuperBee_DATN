@@ -109,7 +109,8 @@ export default function CartPage() {
       for (const id of selectedIds) {
         await removeItem(id);
       }
-      pop("Đã xóa các sản phẩm đã chọn.", "success");
+      await fetchCartItems();
+      pop("Đã xóa các sản phẩm đã chọn.", "s");
     }
   };
 

@@ -102,7 +102,7 @@ class AdminDiscountCodeController extends Controller
             $rules = [
                 'code'                  => 'required|string|unique:promotions,code',
                 'description'           => 'nullable|string|max:255',
-                'discount_value'        => 'required|integer|min:0|max:99',
+                'discount_value'        => 'required|integer|min:0|max:100',
                 'min_discount_amount'   => 'nullable|integer|min:0',
                 'max_discount_amount'   => 'nullable|integer|min:0',
                 'start_date'            => 'required|date',
@@ -124,7 +124,7 @@ class AdminDiscountCodeController extends Controller
                 'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
                 'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
                 'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
-                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 99%.",
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 100%.",
 
                 'min_discount_amount.integer'   => 'Số tiền giảm giá tối thiểu phải là số nguyên.',
                 'min_discount_amount.min'       => 'Số tiền giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',
@@ -273,7 +273,7 @@ class AdminDiscountCodeController extends Controller
                 'description'          => 'nullable|string|max:255',
                 'usage_limit'          => 'nullable|integer|min:-1|not_in:0',
                 'per_user_limit'       => 'nullable|integer|min:-1|not_in:0',
-                'discount_value'       => 'required|integer|min:0',
+               'discount_value'        => 'required|integer|min:0|max:100',
                 'min_discount_amount'  => 'nullable|integer|min:0',
                 'max_discount_amount'  => 'nullable|integer|min:0|gt:min_discount_amount',
                 'start_date'           => 'required|date',
@@ -298,9 +298,10 @@ class AdminDiscountCodeController extends Controller
                 'per_user_limit.min'            => 'Giới hạn mỗi người dùng phải lớn hơn hoặc bằng -1.',
                 'per_user_limit.not_in'         => 'Giới hạn mỗi người dùng không được là 0.',
 
-                'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
+               'discount_value.required'       => 'Vui lòng nhập giá trị giảm giá.',
                 'discount_value.integer'        => 'Giá trị giảm giá phải là số nguyên.',
                 'discount_value.min'            => 'Giá trị giảm giá phải lớn hơn hoặc bằng 0.',
+                'discount_value.max'=>"Giá trị giảm giá phải nhỏ hơn 100%.",
 
                 'min_discount_amount.integer'   => 'Giá trị giảm giá tối thiểu phải là số nguyên.',
                 'min_discount_amount.min'       => 'Giá trị giảm giá tối thiểu phải lớn hơn hoặc bằng 0.',

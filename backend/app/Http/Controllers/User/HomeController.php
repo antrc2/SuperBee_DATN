@@ -7,6 +7,7 @@ use App\Http\Controllers\Callback\CardController;
 use App\Http\Controllers\Controller;
 use App\Models\Banner;
 use App\Models\ChatRoom;
+use App\Models\DonatePromotion;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Wallet;
@@ -55,6 +56,7 @@ class HomeController extends Controller
         $banners = Banner::where('web_id', $request->web_id)->where('status', 1)->orderBy('id', 'asc')->get();
         $category = new UserCategoryController();
         $categories = $category->index()->getData();
+        $napthe = DonatePromotion::where('status',1)->first();
         // $topNap = Wallet::with(['user' => fn($q) => $q->select('id', 'username')])
 
         //     // Tôi muốn cộng thêm dữ liệu ở cột promotion_balance vào cột balance
@@ -99,7 +101,8 @@ class HomeController extends Controller
                 'top_users' => $topNap,
                 'featured_products' => $featuredProducts,
                 'newest_products' => $newestProducts,
-                'topwallet'=>$topWallets
+                'topwallet'=>$topWallets,
+                'napthe'=>$napthe
             ]
         ], 200);
     }

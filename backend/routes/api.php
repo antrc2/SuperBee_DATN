@@ -460,21 +460,20 @@ Route::middleware(['jwt'])->prefix('/admin')->group(function () {
         Route::put('/', [AdminBusinessSettingController::class, 'update'])->middleware('permission:business_settings.edit');
     });
     Route::prefix('/employees')->group(function () {
-        Route::get('/', [EmployeeController::class, 'index'])->middleware('permission:employees.view');
-        Route::get('/form-data', [EmployeeController::class, 'getFormData'])->middleware('permission:employees.create|employees.edit');
-        Route::get('/check-slots', [EmployeeController::class, 'checkAvailableSlots'])->middleware('permission:employees.create|employees.edit');
-        Route::get('/agent-slot-stats', [EmployeeController::class, 'getAgentSlotStats'])->middleware('permission:employees.view');
-        Route::post('/create-agent-slot', [EmployeeController::class, 'createAgentSlot'])->middleware('permission:employees.create');
-        Route::get('/eligible-support-agents/{employee}', [EmployeeController::class, 'getEligibleSupportAgents'])->middleware('permission:employees.delete'); // Quyền delete hoặc edit đều hợp lý
-        Route::get('/{employee}', [EmployeeController::class, 'show'])->middleware('permission:employees.view');
-        Route::post('/', [EmployeeController::class, 'store'])->middleware('permission:employees.create');
-        Route::put('/{employee}', [EmployeeController::class, 'update'])->middleware('permission:employees.edit');
+        Route::get('/', [EmployeeController::class, 'index']);
+        Route::get('/form-data', [EmployeeController::class, 'getFormData']);
+        Route::get('/check-slots', [EmployeeController::class, 'checkAvailableSlots']);
+        Route::get('/agent-slot-stats', [EmployeeController::class, 'getAgentSlotStats']);
+        Route::post('/create-agent-slot', [EmployeeController::class, 'createAgentSlot']);
+        Route::get('/eligible-support-agents/{employee}', [EmployeeController::class, 'getEligibleSupportAgents']);
+        Route::get('/{employee}', [EmployeeController::class, 'show']);
+        Route::post('/', [EmployeeController::class, 'store']);
+        Route::put('/{employee}', [EmployeeController::class, 'update']);
 
         // === ROUTE ĐÃ SỬA: Dùng PATCH để cập nhật trạng thái ===
-        Route::patch('/{employee}/status', [EmployeeController::class, 'updateStatus'])->middleware('permission:employees.edit');
-
+        Route::patch('/{employee}/status', [EmployeeController::class, 'updateStatus']);
         // Route destroy() giờ có thể không cần dùng từ FE nữa, nhưng giữ lại cho API
-        Route::delete('/{employee}', [EmployeeController::class, 'destroy'])->middleware('permission:employees.delete');
+        Route::delete('/{employee}', [EmployeeController::class, 'destroy']);
     });
     Route::prefix('dashboard')->middleware(['auth:api'])->group(function () {
         // API Tổng hợp

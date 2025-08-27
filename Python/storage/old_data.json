@@ -1300,5 +1300,26 @@
                 "totalAmount": "10000.000000"
             }
         ]
+    },
+    {
+        "id": "25082611483837992",
+        "detail": [
+            {
+                "detailDestNumber": "0838411897",
+                "detailDestName": "NGUYEN NGOC AN",
+                "detailBenBankCd": "963369",
+                "detailAmount": "250000",
+                "detailChargeAmount": "0",
+                "detailDescription": "WDX1REEXRY6RHYBA",
+                "status": "DONE",
+                "errorCode": "00",
+                "errorMessage": null,
+                "errorDetail": null,
+                "ft": "FT25238716001710",
+                "refundTransactionFT": null,
+                "totalTransactionFT": "FT25238443108423",
+                "totalAmount": "250000.000000"
+            }
+        ]
     }
 ]

@@ -150,11 +150,11 @@ export const adminModules = [
     create: EmployeeCreatePage,
     edit: EmployeeEditPage,
     show: NotFound, // Không có trang chi tiết cho nhân viên
-    permissions: {
-      view: "employees.view",
-      create: "employees.create",
-      edit: "employees.edit",
-    },
+    // permissions: {
+    //   view: "employees.view",
+    //   create: "employees.create",
+    //   edit: "employees.edit",
+    // },
   },
   // Mã giảm giá
   {

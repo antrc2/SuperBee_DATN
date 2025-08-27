@@ -43,11 +43,11 @@ export default function Product({ product }) {
           <div className="absolute top-2 right-2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <button
               onClick={handleAdd}
-              className="bg-highlight/80 hover:bg-highlight text-accent-contrast rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm"
+              className="bg-highlight/80 group-hover:bg-highlight border-2 border-white  hover:bg-highlight text-accent-contrast rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm group-hover:shadow-md"
             >
-              <ShoppingCart size={16} />
+              <ShoppingCart size={16} className="text-white " />
             </button>
-            <div className="bg-primary/50 hover:bg-primary/80 text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm">
+            <div className="bg-primary/50 group-hover:bg-primary/80 border-2 border-white text-white rounded-full w-9 h-9 flex items-center justify-center backdrop-blur-sm group-hover:shadow-md hover:bg-primary/80">
               <Eye size={16} />
             </div>
           </div>
@@ -69,7 +69,7 @@ export default function Product({ product }) {
             </h3>
             <div className="border-t border-themed my-2"></div>
             <div className="space-y-1 text-xs max-h-[80px] overflow-y-auto custom-scrollbar-notification">
-              {product.game_attributes?.slice(0, 4).map((attr) => (
+              {product.game_attributes?.slice(0, 3).map((attr) => (
                 <div key={attr.id} className="flex justify-between">
                   <span className="text-secondary truncate max-w-[60%]">
                     {attr.attribute_key}:
@@ -81,7 +81,7 @@ export default function Product({ product }) {
               ))}
               {product.game_attributes?.length > 4 && (
                 <div className="text-xs text-secondary text-center pt-1">
-                  + {product.game_attributes.length - 4} thuộc tính khác
+                  + {product.game_attributes.length - 3} thuộc tính khác
                 </div>
               )}
             </div>
